@@ -529,8 +529,8 @@ github.com/onsi/ginkgo/v2 v2.28.1 h1:S4hj+HbZp40fNKuLUQOYLDgZLwNUVn19N3Atb98NCyI
 github.com/onsi/ginkgo/v2 v2.28.1/go.mod h1:CLtbVInNckU3/+gC8LzkGUb9oF+e8W8TdUsxPwvdOgE=
 github.com/onsi/gomega v1.39.1 h1:1IJLAad4zjPn2PsnhH70V4DKRFlrCzGBNrNaru+Vf28=
 github.com/onsi/gomega v1.39.1/go.mod h1:hL6yVALoTOxeWudERyfppUcZXjMwIMLnuSfruD2lcfg=
-github.com/osapi-io/osapi-sdk v0.0.0-20260302044625-9e8671ed499e h1:4p5qn0AqFDf7PG0uw+FisJhyhisjC6LT/mZv+sZhPHk=
-github.com/osapi-io/osapi-sdk v0.0.0-20260302044625-9e8671ed499e/go.mod h1:5Y45ymBR4BcxJTOJ7WhqYTDHXxtlQRW7Sr3G52pfMdI=
+github.com/osapi-io/osapi-sdk v0.0.0-20260302174834-8a6a689f7f56 h1:Y39Z/6C18xPSjPH0VabAOVzZ14JBaN6zxMUZD9Y2wbY=
+github.com/osapi-io/osapi-sdk v0.0.0-20260302174834-8a6a689f7f56/go.mod h1:5Y45ymBR4BcxJTOJ7WhqYTDHXxtlQRW7Sr3G52pfMdI=
 github.com/otiai10/copy v1.2.0/go.mod h1:rrF5dJ5F0t/EWSYODDu4j9/vEeYHMkc8jt0zJChqQWw=
 github.com/otiai10/copy v1.14.0 h1:dCI/t1iTdYGtkvCuBG2BgR6KZa83PTclw4U5n2wAllU=
 github.com/otiai10/copy v1.14.0/go.mod h1:ECfuL02W+/FkTWZWgQqXPWZgW9oeKCSQ5qVfSc4qc4w=
