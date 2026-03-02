@@ -122,6 +122,43 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			errContains: "no result for",
 		},
 		{
+			name: "Decodes command result with error field",
+			results: sdk.Results{
+				"run-cmd": &sdk.Result{
+					Changed: true,
+					Data: map[string]any{
+						"stdout":      "partial output",
+						"stderr":      "command not found",
+						"exit_code":   float64(127),
+						"duration_ms": float64(50),
+						"error":       "exec failed",
+					},
+				},
+			},
+			lookupName: "run-cmd",
+			target:     &orchestrator.CommandResult{},
+			validateFunc: func() {
+				r := orchestrator.NewResults(sdk.Results{
+					"run-cmd": &sdk.Result{
+						Changed: true,
+						Data: map[string]any{
+							"stdout":      "partial output",
+							"stderr":      "command not found",
+							"exit_code":   float64(127),
+							"duration_ms": float64(50),
+							"error":       "exec failed",
+						},
+					},
+				})
+				var cmd orchestrator.CommandResult
+				err := r.Decode("run-cmd", &cmd)
+				s.Require().NoError(err)
+				s.Equal("exec failed", cmd.Error)
+				s.Equal(127, cmd.ExitCode)
+				s.Equal("command not found", cmd.Stderr)
+			},
+		},
+		{
 			name: "Returns error when unmarshal fails",
 			results: sdk.Results{
 				"bad-task": &sdk.Result{
