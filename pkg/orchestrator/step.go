@@ -28,6 +28,15 @@ type Step struct {
 	task *sdk.Task
 }
 
+// Named overrides the auto-generated step name.
+func (s *Step) Named(
+	name string,
+) *Step {
+	s.task.SetName(name)
+
+	return s
+}
+
 // After declares that this step runs after the given steps complete.
 func (s *Step) After(
 	deps ...*Step,

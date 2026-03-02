@@ -142,18 +142,21 @@ func main() {
 	// --- Level 3: Only if all dependencies changed ---
 	// This runs only if summarize reported changes (all deps changed).
 	o.CommandExec("_any", "echo", "all-deps-changed").
+		Named("notify").
 		After(summarize).
 		OnlyIfAllChanged()
 
 	// --- Independent: Broadcast operation with error recovery ---
-	// Targets all hosts in group:web.prod. After execution, per-host
-	// results are available via Results.HostResults().
+	// Targets all hosts via _all. After execution, per-host results
+	// are displayed automatically by the renderer.
 	deploy := o.CommandExec("_all", "echo", "deploying").
+		Named("deploy-all").
 		OnError(orchestrator.Continue)
 
 	// Recovery step — only runs if deploy failed (OnlyIfFailed).
 	// Demonstrates failure-triggered cleanup pattern.
 	o.CommandExec("_any", "echo", "deploy-failed-cleanup").
+		Named("cleanup").
 		After(deploy).
 		OnlyIfFailed()
 

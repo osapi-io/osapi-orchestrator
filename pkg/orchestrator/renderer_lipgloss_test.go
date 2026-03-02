@@ -467,6 +467,60 @@ func (s *RendererLipglossTestSuite) TestTaskDoneVerbose() {
 	}
 }
 
+func (s *RendererLipglossTestSuite) TestTaskDoneShowsHostResults() {
+	tests := []struct {
+		name        string
+		result      sdk.TaskResult
+		contains    []string
+		notContains []string
+	}{
+		{
+			name: "Shows per-host results",
+			result: sdk.TaskResult{
+				Name:    "deploy-all",
+				Status:  sdk.StatusChanged,
+				Changed: true,
+				HostResults: []sdk.HostResult{
+					{Hostname: "web-01", Changed: true},
+					{Hostname: "web-02", Changed: false, Error: "timeout"},
+				},
+			},
+			contains: []string{
+				"web-01",
+				"web-02",
+				"error: timeout",
+			},
+		},
+		{
+			name: "No host results for non-broadcast",
+			result: sdk.TaskResult{
+				Name:   "get-hostname",
+				Status: sdk.StatusUnchanged,
+			},
+			notContains: []string{
+				"web-",
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var buf bytes.Buffer
+			r := newLipglossRendererWithWriter(&buf)
+
+			r.TaskDone(tc.result)
+
+			output := buf.String()
+			for _, c := range tc.contains {
+				s.Contains(output, c)
+			}
+			for _, c := range tc.notContains {
+				s.NotContains(output, c)
+			}
+		})
+	}
+}
+
 func TestRendererLipglossTestSuite(
 	t *testing.T,
 ) {

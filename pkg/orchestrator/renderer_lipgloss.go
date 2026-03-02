@@ -220,9 +220,41 @@ func (r *lipglossRenderer) TaskDone(
 		)
 	}
 
+	// Always show per-host results for broadcast operations.
+	if len(result.HostResults) > 0 {
+		r.printHostResults(result.HostResults)
+	}
+
 	// Verbose mode: show response data on success.
 	if r.verbose && result.Data != nil {
 		r.printResultData(result.Data)
+	}
+}
+
+// printHostResults renders per-host results for broadcast operations.
+func (r *lipglossRenderer) printHostResults(
+	hostResults []sdk.HostResult,
+) {
+	indent := strings.Repeat(" ", tagWidth+2)
+
+	for _, hr := range hostResults {
+		status := r.green.Render("ok")
+		if hr.Error != "" {
+			status = r.red.Render("error: " + hr.Error)
+		}
+
+		changed := ""
+		if hr.Changed {
+			changed = r.greenB.Render(" changed")
+		}
+
+		r.printf(
+			"%s%s %s%s\n",
+			indent,
+			r.dim.Render(hr.Hostname),
+			status,
+			changed,
+		)
 	}
 }
 
