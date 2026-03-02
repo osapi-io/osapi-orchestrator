@@ -41,6 +41,45 @@ func NewResults(
 	return Results{results: sdkResults}
 }
 
+// TaskStatus represents the outcome of a step for guard inspection.
+type TaskStatus int
+
+const (
+	// TaskStatusUnknown indicates the step was not found or has not run.
+	TaskStatusUnknown TaskStatus = iota
+	// TaskStatusChanged indicates the step ran and reported changes.
+	TaskStatusChanged
+	// TaskStatusUnchanged indicates the step ran with no changes.
+	TaskStatusUnchanged
+	// TaskStatusSkipped indicates the step was skipped.
+	TaskStatusSkipped
+	// TaskStatusFailed indicates the step failed.
+	TaskStatusFailed
+)
+
+// Status returns the terminal status of a completed dependency step.
+func (r Results) Status(
+	name string,
+) TaskStatus {
+	result := r.results.Get(name)
+	if result == nil {
+		return TaskStatusUnknown
+	}
+
+	switch result.Status {
+	case sdk.StatusChanged:
+		return TaskStatusChanged
+	case sdk.StatusUnchanged:
+		return TaskStatusUnchanged
+	case sdk.StatusSkipped:
+		return TaskStatusSkipped
+	case sdk.StatusFailed:
+		return TaskStatusFailed
+	default:
+		return TaskStatusUnknown
+	}
+}
+
 // Decode retrieves the result of a named step and decodes it into
 // the given typed struct.
 func (r Results) Decode(

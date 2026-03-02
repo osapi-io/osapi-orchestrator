@@ -232,6 +232,71 @@ func (s *ResultPublicTestSuite) TestReportSummary() {
 	}
 }
 
+func (s *ResultPublicTestSuite) TestStatus() {
+	tests := []struct {
+		name       string
+		results    sdk.Results
+		lookupName string
+		wantStatus orchestrator.TaskStatus
+	}{
+		{
+			name: "Returns TaskStatusChanged for changed result",
+			results: sdk.Results{
+				"step-a": &sdk.Result{
+					Changed: true,
+					Status:  sdk.StatusChanged,
+				},
+			},
+			lookupName: "step-a",
+			wantStatus: orchestrator.TaskStatusChanged,
+		},
+		{
+			name: "Returns TaskStatusUnchanged for unchanged result",
+			results: sdk.Results{
+				"step-a": &sdk.Result{
+					Changed: false,
+					Status:  sdk.StatusUnchanged,
+				},
+			},
+			lookupName: "step-a",
+			wantStatus: orchestrator.TaskStatusUnchanged,
+		},
+		{
+			name: "Returns TaskStatusSkipped for skipped result",
+			results: sdk.Results{
+				"step-a": &sdk.Result{
+					Status: sdk.StatusSkipped,
+				},
+			},
+			lookupName: "step-a",
+			wantStatus: orchestrator.TaskStatusSkipped,
+		},
+		{
+			name: "Returns TaskStatusFailed for failed result",
+			results: sdk.Results{
+				"step-a": &sdk.Result{
+					Status: sdk.StatusFailed,
+				},
+			},
+			lookupName: "step-a",
+			wantStatus: orchestrator.TaskStatusFailed,
+		},
+		{
+			name:       "Returns TaskStatusUnknown for missing result",
+			results:    sdk.Results{},
+			lookupName: "nonexistent",
+			wantStatus: orchestrator.TaskStatusUnknown,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			r := orchestrator.NewResults(tc.results)
+			s.Equal(tc.wantStatus, r.Status(tc.lookupName))
+		})
+	}
+}
+
 func TestResultPublicTestSuite(
 	t *testing.T,
 ) {
