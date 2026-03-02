@@ -188,6 +188,12 @@ func (r *lipglossRenderer) TaskStart(
 func (r *lipglossRenderer) TaskDone(
 	result sdk.TaskResult,
 ) {
+	// Suppress the [skipped] line — the [skip] line from OnSkip
+	// already shows the reason and is more useful.
+	if result.Status == sdk.StatusSkipped {
+		return
+	}
+
 	label := fmt.Sprintf("[%s]", result.Status)
 
 	var tag string
@@ -258,23 +264,62 @@ func (r *lipglossRenderer) printHostResults(
 	}
 }
 
-// printResultData renders key result fields as indented lines.
+// skipKeys are internal fields that clutter verbose output.
+var skipKeys = map[string]bool{
+	"duration_ms": true,
+	"exit_code":   true,
+	"stderr":      true,
+}
+
+// printResultData renders result data fields as indented lines.
 func (r *lipglossRenderer) printResultData(
 	data map[string]any,
 ) {
 	indent := strings.Repeat(" ", tagWidth+2)
 
-	for _, key := range []string{"stdout", "stderr", "hostname", "error"} {
-		if v, ok := data[key]; ok {
-			str := fmt.Sprintf("%v", v)
-			if str != "" {
-				r.printf(
-					"%s%s\n",
-					indent,
-					r.dim.Render(fmt.Sprintf("%s: %s", key, str)),
-				)
-			}
+	for key, v := range data {
+		if skipKeys[key] {
+			continue
 		}
+
+		str := formatValue(v)
+		if str != "" {
+			r.printf(
+				"%s%s\n",
+				indent,
+				r.dim.Render(fmt.Sprintf("%s: %s", key, str)),
+			)
+		}
+	}
+}
+
+// formatValue renders a value for display, keeping simple values inline
+// and omitting complex nested structures.
+func formatValue(
+	v any,
+) string {
+	switch val := v.(type) {
+	case string:
+		return strings.TrimSpace(val)
+	case float64:
+		if val == float64(int64(val)) {
+			return fmt.Sprintf("%d", int64(val))
+		}
+
+		return fmt.Sprintf("%.2f", val)
+	case bool:
+		return fmt.Sprintf("%v", val)
+	case []any:
+		return fmt.Sprintf("[%d items]", len(val))
+	case map[string]any:
+		parts := make([]string, 0, len(val))
+		for k, inner := range val {
+			parts = append(parts, fmt.Sprintf("%s=%v", k, inner))
+		}
+
+		return strings.Join(parts, " ")
+	default:
+		return fmt.Sprintf("%v", v)
 	}
 }
 

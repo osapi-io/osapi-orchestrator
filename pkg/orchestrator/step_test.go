@@ -87,6 +87,147 @@ func (s *StepTestSuite) TestWhenGuardCallbackInvoked() {
 	}
 }
 
+func (s *StepTestSuite) TestNamedSetsTaskName() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	orch := New(server.URL, "test-token")
+	step := orch.NodeHostnameGet("_any").Named("custom-name")
+
+	s.Equal("custom-name", step.task.Name())
+}
+
+func (s *StepTestSuite) TestOnlyIfFailedGuard() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	orch := New(server.URL, "test-token")
+
+	tests := []struct {
+		name     string
+		results  sdk.Results
+		expected bool
+	}{
+		{
+			name: "Returns true when dependency failed",
+			results: sdk.Results{
+				"dep": &sdk.Result{Status: sdk.StatusFailed},
+			},
+			expected: true,
+		},
+		{
+			name: "Returns false when dependency succeeded",
+			results: sdk.Results{
+				"dep": &sdk.Result{Status: sdk.StatusChanged},
+			},
+			expected: false,
+		},
+		{
+			name:     "Returns false when no results",
+			results:  sdk.Results{},
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			dep := orch.NodeHostnameGet("_any").Named("dep")
+			step := orch.NodeHostnameGet("_any").After(dep).OnlyIfFailed()
+
+			guard := step.task.Guard()
+			s.Require().NotNil(guard)
+			s.Equal(tc.expected, guard(tc.results))
+		})
+	}
+}
+
+func (s *StepTestSuite) TestOnlyIfAllChangedGuard() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	orch := New(server.URL, "test-token")
+
+	tests := []struct {
+		name     string
+		results  sdk.Results
+		hasDeps  bool
+		expected bool
+	}{
+		{
+			name: "Returns true when all deps changed",
+			results: sdk.Results{
+				"dep-a": &sdk.Result{Status: sdk.StatusChanged},
+				"dep-b": &sdk.Result{Status: sdk.StatusChanged},
+			},
+			hasDeps:  true,
+			expected: true,
+		},
+		{
+			name: "Returns false when one dep unchanged",
+			results: sdk.Results{
+				"dep-a": &sdk.Result{Status: sdk.StatusChanged},
+				"dep-b": &sdk.Result{Status: sdk.StatusUnchanged},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+		{
+			name: "Returns false when dep missing from results",
+			results: sdk.Results{
+				"dep-a": &sdk.Result{Status: sdk.StatusChanged},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+		{
+			name:     "Returns false with no dependencies",
+			results:  sdk.Results{},
+			hasDeps:  false,
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var step *Step
+			if tc.hasDeps {
+				depA := orch.NodeHostnameGet("_any").Named("dep-a")
+				depB := orch.NodeHostnameGet("_any").Named("dep-b")
+				step = orch.NodeHostnameGet("_any").
+					After(depA, depB).
+					OnlyIfAllChanged()
+			} else {
+				step = orch.NodeHostnameGet("_any").OnlyIfAllChanged()
+			}
+
+			guard := step.task.Guard()
+			s.Require().NotNil(guard)
+			s.Equal(tc.expected, guard(tc.results))
+		})
+	}
+}
+
 func TestStepTestSuite(
 	t *testing.T,
 ) {

@@ -4,7 +4,10 @@ go 1.25.7
 
 replace github.com/osapi-io/osapi-orchestrator => ../..
 
-require github.com/osapi-io/osapi-orchestrator v0.0.0-00010101000000-000000000000
+require (
+	github.com/osapi-io/osapi-orchestrator v0.0.0-00010101000000-000000000000
+	github.com/osapi-io/osapi-sdk v0.0.0-20260302232128-2eaecd5d82c3
+)
 
 require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
@@ -23,7 +26,6 @@ require (
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/oapi-codegen/runtime v1.2.0 // indirect
-	github.com/osapi-io/osapi-sdk v0.0.0-20260302174834-8a6a689f7f56 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect

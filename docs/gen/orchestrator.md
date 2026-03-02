@@ -19,14 +19,18 @@ retries, and reporting.
 - [type DiskResult](#DiskResult)
 - [type DiskUsage](#DiskUsage)
 - [type ErrorStrategy](#ErrorStrategy)
+- [type HostResult](#HostResult)
+  - [func \(h HostResult\) Decode\(v any\) error](#HostResult.Decode)
 - [type HostnameResult](#HostnameResult)
 - [type LoadResult](#LoadResult)
 - [type MemoryResult](#MemoryResult)
+- [type Option](#Option)
+  - [func WithVerbose\(\) Option](#WithVerbose)
 - [type Orchestrator](#Orchestrator)
-  - [func New\(url string, token string\) \*Orchestrator](#New)
+  - [func New\(url string, token string, opts ...Option\) \*Orchestrator](#New)
   - [func \(o \*Orchestrator\) CommandExec\(target string, command string, args ...string\) \*Step](#Orchestrator.CommandExec)
   - [func \(o \*Orchestrator\) CommandShell\(target string, command string\) \*Step](#Orchestrator.CommandShell)
-  - [func \(o \*Orchestrator\) HealthCheck\(target string\) \*Step](#Orchestrator.HealthCheck)
+  - [func \(o \*Orchestrator\) HealthCheck\(\_ string\) \*Step](#Orchestrator.HealthCheck)
   - [func \(o \*Orchestrator\) NetworkDNSGet\(target string, interfaceName string\) \*Step](#Orchestrator.NetworkDNSGet)
   - [func \(o \*Orchestrator\) NetworkDNSUpdate\(target string, interfaceName string, servers \[\]string, searchDomains \[\]string\) \*Step](#Orchestrator.NetworkDNSUpdate)
   - [func \(o \*Orchestrator\) NetworkPingDo\(target string, address string\) \*Step](#Orchestrator.NetworkPingDo)
@@ -37,22 +41,30 @@ retries, and reporting.
   - [func \(o \*Orchestrator\) NodeStatusGet\(target string\) \*Step](#Orchestrator.NodeStatusGet)
   - [func \(o \*Orchestrator\) NodeUptimeGet\(target string\) \*Step](#Orchestrator.NodeUptimeGet)
   - [func \(o \*Orchestrator\) Run\(\) \(\*Report, error\)](#Orchestrator.Run)
+  - [func \(o \*Orchestrator\) TaskFunc\(name string, fn func\(ctx context.Context, r Results\) \(\*sdk.Result, error\)\) \*Step](#Orchestrator.TaskFunc)
 - [type PingResult](#PingResult)
 - [type Report](#Report)
+  - [func \(r \*Report\) Decode\(name string, v any\) error](#Report.Decode)
   - [func \(r \*Report\) Summary\(\) string](#Report.Summary)
 - [type Results](#Results)
   - [func NewResults\(sdkResults sdk.Results\) Results](#NewResults)
   - [func \(r Results\) Decode\(name string, v any\) error](#Results.Decode)
+  - [func \(r Results\) HostResults\(name string\) \[\]HostResult](#Results.HostResults)
+  - [func \(r Results\) Status\(name string\) TaskStatus](#Results.Status)
 - [type Step](#Step)
   - [func \(s \*Step\) After\(deps ...\*Step\) \*Step](#Step.After)
+  - [func \(s \*Step\) Named\(name string\) \*Step](#Step.Named)
   - [func \(s \*Step\) OnError\(strategy ErrorStrategy\) \*Step](#Step.OnError)
+  - [func \(s \*Step\) OnlyIfAllChanged\(\) \*Step](#Step.OnlyIfAllChanged)
   - [func \(s \*Step\) OnlyIfChanged\(\) \*Step](#Step.OnlyIfChanged)
+  - [func \(s \*Step\) OnlyIfFailed\(\) \*Step](#Step.OnlyIfFailed)
   - [func \(s \*Step\) Retry\(n int\) \*Step](#Step.Retry)
   - [func \(s \*Step\) When\(fn func\(Results\) bool\) \*Step](#Step.When)
+- [type TaskStatus](#TaskStatus)
 
 <a name="CommandResult"></a>
 
-## type [CommandResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L57-L62)
+## type [CommandResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L57-L63)
 
 CommandResult holds typed command execution output.
 
@@ -62,12 +74,13 @@ type CommandResult struct {
     Stderr     string `json:"stderr"`
     ExitCode   int    `json:"exit_code"`
     DurationMs int64  `json:"duration_ms"`
+    Error      string `json:"error,omitempty"`
 }
 ```
 
 <a name="DNSConfigResult"></a>
 
-## type [DNSConfigResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L72-L75)
+## type [DNSConfigResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L74-L77)
 
 DNSConfigResult holds typed DNS configuration output.
 
@@ -80,7 +93,7 @@ type DNSConfigResult struct {
 
 <a name="DNSUpdateResult"></a>
 
-## type [DNSUpdateResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L78-L81)
+## type [DNSUpdateResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L80-L84)
 
 DNSUpdateResult holds typed DNS update output.
 
@@ -88,6 +101,7 @@ DNSUpdateResult holds typed DNS update output.
 type DNSUpdateResult struct {
     Success bool   `json:"success"`
     Message string `json:"message"`
+    Error   string `json:"error,omitempty"`
 }
 ```
 
@@ -120,7 +134,7 @@ type DiskUsage struct {
 
 <a name="ErrorStrategy"></a>
 
-## type [ErrorStrategy](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L26)
+## type [ErrorStrategy](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L41)
 
 ErrorStrategy controls what happens when a step fails.
 
@@ -138,6 +152,31 @@ const (
     Continue
 )
 ```
+
+<a name="HostResult"></a>
+
+## type [HostResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L85-L90)
+
+HostResult represents a single host's response within a broadcast operation.
+
+```go
+type HostResult struct {
+    Hostname string
+    Changed  bool
+    Error    string
+    Data     map[string]any
+}
+```
+
+<a name="HostResult.Decode"></a>
+
+### func \(HostResult\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L93-L95)
+
+```go
+func (h HostResult) Decode(v any) error
+```
+
+Decode unmarshals host\-specific data into a typed result struct.
 
 <a name="HostnameResult"></a>
 
@@ -180,9 +219,30 @@ type MemoryResult struct {
 }
 ```
 
+<a name="Option"></a>
+
+## type [Option](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L26)
+
+Option configures the Orchestrator.
+
+```go
+type Option func(*config)
+```
+
+<a name="WithVerbose"></a>
+
+### func [WithVerbose](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L34)
+
+```go
+func WithVerbose() Option
+```
+
+WithVerbose enables verbose output showing stdout, stderr, and full response
+data for all tasks.
+
 <a name="Orchestrator"></a>
 
-## type [Orchestrator](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/types.go#L27-L30)
+## type [Orchestrator](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/types.go#L27-L31)
 
 Orchestrator is the top\-level entry point for building and running
 infrastructure plans.
@@ -195,17 +255,17 @@ type Orchestrator struct {
 
 <a name="New"></a>
 
-### func [New](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/orchestrator.go#L37-L40)
+### func [New](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/orchestrator.go#L36-L40)
 
 ```go
-func New(url string, token string) *Orchestrator
+func New(url string, token string, opts ...Option) *Orchestrator
 ```
 
 New creates an Orchestrator connected to the given OSAPI server.
 
 <a name="Orchestrator.CommandExec"></a>
 
-### func \(\*Orchestrator\) [CommandExec](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L195-L199)
+### func \(\*Orchestrator\) [CommandExec](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L200-L204)
 
 ```go
 func (o *Orchestrator) CommandExec(target string, command string, args ...string) *Step
@@ -215,7 +275,7 @@ CommandExec creates a step that executes a command.
 
 <a name="Orchestrator.CommandShell"></a>
 
-### func \(\*Orchestrator\) [CommandShell](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L211-L214)
+### func \(\*Orchestrator\) [CommandShell](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L216-L219)
 
 ```go
 func (o *Orchestrator) CommandShell(target string, command string) *Step
@@ -228,14 +288,14 @@ CommandShell creates a step that executes a shell command string.
 ### func \(\*Orchestrator\) [HealthCheck](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L57-L59)
 
 ```go
-func (o *Orchestrator) HealthCheck(target string) *Step
+func (o *Orchestrator) HealthCheck(_ string) *Step
 ```
 
 HealthCheck creates a health check step against the given target.
 
 <a name="Orchestrator.NetworkDNSGet"></a>
 
-### func \(\*Orchestrator\) [NetworkDNSGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L149-L152)
+### func \(\*Orchestrator\) [NetworkDNSGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L154-L157)
 
 ```go
 func (o *Orchestrator) NetworkDNSGet(target string, interfaceName string) *Step
@@ -245,7 +305,7 @@ NetworkDNSGet creates a step that retrieves DNS configuration.
 
 <a name="Orchestrator.NetworkDNSUpdate"></a>
 
-### func \(\*Orchestrator\) [NetworkDNSUpdate](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L163-L168)
+### func \(\*Orchestrator\) [NetworkDNSUpdate](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L168-L173)
 
 ```go
 func (o *Orchestrator) NetworkDNSUpdate(target string, interfaceName string, servers []string, searchDomains []string) *Step
@@ -255,7 +315,7 @@ NetworkDNSUpdate creates a step that updates DNS configuration.
 
 <a name="Orchestrator.NetworkPingDo"></a>
 
-### func \(\*Orchestrator\) [NetworkPingDo](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L181-L184)
+### func \(\*Orchestrator\) [NetworkPingDo](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L186-L189)
 
 ```go
 func (o *Orchestrator) NetworkPingDo(target string, address string) *Step
@@ -265,7 +325,7 @@ NetworkPingDo creates a step that pings an address.
 
 <a name="Orchestrator.NodeDiskGet"></a>
 
-### func \(\*Orchestrator\) [NodeDiskGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L119-L121)
+### func \(\*Orchestrator\) [NodeDiskGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L124-L126)
 
 ```go
 func (o *Orchestrator) NodeDiskGet(target string) *Step
@@ -275,7 +335,7 @@ NodeDiskGet creates a step that retrieves disk usage.
 
 <a name="Orchestrator.NodeHostnameGet"></a>
 
-### func \(\*Orchestrator\) [NodeHostnameGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L89-L91)
+### func \(\*Orchestrator\) [NodeHostnameGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L94-L96)
 
 ```go
 func (o *Orchestrator) NodeHostnameGet(target string) *Step
@@ -285,7 +345,7 @@ NodeHostnameGet creates a step that retrieves the hostname.
 
 <a name="Orchestrator.NodeLoadGet"></a>
 
-### func \(\*Orchestrator\) [NodeLoadGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L139-L141)
+### func \(\*Orchestrator\) [NodeLoadGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L144-L146)
 
 ```go
 func (o *Orchestrator) NodeLoadGet(target string) *Step
@@ -295,7 +355,7 @@ NodeLoadGet creates a step that retrieves load averages.
 
 <a name="Orchestrator.NodeMemoryGet"></a>
 
-### func \(\*Orchestrator\) [NodeMemoryGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L129-L131)
+### func \(\*Orchestrator\) [NodeMemoryGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L134-L136)
 
 ```go
 func (o *Orchestrator) NodeMemoryGet(target string) *Step
@@ -305,7 +365,7 @@ NodeMemoryGet creates a step that retrieves memory stats.
 
 <a name="Orchestrator.NodeStatusGet"></a>
 
-### func \(\*Orchestrator\) [NodeStatusGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L99-L101)
+### func \(\*Orchestrator\) [NodeStatusGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L104-L106)
 
 ```go
 func (o *Orchestrator) NodeStatusGet(target string) *Step
@@ -315,7 +375,7 @@ NodeStatusGet creates a step that retrieves node status.
 
 <a name="Orchestrator.NodeUptimeGet"></a>
 
-### func \(\*Orchestrator\) [NodeUptimeGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L109-L111)
+### func \(\*Orchestrator\) [NodeUptimeGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L114-L116)
 
 ```go
 func (o *Orchestrator) NodeUptimeGet(target string) *Step
@@ -325,7 +385,7 @@ NodeUptimeGet creates a step that retrieves system uptime.
 
 <a name="Orchestrator.Run"></a>
 
-### func \(\*Orchestrator\) [Run](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/orchestrator.go#L51)
+### func \(\*Orchestrator\) [Run](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/orchestrator.go#L59)
 
 ```go
 func (o *Orchestrator) Run() (*Report, error)
@@ -333,9 +393,19 @@ func (o *Orchestrator) Run() (*Report, error)
 
 Run executes the plan and returns a report.
 
+<a name="Orchestrator.TaskFunc"></a>
+
+### func \(\*Orchestrator\) [TaskFunc](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/orchestrator.go#L73-L76)
+
+```go
+func (o *Orchestrator) TaskFunc(name string, fn func(ctx context.Context, r Results) (*sdk.Result, error)) *Step
+```
+
+TaskFunc creates a custom step that receives completed results from prior steps.
+
 <a name="PingResult"></a>
 
-## type [PingResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L65-L69)
+## type [PingResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L66-L71)
 
 PingResult holds typed ping output.
 
@@ -344,12 +414,13 @@ type PingResult struct {
     PacketsSent     int     `json:"packets_sent"`
     PacketsReceived int     `json:"packets_received"`
     PacketLoss      float64 `json:"packet_loss"`
+    Error           string  `json:"error,omitempty"`
 }
 ```
 
 <a name="Report"></a>
 
-## type [Report](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L68-L71)
+## type [Report](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L155-L158)
 
 Report summarizes plan execution.
 
@@ -360,9 +431,20 @@ type Report struct {
 }
 ```
 
+<a name="Report.Decode"></a>
+
+### func \(\*Report\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L162-L165)
+
+```go
+func (r *Report) Decode(name string, v any) error
+```
+
+Decode retrieves the result of a named task from the report and decodes it into
+the given typed struct.
+
 <a name="Report.Summary"></a>
 
-### func \(\*Report\) [Summary](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L74)
+### func \(\*Report\) [Summary](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L189)
 
 ```go
 func (r *Report) Summary() string
@@ -394,7 +476,7 @@ NewResults creates a Results from SDK results. Intended for testing.
 
 <a name="Results.Decode"></a>
 
-### func \(Results\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L46-L49)
+### func \(Results\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L133-L136)
 
 ```go
 func (r Results) Decode(name string, v any) error
@@ -402,6 +484,27 @@ func (r Results) Decode(name string, v any) error
 
 Decode retrieves the result of a named step and decodes it into the given typed
 struct.
+
+<a name="Results.HostResults"></a>
+
+### func \(Results\) [HostResults](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L110-L112)
+
+```go
+func (r Results) HostResults(name string) []HostResult
+```
+
+HostResults returns per\-host results for a broadcast operation. Returns nil for
+unicast operations or unknown step names.
+
+<a name="Results.Status"></a>
+
+### func \(Results\) [Status](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L61-L63)
+
+```go
+func (r Results) Status(name string) TaskStatus
+```
+
+Status returns the terminal status of a completed dependency step.
 
 <a name="Step"></a>
 
@@ -418,7 +521,7 @@ type Step struct {
 
 <a name="Step.After"></a>
 
-### func \(\*Step\) [After](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L32-L34)
+### func \(\*Step\) [After](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L41-L43)
 
 ```go
 func (s *Step) After(deps ...*Step) *Step
@@ -426,9 +529,19 @@ func (s *Step) After(deps ...*Step) *Step
 
 After declares that this step runs after the given steps complete.
 
+<a name="Step.Named"></a>
+
+### func \(\*Step\) [Named](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L32-L34)
+
+```go
+func (s *Step) Named(name string) *Step
+```
+
+Named overrides the auto\-generated step name.
+
 <a name="Step.OnError"></a>
 
-### func \(\*Step\) [OnError](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L74-L76)
+### func \(\*Step\) [OnError](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L120-L122)
 
 ```go
 func (s *Step) OnError(strategy ErrorStrategy) *Step
@@ -436,9 +549,19 @@ func (s *Step) OnError(strategy ErrorStrategy) *Step
 
 OnError sets the error strategy for this step.
 
+<a name="Step.OnlyIfAllChanged"></a>
+
+### func \(\*Step\) [OnlyIfAllChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L87)
+
+```go
+func (s *Step) OnlyIfAllChanged() *Step
+```
+
+OnlyIfAllChanged skips this step unless all dependencies reported changes.
+
 <a name="Step.OnlyIfChanged"></a>
 
-### func \(\*Step\) [OnlyIfChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L55)
+### func \(\*Step\) [OnlyIfChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L64)
 
 ```go
 func (s *Step) OnlyIfChanged() *Step
@@ -446,9 +569,19 @@ func (s *Step) OnlyIfChanged() *Step
 
 OnlyIfChanged skips this step unless a dependency reported changes.
 
+<a name="Step.OnlyIfFailed"></a>
+
+### func \(\*Step\) [OnlyIfFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L71)
+
+```go
+func (s *Step) OnlyIfFailed() *Step
+```
+
+OnlyIfFailed skips this step unless at least one dependency failed.
+
 <a name="Step.Retry"></a>
 
-### func \(\*Step\) [Retry](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L46-L48)
+### func \(\*Step\) [Retry](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L55-L57)
 
 ```go
 func (s *Step) Retry(n int) *Step
@@ -458,12 +591,39 @@ Retry sets the number of retry attempts on failure.
 
 <a name="Step.When"></a>
 
-### func \(\*Step\) [When](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L63-L65)
+### func \(\*Step\) [When](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L109-L111)
 
 ```go
 func (s *Step) When(fn func(Results) bool) *Step
 ```
 
 When adds a guard condition — the step only runs if the predicate returns true.
+
+<a name="TaskStatus"></a>
+
+## type [TaskStatus](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L45)
+
+TaskStatus represents the outcome of a step for guard inspection.
+
+```go
+type TaskStatus int
+```
+
+<a name="TaskStatusUnknown"></a>
+
+```go
+const (
+    // TaskStatusUnknown indicates the step was not found or has not run.
+    TaskStatusUnknown TaskStatus = iota
+    // TaskStatusChanged indicates the step ran and reported changes.
+    TaskStatusChanged
+    // TaskStatusUnchanged indicates the step ran with no changes.
+    TaskStatusUnchanged
+    // TaskStatusSkipped indicates the step was skipped.
+    TaskStatusSkipped
+    // TaskStatusFailed indicates the step failed.
+    TaskStatusFailed
+)
+```
 
 Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)

@@ -12,7 +12,7 @@ tool (
 
 require (
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/osapi-io/osapi-sdk v0.0.0-20260302174834-8a6a689f7f56
+	github.com/osapi-io/osapi-sdk v0.0.0-20260302232128-2eaecd5d82c3
 	github.com/stretchr/testify v1.11.1
 )
 

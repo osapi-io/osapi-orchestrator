@@ -95,7 +95,7 @@ func main() {
 		After(health).
 		Retry(2)
 
-	uptime := o.CommandExec("_any", "uptime", "-s").
+	uptime := o.CommandExec("_any", "uptime").
 		After(health)
 
 	// --- Level 2: Conditional command ---

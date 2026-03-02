@@ -179,9 +179,10 @@ func (s *RendererLipglossTestSuite) TestTaskStart() {
 
 func (s *RendererLipglossTestSuite) TestTaskDone() {
 	tests := []struct {
-		name     string
-		result   sdk.TaskResult
-		contains []string
+		name        string
+		result      sdk.TaskResult
+		contains    []string
+		expectEmpty bool
 	}{
 		{
 			name: "Unchanged task",
@@ -224,6 +225,15 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 				"failed",
 			},
 		},
+		{
+			name: "Skipped task suppressed",
+			result: sdk.TaskResult{
+				Name:     "skipped-task",
+				Status:   sdk.StatusSkipped,
+				Duration: 1 * time.Millisecond,
+			},
+			expectEmpty: true,
+		},
 	}
 
 	for _, tc := range tests {
@@ -234,9 +244,81 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 			r.TaskDone(tc.result)
 
 			output := buf.String()
+
+			if tc.expectEmpty {
+				s.Empty(output)
+				return
+			}
+
 			for _, c := range tc.contains {
 				s.Contains(output, c)
 			}
+		})
+	}
+}
+
+func (s *RendererLipglossTestSuite) TestFormatValue() {
+	tests := []struct {
+		name     string
+		input    any
+		expected string
+	}{
+		{
+			name:     "String value trimmed",
+			input:    "  hello world  ",
+			expected: "hello world",
+		},
+		{
+			name:     "Empty string returns empty",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "Float64 whole number as integer",
+			input:    float64(42),
+			expected: "42",
+		},
+		{
+			name:     "Float64 decimal to two places",
+			input:    float64(3.14159),
+			expected: "3.14",
+		},
+		{
+			name:     "Bool true",
+			input:    true,
+			expected: "true",
+		},
+		{
+			name:     "Bool false",
+			input:    false,
+			expected: "false",
+		},
+		{
+			name:     "Slice shows item count",
+			input:    []any{"a", "b", "c"},
+			expected: "[3 items]",
+		},
+		{
+			name:     "Empty slice shows zero items",
+			input:    []any{},
+			expected: "[0 items]",
+		},
+		{
+			name:     "Map shows key=value pairs",
+			input:    map[string]any{"env": "prod"},
+			expected: "env=prod",
+		},
+		{
+			name:     "Default type uses Sprintf",
+			input:    42,
+			expected: "42",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			got := formatValue(tc.input)
+			s.Equal(tc.expected, got)
 		})
 	}
 }

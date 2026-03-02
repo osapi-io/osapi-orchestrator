@@ -324,6 +324,16 @@ func (s *ResultPublicTestSuite) TestStatus() {
 			lookupName: "nonexistent",
 			wantStatus: orchestrator.TaskStatusUnknown,
 		},
+		{
+			name: "Returns TaskStatusUnknown for unrecognized SDK status",
+			results: sdk.Results{
+				"step-a": &sdk.Result{
+					Status: sdk.Status("unknown-status"),
+				},
+			},
+			lookupName: "step-a",
+			wantStatus: orchestrator.TaskStatusUnknown,
+		},
 	}
 
 	for _, tc := range tests {
@@ -417,6 +427,7 @@ func (s *ResultPublicTestSuite) TestHostResultDecode() {
 	tests := []struct {
 		name        string
 		hostResult  orchestrator.HostResult
+		target      any
 		expectErr   bool
 		errContains string
 		validateFn  func(cmd orchestrator.CommandResult)
@@ -445,16 +456,34 @@ func (s *ResultPublicTestSuite) TestHostResultDecode() {
 			expectErr:   true,
 			errContains: "marshal host result data",
 		},
+		{
+			name: "Returns error when decode target is invalid",
+			hostResult: orchestrator.HostResult{
+				Data: map[string]any{"stdout": "hello"},
+			},
+			target:      &struct{ Stdout chan int }{},
+			expectErr:   true,
+			errContains: "decode host result data",
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			if tc.target != nil {
+				err := tc.hostResult.Decode(tc.target)
+				s.Require().Error(err)
+				s.Contains(err.Error(), tc.errContains)
+
+				return
+			}
+
 			var cmd orchestrator.CommandResult
 			err := tc.hostResult.Decode(&cmd)
 
 			if tc.expectErr {
 				s.Require().Error(err)
 				s.Contains(err.Error(), tc.errContains)
+
 				return
 			}
 
@@ -472,6 +501,7 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 		name        string
 		tasks       []sdk.TaskResult
 		lookupName  string
+		target      any
 		expectErr   bool
 		errContains string
 		validateFn  func(cmd orchestrator.CommandResult)
@@ -514,12 +544,47 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 			expectErr:   true,
 			errContains: "no result data for",
 		},
+		{
+			name: "Returns error when marshal fails",
+			tasks: []sdk.TaskResult{
+				{
+					Name:   "bad-marshal",
+					Status: sdk.StatusChanged,
+					Data:   map[string]any{"fn": func() {}},
+				},
+			},
+			lookupName:  "bad-marshal",
+			expectErr:   true,
+			errContains: "marshal result data",
+		},
+		{
+			name: "Returns error when decode target is invalid",
+			tasks: []sdk.TaskResult{
+				{
+					Name:   "bad-decode",
+					Status: sdk.StatusChanged,
+					Data:   map[string]any{"stdout": "hello"},
+				},
+			},
+			lookupName:  "bad-decode",
+			target:      &struct{ Stdout chan int }{},
+			expectErr:   true,
+			errContains: "decode result data",
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			report := &orchestrator.Report{
 				Tasks: tc.tasks,
+			}
+
+			if tc.target != nil {
+				err := report.Decode(tc.lookupName, tc.target)
+				s.Require().Error(err)
+				s.Contains(err.Error(), tc.errContains)
+
+				return
 			}
 
 			var cmd orchestrator.CommandResult

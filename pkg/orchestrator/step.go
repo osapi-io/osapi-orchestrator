@@ -69,7 +69,7 @@ func (s *Step) OnlyIfChanged() *Step {
 
 // OnlyIfFailed skips this step unless at least one dependency failed.
 func (s *Step) OnlyIfFailed() *Step {
-	s.task.When(func(sdkResults sdk.Results) bool {
+	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
 		for _, dep := range s.task.Dependencies() {
 			if r := sdkResults.Get(dep.Name()); r != nil && r.Status == sdk.StatusFailed {
 				return true
@@ -77,7 +77,7 @@ func (s *Step) OnlyIfFailed() *Step {
 		}
 
 		return false
-	})
+	}, "only-if-failed: no dependency failed")
 
 	return s
 }
@@ -85,7 +85,7 @@ func (s *Step) OnlyIfFailed() *Step {
 // OnlyIfAllChanged skips this step unless all dependencies reported
 // changes.
 func (s *Step) OnlyIfAllChanged() *Step {
-	s.task.When(func(sdkResults sdk.Results) bool {
+	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
 		deps := s.task.Dependencies()
 		if len(deps) == 0 {
 			return false
@@ -99,7 +99,7 @@ func (s *Step) OnlyIfAllChanged() *Step {
 		}
 
 		return true
-	})
+	}, "only-if-all-changed: not all dependencies changed")
 
 	return s
 }
@@ -109,9 +109,9 @@ func (s *Step) OnlyIfAllChanged() *Step {
 func (s *Step) When(
 	fn func(Results) bool,
 ) *Step {
-	s.task.When(func(sdkResults sdk.Results) bool {
+	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
 		return fn(Results{results: sdkResults})
-	})
+	}, "when: guard returned false")
 
 	return s
 }
