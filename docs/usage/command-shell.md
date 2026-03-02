@@ -28,12 +28,13 @@ var result orchestrator.CommandResult
 err := results.Decode("command.shell.execute-1", &result)
 ```
 
-| Field        | Type     | Description                         |
-| ------------ | -------- | ----------------------------------- |
-| `Stdout`     | `string` | Standard output from the command.   |
-| `Stderr`     | `string` | Standard error from the command.    |
-| `ExitCode`   | `int`    | Process exit code (0 = success).    |
-| `DurationMs` | `int64`  | Execution duration in milliseconds. |
+| Field        | Type     | Description                                          |
+| ------------ | -------- | ---------------------------------------------------- |
+| `Stdout`     | `string` | Standard output from the command.                    |
+| `Stderr`     | `string` | Standard error from the command.                     |
+| `ExitCode`   | `int`    | Process exit code (0 = success).                     |
+| `DurationMs` | `int64`  | Execution duration in milliseconds.                  |
+| `Error`      | `string` | Error message if execution failed; empty on success. |
 
 ## Idempotency
 

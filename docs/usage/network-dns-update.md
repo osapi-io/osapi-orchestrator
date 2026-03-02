@@ -30,10 +30,11 @@ var result orchestrator.DNSUpdateResult
 err := results.Decode("network.dns.update-1", &result)
 ```
 
-| Field     | Type     | Description                                    |
-| --------- | -------- | ---------------------------------------------- |
-| `Success` | `bool`   | Whether the update completed successfully.     |
-| `Message` | `string` | Human-readable message describing the outcome. |
+| Field     | Type     | Description                                       |
+| --------- | -------- | ------------------------------------------------- |
+| `Success` | `bool`   | Whether the update completed successfully.        |
+| `Message` | `string` | Human-readable message describing the outcome.    |
+| `Error`   | `string` | Error message if update failed; empty on success. |
 
 ## Idempotency
 

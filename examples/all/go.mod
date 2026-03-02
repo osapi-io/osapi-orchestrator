@@ -23,7 +23,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/oapi-codegen/runtime v1.2.0 // indirect
-	github.com/osapi-io/osapi-sdk v0.0.0-20260302044625-9e8671ed499e // indirect
+	github.com/osapi-io/osapi-sdk v0.0.0-20260302174834-8a6a689f7f56 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect

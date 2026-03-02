@@ -7,13 +7,14 @@ error handling.
 ## Quick Start
 
 ```go
-o := orchestrator.New(url, token)
+o := orchestrator.New(url, token)             // or: New(url, token, orchestrator.WithVerbose())
 
 health := o.HealthCheck("_any")
 hostname := o.NodeHostnameGet("_any").After(health)
 o.CommandExec("_any", "whoami").After(hostname)
 
 report, err := o.Run()
+// report.Decode("command.exec.execute-1", &cmd) to extract typed results
 ```
 
 ## Operations
@@ -38,13 +39,15 @@ report, err := o.Run()
 Every operation returns a `*Step`. Chain methods to declare ordering,
 conditions, and error handling:
 
-| Method          | What it does                                 |
-| --------------- | -------------------------------------------- |
-| `After`         | Run after the given steps complete           |
-| `Retry`         | Retry on failure up to N times               |
-| `OnlyIfChanged` | Skip unless a dependency reported changes    |
-| `When`          | Guard — only run if predicate returns true   |
-| `OnError`       | Set error strategy (`StopAll` or `Continue`) |
+| Method             | What it does                                  |
+| ------------------ | --------------------------------------------- |
+| `After`            | Run after the given steps complete            |
+| `Retry`            | Retry on failure up to N times                |
+| `OnlyIfChanged`    | Skip unless a dependency reported changes     |
+| `OnlyIfFailed`     | Skip unless at least one dependency failed    |
+| `OnlyIfAllChanged` | Skip unless all dependencies reported changes |
+| `When`             | Guard — only run if predicate returns true    |
+| `OnError`          | Set error strategy (`StopAll` or `Continue`)  |
 
 ## Typed Results
 
@@ -56,16 +59,16 @@ err := results.Decode("node.hostname.get-1", &h)
 fmt.Println(h.Hostname)
 ```
 
-| Struct            | Fields                                         |
-| ----------------- | ---------------------------------------------- |
-| `HostnameResult`  | `Hostname`, `Labels`                           |
-| `DiskResult`      | `Disks` (slice of `DiskUsage`)                 |
-| `MemoryResult`    | `Total`, `Free`, `Cached`                      |
-| `LoadResult`      | `Load1`, `Load5`, `Load15`                     |
-| `CommandResult`   | `Stdout`, `Stderr`, `ExitCode`, `DurationMs`   |
-| `PingResult`      | `PacketsSent`, `PacketsReceived`, `PacketLoss` |
-| `DNSConfigResult` | `DNSServers`, `SearchDomains`                  |
-| `DNSUpdateResult` | `Success`, `Message`                           |
+| Struct            | Fields                                                  |
+| ----------------- | ------------------------------------------------------- |
+| `HostnameResult`  | `Hostname`, `Labels`                                    |
+| `DiskResult`      | `Disks` (slice of `DiskUsage`)                          |
+| `MemoryResult`    | `Total`, `Free`, `Cached`                               |
+| `LoadResult`      | `Load1`, `Load5`, `Load15`                              |
+| `CommandResult`   | `Stdout`, `Stderr`, `ExitCode`, `DurationMs`, `Error`   |
+| `PingResult`      | `PacketsSent`, `PacketsReceived`, `PacketLoss`, `Error` |
+| `DNSConfigResult` | `DNSServers`, `SearchDomains`                           |
+| `DNSUpdateResult` | `Success`, `Message`, `Error`                           |
 
 ## Error Strategies
 
