@@ -80,6 +80,54 @@ func (r Results) Status(
 	}
 }
 
+// HostResult represents a single host's response within a broadcast
+// operation.
+type HostResult struct {
+	Hostname string
+	Changed  bool
+	Error    string
+	Data     map[string]any
+}
+
+// Decode unmarshals host-specific data into a typed result struct.
+func (h HostResult) Decode(
+	v any,
+) error {
+	b, err := json.Marshal(h.Data)
+	if err != nil {
+		return fmt.Errorf("marshal host result data: %w", err)
+	}
+
+	if err := json.Unmarshal(b, v); err != nil {
+		return fmt.Errorf("decode host result data: %w", err)
+	}
+
+	return nil
+}
+
+// HostResults returns per-host results for a broadcast operation.
+// Returns nil for unicast operations or unknown step names.
+func (r Results) HostResults(
+	name string,
+) []HostResult {
+	result := r.results.Get(name)
+	if result == nil || len(result.HostResults) == 0 {
+		return nil
+	}
+
+	hrs := make([]HostResult, len(result.HostResults))
+	for i, hr := range result.HostResults {
+		hrs[i] = HostResult{
+			Hostname: hr.Hostname,
+			Changed:  hr.Changed,
+			Error:    hr.Error,
+			Data:     hr.Data,
+		}
+	}
+
+	return hrs
+}
+
 // Decode retrieves the result of a named step and decodes it into
 // the given typed struct.
 func (r Results) Decode(

@@ -297,6 +297,139 @@ func (s *ResultPublicTestSuite) TestStatus() {
 	}
 }
 
+func (s *ResultPublicTestSuite) TestHostResults() {
+	tests := []struct {
+		name       string
+		results    sdk.Results
+		lookupName string
+		wantNil    bool
+		wantLen    int
+		validateFn func(hrs []orchestrator.HostResult)
+	}{
+		{
+			name: "Returns per-host results",
+			results: sdk.Results{
+				"deploy": &sdk.Result{
+					Changed: true,
+					Status:  sdk.StatusChanged,
+					HostResults: []sdk.HostResult{
+						{
+							Hostname: "web-01",
+							Changed:  true,
+							Data: map[string]any{
+								"stdout": "deployed",
+							},
+						},
+						{
+							Hostname: "web-02",
+							Changed:  false,
+							Error:    "timeout",
+						},
+					},
+				},
+			},
+			lookupName: "deploy",
+			wantLen:    2,
+			validateFn: func(hrs []orchestrator.HostResult) {
+				s.Equal("web-01", hrs[0].Hostname)
+				s.True(hrs[0].Changed)
+				s.Empty(hrs[0].Error)
+				s.Equal("web-02", hrs[1].Hostname)
+				s.Equal("timeout", hrs[1].Error)
+			},
+		},
+		{
+			name:       "Returns nil for missing step",
+			results:    sdk.Results{},
+			lookupName: "nonexistent",
+			wantNil:    true,
+		},
+		{
+			name: "Returns nil for unicast result",
+			results: sdk.Results{
+				"get-host": &sdk.Result{
+					Changed: false,
+					Status:  sdk.StatusUnchanged,
+				},
+			},
+			lookupName: "get-host",
+			wantNil:    true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			r := orchestrator.NewResults(tc.results)
+			hrs := r.HostResults(tc.lookupName)
+
+			if tc.wantNil {
+				s.Nil(hrs)
+				return
+			}
+
+			s.Len(hrs, tc.wantLen)
+
+			if tc.validateFn != nil {
+				tc.validateFn(hrs)
+			}
+		})
+	}
+}
+
+func (s *ResultPublicTestSuite) TestHostResultDecode() {
+	tests := []struct {
+		name        string
+		hostResult  orchestrator.HostResult
+		expectErr   bool
+		errContains string
+		validateFn  func(cmd orchestrator.CommandResult)
+	}{
+		{
+			name: "Decodes host result data into typed struct",
+			hostResult: orchestrator.HostResult{
+				Hostname: "web-01",
+				Changed:  true,
+				Data: map[string]any{
+					"stdout":    "hello",
+					"stderr":    "",
+					"exit_code": float64(0),
+				},
+			},
+			validateFn: func(cmd orchestrator.CommandResult) {
+				s.Equal("hello", cmd.Stdout)
+				s.Equal(0, cmd.ExitCode)
+			},
+		},
+		{
+			name: "Returns error for unmarshalable data",
+			hostResult: orchestrator.HostResult{
+				Data: map[string]any{"fn": func() {}},
+			},
+			expectErr:   true,
+			errContains: "marshal host result data",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var cmd orchestrator.CommandResult
+			err := tc.hostResult.Decode(&cmd)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Contains(err.Error(), tc.errContains)
+				return
+			}
+
+			s.Require().NoError(err)
+
+			if tc.validateFn != nil {
+				tc.validateFn(cmd)
+			}
+		})
+	}
+}
+
 func TestResultPublicTestSuite(
 	t *testing.T,
 ) {
