@@ -157,6 +157,34 @@ type Report struct {
 	Duration time.Duration
 }
 
+// Decode retrieves the result of a named task from the report
+// and decodes it into the given typed struct.
+func (r *Report) Decode(
+	name string,
+	v any,
+) error {
+	for _, t := range r.Tasks {
+		if t.Name == name {
+			if t.Data == nil {
+				return fmt.Errorf("no result data for %q", name)
+			}
+
+			b, err := json.Marshal(t.Data)
+			if err != nil {
+				return fmt.Errorf("marshal result data: %w", err)
+			}
+
+			if err := json.Unmarshal(b, v); err != nil {
+				return fmt.Errorf("decode result data: %w", err)
+			}
+
+			return nil
+		}
+	}
+
+	return fmt.Errorf("no result for %q", name)
+}
+
 // Summary returns a human-readable summary of the plan execution.
 func (r *Report) Summary() string {
 	var changed, unchanged, skipped, failed int

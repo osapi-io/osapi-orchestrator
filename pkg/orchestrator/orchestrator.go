@@ -60,6 +60,26 @@ func (o *Orchestrator) Run() (*Report, error) {
 	}, nil
 }
 
+// TaskFunc creates a custom step that receives completed results
+// from prior steps.
+func (o *Orchestrator) TaskFunc(
+	name string,
+	fn func(ctx context.Context, r Results) (*sdk.Result, error),
+) *Step {
+	task := o.plan.TaskFuncWithResults(
+		name,
+		func(
+			ctx context.Context,
+			_ *osapi.Client,
+			results sdk.Results,
+		) (*sdk.Result, error) {
+			return fn(ctx, Results{results: results})
+		},
+	)
+
+	return &Step{task: task}
+}
+
 // nextName generates an auto-incremented task name from the operation.
 func (o *Orchestrator) nextName(
 	operation string,

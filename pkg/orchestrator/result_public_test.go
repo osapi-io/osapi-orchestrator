@@ -467,6 +467,80 @@ func (s *ResultPublicTestSuite) TestHostResultDecode() {
 	}
 }
 
+func (s *ResultPublicTestSuite) TestReportDecode() {
+	tests := []struct {
+		name        string
+		tasks       []sdk.TaskResult
+		lookupName  string
+		expectErr   bool
+		errContains string
+		validateFn  func(cmd orchestrator.CommandResult)
+	}{
+		{
+			name: "Decodes task result from report",
+			tasks: []sdk.TaskResult{
+				{
+					Name:    "run-cmd",
+					Status:  sdk.StatusChanged,
+					Changed: true,
+					Data: map[string]any{
+						"stdout":    "hello",
+						"exit_code": float64(0),
+					},
+				},
+			},
+			lookupName: "run-cmd",
+			validateFn: func(cmd orchestrator.CommandResult) {
+				s.Equal("hello", cmd.Stdout)
+				s.Equal(0, cmd.ExitCode)
+			},
+		},
+		{
+			name:        "Returns error for missing task",
+			tasks:       []sdk.TaskResult{},
+			lookupName:  "nonexistent",
+			expectErr:   true,
+			errContains: "no result for",
+		},
+		{
+			name: "Returns error for nil data",
+			tasks: []sdk.TaskResult{
+				{
+					Name:   "no-data",
+					Status: sdk.StatusSkipped,
+				},
+			},
+			lookupName:  "no-data",
+			expectErr:   true,
+			errContains: "no result data for",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			report := &orchestrator.Report{
+				Tasks: tc.tasks,
+			}
+
+			var cmd orchestrator.CommandResult
+			err := report.Decode(tc.lookupName, &cmd)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Contains(err.Error(), tc.errContains)
+
+				return
+			}
+
+			s.Require().NoError(err)
+
+			if tc.validateFn != nil {
+				tc.validateFn(cmd)
+			}
+		})
+	}
+}
+
 func TestResultPublicTestSuite(
 	t *testing.T,
 ) {
