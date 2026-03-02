@@ -265,6 +265,37 @@ func (s *RendererLipglossTestSuite) TestTaskSkip() {
 	s.Contains(output, "dependency failed")
 }
 
+func (s *RendererLipglossTestSuite) TestFormatDuration() {
+	tests := []struct {
+		name     string
+		d        time.Duration
+		expected string
+	}{
+		{
+			name:     "Pure milliseconds",
+			d:        942191541 * time.Nanosecond,
+			expected: "942ms",
+		},
+		{
+			name:     "Seconds with fractional ms",
+			d:        1035578833 * time.Nanosecond,
+			expected: "1.036s",
+		},
+		{
+			name:     "Clean milliseconds unchanged",
+			d:        230 * time.Millisecond,
+			expected: "230ms",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			got := formatDuration(tc.d)
+			s.Equal(tc.expected, got)
+		})
+	}
+}
+
 func (s *RendererLipglossTestSuite) TestPadTag() {
 	tests := []struct {
 		name       string

@@ -25,6 +25,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
@@ -32,6 +33,9 @@ import (
 
 // tagWidth is the visible width of the longest status tag ([unchanged]).
 const tagWidth = 11
+
+// nameWidth is the column width for task names.
+const nameWidth = 25
 
 // lipglossRenderer implements renderer with colored terminal output.
 type lipglossRenderer struct {
@@ -172,8 +176,9 @@ func (r *lipglossRenderer) TaskStart(
 ) {
 	tag := padTag(r.dim.Render("[start]"), len("[start]"))
 	r.printf(
-		"  %s %-20s %s\n",
+		"  %s %-*s %s\n",
 		tag,
+		nameWidth,
 		name,
 		r.dim.Render(detail),
 	)
@@ -197,11 +202,12 @@ func (r *lipglossRenderer) TaskDone(
 	}
 
 	r.printf(
-		"  %s %-20s %s  %s\n",
+		"  %s %-*s %s  %s\n",
 		tag,
+		nameWidth,
 		result.Name,
 		changedStr,
-		r.dim.Render(result.Duration.String()),
+		r.dim.Render(formatDuration(result.Duration)),
 	)
 }
 
@@ -212,8 +218,9 @@ func (r *lipglossRenderer) TaskRetry(
 ) {
 	tag := padTag(r.yellow.Render("[retry]"), len("[retry]"))
 	r.printf(
-		"  %s %-20s attempt=%d error=%q\n",
+		"  %s %-*s attempt=%d error=%q\n",
 		tag,
+		nameWidth,
 		name,
 		attempt,
 		err,
@@ -227,8 +234,9 @@ func (r *lipglossRenderer) TaskSkip(
 	dimYellow := r.yellow.Faint(true)
 	tag := padTag(dimYellow.Render("[skip]"), len("[skip]"))
 	r.printf(
-		"  %s %-20s reason=%q\n",
+		"  %s %-*s reason=%q\n",
 		tag,
+		nameWidth,
 		name,
 		reason,
 	)
@@ -242,6 +250,13 @@ func (r *lipglossRenderer) printf(
 	a ...any,
 ) {
 	_, _ = fmt.Fprintf(r.w, format, a...)
+}
+
+// formatDuration rounds a duration to millisecond precision for cleaner output.
+func formatDuration(
+	d time.Duration,
+) string {
+	return d.Round(time.Millisecond).String()
 }
 
 // padTag right-pads a styled tag string so the visible width equals tagWidth.
