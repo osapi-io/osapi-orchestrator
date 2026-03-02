@@ -18,43 +18,61 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package orchestrator
+package orchestrator_test
 
-import sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
+import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-// Option configures the Orchestrator.
-type Option func(*config)
-
-type config struct {
-	verbose bool
-}
-
-// WithVerbose enables verbose output showing stdout, stderr, and
-// full response data for all tasks.
-func WithVerbose() Option {
-	return func(c *config) {
-		c.verbose = true
-	}
-}
-
-// ErrorStrategy controls what happens when a step fails.
-type ErrorStrategy int
-
-const (
-	// StopAll halts the entire plan on failure.
-	StopAll ErrorStrategy = iota
-	// Continue skips dependent steps and continues with the rest.
-	Continue
+	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
+	"github.com/stretchr/testify/suite"
 )
 
-// toSDKStrategy maps a porcelain ErrorStrategy to the SDK type.
-func toSDKStrategy(
-	s ErrorStrategy,
-) sdk.ErrorStrategy {
-	switch s {
-	case Continue:
-		return sdk.Continue
-	default:
-		return sdk.StopAll
+type OptionsPublicTestSuite struct {
+	suite.Suite
+}
+
+func (s *OptionsPublicTestSuite) TestWithVerbose() {
+	tests := []struct {
+		name string
+		opts []orchestrator.Option
+	}{
+		{
+			name: "Creates orchestrator without verbose",
+			opts: nil,
+		},
+		{
+			name: "Creates orchestrator with verbose",
+			opts: []orchestrator.Option{orchestrator.WithVerbose()},
+		},
 	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(
+				http.HandlerFunc(func(
+					w http.ResponseWriter,
+					_ *http.Request,
+				) {
+					w.WriteHeader(http.StatusOK)
+				}),
+			)
+			defer server.Close()
+
+			o := orchestrator.New(
+				server.URL,
+				"test-token",
+				tc.opts...,
+			)
+
+			s.NotNil(o)
+		})
+	}
+}
+
+func TestOptionsPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(OptionsPublicTestSuite))
 }

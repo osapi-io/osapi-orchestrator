@@ -40,6 +40,7 @@ const nameWidth = 25
 // lipglossRenderer implements renderer with colored terminal output.
 type lipglossRenderer struct {
 	w       io.Writer
+	verbose bool
 	header  lipgloss.Style
 	magenta lipgloss.Style
 	cyan    lipgloss.Style
@@ -209,6 +210,40 @@ func (r *lipglossRenderer) TaskDone(
 		changedStr,
 		r.dim.Render(formatDuration(result.Duration)),
 	)
+
+	// Always show error detail on failure.
+	if result.Status == sdk.StatusFailed && result.Error != nil {
+		r.printf(
+			"  %s %s\n",
+			strings.Repeat(" ", tagWidth),
+			r.red.Render(result.Error.Error()),
+		)
+	}
+
+	// Verbose mode: show response data on success.
+	if r.verbose && result.Data != nil {
+		r.printResultData(result.Data)
+	}
+}
+
+// printResultData renders key result fields as indented lines.
+func (r *lipglossRenderer) printResultData(
+	data map[string]any,
+) {
+	indent := strings.Repeat(" ", tagWidth+2)
+
+	for _, key := range []string{"stdout", "stderr", "hostname", "error"} {
+		if v, ok := data[key]; ok {
+			str := fmt.Sprintf("%v", v)
+			if str != "" {
+				r.printf(
+					"%s%s\n",
+					indent,
+					r.dim.Render(fmt.Sprintf("%s: %s", key, str)),
+				)
+			}
+		}
+	}
 }
 
 func (r *lipglossRenderer) TaskRetry(

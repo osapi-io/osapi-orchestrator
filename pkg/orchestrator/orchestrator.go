@@ -36,9 +36,16 @@ import (
 func New(
 	url string,
 	token string,
+	opts ...Option,
 ) *Orchestrator {
+	cfg := &config{}
+	for _, o := range opts {
+		o(cfg)
+	}
+
 	client := osapi.New(url, token)
 	r := newLipglossRenderer()
+	r.verbose = cfg.verbose
 	plan := sdk.NewPlan(client, sdk.WithHooks(rendererHooks(r)))
 
 	return &Orchestrator{
