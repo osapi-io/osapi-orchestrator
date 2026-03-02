@@ -58,6 +58,43 @@ func (s *Step) OnlyIfChanged() *Step {
 	return s
 }
 
+// OnlyIfFailed skips this step unless at least one dependency failed.
+func (s *Step) OnlyIfFailed() *Step {
+	s.task.When(func(sdkResults sdk.Results) bool {
+		for _, dep := range s.task.Dependencies() {
+			if r := sdkResults.Get(dep.Name()); r != nil && r.Status == sdk.StatusFailed {
+				return true
+			}
+		}
+
+		return false
+	})
+
+	return s
+}
+
+// OnlyIfAllChanged skips this step unless all dependencies reported
+// changes.
+func (s *Step) OnlyIfAllChanged() *Step {
+	s.task.When(func(sdkResults sdk.Results) bool {
+		deps := s.task.Dependencies()
+		if len(deps) == 0 {
+			return false
+		}
+
+		for _, dep := range deps {
+			r := sdkResults.Get(dep.Name())
+			if r == nil || r.Status != sdk.StatusChanged {
+				return false
+			}
+		}
+
+		return true
+	})
+
+	return s
+}
+
 // When adds a guard condition — the step only runs if the predicate
 // returns true.
 func (s *Step) When(
