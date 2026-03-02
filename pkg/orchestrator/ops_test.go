@@ -139,11 +139,11 @@ func (s *OpsTestSuite) TestHealthCheckAutoNaming() {
 		expected string
 	}{
 		{
-			name:     "First health check gets seq 1",
-			expected: "health-check-1",
+			name:     "First health check has no suffix",
+			expected: "health-check",
 		},
 		{
-			name:     "Second health check gets seq 2",
+			name:     "Second health check gets counter suffix",
 			expected: "health-check-2",
 		},
 	}

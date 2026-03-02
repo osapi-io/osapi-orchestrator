@@ -25,7 +25,7 @@ import sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
 // Orchestrator is the top-level entry point for building and running
 // infrastructure plans.
 type Orchestrator struct {
-	plan     *sdk.Plan
-	seq      int
-	renderer renderer
+	plan      *sdk.Plan
+	nameCount map[string]int
+	renderer  renderer
 }
