@@ -5,11 +5,30 @@ before:
   hooks:
     - go mod tidy
 
+# NOTE: builds are skipped until cmd/main.go exists.
+# When the CLI lands, remove `skip: true` and uncomment the build config.
 builds:
   - skip: true
+  # - env:
+  #     - CGO_ENABLED=0
+  #   goos:
+  #     - linux
+  #     - darwin
+  #     - windows
+  #   ldflags:
+  #     - -s -w -X {{ .ModulePath }}/cmd.date={{ .CommitDate }}
+  #     - -X {{ .ModulePath }}/cmd.commit={{ .Commit }}
+  #     - -X {{ .ModulePath }}/cmd.version={{ .Version }}
+  #     - -X {{ .ModulePath }}/cmd.builtBy=goreleaser
+  #     - -X {{ .ModulePath }}/cmd.treestate={{ .IsGitDirty }}
 
+archives:
+  - formats:
+    - binary
 checksum:
   name_template: 'checksums.txt'
+snapshot:
+  version_template: "{{ incpatch .Version }}.dev"
 changelog:
   sort: asc
   filters:
@@ -42,3 +61,5 @@ changelog:
       order: 5
     - title: Others
       order: 999
+# universal_binaries:
+#   - replace: true
