@@ -17,6 +17,12 @@ of the [osapi-sdk][] engine.
 ## 📦 Install
 
 ```bash
+go install github.com/osapi-io/osapi-orchestrator@latest
+```
+
+As a library dependency:
+
+```bash
 go get github.com/osapi-io/osapi-orchestrator
 ```
 
