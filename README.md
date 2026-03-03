@@ -14,13 +14,13 @@ A Go package for orchestrating operations across [OSAPI][]-managed hosts —
 typed operations, chaining, conditions, and result decoding built on top
 of the [osapi-sdk][] engine.
 
-## Install
+## 📦 Install
 
 ```bash
 go get github.com/osapi-io/osapi-orchestrator
 ```
 
-## Features
+## ✨ Features
 
 Typed constructors, typed results, and chainable step methods. See the
 [usage docs](docs/usage/README.md) for full details, examples, and
@@ -164,7 +164,7 @@ for _, hr := range hrs {
 }
 ```
 
-## Examples
+## 📋 Examples
 
 Each example is a standalone Go program you can read and run.
 
@@ -178,13 +178,13 @@ OSAPI_TOKEN="<jwt>" go run main.go                # normal output
 OSAPI_TOKEN="<jwt>" OSAPI_VERBOSE=1 go run main.go  # verbose output
 ```
 
-## Contributing
+## 🤝 Contributing
 
 See the [Development](docs/development.md) guide for prerequisites, setup,
 and conventions. See the [Contributing](docs/contributing.md) guide before
 submitting a PR.
 
-## License
+## 📄 License
 
 The [MIT][] License.
 
