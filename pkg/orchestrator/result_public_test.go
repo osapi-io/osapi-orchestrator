@@ -122,6 +122,43 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			errContains: "no result for",
 		},
 		{
+			name: "Decodes command result with error field",
+			results: sdk.Results{
+				"run-cmd": &sdk.Result{
+					Changed: true,
+					Data: map[string]any{
+						"stdout":      "partial output",
+						"stderr":      "command not found",
+						"exit_code":   float64(127),
+						"duration_ms": float64(50),
+						"error":       "exec failed",
+					},
+				},
+			},
+			lookupName: "run-cmd",
+			target:     &orchestrator.CommandResult{},
+			validateFunc: func() {
+				r := orchestrator.NewResults(sdk.Results{
+					"run-cmd": &sdk.Result{
+						Changed: true,
+						Data: map[string]any{
+							"stdout":      "partial output",
+							"stderr":      "command not found",
+							"exit_code":   float64(127),
+							"duration_ms": float64(50),
+							"error":       "exec failed",
+						},
+					},
+				})
+				var cmd orchestrator.CommandResult
+				err := r.Decode("run-cmd", &cmd)
+				s.Require().NoError(err)
+				s.Equal("exec failed", cmd.Error)
+				s.Equal(127, cmd.ExitCode)
+				s.Equal("command not found", cmd.Stderr)
+			},
+		},
+		{
 			name: "Returns error when unmarshal fails",
 			results: sdk.Results{
 				"bad-task": &sdk.Result{
@@ -228,6 +265,343 @@ func (s *ResultPublicTestSuite) TestReportSummary() {
 			}
 
 			s.Equal(tc.expected, report.Summary())
+		})
+	}
+}
+
+func (s *ResultPublicTestSuite) TestStatus() {
+	tests := []struct {
+		name       string
+		results    sdk.Results
+		lookupName string
+		wantStatus orchestrator.TaskStatus
+	}{
+		{
+			name: "Returns TaskStatusChanged for changed result",
+			results: sdk.Results{
+				"step-a": &sdk.Result{
+					Changed: true,
+					Status:  sdk.StatusChanged,
+				},
+			},
+			lookupName: "step-a",
+			wantStatus: orchestrator.TaskStatusChanged,
+		},
+		{
+			name: "Returns TaskStatusUnchanged for unchanged result",
+			results: sdk.Results{
+				"step-a": &sdk.Result{
+					Changed: false,
+					Status:  sdk.StatusUnchanged,
+				},
+			},
+			lookupName: "step-a",
+			wantStatus: orchestrator.TaskStatusUnchanged,
+		},
+		{
+			name: "Returns TaskStatusSkipped for skipped result",
+			results: sdk.Results{
+				"step-a": &sdk.Result{
+					Status: sdk.StatusSkipped,
+				},
+			},
+			lookupName: "step-a",
+			wantStatus: orchestrator.TaskStatusSkipped,
+		},
+		{
+			name: "Returns TaskStatusFailed for failed result",
+			results: sdk.Results{
+				"step-a": &sdk.Result{
+					Status: sdk.StatusFailed,
+				},
+			},
+			lookupName: "step-a",
+			wantStatus: orchestrator.TaskStatusFailed,
+		},
+		{
+			name:       "Returns TaskStatusUnknown for missing result",
+			results:    sdk.Results{},
+			lookupName: "nonexistent",
+			wantStatus: orchestrator.TaskStatusUnknown,
+		},
+		{
+			name: "Returns TaskStatusUnknown for unrecognized SDK status",
+			results: sdk.Results{
+				"step-a": &sdk.Result{
+					Status: sdk.Status("unknown-status"),
+				},
+			},
+			lookupName: "step-a",
+			wantStatus: orchestrator.TaskStatusUnknown,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			r := orchestrator.NewResults(tc.results)
+			s.Equal(tc.wantStatus, r.Status(tc.lookupName))
+		})
+	}
+}
+
+func (s *ResultPublicTestSuite) TestHostResults() {
+	tests := []struct {
+		name       string
+		results    sdk.Results
+		lookupName string
+		wantNil    bool
+		wantLen    int
+		validateFn func(hrs []orchestrator.HostResult)
+	}{
+		{
+			name: "Returns per-host results",
+			results: sdk.Results{
+				"deploy": &sdk.Result{
+					Changed: true,
+					Status:  sdk.StatusChanged,
+					HostResults: []sdk.HostResult{
+						{
+							Hostname: "web-01",
+							Changed:  true,
+							Data: map[string]any{
+								"stdout": "deployed",
+							},
+						},
+						{
+							Hostname: "web-02",
+							Changed:  false,
+							Error:    "timeout",
+						},
+					},
+				},
+			},
+			lookupName: "deploy",
+			wantLen:    2,
+			validateFn: func(hrs []orchestrator.HostResult) {
+				s.Equal("web-01", hrs[0].Hostname)
+				s.True(hrs[0].Changed)
+				s.Empty(hrs[0].Error)
+				s.Equal("web-02", hrs[1].Hostname)
+				s.Equal("timeout", hrs[1].Error)
+			},
+		},
+		{
+			name:       "Returns nil for missing step",
+			results:    sdk.Results{},
+			lookupName: "nonexistent",
+			wantNil:    true,
+		},
+		{
+			name: "Returns nil for unicast result",
+			results: sdk.Results{
+				"get-host": &sdk.Result{
+					Changed: false,
+					Status:  sdk.StatusUnchanged,
+				},
+			},
+			lookupName: "get-host",
+			wantNil:    true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			r := orchestrator.NewResults(tc.results)
+			hrs := r.HostResults(tc.lookupName)
+
+			if tc.wantNil {
+				s.Nil(hrs)
+				return
+			}
+
+			s.Len(hrs, tc.wantLen)
+
+			if tc.validateFn != nil {
+				tc.validateFn(hrs)
+			}
+		})
+	}
+}
+
+func (s *ResultPublicTestSuite) TestHostResultDecode() {
+	tests := []struct {
+		name        string
+		hostResult  orchestrator.HostResult
+		target      any
+		expectErr   bool
+		errContains string
+		validateFn  func(cmd orchestrator.CommandResult)
+	}{
+		{
+			name: "Decodes host result data into typed struct",
+			hostResult: orchestrator.HostResult{
+				Hostname: "web-01",
+				Changed:  true,
+				Data: map[string]any{
+					"stdout":    "hello",
+					"stderr":    "",
+					"exit_code": float64(0),
+				},
+			},
+			validateFn: func(cmd orchestrator.CommandResult) {
+				s.Equal("hello", cmd.Stdout)
+				s.Equal(0, cmd.ExitCode)
+			},
+		},
+		{
+			name: "Returns error for unmarshalable data",
+			hostResult: orchestrator.HostResult{
+				Data: map[string]any{"fn": func() {}},
+			},
+			expectErr:   true,
+			errContains: "marshal host result data",
+		},
+		{
+			name: "Returns error when decode target is invalid",
+			hostResult: orchestrator.HostResult{
+				Data: map[string]any{"stdout": "hello"},
+			},
+			target:      &struct{ Stdout chan int }{},
+			expectErr:   true,
+			errContains: "decode host result data",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.target != nil {
+				err := tc.hostResult.Decode(tc.target)
+				s.Require().Error(err)
+				s.Contains(err.Error(), tc.errContains)
+
+				return
+			}
+
+			var cmd orchestrator.CommandResult
+			err := tc.hostResult.Decode(&cmd)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Contains(err.Error(), tc.errContains)
+
+				return
+			}
+
+			s.Require().NoError(err)
+
+			if tc.validateFn != nil {
+				tc.validateFn(cmd)
+			}
+		})
+	}
+}
+
+func (s *ResultPublicTestSuite) TestReportDecode() {
+	tests := []struct {
+		name        string
+		tasks       []sdk.TaskResult
+		lookupName  string
+		target      any
+		expectErr   bool
+		errContains string
+		validateFn  func(cmd orchestrator.CommandResult)
+	}{
+		{
+			name: "Decodes task result from report",
+			tasks: []sdk.TaskResult{
+				{
+					Name:    "run-cmd",
+					Status:  sdk.StatusChanged,
+					Changed: true,
+					Data: map[string]any{
+						"stdout":    "hello",
+						"exit_code": float64(0),
+					},
+				},
+			},
+			lookupName: "run-cmd",
+			validateFn: func(cmd orchestrator.CommandResult) {
+				s.Equal("hello", cmd.Stdout)
+				s.Equal(0, cmd.ExitCode)
+			},
+		},
+		{
+			name:        "Returns error for missing task",
+			tasks:       []sdk.TaskResult{},
+			lookupName:  "nonexistent",
+			expectErr:   true,
+			errContains: "no result for",
+		},
+		{
+			name: "Returns error for nil data",
+			tasks: []sdk.TaskResult{
+				{
+					Name:   "no-data",
+					Status: sdk.StatusSkipped,
+				},
+			},
+			lookupName:  "no-data",
+			expectErr:   true,
+			errContains: "no result data for",
+		},
+		{
+			name: "Returns error when marshal fails",
+			tasks: []sdk.TaskResult{
+				{
+					Name:   "bad-marshal",
+					Status: sdk.StatusChanged,
+					Data:   map[string]any{"fn": func() {}},
+				},
+			},
+			lookupName:  "bad-marshal",
+			expectErr:   true,
+			errContains: "marshal result data",
+		},
+		{
+			name: "Returns error when decode target is invalid",
+			tasks: []sdk.TaskResult{
+				{
+					Name:   "bad-decode",
+					Status: sdk.StatusChanged,
+					Data:   map[string]any{"stdout": "hello"},
+				},
+			},
+			lookupName:  "bad-decode",
+			target:      &struct{ Stdout chan int }{},
+			expectErr:   true,
+			errContains: "decode result data",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			report := &orchestrator.Report{
+				Tasks: tc.tasks,
+			}
+
+			if tc.target != nil {
+				err := report.Decode(tc.lookupName, tc.target)
+				s.Require().Error(err)
+				s.Contains(err.Error(), tc.errContains)
+
+				return
+			}
+
+			var cmd orchestrator.CommandResult
+			err := report.Decode(tc.lookupName, &cmd)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Contains(err.Error(), tc.errContains)
+
+				return
+			}
+
+			s.Require().NoError(err)
+
+			if tc.validateFn != nil {
+				tc.validateFn(cmd)
+			}
 		})
 	}
 }

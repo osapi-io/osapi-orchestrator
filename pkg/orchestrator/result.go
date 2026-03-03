@@ -41,6 +41,93 @@ func NewResults(
 	return Results{results: sdkResults}
 }
 
+// TaskStatus represents the outcome of a step for guard inspection.
+type TaskStatus int
+
+const (
+	// TaskStatusUnknown indicates the step was not found or has not run.
+	TaskStatusUnknown TaskStatus = iota
+	// TaskStatusChanged indicates the step ran and reported changes.
+	TaskStatusChanged
+	// TaskStatusUnchanged indicates the step ran with no changes.
+	TaskStatusUnchanged
+	// TaskStatusSkipped indicates the step was skipped.
+	TaskStatusSkipped
+	// TaskStatusFailed indicates the step failed.
+	TaskStatusFailed
+)
+
+// Status returns the terminal status of a completed dependency step.
+func (r Results) Status(
+	name string,
+) TaskStatus {
+	result := r.results.Get(name)
+	if result == nil {
+		return TaskStatusUnknown
+	}
+
+	switch result.Status {
+	case sdk.StatusChanged:
+		return TaskStatusChanged
+	case sdk.StatusUnchanged:
+		return TaskStatusUnchanged
+	case sdk.StatusSkipped:
+		return TaskStatusSkipped
+	case sdk.StatusFailed:
+		return TaskStatusFailed
+	default:
+		return TaskStatusUnknown
+	}
+}
+
+// HostResult represents a single host's response within a broadcast
+// operation.
+type HostResult struct {
+	Hostname string
+	Changed  bool
+	Error    string
+	Data     map[string]any
+}
+
+// Decode unmarshals host-specific data into a typed result struct.
+func (h HostResult) Decode(
+	v any,
+) error {
+	b, err := json.Marshal(h.Data)
+	if err != nil {
+		return fmt.Errorf("marshal host result data: %w", err)
+	}
+
+	if err := json.Unmarshal(b, v); err != nil {
+		return fmt.Errorf("decode host result data: %w", err)
+	}
+
+	return nil
+}
+
+// HostResults returns per-host results for a broadcast operation.
+// Returns nil for unicast operations or unknown step names.
+func (r Results) HostResults(
+	name string,
+) []HostResult {
+	result := r.results.Get(name)
+	if result == nil || len(result.HostResults) == 0 {
+		return nil
+	}
+
+	hrs := make([]HostResult, len(result.HostResults))
+	for i, hr := range result.HostResults {
+		hrs[i] = HostResult{
+			Hostname: hr.Hostname,
+			Changed:  hr.Changed,
+			Error:    hr.Error,
+			Data:     hr.Data,
+		}
+	}
+
+	return hrs
+}
+
 // Decode retrieves the result of a named step and decodes it into
 // the given typed struct.
 func (r Results) Decode(
@@ -68,6 +155,34 @@ func (r Results) Decode(
 type Report struct {
 	Tasks    []sdk.TaskResult
 	Duration time.Duration
+}
+
+// Decode retrieves the result of a named task from the report
+// and decodes it into the given typed struct.
+func (r *Report) Decode(
+	name string,
+	v any,
+) error {
+	for _, t := range r.Tasks {
+		if t.Name == name {
+			if t.Data == nil {
+				return fmt.Errorf("no result data for %q", name)
+			}
+
+			b, err := json.Marshal(t.Data)
+			if err != nil {
+				return fmt.Errorf("marshal result data: %w", err)
+			}
+
+			if err := json.Unmarshal(b, v); err != nil {
+				return fmt.Errorf("decode result data: %w", err)
+			}
+
+			return nil
+		}
+	}
+
+	return fmt.Errorf("no result for %q", name)
 }
 
 // Summary returns a human-readable summary of the plan execution.

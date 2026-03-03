@@ -25,6 +25,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
@@ -33,9 +34,13 @@ import (
 // tagWidth is the visible width of the longest status tag ([unchanged]).
 const tagWidth = 11
 
+// nameWidth is the column width for task names.
+const nameWidth = 25
+
 // lipglossRenderer implements renderer with colored terminal output.
 type lipglossRenderer struct {
 	w       io.Writer
+	verbose bool
 	header  lipgloss.Style
 	magenta lipgloss.Style
 	cyan    lipgloss.Style
@@ -172,8 +177,9 @@ func (r *lipglossRenderer) TaskStart(
 ) {
 	tag := padTag(r.dim.Render("[start]"), len("[start]"))
 	r.printf(
-		"  %s %-20s %s\n",
+		"  %s %-*s %s\n",
 		tag,
+		nameWidth,
 		name,
 		r.dim.Render(detail),
 	)
@@ -182,6 +188,12 @@ func (r *lipglossRenderer) TaskStart(
 func (r *lipglossRenderer) TaskDone(
 	result sdk.TaskResult,
 ) {
+	// Suppress the [skipped] line — the [skip] line from OnSkip
+	// already shows the reason and is more useful.
+	if result.Status == sdk.StatusSkipped {
+		return
+	}
+
 	label := fmt.Sprintf("[%s]", result.Status)
 
 	var tag string
@@ -197,12 +209,118 @@ func (r *lipglossRenderer) TaskDone(
 	}
 
 	r.printf(
-		"  %s %-20s %s  %s\n",
+		"  %s %-*s %s  %s\n",
 		tag,
+		nameWidth,
 		result.Name,
 		changedStr,
-		r.dim.Render(result.Duration.String()),
+		r.dim.Render(formatDuration(result.Duration)),
 	)
+
+	// Always show error detail on failure.
+	if result.Status == sdk.StatusFailed && result.Error != nil {
+		r.printf(
+			"  %s %s\n",
+			strings.Repeat(" ", tagWidth),
+			r.red.Render(result.Error.Error()),
+		)
+	}
+
+	// Always show per-host results for broadcast operations.
+	if len(result.HostResults) > 0 {
+		r.printHostResults(result.HostResults)
+	}
+
+	// Verbose mode: show response data on success.
+	if r.verbose && result.Data != nil {
+		r.printResultData(result.Data)
+	}
+}
+
+// printHostResults renders per-host results for broadcast operations.
+func (r *lipglossRenderer) printHostResults(
+	hostResults []sdk.HostResult,
+) {
+	indent := strings.Repeat(" ", tagWidth+2)
+
+	for _, hr := range hostResults {
+		status := r.green.Render("ok")
+		if hr.Error != "" {
+			status = r.red.Render("error: " + hr.Error)
+		}
+
+		changed := ""
+		if hr.Changed {
+			changed = r.greenB.Render(" changed")
+		}
+
+		r.printf(
+			"%s%s %s%s\n",
+			indent,
+			r.dim.Render(hr.Hostname),
+			status,
+			changed,
+		)
+	}
+}
+
+// skipKeys are internal fields that clutter verbose output.
+var skipKeys = map[string]bool{
+	"duration_ms": true,
+	"exit_code":   true,
+	"stderr":      true,
+}
+
+// printResultData renders result data fields as indented lines.
+func (r *lipglossRenderer) printResultData(
+	data map[string]any,
+) {
+	indent := strings.Repeat(" ", tagWidth+2)
+
+	for key, v := range data {
+		if skipKeys[key] {
+			continue
+		}
+
+		str := formatValue(v)
+		if str != "" {
+			r.printf(
+				"%s%s\n",
+				indent,
+				r.dim.Render(fmt.Sprintf("%s: %s", key, str)),
+			)
+		}
+	}
+}
+
+// formatValue renders a value for display, keeping simple values inline
+// and omitting complex nested structures.
+func formatValue(
+	v any,
+) string {
+	switch val := v.(type) {
+	case string:
+		return strings.TrimSpace(val)
+	case float64:
+		if val == float64(int64(val)) {
+			return fmt.Sprintf("%d", int64(val))
+		}
+
+		return fmt.Sprintf("%.2f", val)
+	case bool:
+		return fmt.Sprintf("%v", val)
+	case []any:
+		return fmt.Sprintf("[%d items]", len(val))
+	case map[string]any:
+		parts := make([]string, 0, len(val))
+		for k, inner := range val {
+			parts = append(parts, fmt.Sprintf("%s=%v", k, inner))
+		}
+
+		return strings.Join(parts, " ")
+	default:
+		return fmt.Sprintf("%v", v)
+	}
 }
 
 func (r *lipglossRenderer) TaskRetry(
@@ -212,8 +330,9 @@ func (r *lipglossRenderer) TaskRetry(
 ) {
 	tag := padTag(r.yellow.Render("[retry]"), len("[retry]"))
 	r.printf(
-		"  %s %-20s attempt=%d error=%q\n",
+		"  %s %-*s attempt=%d error=%q\n",
 		tag,
+		nameWidth,
 		name,
 		attempt,
 		err,
@@ -227,8 +346,9 @@ func (r *lipglossRenderer) TaskSkip(
 	dimYellow := r.yellow.Faint(true)
 	tag := padTag(dimYellow.Render("[skip]"), len("[skip]"))
 	r.printf(
-		"  %s %-20s reason=%q\n",
+		"  %s %-*s reason=%q\n",
 		tag,
+		nameWidth,
 		name,
 		reason,
 	)
@@ -242,6 +362,13 @@ func (r *lipglossRenderer) printf(
 	a ...any,
 ) {
 	_, _ = fmt.Fprintf(r.w, format, a...)
+}
+
+// formatDuration rounds a duration to millisecond precision for cleaner output.
+func formatDuration(
+	d time.Duration,
+) string {
+	return d.Round(time.Millisecond).String()
 }
 
 // padTag right-pads a styled tag string so the visible width equals tagWidth.

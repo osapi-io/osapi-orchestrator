@@ -18,14 +18,61 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package orchestrator
+package orchestrator_test
 
-import sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
+import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-// Orchestrator is the top-level entry point for building and running
-// infrastructure plans.
-type Orchestrator struct {
-	plan      *sdk.Plan
-	nameCount map[string]int
-	renderer  renderer
+	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
+	"github.com/stretchr/testify/suite"
+)
+
+type OptionsPublicTestSuite struct {
+	suite.Suite
+}
+
+func (s *OptionsPublicTestSuite) TestWithVerbose() {
+	tests := []struct {
+		name string
+		opts []orchestrator.Option
+	}{
+		{
+			name: "Creates orchestrator without verbose",
+			opts: nil,
+		},
+		{
+			name: "Creates orchestrator with verbose",
+			opts: []orchestrator.Option{orchestrator.WithVerbose()},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(
+				http.HandlerFunc(func(
+					w http.ResponseWriter,
+					_ *http.Request,
+				) {
+					w.WriteHeader(http.StatusOK)
+				}),
+			)
+			defer server.Close()
+
+			o := orchestrator.New(
+				server.URL,
+				"test-token",
+				tc.opts...,
+			)
+
+			s.NotNil(o)
+		})
+	}
+}
+
+func TestOptionsPublicTestSuite(
+	t *testing.T,
+) {
+	suite.Run(t, new(OptionsPublicTestSuite))
 }

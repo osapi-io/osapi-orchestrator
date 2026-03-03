@@ -39,8 +39,8 @@ github.com/muesli/termenv v0.16.0 h1:S5AlUN9dENB57rsbnkPyfdGuWIlkmzJjbFf0Tf5FWUc
 github.com/muesli/termenv v0.16.0/go.mod h1:ZRfOIKPFDYQoDFF4Olj7/QJbW60Ol/kL1pU3VfY/Cnk=
 github.com/oapi-codegen/runtime v1.2.0 h1:RvKc1CVS1QeKSNzO97FBQbSMZyQ8s6rZd+LpmzwHMP4=
 github.com/oapi-codegen/runtime v1.2.0/go.mod h1:Y7ZhmmlE8ikZOmuHRRndiIm7nf3xcVv+YMweKgG1DT0=
-github.com/osapi-io/osapi-sdk v0.0.0-20260302000509-102e4a7f342f h1:codX88Y/ZkvDYp2erlmaIQjRnEBod4pIcqctqXK/0zc=
-github.com/osapi-io/osapi-sdk v0.0.0-20260302000509-102e4a7f342f/go.mod h1:bk9s5LKXaf4c2I1FAf7T7xDjn2ZqZ56Mtjoo7Ce8e6Q=
+github.com/osapi-io/osapi-sdk v0.0.0-20260302232128-2eaecd5d82c3 h1:WiEtz4/WXYh0/eKjlOzC4DVOnXzId3AIg3pjJYeSiRs=
+github.com/osapi-io/osapi-sdk v0.0.0-20260302232128-2eaecd5d82c3/go.mod h1:5Y45ymBR4BcxJTOJ7WhqYTDHXxtlQRW7Sr3G52pfMdI=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

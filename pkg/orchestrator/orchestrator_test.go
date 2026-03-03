@@ -36,33 +36,51 @@ type OrchestratorTestSuite struct {
 }
 
 func (s *OrchestratorTestSuite) TestNextName() {
-	o := &Orchestrator{}
-
 	tests := []struct {
 		name      string
 		operation string
+		params    map[string]any
 		expected  string
 	}{
 		{
-			name:      "First call increments to 1",
-			operation: "node.hostname.get",
-			expected:  "node.hostname.get-1",
+			name:      "Maps operation to friendly name",
+			operation: opNodeHostnameGet,
+			expected:  "get-hostname",
 		},
 		{
-			name:      "Second call increments to 2",
-			operation: "node.disk.get",
-			expected:  "node.disk.get-2",
+			name:      "Different operation gets its friendly name",
+			operation: opNodeDiskGet,
+			expected:  "get-disk",
 		},
 		{
-			name:      "Third call increments to 3",
-			operation: "node.hostname.get",
-			expected:  "node.hostname.get-3",
+			name:      "Duplicate friendly name gets counter suffix",
+			operation: opNodeHostnameGet,
+			expected:  "get-hostname-2",
+		},
+		{
+			name:      "Command includes command name",
+			operation: opCommandExec,
+			params:    map[string]any{"command": "uptime"},
+			expected:  "run-uptime",
+		},
+		{
+			name:      "Duplicate command gets counter suffix",
+			operation: opCommandExec,
+			params:    map[string]any{"command": "uptime"},
+			expected:  "run-uptime-2",
+		},
+		{
+			name:      "Unknown operation falls back to raw name",
+			operation: "custom.op",
+			expected:  "custom.op",
 		},
 	}
 
+	o := &Orchestrator{nameCount: make(map[string]int)}
+
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			got := o.nextName(tc.operation)
+			got := o.nextName(tc.operation, tc.params)
 			s.Equal(tc.expected, got)
 		})
 	}

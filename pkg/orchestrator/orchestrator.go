@@ -36,14 +36,22 @@ import (
 func New(
 	url string,
 	token string,
+	opts ...Option,
 ) *Orchestrator {
+	cfg := &config{}
+	for _, o := range opts {
+		o(cfg)
+	}
+
 	client := osapi.New(url, token)
 	r := newLipglossRenderer()
+	r.verbose = cfg.verbose
 	plan := sdk.NewPlan(client, sdk.WithHooks(rendererHooks(r)))
 
 	return &Orchestrator{
-		plan:     plan,
-		renderer: r,
+		plan:      plan,
+		nameCount: make(map[string]int),
+		renderer:  r,
 	}
 }
 
@@ -60,13 +68,64 @@ func (o *Orchestrator) Run() (*Report, error) {
 	}, nil
 }
 
-// nextName generates an auto-incremented task name from the operation.
+// TaskFunc creates a custom step that receives completed results
+// from prior steps.
+func (o *Orchestrator) TaskFunc(
+	name string,
+	fn func(ctx context.Context, r Results) (*sdk.Result, error),
+) *Step {
+	task := o.plan.TaskFuncWithResults(
+		name,
+		func(
+			ctx context.Context,
+			_ *osapi.Client,
+			results sdk.Results,
+		) (*sdk.Result, error) {
+			return fn(ctx, Results{results: results})
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// friendlyNames maps operation strings to short, human-readable prefixes.
+var friendlyNames = map[string]string{
+	opNodeHostnameGet:  "get-hostname",
+	opNodeStatusGet:    "get-status",
+	opNodeUptimeGet:    "get-uptime",
+	opNodeDiskGet:      "get-disk",
+	opNodeMemoryGet:    "get-memory",
+	opNodeLoadGet:      "get-load",
+	opNetworkDNSGet:    "get-dns",
+	opNetworkDNSUpdate: "update-dns",
+	opNetworkPingDo:    "ping",
+	opCommandExec:      "run",
+	opCommandShell:     "shell",
+}
+
+// nextName generates a human-readable task name from the operation.
+// For command operations, appends the command name (e.g. "run-uptime").
+// Appends a counter suffix on collision (e.g. "run-echo-2").
 func (o *Orchestrator) nextName(
 	operation string,
+	params map[string]any,
 ) string {
-	o.seq++
+	prefix := friendlyNames[operation]
+	if prefix == "" {
+		prefix = operation
+	}
 
-	return fmt.Sprintf("%s-%d", operation, o.seq)
+	// For command ops, include the command name.
+	if cmd, ok := params["command"].(string); ok && cmd != "" {
+		prefix = fmt.Sprintf("%s-%s", prefix, cmd)
+	}
+
+	o.nameCount[prefix]++
+	if o.nameCount[prefix] > 1 {
+		return fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
+	}
+
+	return prefix
 }
 
 // rendererHooks translates SDK hook callbacks into renderer calls.

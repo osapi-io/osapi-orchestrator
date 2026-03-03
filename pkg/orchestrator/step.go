@@ -28,6 +28,15 @@ type Step struct {
 	task *sdk.Task
 }
 
+// Named overrides the auto-generated step name.
+func (s *Step) Named(
+	name string,
+) *Step {
+	s.task.SetName(name)
+
+	return s
+}
+
 // After declares that this step runs after the given steps complete.
 func (s *Step) After(
 	deps ...*Step,
@@ -58,14 +67,51 @@ func (s *Step) OnlyIfChanged() *Step {
 	return s
 }
 
+// OnlyIfFailed skips this step unless at least one dependency failed.
+func (s *Step) OnlyIfFailed() *Step {
+	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+		for _, dep := range s.task.Dependencies() {
+			if r := sdkResults.Get(dep.Name()); r != nil && r.Status == sdk.StatusFailed {
+				return true
+			}
+		}
+
+		return false
+	}, "only-if-failed: no dependency failed")
+
+	return s
+}
+
+// OnlyIfAllChanged skips this step unless all dependencies reported
+// changes.
+func (s *Step) OnlyIfAllChanged() *Step {
+	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+		deps := s.task.Dependencies()
+		if len(deps) == 0 {
+			return false
+		}
+
+		for _, dep := range deps {
+			r := sdkResults.Get(dep.Name())
+			if r == nil || r.Status != sdk.StatusChanged {
+				return false
+			}
+		}
+
+		return true
+	}, "only-if-all-changed: not all dependencies changed")
+
+	return s
+}
+
 // When adds a guard condition — the step only runs if the predicate
 // returns true.
 func (s *Step) When(
 	fn func(Results) bool,
 ) *Step {
-	s.task.When(func(sdkResults sdk.Results) bool {
+	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
 		return fn(Results{results: sdkResults})
-	})
+	}, "when: guard returned false")
 
 	return s
 }

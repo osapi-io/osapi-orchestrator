@@ -21,12 +21,15 @@
 package orchestrator_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
+	sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
 type OrchestratorPublicTestSuite struct {
@@ -63,6 +66,46 @@ func (s *OrchestratorPublicTestSuite) TestRunEmptyPlan() {
 	s.Require().NoError(err)
 	s.NotNil(report)
 	s.Empty(report.Tasks)
+}
+
+func (s *OrchestratorPublicTestSuite) TestTaskFuncReturnsStep() {
+	o := orchestrator.New(s.server.URL, "test-token")
+
+	step := o.TaskFunc(
+		"summarize",
+		func(
+			_ context.Context,
+			_ orchestrator.Results,
+		) (*sdk.Result, error) {
+			return &sdk.Result{Changed: true}, nil
+		},
+	)
+
+	s.NotNil(step)
+}
+
+func (s *OrchestratorPublicTestSuite) TestTaskFuncExecutes() {
+	o := orchestrator.New(s.server.URL, "test-token")
+
+	var called bool
+	o.TaskFunc(
+		"custom",
+		func(
+			_ context.Context,
+			_ orchestrator.Results,
+		) (*sdk.Result, error) {
+			called = true
+			return &sdk.Result{Changed: true, Data: map[string]any{"key": "val"}}, nil
+		},
+	)
+
+	report, err := o.Run()
+
+	s.Require().NoError(err)
+	s.True(called)
+	s.Len(report.Tasks, 1)
+	s.Equal("custom", report.Tasks[0].Name)
+	s.True(report.Tasks[0].Changed)
 }
 
 func TestOrchestratorPublicTestSuite(

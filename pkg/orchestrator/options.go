@@ -22,6 +22,21 @@ package orchestrator
 
 import sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
 
+// Option configures the Orchestrator.
+type Option func(*config)
+
+type config struct {
+	verbose bool
+}
+
+// WithVerbose enables verbose output showing stdout, stderr, and
+// full response data for all tasks.
+func WithVerbose() Option {
+	return func(c *config) {
+		c.verbose = true
+	}
+}
+
 // ErrorStrategy controls what happens when a step fails.
 type ErrorStrategy int
 

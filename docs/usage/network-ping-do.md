@@ -23,11 +23,12 @@ var result orchestrator.PingResult
 err := results.Decode("network.ping.do-1", &result)
 ```
 
-| Field             | Type      | Description                         |
-| ----------------- | --------- | ----------------------------------- |
-| `PacketsSent`     | `int`     | Number of ICMP packets sent.        |
-| `PacketsReceived` | `int`     | Number of ICMP packets received.    |
-| `PacketLoss`      | `float64` | Percentage of packets lost (0-100). |
+| Field             | Type      | Description                                     |
+| ----------------- | --------- | ----------------------------------------------- |
+| `PacketsSent`     | `int`     | Number of ICMP packets sent.                    |
+| `PacketsReceived` | `int`     | Number of ICMP packets received.                |
+| `PacketLoss`      | `float64` | Percentage of packets lost (0-100).             |
+| `Error`           | `string`  | Error message if ping failed; empty on success. |
 
 ## Idempotency
 

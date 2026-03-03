@@ -59,6 +59,7 @@ type CommandResult struct {
 	Stderr     string `json:"stderr"`
 	ExitCode   int    `json:"exit_code"`
 	DurationMs int64  `json:"duration_ms"`
+	Error      string `json:"error,omitempty"`
 }
 
 // PingResult holds typed ping output.
@@ -66,6 +67,7 @@ type PingResult struct {
 	PacketsSent     int     `json:"packets_sent"`
 	PacketsReceived int     `json:"packets_received"`
 	PacketLoss      float64 `json:"packet_loss"`
+	Error           string  `json:"error,omitempty"`
 }
 
 // DNSConfigResult holds typed DNS configuration output.
@@ -78,4 +80,5 @@ type DNSConfigResult struct {
 type DNSUpdateResult struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
+	Error   string `json:"error,omitempty"`
 }

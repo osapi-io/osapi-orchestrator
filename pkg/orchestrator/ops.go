@@ -47,7 +47,7 @@ const (
 func (o *Orchestrator) newStep(
 	op *sdk.Op,
 ) *Step {
-	name := o.nextName(op.Operation)
+	name := o.nextName(op.Operation, op.Params)
 	task := o.plan.Task(name, op)
 
 	return &Step{task: task}
@@ -57,8 +57,13 @@ func (o *Orchestrator) newStep(
 func (o *Orchestrator) HealthCheck(
 	_ string,
 ) *Step {
-	o.seq++
-	name := fmt.Sprintf("health-check-%d", o.seq)
+	prefix := "health-check"
+	o.nameCount[prefix]++
+
+	name := prefix
+	if o.nameCount[prefix] > 1 {
+		name = fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
+	}
 
 	task := o.plan.TaskFunc(
 		name,
