@@ -135,6 +135,18 @@ func (s *OpsPublicTestSuite) TestOperations() {
 				return s.orch.CommandShell("_any", "echo hello")
 			},
 		},
+		{
+			name: "AgentList",
+			newFn: func() *orchestrator.Step {
+				return s.orch.AgentList()
+			},
+		},
+		{
+			name: "AgentGet",
+			newFn: func() *orchestrator.Step {
+				return s.orch.AgentGet("server1")
+			},
+		},
 	}
 
 	for _, tc := range tests {
