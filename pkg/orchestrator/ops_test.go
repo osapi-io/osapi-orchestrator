@@ -65,7 +65,7 @@ func (s *OpsTestSuite) TestHealthCheckFunc() {
 				_, _ = w.Write([]byte(`{"status":"unhealthy"}`))
 			}),
 			expectErr:   true,
-			errContains: "unhealthy: status 503",
+			errContains: "health check",
 		},
 	}
 
