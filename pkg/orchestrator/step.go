@@ -116,6 +116,43 @@ func (s *Step) When(
 	return s
 }
 
+// WhenFact adds a fact-based guard. The step runs only if the
+// predicate returns true for the target agent. Requires a prior
+// AgentList step referenced by name.
+//
+// For broadcast targets (_all, labels), the guard passes if at
+// least one agent matches the predicate.
+func (s *Step) WhenFact(
+	agentListStep string,
+	fn Predicate,
+) *Step {
+	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+		r := Results{results: sdkResults}
+
+		var list AgentListResult
+		if err := r.Decode(agentListStep, &list); err != nil {
+			return false
+		}
+
+		target := ""
+		if op := s.task.Operation(); op != nil {
+			target = op.Target
+		}
+
+		for _, a := range list.Agents {
+			if target == "_all" || target == a.Hostname {
+				if fn(a) {
+					return true
+				}
+			}
+		}
+
+		return false
+	}, "when-fact: no matching agent")
+
+	return s
+}
+
 // OnError sets the error strategy for this step.
 func (s *Step) OnError(
 	strategy ErrorStrategy,

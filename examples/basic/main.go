@@ -18,16 +18,44 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package orchestrator
+// Package main demonstrates the simplest orchestrator DAG: a health check
+// followed by a hostname query.
+//
+// DAG:
+//
+//	health-check
+//	    └── get-hostname
+//
+// Run with: OSAPI_TOKEN="<jwt>" go run main.go
+package main
 
-import sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
+import (
+	"log"
+	"os"
 
-// Orchestrator is the top-level entry point for building and running
-// infrastructure plans.
-type Orchestrator struct {
-	url       string
-	token     string
-	plan      *sdk.Plan
-	nameCount map[string]int
-	renderer  renderer
+	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
+)
+
+func main() {
+	token := os.Getenv("OSAPI_TOKEN")
+	if token == "" {
+		log.Fatal("OSAPI_TOKEN is required")
+	}
+
+	url := os.Getenv("OSAPI_URL")
+	if url == "" {
+		url = "http://localhost:8080"
+	}
+
+	o := orchestrator.New(url, token)
+
+	// Level 0: verify the API is reachable.
+	health := o.HealthCheck("_any")
+
+	// Level 1: query hostname from any available agent.
+	o.NodeHostnameGet("_any").After(health)
+
+	if _, err := o.Run(); err != nil {
+		log.Fatal(err)
+	}
 }

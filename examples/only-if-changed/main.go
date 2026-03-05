@@ -18,16 +18,50 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package orchestrator
+// Package main demonstrates OnlyIfChanged — a step that is skipped
+// unless at least one dependency reported a change.
+//
+// DAG:
+//
+//	health-check
+//	    ├── get-hostname
+//	    └── get-disk
+//	            └── run-df (only-if-changed)
+//
+// Run with: OSAPI_TOKEN="<jwt>" go run main.go
+package main
 
-import sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
+import (
+	"log"
+	"os"
 
-// Orchestrator is the top-level entry point for building and running
-// infrastructure plans.
-type Orchestrator struct {
-	url       string
-	token     string
-	plan      *sdk.Plan
-	nameCount map[string]int
-	renderer  renderer
+	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
+)
+
+func main() {
+	token := os.Getenv("OSAPI_TOKEN")
+	if token == "" {
+		log.Fatal("OSAPI_TOKEN is required")
+	}
+
+	url := os.Getenv("OSAPI_URL")
+	if url == "" {
+		url = "http://localhost:8080"
+	}
+
+	o := orchestrator.New(url, token)
+
+	health := o.HealthCheck("_any")
+	o.NodeHostnameGet("_any").After(health)
+	disk := o.NodeDiskGet("_any").After(health)
+
+	// Only runs if the disk query reported changes.
+	o.CommandExec("_any", "df", "-h").
+		Named("run-df").
+		After(disk).
+		OnlyIfChanged()
+
+	if _, err := o.Run(); err != nil {
+		log.Fatal(err)
+	}
 }

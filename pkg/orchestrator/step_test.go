@@ -228,6 +228,174 @@ func (s *StepTestSuite) TestOnlyIfAllChangedGuard() {
 	}
 }
 
+func (s *StepTestSuite) TestWhenFactGuardBehavior() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	orch := New(server.URL, "test-token")
+
+	tests := []struct {
+		name       string
+		results    sdk.Results
+		stepName   string
+		target     string
+		predicate  Predicate
+		wantResult bool
+	}{
+		{
+			name:     "Returns false when agent list step not found",
+			results:  sdk.Results{},
+			stepName: "list-agents",
+			target:   "web-01",
+			predicate: func(_ AgentResult) bool {
+				return true
+			},
+			wantResult: false,
+		},
+		{
+			name: "Returns true when target hostname matches and predicate passes",
+			results: sdk.Results{
+				"list-agents": &sdk.Result{
+					Data: map[string]any{
+						"agents": []any{
+							map[string]any{
+								"hostname": "web-01",
+								"os_info": map[string]any{
+									"distribution": "Ubuntu",
+								},
+							},
+						},
+						"total": float64(1),
+					},
+				},
+			},
+			stepName: "list-agents",
+			target:   "web-01",
+			predicate: func(a AgentResult) bool {
+				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
+			},
+			wantResult: true,
+		},
+		{
+			name: "Returns false when target hostname matches but predicate fails",
+			results: sdk.Results{
+				"list-agents": &sdk.Result{
+					Data: map[string]any{
+						"agents": []any{
+							map[string]any{
+								"hostname": "web-01",
+								"os_info": map[string]any{
+									"distribution": "Debian",
+								},
+							},
+						},
+						"total": float64(1),
+					},
+				},
+			},
+			stepName: "list-agents",
+			target:   "web-01",
+			predicate: func(a AgentResult) bool {
+				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
+			},
+			wantResult: false,
+		},
+		{
+			name: "Returns false when target hostname does not match any agent",
+			results: sdk.Results{
+				"list-agents": &sdk.Result{
+					Data: map[string]any{
+						"agents": []any{
+							map[string]any{
+								"hostname": "web-02",
+							},
+						},
+						"total": float64(1),
+					},
+				},
+			},
+			stepName: "list-agents",
+			target:   "web-01",
+			predicate: func(_ AgentResult) bool {
+				return true
+			},
+			wantResult: false,
+		},
+		{
+			name: "Returns true for _all target when any agent matches predicate",
+			results: sdk.Results{
+				"list-agents": &sdk.Result{
+					Data: map[string]any{
+						"agents": []any{
+							map[string]any{
+								"hostname": "web-01",
+								"os_info": map[string]any{
+									"distribution": "Debian",
+								},
+							},
+							map[string]any{
+								"hostname": "web-02",
+								"os_info": map[string]any{
+									"distribution": "Ubuntu",
+								},
+							},
+						},
+						"total": float64(2),
+					},
+				},
+			},
+			stepName: "list-agents",
+			target:   "_all",
+			predicate: func(a AgentResult) bool {
+				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
+			},
+			wantResult: true,
+		},
+		{
+			name: "Returns false for _all target when no agent matches predicate",
+			results: sdk.Results{
+				"list-agents": &sdk.Result{
+					Data: map[string]any{
+						"agents": []any{
+							map[string]any{
+								"hostname": "web-01",
+								"os_info": map[string]any{
+									"distribution": "Debian",
+								},
+							},
+						},
+						"total": float64(1),
+					},
+				},
+			},
+			stepName: "list-agents",
+			target:   "_all",
+			predicate: func(a AgentResult) bool {
+				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
+			},
+			wantResult: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := orch.NodeHostnameGet(tc.target).
+				WhenFact(tc.stepName, tc.predicate)
+
+			guard := step.task.Guard()
+			s.Require().NotNil(guard)
+			s.Equal(tc.wantResult, guard(tc.results))
+		})
+	}
+}
+
 func TestStepTestSuite(
 	t *testing.T,
 ) {

@@ -18,16 +18,45 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package orchestrator
+// Package main demonstrates automatic retry on failure. The load query
+// is configured to retry up to 3 times before giving up.
+//
+// DAG:
+//
+//	health-check
+//	    └── get-load [retry:3]
+//
+// Run with: OSAPI_TOKEN="<jwt>" go run main.go
+package main
 
-import sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
+import (
+	"log"
+	"os"
 
-// Orchestrator is the top-level entry point for building and running
-// infrastructure plans.
-type Orchestrator struct {
-	url       string
-	token     string
-	plan      *sdk.Plan
-	nameCount map[string]int
-	renderer  renderer
+	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
+)
+
+func main() {
+	token := os.Getenv("OSAPI_TOKEN")
+	if token == "" {
+		log.Fatal("OSAPI_TOKEN is required")
+	}
+
+	url := os.Getenv("OSAPI_URL")
+	if url == "" {
+		url = "http://localhost:8080"
+	}
+
+	o := orchestrator.New(url, token)
+
+	health := o.HealthCheck("_any")
+
+	// Retry up to 3 times on transient failure.
+	o.NodeLoadGet("_any").
+		After(health).
+		Retry(3)
+
+	if _, err := o.Run(); err != nil {
+		log.Fatal(err)
+	}
 }

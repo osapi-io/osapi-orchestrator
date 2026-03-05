@@ -1,13 +1,12 @@
-module github.com/osapi-io/osapi-orchestrator/examples/all
+module github.com/osapi-io/osapi-orchestrator/examples/parallel
 
 go 1.25.7
 
 replace github.com/osapi-io/osapi-orchestrator => ../..
 
-require (
-	github.com/osapi-io/osapi-orchestrator v0.0.0-00010101000000-000000000000
-	github.com/osapi-io/osapi-sdk v0.0.0-20260302232128-2eaecd5d82c3
-)
+replace github.com/osapi-io/osapi-sdk => ../../../osapi-sdk
+
+require github.com/osapi-io/osapi-orchestrator v0.0.0-00010101000000-000000000000
 
 require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
@@ -26,11 +25,12 @@ require (
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/oapi-codegen/runtime v1.2.0 // indirect
+	github.com/osapi-io/osapi-sdk v0.0.0-20260305185914-a4896d2201a6 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/otel v1.40.0 // indirect
-	go.opentelemetry.io/otel/metric v1.40.0 // indirect
-	go.opentelemetry.io/otel/trace v1.40.0 // indirect
+	go.opentelemetry.io/otel v1.41.0 // indirect
+	go.opentelemetry.io/otel/metric v1.41.0 // indirect
+	go.opentelemetry.io/otel/trace v1.41.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 )

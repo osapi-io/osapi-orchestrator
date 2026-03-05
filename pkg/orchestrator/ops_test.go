@@ -65,7 +65,7 @@ func (s *OpsTestSuite) TestHealthCheckFunc() {
 				_, _ = w.Write([]byte(`{"status":"unhealthy"}`))
 			}),
 			expectErr:   true,
-			errContains: "unhealthy: status 503",
+			errContains: "health check",
 		},
 	}
 
@@ -152,6 +152,236 @@ func (s *OpsTestSuite) TestHealthCheckAutoNaming() {
 		s.Run(tc.name, func() {
 			step := orch.HealthCheck("_any")
 			s.Equal(tc.expected, step.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestAgentListFunc() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with agent data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(`{"agents":[{"hostname":"web-01","status":"Ready"}],"total":1}`),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "list agents",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.AgentList()
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.False(result.Changed)
+			s.NotNil(result.Data)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestAgentListAutoNaming() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	orch := New(server.URL, "test-token")
+
+	tests := []struct {
+		name     string
+		expected string
+	}{
+		{
+			name:     "First list-agents has no suffix",
+			expected: "list-agents",
+		},
+		{
+			name:     "Second list-agents gets counter suffix",
+			expected: "list-agents-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := orch.AgentList()
+			s.Equal(tc.expected, step.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestAgentGetFunc() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with agent details",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(`{"hostname":"web-01","status":"Ready","architecture":"amd64"}`),
+				)
+			}),
+		},
+		{
+			name: "Returns error on not found",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusNotFound)
+				_, _ = w.Write([]byte(`{"error":"agent not found"}`))
+			}),
+			expectErr:   true,
+			errContains: "get agent",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.AgentGet("web-01")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.False(result.Changed)
+			s.NotNil(result.Data)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestAgentGetAutoNaming() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	orch := New(server.URL, "test-token")
+
+	tests := []struct {
+		name     string
+		expected string
+	}{
+		{
+			name:     "First get-agent has no suffix",
+			expected: "get-agent",
+		},
+		{
+			name:     "Second get-agent gets counter suffix",
+			expected: "get-agent-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := orch.AgentGet("web-01")
+			s.Equal(tc.expected, step.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestMustRawToMap() {
+	tests := []struct {
+		name   string
+		input  []byte
+		panics bool
+	}{
+		{
+			name:  "Valid JSON returns map",
+			input: []byte(`{"key":"value"}`),
+		},
+		{
+			name:   "Invalid JSON panics",
+			input:  []byte(`not json`),
+			panics: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.panics {
+				s.Panics(func() { mustRawToMap(tc.input) })
+
+				return
+			}
+
+			data := mustRawToMap(tc.input)
+			s.NotNil(data)
+			s.Equal("value", data["key"])
 		})
 	}
 }

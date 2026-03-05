@@ -132,6 +132,17 @@ func (s *StepPublicTestSuite) TestChaining() {
 			},
 		},
 		{
+			name: "WhenFact returns same step",
+			chainFn: func() *orchestrator.Step {
+				return s.orch.NodeHostnameGet("_any").
+					WhenFact("list-agents", func(
+						_ orchestrator.AgentResult,
+					) bool {
+						return true
+					})
+			},
+		},
+		{
 			name: "Full method chain",
 			chainFn: func() *orchestrator.Step {
 				health := s.orch.HealthCheck("_any")

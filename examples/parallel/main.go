@@ -18,16 +18,53 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package orchestrator
+// Package main demonstrates parallel task execution. Multiple operations
+// at the same DAG level run concurrently.
+//
+// DAG:
+//
+//	health-check
+//	    ├── get-hostname
+//	    ├── get-disk
+//	    ├── get-memory
+//	    ├── get-load
+//	    └── get-uptime
+//
+// Run with: OSAPI_TOKEN="<jwt>" go run main.go
+package main
 
-import sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
+import (
+	"log"
+	"os"
 
-// Orchestrator is the top-level entry point for building and running
-// infrastructure plans.
-type Orchestrator struct {
-	url       string
-	token     string
-	plan      *sdk.Plan
-	nameCount map[string]int
-	renderer  renderer
+	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
+)
+
+func main() {
+	token := os.Getenv("OSAPI_TOKEN")
+	if token == "" {
+		log.Fatal("OSAPI_TOKEN is required")
+	}
+
+	url := os.Getenv("OSAPI_URL")
+	if url == "" {
+		url = "http://localhost:8080"
+	}
+
+	o := orchestrator.New(url, token)
+
+	// Level 0: health gate.
+	health := o.HealthCheck("_any")
+
+	// Level 1: five queries run in parallel — all share the same
+	// dependency so the orchestrator schedules them concurrently.
+	o.NodeHostnameGet("_any").After(health)
+	o.NodeDiskGet("_any").After(health)
+	o.NodeMemoryGet("_any").After(health)
+	o.NodeLoadGet("_any").After(health)
+	o.NodeUptimeGet("_any").After(health)
+
+	if _, err := o.Run(); err != nil {
+		log.Fatal(err)
+	}
 }

@@ -18,16 +18,42 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-package orchestrator
+// Package main demonstrates broadcast targeting with _all. The command
+// is sent to every registered agent and per-host results are displayed
+// automatically by the renderer.
+//
+// DAG:
+//
+//	hostname-all (_all broadcast)
+//
+// Run with: OSAPI_TOKEN="<jwt>" go run main.go
+package main
 
-import sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
+import (
+	"log"
+	"os"
 
-// Orchestrator is the top-level entry point for building and running
-// infrastructure plans.
-type Orchestrator struct {
-	url       string
-	token     string
-	plan      *sdk.Plan
-	nameCount map[string]int
-	renderer  renderer
+	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
+)
+
+func main() {
+	token := os.Getenv("OSAPI_TOKEN")
+	if token == "" {
+		log.Fatal("OSAPI_TOKEN is required")
+	}
+
+	url := os.Getenv("OSAPI_URL")
+	if url == "" {
+		url = "http://localhost:8080"
+	}
+
+	o := orchestrator.New(url, token)
+
+	// Target _all: the job is delivered to every registered agent.
+	// The renderer shows per-host results automatically.
+	o.NodeHostnameGet("_all")
+
+	if _, err := o.Run(); err != nil {
+		log.Fatal(err)
+	}
 }

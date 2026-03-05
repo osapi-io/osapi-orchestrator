@@ -22,12 +22,26 @@ package orchestrator
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"net/http"
 
 	sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
 	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 )
+
+// mustRawToMap unmarshals raw JSON bytes into a map for sdk.Result.Data.
+// Panics on error because the SDK guarantees the response body is valid
+// JSON — an unmarshal failure here indicates a programming error.
+func mustRawToMap(
+	raw []byte,
+) map[string]any {
+	var data map[string]any
+	if err := json.Unmarshal(raw, &data); err != nil {
+		panic(fmt.Sprintf("unmarshal SDK response: %v", err))
+	}
+
+	return data
+}
 
 // Operation constants matching the OSAPI agent's supported operations.
 const (
@@ -71,16 +85,9 @@ func (o *Orchestrator) HealthCheck(
 			ctx context.Context,
 			c *osapi.Client,
 		) (*sdk.Result, error) {
-			resp, err := c.Health.Liveness(ctx)
+			_, err := c.Health.Liveness(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("health check: %w", err)
-			}
-
-			if resp.StatusCode() != http.StatusOK {
-				return nil, fmt.Errorf(
-					"unhealthy: status %d",
-					resp.StatusCode(),
-				)
 			}
 
 			return &sdk.Result{Changed: false}, nil
@@ -224,4 +231,68 @@ func (o *Orchestrator) CommandShell(
 			"command": command,
 		},
 	})
+}
+
+// AgentList creates a step that lists all active agents with their facts.
+func (o *Orchestrator) AgentList() *Step {
+	prefix := "list-agents"
+	o.nameCount[prefix]++
+
+	name := prefix
+	if o.nameCount[prefix] > 1 {
+		name = fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
+	}
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Agent.List(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("list agents: %w", err)
+			}
+
+			return &sdk.Result{
+				Changed: false,
+				Data:    mustRawToMap(resp.RawJSON()),
+			}, nil
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// AgentGet creates a step that retrieves detailed info about a specific agent.
+func (o *Orchestrator) AgentGet(
+	hostname string,
+) *Step {
+	prefix := "get-agent"
+	o.nameCount[prefix]++
+
+	name := prefix
+	if o.nameCount[prefix] > 1 {
+		name = fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
+	}
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Agent.Get(ctx, hostname)
+			if err != nil {
+				return nil, fmt.Errorf("get agent %s: %w", hostname, err)
+			}
+
+			return &sdk.Result{
+				Changed: false,
+				Data:    mustRawToMap(resp.RawJSON()),
+			}, nil
+		},
+	)
+
+	return &Step{task: task}
 }

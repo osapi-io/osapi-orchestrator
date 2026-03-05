@@ -49,6 +49,8 @@ func New(
 	plan := sdk.NewPlan(client, sdk.WithHooks(rendererHooks(r)))
 
 	return &Orchestrator{
+		url:       url,
+		token:     token,
 		plan:      plan,
 		nameCount: make(map[string]int),
 		renderer:  r,
