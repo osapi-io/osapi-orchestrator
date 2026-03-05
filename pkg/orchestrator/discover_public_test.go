@@ -93,9 +93,12 @@ func (s *DiscoverPublicTestSuite) TearDownTest() {
 
 func (s *DiscoverPublicTestSuite) TestDiscover() {
 	tests := []struct {
-		name       string
-		predicates []orchestrator.Predicate
-		expected   []string
+		name        string
+		predicates  []orchestrator.Predicate
+		expected    []string
+		expectErr   bool
+		errContains string
+		setupServer func() *httptest.Server
 	}{
 		{
 			name:       "No predicates returns all agents",
@@ -132,13 +135,44 @@ func (s *DiscoverPublicTestSuite) TestDiscover() {
 			},
 			expected: []string{},
 		},
+		{
+			name:        "Returns error when server returns unauthorized",
+			expectErr:   true,
+			errContains: "discover",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(
+					http.HandlerFunc(func(
+						w http.ResponseWriter,
+						_ *http.Request,
+					) {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusUnauthorized)
+						_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+					}),
+				)
+			},
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			o := orchestrator.New(s.server.URL, "test-token")
+			server := s.server
+			if tc.setupServer != nil {
+				server = tc.setupServer()
+				defer server.Close()
+			}
+
+			o := orchestrator.New(server.URL, "test-token")
 
 			agents, err := o.Discover(s.ctx, tc.predicates...)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Contains(err.Error(), tc.errContains)
+				s.Nil(agents)
+
+				return
+			}
 
 			s.Require().NoError(err)
 
@@ -152,34 +186,15 @@ func (s *DiscoverPublicTestSuite) TestDiscover() {
 	}
 }
 
-func (s *DiscoverPublicTestSuite) TestDiscoverError() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusUnauthorized)
-			_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
-		}),
-	)
-	defer server.Close()
-
-	o := orchestrator.New(server.URL, "bad-token")
-
-	agents, err := o.Discover(s.ctx)
-
-	s.Error(err)
-	s.Nil(agents)
-	s.Contains(err.Error(), "discover")
-}
-
 func (s *DiscoverPublicTestSuite) TestGroupByFact() {
 	tests := []struct {
-		name       string
-		key        string
-		predicates []orchestrator.Predicate
-		expected   map[string][]string
+		name        string
+		key         string
+		predicates  []orchestrator.Predicate
+		expected    map[string][]string
+		expectErr   bool
+		errContains string
+		setupServer func() *httptest.Server
 	}{
 		{
 			name: "Group by os.distribution",
@@ -207,13 +222,43 @@ func (s *DiscoverPublicTestSuite) TestGroupByFact() {
 				"Ubuntu": {"web-01", "web-03"},
 			},
 		},
+		{
+			name:        "Returns error when discover fails",
+			key:         "os.distribution",
+			expectErr:   true,
+			errContains: "group by fact",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(
+					http.HandlerFunc(func(
+						w http.ResponseWriter,
+						_ *http.Request,
+					) {
+						w.WriteHeader(http.StatusUnauthorized)
+					}),
+				)
+			},
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			o := orchestrator.New(s.server.URL, "test-token")
+			server := s.server
+			if tc.setupServer != nil {
+				server = tc.setupServer()
+				defer server.Close()
+			}
+
+			o := orchestrator.New(server.URL, "test-token")
 
 			groups, err := o.GroupByFact(s.ctx, tc.key, tc.predicates...)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Contains(err.Error(), tc.errContains)
+				s.Nil(groups)
+
+				return
+			}
 
 			s.Require().NoError(err)
 			s.Len(groups, len(tc.expected))
