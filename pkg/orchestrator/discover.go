@@ -109,3 +109,65 @@ func (o *Orchestrator) fetchAgents(
 
 	return nil, fmt.Errorf("agent list result not found")
 }
+
+// GroupByFact queries agents, optionally filters by predicates,
+// and groups results by the string value at the given key.
+func (o *Orchestrator) GroupByFact(
+	ctx context.Context,
+	key string,
+	predicates ...Predicate,
+) (map[string][]AgentResult, error) {
+	agents, err := o.Discover(ctx, predicates...)
+	if err != nil {
+		return nil, fmt.Errorf("group by fact: %w", err)
+	}
+
+	groups := make(map[string][]AgentResult)
+	for _, a := range agents {
+		v := factValue(a, key)
+		if v == "" {
+			continue
+		}
+
+		groups[v] = append(groups[v], a)
+	}
+
+	return groups, nil
+}
+
+// factValue extracts a string value from an agent for grouping.
+func factValue(
+	a AgentResult,
+	key string,
+) string {
+	switch key {
+	case "os.distribution":
+		if a.OSInfo == nil {
+			return ""
+		}
+
+		return a.OSInfo.Distribution
+	case "os.version":
+		if a.OSInfo == nil {
+			return ""
+		}
+
+		return a.OSInfo.Version
+	case "architecture":
+		return a.Architecture
+	case "service_manager":
+		return a.ServiceMgr
+	case "package_manager":
+		return a.PackageMgr
+	case "kernel_version":
+		return a.KernelVersion
+	default:
+		if a.Facts == nil {
+			return ""
+		}
+
+		v, _ := a.Facts[key].(string)
+
+		return v
+	}
+}

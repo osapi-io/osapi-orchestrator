@@ -174,6 +174,65 @@ func (s *DiscoverPublicTestSuite) TestDiscoverError() {
 	s.Contains(err.Error(), "discover")
 }
 
+func (s *DiscoverPublicTestSuite) TestGroupByFact() {
+	tests := []struct {
+		name       string
+		key        string
+		predicates []orchestrator.Predicate
+		expected   map[string][]string
+	}{
+		{
+			name: "Group by os.distribution",
+			key:  "os.distribution",
+			expected: map[string][]string{
+				"Ubuntu": {"web-01", "web-03"},
+				"Debian": {"web-02"},
+			},
+		},
+		{
+			name: "Group by architecture",
+			key:  "architecture",
+			expected: map[string][]string{
+				"amd64": {"web-01", "web-03"},
+				"arm64": {"web-02"},
+			},
+		},
+		{
+			name: "Group with predicate filter",
+			key:  "os.distribution",
+			predicates: []orchestrator.Predicate{
+				orchestrator.OS("Ubuntu"),
+			},
+			expected: map[string][]string{
+				"Ubuntu": {"web-01", "web-03"},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			o := orchestrator.New(s.server.URL, "test-token")
+
+			groups, err := o.GroupByFact(s.ctx, tc.key, tc.predicates...)
+
+			s.Require().NoError(err)
+			s.Len(groups, len(tc.expected))
+
+			for key, expectedHostnames := range tc.expected {
+				agents, ok := groups[key]
+				s.True(ok, "expected group %q", key)
+
+				hostnames := make([]string, 0, len(agents))
+				for _, a := range agents {
+					hostnames = append(hostnames, a.Hostname)
+				}
+
+				s.Equal(expectedHostnames, hostnames)
+			}
+		})
+	}
+}
+
 func TestDiscoverPublicTestSuite(
 	t *testing.T,
 ) {
