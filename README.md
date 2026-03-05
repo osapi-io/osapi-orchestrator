@@ -38,6 +38,10 @@ the request:
 | `hostname`  | Send to a specific host                     |
 | `key:value` | Send to agents matching a label             |
 
+Agents expose labels (used for targeting) and extended system facts via
+`AgentList` and `AgentGet`. Facts come from agent-side providers and
+include OS, hardware, and network details.
+
 ## ✨ Features
 
 Typed constructors, typed results, and chainable step methods. See the
@@ -63,6 +67,8 @@ string constants.
 | `NetworkPingDo`    | `network.ping.do`       | [docs](docs/usage/network-ping-do.md)    | [`ops.go`](pkg/orchestrator/ops.go) |
 | `CommandExec`      | `command.exec.execute`  | [docs](docs/usage/command-exec.md)       | [`ops.go`](pkg/orchestrator/ops.go) |
 | `CommandShell`     | `command.shell.execute` | [docs](docs/usage/command-shell.md)      | [`ops.go`](pkg/orchestrator/ops.go) |
+| `AgentList`        | List active agents      | [docs](docs/usage/agent-list.md)         | [`ops.go`](pkg/orchestrator/ops.go) |
+| `AgentGet`         | Get agent details       | [docs](docs/usage/agent-get.md)          | [`ops.go`](pkg/orchestrator/ops.go) |
 
 ### Typed Results
 
@@ -79,6 +85,8 @@ Decode step results into typed structs instead of digging through
 | `PingResult`      | `PacketsSent`, `PacketsReceived`, `PacketLoss`, `Error` |
 | `DNSConfigResult` | `DNSServers`, `SearchDomains`                           |
 | `DNSUpdateResult` | `Success`, `Message`, `Error`                           |
+| `AgentListResult` | `Agents` (slice of `AgentResult`), `Total`              |
+| `AgentResult`     | `Hostname`, `Status`, `Architecture`, `OSInfo`, `Memory` |
 
 ### Step Chaining
 
