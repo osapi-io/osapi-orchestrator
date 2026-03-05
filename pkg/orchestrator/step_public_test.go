@@ -132,6 +132,17 @@ func (s *StepPublicTestSuite) TestChaining() {
 			},
 		},
 		{
+			name: "WhenFact returns same step",
+			chainFn: func() *orchestrator.Step {
+				return s.orch.NodeHostnameGet("_any").
+					WhenFact("list-agents", func(
+						_ orchestrator.AgentResult,
+					) bool {
+						return true
+					})
+			},
+		},
+		{
 			name: "Full method chain",
 			chainFn: func() *orchestrator.Step {
 				health := s.orch.HealthCheck("_any")
@@ -145,6 +156,51 @@ func (s *StepPublicTestSuite) TestChaining() {
 					) bool {
 						return true
 					}).
+					OnError(orchestrator.Continue)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.chainFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestWhenFact() {
+	tests := []struct {
+		name    string
+		chainFn func() *orchestrator.Step
+	}{
+		{
+			name: "WhenFact chains with After",
+			chainFn: func() *orchestrator.Step {
+				health := s.orch.HealthCheck("_any")
+
+				return s.orch.NodeHostnameGet("_any").
+					After(health).
+					WhenFact("list-agents", func(
+						_ orchestrator.AgentResult,
+					) bool {
+						return true
+					})
+			},
+		},
+		{
+			name: "WhenFact in full chain",
+			chainFn: func() *orchestrator.Step {
+				health := s.orch.HealthCheck("_any")
+
+				return s.orch.NodeHostnameGet("_any").
+					After(health).
+					WhenFact("list-agents", func(
+						a orchestrator.AgentResult,
+					) bool {
+						return a.OSInfo != nil
+					}).
+					Retry(2).
 					OnError(orchestrator.Continue)
 			},
 		},
