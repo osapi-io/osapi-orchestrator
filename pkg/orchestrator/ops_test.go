@@ -171,7 +171,9 @@ func (s *OpsTestSuite) TestAgentListFunc() {
 			) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`{"agents":[{"hostname":"web-01","status":"Ready"}],"total":1}`))
+				_, _ = w.Write(
+					[]byte(`{"agents":[{"hostname":"web-01","status":"Ready"}],"total":1}`),
+				)
 			}),
 		},
 		{
@@ -268,7 +270,9 @@ func (s *OpsTestSuite) TestAgentGetFunc() {
 			) {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
-				_, _ = w.Write([]byte(`{"hostname":"web-01","status":"Ready","architecture":"amd64"}`))
+				_, _ = w.Write(
+					[]byte(`{"hostname":"web-01","status":"Ready","architecture":"amd64"}`),
+				)
 			}),
 		},
 		{
