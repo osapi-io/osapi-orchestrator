@@ -22,7 +22,6 @@ package orchestrator
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
@@ -36,17 +35,17 @@ func (o *Orchestrator) Discover(
 	ctx context.Context,
 	predicates ...Predicate,
 ) ([]AgentResult, error) {
-	list, err := o.fetchAgents(ctx)
+	agents, err := o.fetchAgents(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("discover: %w", err)
 	}
 
 	if len(predicates) == 0 {
-		return list.Agents, nil
+		return agents, nil
 	}
 
-	matched := make([]AgentResult, 0, len(list.Agents))
-	for _, a := range list.Agents {
+	matched := make([]AgentResult, 0, len(agents))
+	for _, a := range agents {
 		if MatchAll(a, predicates...) {
 			matched = append(matched, a)
 		}
@@ -55,11 +54,24 @@ func (o *Orchestrator) Discover(
 	return matched, nil
 }
 
+// mustDecode decodes a named task result into v, panicking on error.
+// Used when the task is known to exist with valid data (e.g.,
+// immediately after a successful plan run with a known task name).
+func mustDecode(
+	report *Report,
+	name string,
+	v any,
+) {
+	if err := report.Decode(name, v); err != nil {
+		panic(fmt.Sprintf("decode %s: %v", name, err))
+	}
+}
+
 // fetchAgents creates a temporary plan, runs AgentList, and decodes
 // the result.
 func (o *Orchestrator) fetchAgents(
 	ctx context.Context,
-) (*AgentListResult, error) {
+) ([]AgentResult, error) {
 	client := osapi.New(o.url, o.token)
 	plan := sdk.NewPlan(client)
 
@@ -74,40 +86,24 @@ func (o *Orchestrator) fetchAgents(
 				return nil, fmt.Errorf("list agents: %w", err)
 			}
 
-			var data map[string]any
-			if err := json.Unmarshal(resp.RawJSON(), &data); err != nil {
-				return nil, fmt.Errorf("unmarshal agents: %w", err)
-			}
-
 			return &sdk.Result{
 				Changed: false,
-				Data:    data,
+				Data:    mustRawToMap(resp.RawJSON()),
 			}, nil
 		},
 	)
 
-	report, err := plan.Run(ctx)
+	sdkReport, err := plan.Run(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("run agent list: %w", err)
 	}
 
+	report := &Report{Tasks: sdkReport.Tasks, Duration: sdkReport.Duration}
+
 	var list AgentListResult
-	for _, t := range report.Tasks {
-		if t.Name == "list-agents" {
-			b, err := json.Marshal(t.Data)
-			if err != nil {
-				return nil, fmt.Errorf("marshal agent data: %w", err)
-			}
+	mustDecode(report, "list-agents", &list)
 
-			if err := json.Unmarshal(b, &list); err != nil {
-				return nil, fmt.Errorf("decode agent data: %w", err)
-			}
-
-			return &list, nil
-		}
-	}
-
-	return nil, fmt.Errorf("agent list result not found")
+	return list.Agents, nil
 }
 
 // GroupByFact queries agents, optionally filters by predicates,

@@ -18,14 +18,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates grouping agents by a fact value.
-// Groups the fleet by OS distribution and runs a distro-specific
-// package update command on each group.
+// Package main demonstrates filtering agents by labels and facts.
+// Uses HasLabel to find agents with a specific label key-value pair
+// and FactEquals to match agents by arbitrary fact values.
 //
-// DAG (per group, per host):
+// DAG (per matching host):
 //
 //	health-check
-//	    └── shell-<update-cmd> (target=<host>)
+//	    └── get-hostname (target=<host>)
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run main.go
 package main
@@ -38,19 +38,6 @@ import (
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
-
-func installCmd(
-	distro string,
-) string {
-	switch distro {
-	case "Ubuntu", "Debian":
-		return "apt-get update -qq"
-	case "CentOS", "Rocky", "AlmaLinux":
-		return "yum check-update -q"
-	default:
-		return "echo unsupported"
-	}
-}
 
 func main() {
 	token := os.Getenv("OSAPI_TOKEN")
@@ -65,23 +52,26 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	groups, err := o.GroupByFact(
+	// Discover agents labeled as production web servers.
+	agents, err := o.Discover(
 		context.Background(),
-		"os.distribution",
+		orchestrator.HasLabel("role", "web"),
+		orchestrator.FactEquals("env", "prod"),
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	fmt.Printf("Found %d prod web agents\n", len(agents))
+
+	for _, a := range agents {
+		fmt.Printf("  %s (labels=%v)\n", a.Hostname, a.Labels)
+	}
+
 	health := o.HealthCheck("_any")
 
-	for distro, agents := range groups {
-		cmd := installCmd(distro)
-		fmt.Printf("Group %s (%d hosts): %s\n", distro, len(agents), cmd)
-
-		for _, a := range agents {
-			o.CommandShell(a.Hostname, cmd).After(health)
-		}
+	for _, a := range agents {
+		o.NodeHostnameGet(a.Hostname).After(health)
 	}
 
 	if _, err := o.Run(); err != nil {

@@ -213,6 +213,31 @@ func (s *DiscoverPublicTestSuite) TestGroupByFact() {
 			},
 		},
 		{
+			name: "Skips agents with empty fact value",
+			key:  "os.distribution",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(
+					http.HandlerFunc(func(
+						w http.ResponseWriter,
+						_ *http.Request,
+					) {
+						w.Header().Set("Content-Type", "application/json")
+						w.WriteHeader(http.StatusOK)
+						_, _ = w.Write([]byte(`{
+							"agents": [
+								{"hostname":"web-01","os_info":{"distribution":"Ubuntu"}},
+								{"hostname":"web-02"}
+							],
+							"total": 2
+						}`))
+					}),
+				)
+			},
+			expected: map[string][]string{
+				"Ubuntu": {"web-01"},
+			},
+		},
+		{
 			name: "Group with predicate filter",
 			key:  "os.distribution",
 			predicates: []orchestrator.Predicate{

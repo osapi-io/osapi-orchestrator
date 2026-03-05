@@ -23,6 +23,7 @@ package orchestrator
 import (
 	"testing"
 
+	sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -125,6 +126,57 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		s.Run(tc.name, func() {
 			got := factValue(tc.agent, tc.key)
 			s.Equal(tc.expected, got)
+		})
+	}
+}
+
+func (s *DiscoverTestSuite) TestMustDecode() {
+	tests := []struct {
+		name   string
+		report *Report
+		task   string
+		panics bool
+	}{
+		{
+			name: "Succeeds with valid data",
+			report: &Report{
+				Tasks: []sdk.TaskResult{
+					{
+						Name: "test",
+						Data: map[string]any{
+							"hostname": "web-01",
+						},
+					},
+				},
+			},
+			task: "test",
+		},
+		{
+			name: "Panics on missing task",
+			report: &Report{
+				Tasks: []sdk.TaskResult{},
+			},
+			task:   "test",
+			panics: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.panics {
+				var result map[string]any
+				s.Panics(func() {
+					mustDecode(tc.report, tc.task, &result)
+				})
+
+				return
+			}
+
+			var result HostnameResult
+			s.NotPanics(func() {
+				mustDecode(tc.report, tc.task, &result)
+			})
+			s.Equal("web-01", result.Hostname)
 		})
 	}
 }

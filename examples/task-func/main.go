@@ -83,8 +83,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("\n%s in %s\n", report.Summary(), report.Duration)
-
 	// Post-execution: decode typed results from the report.
 	var h orchestrator.HostnameResult
 	if err := report.Decode("get-hostname", &h); err == nil {

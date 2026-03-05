@@ -30,7 +30,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -56,10 +55,7 @@ func main() {
 	// Level 1: query hostname from any available agent.
 	o.NodeHostnameGet("_any").After(health)
 
-	report, err := o.Run()
-	if err != nil {
+	if _, err := o.Run(); err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Printf("%s in %s\n", report.Summary(), report.Duration)
 }

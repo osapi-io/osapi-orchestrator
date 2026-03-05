@@ -30,7 +30,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -54,10 +53,7 @@ func main() {
 	// The renderer shows per-host results automatically.
 	o.NodeHostnameGet("_all")
 
-	report, err := o.Run()
-	if err != nil {
+	if _, err := o.Run(); err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Printf("\n%s in %s\n", report.Summary(), report.Duration)
 }

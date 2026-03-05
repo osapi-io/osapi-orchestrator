@@ -279,6 +279,7 @@ Each example is a standalone Go program you can read and run.
 | [group-by-fact](examples/group-by-fact/main.go)      | Group agents by distro, run per-group commands     |
 | [when-fact](examples/when-fact/main.go)               | Fact-based guard on a step                         |
 | [fact-predicates](examples/fact-predicates/main.go)   | Compose multiple predicates for discovery          |
+| [label-filter](examples/label-filter/main.go)         | Filter by labels and arbitrary fact values         |
 
 ```bash
 cd examples/discover

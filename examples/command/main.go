@@ -65,8 +65,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("\n%s in %s\n", report.Summary(), report.Duration)
-
 	// Decode typed command results from the report.
 	var cmd orchestrator.CommandResult
 	if err := report.Decode("run-uptime", &cmd); err == nil {

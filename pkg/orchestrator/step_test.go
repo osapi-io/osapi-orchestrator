@@ -229,6 +229,18 @@ func (s *StepTestSuite) TestOnlyIfAllChangedGuard() {
 }
 
 func (s *StepTestSuite) TestWhenFactGuardBehavior() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	orch := New(server.URL, "test-token")
+
 	tests := []struct {
 		name       string
 		results    sdk.Results
@@ -374,29 +386,12 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			r := Results{results: tc.results}
+			step := orch.NodeHostnameGet(tc.target).
+				WhenFact(tc.stepName, tc.predicate)
 
-			var list AgentListResult
-
-			decodeErr := r.Decode(tc.stepName, &list)
-			if decodeErr != nil {
-				s.False(tc.wantResult)
-
-				return
-			}
-
-			matched := false
-			for _, a := range list.Agents {
-				if tc.target == "_all" || tc.target == a.Hostname {
-					if tc.predicate(a) {
-						matched = true
-
-						break
-					}
-				}
-			}
-
-			s.Equal(tc.wantResult, matched)
+			guard := step.task.Guard()
+			s.Require().NotNil(guard)
+			s.Equal(tc.wantResult, guard(tc.results))
 		})
 	}
 }

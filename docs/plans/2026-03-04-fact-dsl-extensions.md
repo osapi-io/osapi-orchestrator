@@ -1,10 +1,17 @@
 # Fact DSL Extensions Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to
+> implement this plan task-by-task.
 
-**Goal:** Add fact-aware discovery, filtering, guards, and examples to the orchestrator DSL.
+**Goal:** Add fact-aware discovery, filtering, guards, and examples to the
+orchestrator DSL.
 
-**Architecture:** New `Predicate` type (`func(AgentResult) bool`) with composable helpers (`OS`, `Arch`, `MinMemory`, `MinCPU`, `HasLabel`, `FactEquals`). Two new `Orchestrator` methods (`Discover`, `GroupByFact`) that query agents synchronously at plan-build time. One new `Step` method (`WhenFact`) for execution-time fact guards. Store `url` and `token` on `Orchestrator` so `Discover`/`GroupByFact` can create temporary plans.
+**Architecture:** New `Predicate` type (`func(AgentResult) bool`) with
+composable helpers (`OS`, `Arch`, `MinMemory`, `MinCPU`, `HasLabel`,
+`FactEquals`). Two new `Orchestrator` methods (`Discover`, `GroupByFact`) that
+query agents synchronously at plan-build time. One new `Step` method
+(`WhenFact`) for execution-time fact guards. Store `url` and `token` on
+`Orchestrator` so `Discover`/`GroupByFact` can create temporary plans.
 
 **Tech Stack:** Go, testify/suite, osapi-sdk
 
@@ -13,6 +20,7 @@
 ### Task 1: Store URL and Token on Orchestrator
 
 **Files:**
+
 - Modify: `pkg/orchestrator/types.go:27-31`
 - Modify: `pkg/orchestrator/orchestrator.go:36-56`
 
@@ -46,8 +54,8 @@ return &Orchestrator{
 
 **Step 3: Run tests to verify no regressions**
 
-Run: `go test ./pkg/orchestrator/... -v -count=1`
-Expected: All existing tests pass.
+Run: `go test ./pkg/orchestrator/... -v -count=1` Expected: All existing tests
+pass.
 
 **Step 4: Commit**
 
@@ -60,6 +68,7 @@ feat(orchestrator): store url and token on Orchestrator
 ### Task 2: Add Predicate Type and Helpers
 
 **Files:**
+
 - Create: `pkg/orchestrator/predicate.go`
 - Create: `pkg/orchestrator/predicate_public_test.go`
 
@@ -397,7 +406,8 @@ func TestPredicatePublicTestSuite(
 
 **Step 2: Run tests to verify they fail**
 
-Run: `go test ./pkg/orchestrator/... -run TestPredicatePublicTestSuite -v -count=1`
+Run:
+`go test ./pkg/orchestrator/... -run TestPredicatePublicTestSuite -v -count=1`
 Expected: Compilation error — `OS`, `Arch`, etc. not defined.
 
 **Step 3: Write the implementation**
@@ -500,18 +510,17 @@ func MatchAll(
 
 **Step 4: Run tests to verify they pass**
 
-Run: `go test ./pkg/orchestrator/... -run TestPredicatePublicTestSuite -v -count=1`
+Run:
+`go test ./pkg/orchestrator/... -run TestPredicatePublicTestSuite -v -count=1`
 Expected: All tests pass.
 
 **Step 5: Run full test suite**
 
-Run: `go test ./pkg/orchestrator/... -v -count=1`
-Expected: All tests pass.
+Run: `go test ./pkg/orchestrator/... -v -count=1` Expected: All tests pass.
 
 **Step 6: Run linter**
 
-Run: `just go::vet`
-Expected: No lint errors.
+Run: `just go::vet` Expected: No lint errors.
 
 **Step 7: Commit**
 
@@ -524,6 +533,7 @@ feat(orchestrator): add Predicate type and helpers
 ### Task 3: Add Discover Method
 
 **Files:**
+
 - Create: `pkg/orchestrator/discover.go`
 - Create: `pkg/orchestrator/discover_public_test.go`
 
@@ -670,7 +680,8 @@ func TestDiscoverPublicTestSuite(
 
 **Step 2: Run tests to verify they fail**
 
-Run: `go test ./pkg/orchestrator/... -run TestDiscoverPublicTestSuite -v -count=1`
+Run:
+`go test ./pkg/orchestrator/... -run TestDiscoverPublicTestSuite -v -count=1`
 Expected: Compilation error — `Discover` not defined.
 
 **Step 3: Write the implementation**
@@ -770,16 +781,24 @@ func (o *Orchestrator) fetchAgents(
 }
 ```
 
-Note: The `fetchAgents` implementation depends on the SDK's `plan.Run(ctx)` signature. If the SDK's `Run` method does not accept a context, use `plan.Run(context.Background())` instead and ignore the ctx parameter. Add `"encoding/json"` to the import block.
+Note: The `fetchAgents` implementation depends on the SDK's `plan.Run(ctx)`
+signature. If the SDK's `Run` method does not accept a context, use
+`plan.Run(context.Background())` instead and ignore the ctx parameter. Add
+`"encoding/json"` to the import block.
 
 **Step 4: Run tests to verify they pass**
 
-Run: `go test ./pkg/orchestrator/... -run TestDiscoverPublicTestSuite -v -count=1`
-Expected: Tests pass (or may need adjustment based on SDK's HTTP routing — the test server needs to handle the agent list API path).
+Run:
+`go test ./pkg/orchestrator/... -run TestDiscoverPublicTestSuite -v -count=1`
+Expected: Tests pass (or may need adjustment based on SDK's HTTP routing — the
+test server needs to handle the agent list API path).
 
 **Step 5: Adjust test server if needed**
 
-The test server may need to match the OSAPI SDK's expected endpoint path (e.g., `/api/v1alpha1/agents`). Check the SDK client's `Agent.List()` method for the exact path and update the `agentListHandler` to route accordingly. If needed, use a mux:
+The test server may need to match the OSAPI SDK's expected endpoint path (e.g.,
+`/api/v1alpha1/agents`). Check the SDK client's `Agent.List()` method for the
+exact path and update the `agentListHandler` to route accordingly. If needed,
+use a mux:
 
 ```go
 mux := http.NewServeMux()
@@ -789,8 +808,8 @@ server := httptest.NewServer(mux)
 
 **Step 6: Run full test suite and linter**
 
-Run: `go test ./pkg/orchestrator/... -v -count=1 && just go::vet`
-Expected: All tests pass, no lint errors.
+Run: `go test ./pkg/orchestrator/... -v -count=1 && just go::vet` Expected: All
+tests pass, no lint errors.
 
 **Step 7: Commit**
 
@@ -803,6 +822,7 @@ feat(orchestrator): add Discover method
 ### Task 4: Add GroupByFact Method
 
 **Files:**
+
 - Modify: `pkg/orchestrator/discover.go`
 - Create: `pkg/orchestrator/discover_internal_test.go` (for `factValue`)
 - Modify: `pkg/orchestrator/discover_public_test.go`
@@ -995,7 +1015,8 @@ func TestDiscoverTestSuite(
 
 **Step 2: Run tests to verify they fail**
 
-Run: `go test ./pkg/orchestrator/... -run "TestDiscoverPublicTestSuite/TestGroupByFact|TestDiscoverTestSuite" -v -count=1`
+Run:
+`go test ./pkg/orchestrator/... -run "TestDiscoverPublicTestSuite/TestGroupByFact|TestDiscoverTestSuite" -v -count=1`
 Expected: Compilation errors — `GroupByFact`, `factValue` not defined.
 
 **Step 3: Write the implementation**
@@ -1080,13 +1101,14 @@ func factValue(
 
 **Step 4: Run tests to verify they pass**
 
-Run: `go test ./pkg/orchestrator/... -run "TestDiscoverPublicTestSuite|TestDiscoverTestSuite" -v -count=1`
+Run:
+`go test ./pkg/orchestrator/... -run "TestDiscoverPublicTestSuite|TestDiscoverTestSuite" -v -count=1`
 Expected: All tests pass.
 
 **Step 5: Run full test suite and linter**
 
-Run: `go test ./pkg/orchestrator/... -v -count=1 && just go::vet`
-Expected: All pass.
+Run: `go test ./pkg/orchestrator/... -v -count=1 && just go::vet` Expected: All
+pass.
 
 **Step 6: Commit**
 
@@ -1099,6 +1121,7 @@ feat(orchestrator): add GroupByFact method
 ### Task 5: Add WhenFact Step Method
 
 **Files:**
+
 - Modify: `pkg/orchestrator/step.go`
 - Modify: `pkg/orchestrator/step_public_test.go`
 
@@ -1224,8 +1247,8 @@ Expected: All tests pass.
 
 **Step 5: Run full test suite and linter**
 
-Run: `go test ./pkg/orchestrator/... -v -count=1 && just go::vet`
-Expected: All pass.
+Run: `go test ./pkg/orchestrator/... -v -count=1 && just go::vet` Expected: All
+pass.
 
 **Step 6: Commit**
 
@@ -1238,6 +1261,7 @@ feat(orchestrator): add WhenFact step method
 ### Task 6: Add Examples
 
 **Files:**
+
 - Create: `examples/discover/main.go`
 - Create: `examples/group-by-fact/main.go`
 - Create: `examples/when-fact/main.go`
@@ -1613,13 +1637,13 @@ func main() {
 
 **Step 5: Verify examples compile**
 
-Run: `go build ./examples/discover/... && go build ./examples/group-by-fact/... && go build ./examples/when-fact/... && go build ./examples/fact-predicates/...`
+Run:
+`go build ./examples/discover/... && go build ./examples/group-by-fact/... && go build ./examples/when-fact/... && go build ./examples/fact-predicates/...`
 Expected: No compilation errors.
 
 **Step 6: Run linter**
 
-Run: `just go::vet`
-Expected: No lint errors.
+Run: `just go::vet` Expected: No lint errors.
 
 **Step 7: Commit**
 
@@ -1632,13 +1656,15 @@ feat(examples): add discover, group-by-fact, when-fact, and fact-predicates exam
 ### Task 7: Update README
 
 **Files:**
+
 - Modify: `README.md`
 
 **Step 1: Add Agent Discovery section**
 
-After the "Broadcast Results" section (line 171) and before "Examples" (line 173), add:
+After the "Broadcast Results" section (line 171) and before "Examples" (line
+173), add:
 
-```markdown
+````markdown
 ### Agent Discovery
 
 Query agents at plan-build time and filter by typed predicates:
@@ -1654,29 +1680,29 @@ for _, a := range agents {
     o.CommandShell(a.Hostname, "apt upgrade -y").After(health)
 }
 ```
+````
 
-| Method        | What it does                                           |
-| ------------- | ------------------------------------------------------ |
-| `Discover`    | Query agents filtered by predicates                    |
-| `GroupByFact` | Group agents by a fact key (e.g., `os.distribution`)   |
+| Method        | What it does                                         |
+| ------------- | ---------------------------------------------------- |
+| `Discover`    | Query agents filtered by predicates                  |
+| `GroupByFact` | Group agents by a fact key (e.g., `os.distribution`) |
 
 ### Predicates
 
 Composable filters passed to `Discover` and `GroupByFact`:
 
-| Predicate    | What it matches                                       |
-| ------------ | ----------------------------------------------------- |
-| `OS`         | Agent OS distribution (case-insensitive)              |
-| `Arch`       | Agent architecture (case-insensitive)                 |
-| `MinMemory`  | Minimum total memory                                  |
-| `MinCPU`     | Minimum CPU count                                     |
-| `HasLabel`   | Label key-value pair                                  |
-| `FactEquals` | Arbitrary fact key-value equality                     |
+| Predicate    | What it matches                          |
+| ------------ | ---------------------------------------- |
+| `OS`         | Agent OS distribution (case-insensitive) |
+| `Arch`       | Agent architecture (case-insensitive)    |
+| `MinMemory`  | Minimum total memory                     |
+| `MinCPU`     | Minimum CPU count                        |
+| `HasLabel`   | Label key-value pair                     |
+| `FactEquals` | Arbitrary fact key-value equality        |
 
 ### Fact Guards
 
-Use `WhenFact` for execution-time fact checks with a prior `AgentList`
-step:
+Use `WhenFact` for execution-time fact checks with a prior `AgentList` step:
 
 ```go
 agents := o.AgentList().After(health)
@@ -1687,7 +1713,8 @@ o.CommandShell("web-01", "apt upgrade -y").
         return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
     })
 ```
-```
+
+````
 
 **Step 2: Restructure examples table**
 
@@ -1738,8 +1765,9 @@ Each example is a standalone Go program you can read and run.
 ```bash
 cd examples/discover
 OSAPI_TOKEN="<jwt>" go run main.go
-```
-```
+````
+
+````
 
 **Step 3: Add WhenFact to step chaining table**
 
@@ -1747,7 +1775,7 @@ In the step chaining table (around line 89-97), add after the `When` row:
 
 ```markdown
 | `WhenFact`         | Guard — only run if agent fact predicate is true |
-```
+````
 
 **Step 4: Add Targeting section**
 
@@ -1756,8 +1784,8 @@ After the install section (line 27) and before Features (line 29), add:
 ```markdown
 ## 🎯 Targeting
 
-Most operations accept a `target` parameter to control which agents receive
-the request:
+Most operations accept a `target` parameter to control which agents receive the
+request:
 
 | Target      | Behavior                                    |
 | ----------- | ------------------------------------------- |
@@ -1769,8 +1797,7 @@ the request:
 
 **Step 5: Run linter**
 
-Run: `just go::vet`
-Expected: No lint errors.
+Run: `just go::vet` Expected: No lint errors.
 
 **Step 6: Commit**
 
@@ -1784,15 +1811,13 @@ docs(readme): add discovery, predicates, and categorized examples
 
 **Step 1: Run full test suite**
 
-Run: `just test`
-Expected: All tests pass, linting clean, coverage acceptable.
+Run: `just test` Expected: All tests pass, linting clean, coverage acceptable.
 
 **Step 2: Verify all examples compile**
 
-Run: `go build ./examples/...`
-Expected: No errors.
+Run: `go build ./examples/...` Expected: No errors.
 
 **Step 3: Review git log**
 
-Run: `git log --oneline -10`
-Expected: Clean commit history with conventional commit messages.
+Run: `git log --oneline -10` Expected: Clean commit history with conventional
+commit messages.

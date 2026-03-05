@@ -354,6 +354,38 @@ func (s *OpsTestSuite) TestAgentGetAutoNaming() {
 	}
 }
 
+func (s *OpsTestSuite) TestMustRawToMap() {
+	tests := []struct {
+		name   string
+		input  []byte
+		panics bool
+	}{
+		{
+			name:  "Valid JSON returns map",
+			input: []byte(`{"key":"value"}`),
+		},
+		{
+			name:   "Invalid JSON panics",
+			input:  []byte(`not json`),
+			panics: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.panics {
+				s.Panics(func() { mustRawToMap(tc.input) })
+
+				return
+			}
+
+			data := mustRawToMap(tc.input)
+			s.NotNil(data)
+			s.Equal("value", data["key"])
+		})
+	}
+}
+
 func TestOpsTestSuite(
 	t *testing.T,
 ) {

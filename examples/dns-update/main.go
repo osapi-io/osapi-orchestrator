@@ -31,7 +31,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -69,10 +68,7 @@ func main() {
 		[]string{"example.com"},
 	).After(getDNS)
 
-	report, err := o.Run()
-	if err != nil {
+	if _, err := o.Run(); err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Printf("%s in %s\n", report.Summary(), report.Duration)
 }

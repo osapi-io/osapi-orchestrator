@@ -1,7 +1,7 @@
 # Fact DSL Extensions Design
 
-Add fact-aware discovery, filtering, and guards to the orchestrator DSL.
-Build on existing `AgentResult` types and `When` guard patterns.
+Add fact-aware discovery, filtering, and guards to the orchestrator DSL. Build
+on existing `AgentResult` types and `When` guard patterns.
 
 ## Core Type
 
@@ -11,8 +11,8 @@ type Predicate func(AgentResult) bool
 ```
 
 Reuses `AgentResult` directly — it already has typed fields (`OSInfo`,
-`Architecture`, `Memory`, `CPUCount`, `Labels`, `Facts map[string]any`).
-No new wrapper type.
+`Architecture`, `Memory`, `CPUCount`, `Labels`, `Facts map[string]any`). No new
+wrapper type.
 
 ## Predicate Helpers
 
@@ -42,8 +42,8 @@ func (o *Orchestrator) Discover(
 ```
 
 Queries active agents and returns those matching ALL predicates. Runs
-synchronously at plan-build time. Internally creates a temporary mini-plan
-with `AgentList`, executes it, decodes the result, and applies filters.
+synchronously at plan-build time. Internally creates a temporary mini-plan with
+`AgentList`, executes it, decodes the result, and applies filters.
 
 ### GroupByFact
 
@@ -56,8 +56,8 @@ func (o *Orchestrator) GroupByFact(
 ```
 
 Queries agents, optionally filters by predicates, and groups results by the
-string value at the named key. The key uses dot notation to access nested
-fields on `AgentResult`:
+string value at the named key. The key uses dot notation to access nested fields
+on `AgentResult`:
 
 - `"os.distribution"` → `OSInfo.Distribution`
 - `"architecture"` → `Architecture`
@@ -76,23 +76,22 @@ func (s *Step) WhenFact(
 ) *Step
 ```
 
-Fact-based execution guard. Requires a prior `AgentList` step as a
-dependency (referenced by name). The guard:
+Fact-based execution guard. Requires a prior `AgentList` step as a dependency
+(referenced by name). The guard:
 
 1. Decodes `AgentListResult` from the named step
 2. Finds the agent matching this step's target hostname
 3. Runs the predicate against that agent
 4. Returns true (run) or false (skip)
 
-For `_all` broadcast targets, the guard passes if at least one agent
-matches. For precise per-agent filtering on broadcasts, use `Discover` +
-loop instead.
+For `_all` broadcast targets, the guard passes if at least one agent matches.
+For precise per-agent filtering on broadcasts, use `Discover` + loop instead.
 
 ## Implementation Detail
 
-`Discover` and `GroupByFact` need URL and token to create their mini-plans.
-Add `url` and `token` fields to the `Orchestrator` struct — they are
-already passed to `New()`, just store them alongside the plan.
+`Discover` and `GroupByFact` need URL and token to create their mini-plans. Add
+`url` and `token` fields to the `Orchestrator` struct — they are already passed
+to `New()`, just store them alongside the plan.
 
 ## Usage Patterns
 
@@ -141,22 +140,21 @@ hosts, _ := o.Discover(ctx,
 
 Each example is a standalone `main.go`:
 
-| Directory                      | What it shows                              |
-| ------------------------------ | ------------------------------------------ |
-| `examples/discover/`           | Find agents by OS/arch/memory predicates   |
-| `examples/group-by-fact/`      | Group agents by distro, run per-group cmds |
-| `examples/when-fact/`          | Fact-based guard on a step                 |
-| `examples/fact-predicates/`    | Compose multiple predicates                |
+| Directory                   | What it shows                              |
+| --------------------------- | ------------------------------------------ |
+| `examples/discover/`        | Find agents by OS/arch/memory predicates   |
+| `examples/group-by-fact/`   | Group agents by distro, run per-group cmds |
+| `examples/when-fact/`       | Fact-based guard on a step                 |
+| `examples/fact-predicates/` | Compose multiple predicates                |
 
 ## README Updates
 
 1. Add a **Targeting** section (like osapi-sdk) documenting `_any`, `_all`,
    hostname, and label selectors
-2. Add an **Agent Discovery** section documenting `Discover`,
-   `GroupByFact`, predicates, and `WhenFact`
+2. Add an **Agent Discovery** section documenting `Discover`, `GroupByFact`,
+   predicates, and `WhenFact`
 3. Restructure the examples table into categories matching the SDK pattern
-   (separate tables for core orchestration examples and fact/discovery
-   examples)
+   (separate tables for core orchestration examples and fact/discovery examples)
 4. Add all existing examples to the table (currently only "all" is listed)
 
 ## What This Does NOT Change

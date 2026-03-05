@@ -29,6 +29,20 @@ import (
 	"github.com/osapi-io/osapi-sdk/pkg/osapi"
 )
 
+// mustRawToMap unmarshals raw JSON bytes into a map for sdk.Result.Data.
+// Panics on error because the SDK guarantees the response body is valid
+// JSON — an unmarshal failure here indicates a programming error.
+func mustRawToMap(
+	raw []byte,
+) map[string]any {
+	var data map[string]any
+	if err := json.Unmarshal(raw, &data); err != nil {
+		panic(fmt.Sprintf("unmarshal SDK response: %v", err))
+	}
+
+	return data
+}
+
 // Operation constants matching the OSAPI agent's supported operations.
 const (
 	opNodeHostnameGet  = "node.hostname.get"
@@ -240,14 +254,9 @@ func (o *Orchestrator) AgentList() *Step {
 				return nil, fmt.Errorf("list agents: %w", err)
 			}
 
-			var data map[string]any
-			if err := json.Unmarshal(resp.RawJSON(), &data); err != nil {
-				return nil, fmt.Errorf("unmarshal agents: %w", err)
-			}
-
 			return &sdk.Result{
 				Changed: false,
-				Data:    data,
+				Data:    mustRawToMap(resp.RawJSON()),
 			}, nil
 		},
 	)
@@ -278,14 +287,9 @@ func (o *Orchestrator) AgentGet(
 				return nil, fmt.Errorf("get agent %s: %w", hostname, err)
 			}
 
-			var data map[string]any
-			if err := json.Unmarshal(resp.RawJSON(), &data); err != nil {
-				return nil, fmt.Errorf("unmarshal agent: %w", err)
-			}
-
 			return &sdk.Result{
 				Changed: false,
-				Data:    data,
+				Data:    mustRawToMap(resp.RawJSON()),
 			}, nil
 		},
 	)
