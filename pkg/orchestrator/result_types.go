@@ -20,6 +20,8 @@
 
 package orchestrator
 
+import "time"
+
 // HostnameResult holds typed hostname output.
 type HostnameResult struct {
 	Hostname string            `json:"hostname"`
@@ -81,4 +83,60 @@ type DNSUpdateResult struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
 	Error   string `json:"error,omitempty"`
+}
+
+// AgentListResult holds typed agent list output.
+type AgentListResult struct {
+	Agents []AgentResult `json:"agents"`
+	Total  int           `json:"total"`
+}
+
+// AgentResult holds typed agent details.
+type AgentResult struct {
+	Hostname      string            `json:"hostname"`
+	Status        string            `json:"status"`
+	Labels        map[string]string `json:"labels,omitempty"`
+	Architecture  string            `json:"architecture,omitempty"`
+	KernelVersion string            `json:"kernel_version,omitempty"`
+	CPUCount      int               `json:"cpu_count,omitempty"`
+	FQDN          string            `json:"fqdn,omitempty"`
+	ServiceMgr    string            `json:"service_mgr,omitempty"`
+	PackageMgr    string            `json:"package_mgr,omitempty"`
+	LoadAverage   *AgentLoadAverage `json:"load_average,omitempty"`
+	Memory        *AgentMemory      `json:"memory,omitempty"`
+	OSInfo        *AgentOSInfo      `json:"os_info,omitempty"`
+	Interfaces    []InterfaceResult `json:"interfaces,omitempty"`
+	Uptime        string            `json:"uptime,omitempty"`
+	StartedAt     time.Time         `json:"started_at,omitempty"`
+	RegisteredAt  time.Time         `json:"registered_at,omitempty"`
+	Facts         map[string]any    `json:"facts,omitempty"`
+}
+
+// AgentLoadAverage holds system load averages from agent heartbeat.
+type AgentLoadAverage struct {
+	OneMin     float32 `json:"one_min"`
+	FiveMin    float32 `json:"five_min"`
+	FifteenMin float32 `json:"fifteen_min"`
+}
+
+// AgentMemory holds memory usage from agent heartbeat.
+type AgentMemory struct {
+	Total int `json:"total"`
+	Used  int `json:"used"`
+	Free  int `json:"free"`
+}
+
+// AgentOSInfo holds operating system info from agent heartbeat.
+type AgentOSInfo struct {
+	Distribution string `json:"distribution"`
+	Version      string `json:"version"`
+}
+
+// InterfaceResult holds typed network interface info.
+type InterfaceResult struct {
+	Name   string `json:"name"`
+	IPv4   string `json:"ipv4,omitempty"`
+	IPv6   string `json:"ipv6,omitempty"`
+	MAC    string `json:"mac,omitempty"`
+	Family string `json:"family,omitempty"`
 }
