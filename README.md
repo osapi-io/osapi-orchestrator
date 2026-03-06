@@ -223,7 +223,10 @@ Composable filters passed to `Discover` and `GroupByFact`:
 | `MinMemory`  | Minimum total memory                     |
 | `MinCPU`     | Minimum CPU count                        |
 | `HasLabel`   | Label key-value pair                     |
-| `FactEquals` | Arbitrary fact key-value equality        |
+| `FactEquals`   | Arbitrary fact key-value equality        |
+| `HasCondition` | Agent has active condition of given type  |
+| `NoCondition`  | Agent does NOT have active condition      |
+| `Healthy`      | Agent has no active conditions            |
 
 ### Fact Guards
 
@@ -280,6 +283,7 @@ Each example is a standalone Go program you can read and run.
 | [when-fact](examples/when-fact/main.go)               | Fact-based guard on a step                         |
 | [fact-predicates](examples/fact-predicates/main.go)   | Compose multiple predicates for discovery          |
 | [label-filter](examples/label-filter/main.go)         | Filter by labels and arbitrary fact values         |
+| [condition-filter](examples/condition-filter/main.go) | Filter by node conditions (e.g., DiskPressure)     |
 
 ```bash
 cd examples/discover

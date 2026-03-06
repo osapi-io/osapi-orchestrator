@@ -20,6 +20,7 @@ retries, and reporting.
 - [type AgentOSInfo](#AgentOSInfo)
 - [type AgentResult](#AgentResult)
 - [type CommandResult](#CommandResult)
+- [type ConditionResult](#ConditionResult)
 - [type DNSConfigResult](#DNSConfigResult)
 - [type DNSUpdateResult](#DNSUpdateResult)
 - [type DiskResult](#DiskResult)
@@ -57,9 +58,12 @@ retries, and reporting.
 - [type Predicate](#Predicate)
   - [func Arch\(architecture string\) Predicate](#Arch)
   - [func FactEquals\(key string, value any\) Predicate](#FactEquals)
+  - [func HasCondition\(conditionType string\) Predicate](#HasCondition)
   - [func HasLabel\(key string, value string\) Predicate](#HasLabel)
+  - [func Healthy\(\) Predicate](#Healthy)
   - [func MinCPU\(count int\) Predicate](#MinCPU)
   - [func MinMemory\(total int\) Predicate](#MinMemory)
+  - [func NoCondition\(conditionType string\) Predicate](#NoCondition)
   - [func OS\(distribution string\) Predicate](#OS)
 - [type Report](#Report)
   - [func \(r \*Report\) Decode\(name string, v any\) error](#Report.Decode)
@@ -83,7 +87,7 @@ retries, and reporting.
 
 <a name="MatchAll"></a>
 
-## func [MatchAll](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L100-L103)
+## func [MatchAll](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L146-L149)
 
 ```go
 func MatchAll(agent AgentResult, predicates ...Predicate) bool
@@ -107,7 +111,7 @@ type AgentListResult struct {
 
 <a name="AgentLoadAverage"></a>
 
-## type [AgentLoadAverage](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L116-L120)
+## type [AgentLoadAverage](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L126-L130)
 
 AgentLoadAverage holds system load averages from agent heartbeat.
 
@@ -121,7 +125,7 @@ type AgentLoadAverage struct {
 
 <a name="AgentMemory"></a>
 
-## type [AgentMemory](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L123-L127)
+## type [AgentMemory](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L133-L137)
 
 AgentMemory holds memory usage from agent heartbeat.
 
@@ -135,7 +139,7 @@ type AgentMemory struct {
 
 <a name="AgentOSInfo"></a>
 
-## type [AgentOSInfo](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L130-L133)
+## type [AgentOSInfo](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L140-L143)
 
 AgentOSInfo holds operating system info from agent heartbeat.
 
@@ -148,7 +152,7 @@ type AgentOSInfo struct {
 
 <a name="AgentResult"></a>
 
-## type [AgentResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L95-L113)
+## type [AgentResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L95-L115)
 
 AgentResult holds typed agent details.
 
@@ -156,6 +160,7 @@ AgentResult holds typed agent details.
 type AgentResult struct {
     Hostname      string            `json:"hostname"`
     Status        string            `json:"status"`
+    State         string            `json:"state,omitempty"`
     Labels        map[string]string `json:"labels,omitempty"`
     Architecture  string            `json:"architecture,omitempty"`
     KernelVersion string            `json:"kernel_version,omitempty"`
@@ -166,6 +171,7 @@ type AgentResult struct {
     LoadAverage   *AgentLoadAverage `json:"load_average,omitempty"`
     Memory        *AgentMemory      `json:"memory,omitempty"`
     OSInfo        *AgentOSInfo      `json:"os_info,omitempty"`
+    Conditions    []ConditionResult `json:"conditions,omitempty"`
     Interfaces    []InterfaceResult `json:"interfaces,omitempty"`
     Uptime        string            `json:"uptime,omitempty"`
     StartedAt     time.Time         `json:"started_at,omitempty"`
@@ -187,6 +193,21 @@ type CommandResult struct {
     ExitCode   int    `json:"exit_code"`
     DurationMs int64  `json:"duration_ms"`
     Error      string `json:"error,omitempty"`
+}
+```
+
+<a name="ConditionResult"></a>
+
+## type [ConditionResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L118-L123)
+
+ConditionResult holds a node condition from the agent.
+
+```go
+type ConditionResult struct {
+    Type               string    `json:"type"`
+    Status             bool      `json:"status"`
+    Reason             string    `json:"reason,omitempty"`
+    LastTransitionTime time.Time `json:"last_transition_time"`
 }
 ```
 
@@ -305,7 +326,7 @@ type HostnameResult struct {
 
 <a name="InterfaceResult"></a>
 
-## type [InterfaceResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L136-L142)
+## type [InterfaceResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L146-L152)
 
 InterfaceResult holds typed network interface info.
 
@@ -620,6 +641,17 @@ func FactEquals(key string, value any) Predicate
 FactEquals returns a predicate that matches agents where the given fact key
 equals the expected value.
 
+<a name="HasCondition"></a>
+
+### func [HasCondition](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L100-L102)
+
+```go
+func HasCondition(conditionType string) Predicate
+```
+
+HasCondition returns a predicate that matches agents with an active condition
+\(Status=true\) of the given type.
+
 <a name="HasLabel"></a>
 
 ### func [HasLabel](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L78-L81)
@@ -630,6 +662,17 @@ func HasLabel(key string, value string) Predicate
 
 HasLabel returns a predicate that matches agents with the given label key\-value
 pair.
+
+<a name="Healthy"></a>
+
+### func [Healthy](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L132)
+
+```go
+func Healthy() Predicate
+```
+
+Healthy returns a predicate that matches agents with no active conditions \(all
+conditions are false or the list is empty\).
 
 <a name="MinCPU"></a>
 
@@ -652,6 +695,17 @@ func MinMemory(total int) Predicate
 
 MinMemory returns a predicate that matches agents with at least the given total
 memory \(in the same unit as AgentMemory.Total\).
+
+<a name="NoCondition"></a>
+
+### func [NoCondition](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L116-L118)
+
+```go
+func NoCondition(conditionType string) Predicate
+```
+
+NoCondition returns a predicate that matches agents that do NOT have an active
+condition of the given type.
 
 <a name="OS"></a>
 

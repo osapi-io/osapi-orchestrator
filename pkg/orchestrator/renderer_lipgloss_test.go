@@ -180,8 +180,10 @@ func (s *RendererLipglossTestSuite) TestTaskStart() {
 func (s *RendererLipglossTestSuite) TestTaskDone() {
 	tests := []struct {
 		name        string
+		verbose     bool
 		result      sdk.TaskResult
 		contains    []string
+		notContains []string
 		expectEmpty bool
 	}{
 		{
@@ -234,12 +236,123 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 			},
 			expectEmpty: true,
 		},
+		{
+			name: "Shows error message on failure",
+			result: sdk.TaskResult{
+				Name:     "deploy",
+				Status:   sdk.StatusFailed,
+				Duration: 45 * time.Millisecond,
+				Error:    fmt.Errorf("command exited with code 1"),
+			},
+			contains: []string{
+				"[failed]",
+				"deploy",
+				"command exited with code 1",
+			},
+		},
+		{
+			name: "No error line when error is nil",
+			result: sdk.TaskResult{
+				Name:     "deploy",
+				Status:   sdk.StatusFailed,
+				Duration: 45 * time.Millisecond,
+			},
+			contains: []string{
+				"[failed]",
+				"deploy",
+			},
+		},
+		{
+			name:    "Verbose shows stdout",
+			verbose: true,
+			result: sdk.TaskResult{
+				Name:     "run-cmd",
+				Status:   sdk.StatusChanged,
+				Changed:  true,
+				Duration: 100 * time.Millisecond,
+				Data: map[string]any{
+					"stdout":    "hello world",
+					"exit_code": float64(0),
+				},
+			},
+			contains: []string{
+				"[changed]",
+				"stdout: hello world",
+			},
+		},
+		{
+			name: "Normal mode hides stdout",
+			result: sdk.TaskResult{
+				Name:     "run-cmd",
+				Status:   sdk.StatusChanged,
+				Changed:  true,
+				Duration: 100 * time.Millisecond,
+				Data: map[string]any{
+					"stdout":    "hello world",
+					"exit_code": float64(0),
+				},
+			},
+			contains: []string{
+				"[changed]",
+			},
+			notContains: []string{
+				"stdout:",
+			},
+		},
+		{
+			name:    "Verbose skips empty values",
+			verbose: true,
+			result: sdk.TaskResult{
+				Name:     "run-cmd",
+				Status:   sdk.StatusChanged,
+				Changed:  true,
+				Duration: 100 * time.Millisecond,
+				Data: map[string]any{
+					"stdout": "output",
+					"stderr": "",
+				},
+			},
+			contains: []string{
+				"stdout: output",
+			},
+			notContains: []string{
+				"stderr:",
+			},
+		},
+		{
+			name: "Shows per-host results",
+			result: sdk.TaskResult{
+				Name:    "deploy-all",
+				Status:  sdk.StatusChanged,
+				Changed: true,
+				HostResults: []sdk.HostResult{
+					{Hostname: "web-01", Changed: true},
+					{Hostname: "web-02", Changed: false, Error: "timeout"},
+				},
+			},
+			contains: []string{
+				"web-01",
+				"web-02",
+				"error: timeout",
+			},
+		},
+		{
+			name: "No host results for non-broadcast",
+			result: sdk.TaskResult{
+				Name:   "get-hostname",
+				Status: sdk.StatusUnchanged,
+			},
+			notContains: []string{
+				"web-",
+			},
+		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			var buf bytes.Buffer
 			r := newLipglossRendererWithWriter(&buf)
+			r.verbose = tc.verbose
 
 			r.TaskDone(tc.result)
 
@@ -252,6 +365,9 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 
 			for _, c := range tc.contains {
 				s.Contains(output, c)
+			}
+			for _, c := range tc.notContains {
+				s.NotContains(output, c)
 			}
 		})
 	}
@@ -409,196 +525,6 @@ func (s *RendererLipglossTestSuite) TestPadTag() {
 			)
 			suffix := got[len(tc.styled):]
 			s.Equal(tc.wantSuffix, suffix)
-		})
-	}
-}
-
-func (s *RendererLipglossTestSuite) TestTaskDoneShowsErrorOnFailure() {
-	tests := []struct {
-		name     string
-		result   sdk.TaskResult
-		contains []string
-	}{
-		{
-			name: "Shows error message on failure",
-			result: sdk.TaskResult{
-				Name:     "deploy",
-				Status:   sdk.StatusFailed,
-				Duration: 45 * time.Millisecond,
-				Error:    fmt.Errorf("command exited with code 1"),
-			},
-			contains: []string{
-				"[failed]",
-				"deploy",
-				"command exited with code 1",
-			},
-		},
-		{
-			name: "No error line when error is nil",
-			result: sdk.TaskResult{
-				Name:     "deploy",
-				Status:   sdk.StatusFailed,
-				Duration: 45 * time.Millisecond,
-			},
-			contains: []string{
-				"[failed]",
-				"deploy",
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			var buf bytes.Buffer
-			r := newLipglossRendererWithWriter(&buf)
-
-			r.TaskDone(tc.result)
-
-			output := buf.String()
-			for _, c := range tc.contains {
-				s.Contains(output, c)
-			}
-		})
-	}
-}
-
-func (s *RendererLipglossTestSuite) TestTaskDoneVerbose() {
-	tests := []struct {
-		name        string
-		verbose     bool
-		result      sdk.TaskResult
-		contains    []string
-		notContains []string
-	}{
-		{
-			name:    "Verbose shows stdout",
-			verbose: true,
-			result: sdk.TaskResult{
-				Name:     "run-cmd",
-				Status:   sdk.StatusChanged,
-				Changed:  true,
-				Duration: 100 * time.Millisecond,
-				Data: map[string]any{
-					"stdout":    "hello world",
-					"exit_code": float64(0),
-				},
-			},
-			contains: []string{
-				"[changed]",
-				"stdout: hello world",
-			},
-		},
-		{
-			name:    "Normal mode hides stdout",
-			verbose: false,
-			result: sdk.TaskResult{
-				Name:     "run-cmd",
-				Status:   sdk.StatusChanged,
-				Changed:  true,
-				Duration: 100 * time.Millisecond,
-				Data: map[string]any{
-					"stdout":    "hello world",
-					"exit_code": float64(0),
-				},
-			},
-			contains: []string{
-				"[changed]",
-			},
-			notContains: []string{
-				"stdout:",
-			},
-		},
-		{
-			name:    "Verbose skips empty values",
-			verbose: true,
-			result: sdk.TaskResult{
-				Name:     "run-cmd",
-				Status:   sdk.StatusChanged,
-				Changed:  true,
-				Duration: 100 * time.Millisecond,
-				Data: map[string]any{
-					"stdout": "output",
-					"stderr": "",
-				},
-			},
-			contains: []string{
-				"stdout: output",
-			},
-			notContains: []string{
-				"stderr:",
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			var buf bytes.Buffer
-			r := newLipglossRendererWithWriter(&buf)
-			r.verbose = tc.verbose
-
-			r.TaskDone(tc.result)
-
-			output := buf.String()
-			for _, c := range tc.contains {
-				s.Contains(output, c)
-			}
-			for _, c := range tc.notContains {
-				s.NotContains(output, c)
-			}
-		})
-	}
-}
-
-func (s *RendererLipglossTestSuite) TestTaskDoneShowsHostResults() {
-	tests := []struct {
-		name        string
-		result      sdk.TaskResult
-		contains    []string
-		notContains []string
-	}{
-		{
-			name: "Shows per-host results",
-			result: sdk.TaskResult{
-				Name:    "deploy-all",
-				Status:  sdk.StatusChanged,
-				Changed: true,
-				HostResults: []sdk.HostResult{
-					{Hostname: "web-01", Changed: true},
-					{Hostname: "web-02", Changed: false, Error: "timeout"},
-				},
-			},
-			contains: []string{
-				"web-01",
-				"web-02",
-				"error: timeout",
-			},
-		},
-		{
-			name: "No host results for non-broadcast",
-			result: sdk.TaskResult{
-				Name:   "get-hostname",
-				Status: sdk.StatusUnchanged,
-			},
-			notContains: []string{
-				"web-",
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			var buf bytes.Buffer
-			r := newLipglossRendererWithWriter(&buf)
-
-			r.TaskDone(tc.result)
-
-			output := buf.String()
-			for _, c := range tc.contains {
-				s.Contains(output, c)
-			}
-			for _, c := range tc.notContains {
-				s.NotContains(output, c)
-			}
 		})
 	}
 }

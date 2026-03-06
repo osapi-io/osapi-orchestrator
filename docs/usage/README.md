@@ -70,6 +70,22 @@ fmt.Println(h.Hostname)
 | `DNSConfigResult` | `DNSServers`, `SearchDomains`                           |
 | `DNSUpdateResult` | `Success`, `Message`, `Error`                           |
 
+## Predicates
+
+Composable filters passed to `Discover` and `GroupByFact`:
+
+| Predicate      | What it matches                          |
+| -------------- | ---------------------------------------- |
+| `OS`           | Agent OS distribution (case-insensitive) |
+| `Arch`         | Agent architecture (case-insensitive)    |
+| `MinMemory`    | Minimum total memory                     |
+| `MinCPU`       | Minimum CPU count                        |
+| `HasLabel`     | Label key-value pair                     |
+| `FactEquals`   | Arbitrary fact key-value equality        |
+| `HasCondition` | Agent has active condition of given type |
+| `NoCondition`  | Agent does NOT have active condition     |
+| `Healthy`      | Agent has no active conditions           |
+
 ## Error Strategies
 
 | Strategy            | Behavior                                        |

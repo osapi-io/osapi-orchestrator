@@ -34,13 +34,16 @@ type OpsTestSuite struct {
 	suite.Suite
 }
 
-func (s *OpsTestSuite) TestHealthCheckFunc() {
+func (s *OpsTestSuite) TestHealthCheck() {
 	tests := []struct {
 		name        string
+		newOrch     bool
 		handler     http.HandlerFunc
+		closeServer bool
 		expectErr   bool
 		errContains string
 		expectAlive bool
+		expectName  string
 	}{
 		{
 			name: "Returns success on 200",
@@ -67,12 +70,62 @@ func (s *OpsTestSuite) TestHealthCheckFunc() {
 			expectErr:   true,
 			errContains: "health check",
 		},
+		{
+			name: "Returns error on connection failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusOK)
+			}),
+			closeServer: true,
+			expectErr:   true,
+			errContains: "health check",
+		},
+		{
+			name:    "First name has no suffix",
+			newOrch: true,
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusOK)
+			}),
+			expectName: "health-check",
+		},
+		{
+			name: "Duplicate name gets counter suffix",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusOK)
+			}),
+			expectName: "health-check-2",
+		},
 	}
+
+	var sharedOrch *Orchestrator
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			server := httptest.NewServer(tc.handler)
 			defer server.Close()
+
+			if tc.closeServer {
+				server.Close()
+			}
+
+			if tc.newOrch || sharedOrch == nil {
+				sharedOrch = New(server.URL, "test-token")
+			}
+
+			if tc.expectName != "" {
+				step := sharedOrch.HealthCheck("_any")
+				s.Equal(tc.expectName, step.task.Name())
+
+				return
+			}
 
 			client := osapi.New(server.URL, "test-token")
 
@@ -97,71 +150,14 @@ func (s *OpsTestSuite) TestHealthCheckFunc() {
 	}
 }
 
-func (s *OpsTestSuite) TestHealthCheckFuncConnectionError() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	server.Close()
-
-	client := osapi.New(server.URL, "test-token")
-
-	orch := New(server.URL, "test-token")
-	step := orch.HealthCheck("_any")
-	fn := step.task.Fn()
-
-	result, err := fn(context.Background(), client)
-
-	s.Require().Error(err)
-	s.Contains(err.Error(), "health check")
-	s.Nil(result)
-}
-
-func (s *OpsTestSuite) TestHealthCheckAutoNaming() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	orch := New(server.URL, "test-token")
-
-	tests := []struct {
-		name     string
-		expected string
-	}{
-		{
-			name:     "First health check has no suffix",
-			expected: "health-check",
-		},
-		{
-			name:     "Second health check gets counter suffix",
-			expected: "health-check-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			step := orch.HealthCheck("_any")
-			s.Equal(tc.expected, step.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestAgentListFunc() {
+func (s *OpsTestSuite) TestAgentList() {
 	tests := []struct {
 		name        string
+		newOrch     bool
 		handler     http.HandlerFunc
 		expectErr   bool
 		errContains string
+		expectName  string
 	}{
 		{
 			name: "Returns success with agent data",
@@ -189,12 +185,46 @@ func (s *OpsTestSuite) TestAgentListFunc() {
 			expectErr:   true,
 			errContains: "list agents",
 		},
+		{
+			name:    "First name has no suffix",
+			newOrch: true,
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusOK)
+			}),
+			expectName: "list-agents",
+		},
+		{
+			name: "Duplicate name gets counter suffix",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusOK)
+			}),
+			expectName: "list-agents-2",
+		},
 	}
+
+	var sharedOrch *Orchestrator
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			server := httptest.NewServer(tc.handler)
 			defer server.Close()
+
+			if tc.newOrch || sharedOrch == nil {
+				sharedOrch = New(server.URL, "test-token")
+			}
+
+			if tc.expectName != "" {
+				step := sharedOrch.AgentList()
+				s.Equal(tc.expectName, step.task.Name())
+
+				return
+			}
 
 			client := osapi.New(server.URL, "test-token")
 
@@ -220,47 +250,14 @@ func (s *OpsTestSuite) TestAgentListFunc() {
 	}
 }
 
-func (s *OpsTestSuite) TestAgentListAutoNaming() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	orch := New(server.URL, "test-token")
-
-	tests := []struct {
-		name     string
-		expected string
-	}{
-		{
-			name:     "First list-agents has no suffix",
-			expected: "list-agents",
-		},
-		{
-			name:     "Second list-agents gets counter suffix",
-			expected: "list-agents-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			step := orch.AgentList()
-			s.Equal(tc.expected, step.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestAgentGetFunc() {
+func (s *OpsTestSuite) TestAgentGet() {
 	tests := []struct {
 		name        string
+		newOrch     bool
 		handler     http.HandlerFunc
 		expectErr   bool
 		errContains string
+		expectName  string
 	}{
 		{
 			name: "Returns success with agent details",
@@ -288,12 +285,46 @@ func (s *OpsTestSuite) TestAgentGetFunc() {
 			expectErr:   true,
 			errContains: "get agent",
 		},
+		{
+			name:    "First name has no suffix",
+			newOrch: true,
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusOK)
+			}),
+			expectName: "get-agent",
+		},
+		{
+			name: "Duplicate name gets counter suffix",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusOK)
+			}),
+			expectName: "get-agent-2",
+		},
 	}
+
+	var sharedOrch *Orchestrator
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			server := httptest.NewServer(tc.handler)
 			defer server.Close()
+
+			if tc.newOrch || sharedOrch == nil {
+				sharedOrch = New(server.URL, "test-token")
+			}
+
+			if tc.expectName != "" {
+				step := sharedOrch.AgentGet("web-01")
+				s.Equal(tc.expectName, step.task.Name())
+
+				return
+			}
 
 			client := osapi.New(server.URL, "test-token")
 
@@ -315,41 +346,6 @@ func (s *OpsTestSuite) TestAgentGetFunc() {
 			s.Require().NoError(fnErr)
 			s.False(result.Changed)
 			s.NotNil(result.Data)
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestAgentGetAutoNaming() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	orch := New(server.URL, "test-token")
-
-	tests := []struct {
-		name     string
-		expected string
-	}{
-		{
-			name:     "First get-agent has no suffix",
-			expected: "get-agent",
-		},
-		{
-			name:     "Second get-agent gets counter suffix",
-			expected: "get-agent-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			step := orch.AgentGet("web-01")
-			s.Equal(tc.expected, step.task.Name())
 		})
 	}
 }
