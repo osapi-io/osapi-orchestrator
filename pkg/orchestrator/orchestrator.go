@@ -92,17 +92,19 @@ func (o *Orchestrator) TaskFunc(
 
 // friendlyNames maps operation strings to short, human-readable prefixes.
 var friendlyNames = map[string]string{
-	opNodeHostnameGet:  "get-hostname",
-	opNodeStatusGet:    "get-status",
-	opNodeUptimeGet:    "get-uptime",
-	opNodeDiskGet:      "get-disk",
-	opNodeMemoryGet:    "get-memory",
-	opNodeLoadGet:      "get-load",
-	opNetworkDNSGet:    "get-dns",
-	opNetworkDNSUpdate: "update-dns",
-	opNetworkPingDo:    "ping",
-	opCommandExec:      "run",
-	opCommandShell:     "shell",
+	opNodeHostnameGet:   "get-hostname",
+	opNodeStatusGet:     "get-status",
+	opNodeUptimeGet:     "get-uptime",
+	opNodeDiskGet:       "get-disk",
+	opNodeMemoryGet:     "get-memory",
+	opNodeLoadGet:       "get-load",
+	opNetworkDNSGet:     "get-dns",
+	opNetworkDNSUpdate:  "update-dns",
+	opNetworkPingDo:     "ping",
+	opCommandExec:       "run",
+	opCommandShell:      "shell",
+	opFileDeployExecute: "deploy-file",
+	opFileStatusGet:     "file-status",
 }
 
 // nextName generates a human-readable task name from the operation.

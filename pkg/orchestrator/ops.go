@@ -45,17 +45,19 @@ func mustRawToMap(
 
 // Operation constants matching the OSAPI agent's supported operations.
 const (
-	opNodeHostnameGet  = "node.hostname.get"
-	opNodeStatusGet    = "node.status.get"
-	opNodeUptimeGet    = "node.uptime.get"
-	opNodeDiskGet      = "node.disk.get"
-	opNodeMemoryGet    = "node.memory.get"
-	opNodeLoadGet      = "node.load.get"
-	opNetworkDNSGet    = "network.dns.get"
-	opNetworkDNSUpdate = "network.dns.update"
-	opNetworkPingDo    = "network.ping.do"
-	opCommandExec      = "command.exec.execute"
-	opCommandShell     = "command.shell.execute"
+	opNodeHostnameGet    = "node.hostname.get"
+	opNodeStatusGet      = "node.status.get"
+	opNodeUptimeGet      = "node.uptime.get"
+	opNodeDiskGet        = "node.disk.get"
+	opNodeMemoryGet      = "node.memory.get"
+	opNodeLoadGet        = "node.load.get"
+	opNetworkDNSGet      = "network.dns.get"
+	opNetworkDNSUpdate   = "network.dns.update"
+	opNetworkPingDo      = "network.ping.do"
+	opCommandExec        = "command.exec.execute"
+	opCommandShell       = "command.shell.execute"
+	opFileDeployExecute  = "file.deploy.execute"
+	opFileStatusGet      = "file.status.get"
 )
 
 func (o *Orchestrator) newStep(
@@ -231,6 +233,94 @@ func (o *Orchestrator) CommandShell(
 			"command": command,
 		},
 	})
+}
+
+// FileDeploy creates a step that deploys a file from the Object Store
+// to the target agent's filesystem. The objectName must reference a
+// file previously uploaded to the Object Store. ContentType should be
+// "raw" for literal content or "template" for Go-template rendering
+// with vars and agent facts.
+func (o *Orchestrator) FileDeploy(
+	target string,
+	opts FileDeployOpts,
+) *Step {
+	params := map[string]any{
+		"object_name":  opts.ObjectName,
+		"path":         opts.Path,
+		"content_type": opts.ContentType,
+	}
+	if opts.Mode != "" {
+		params["mode"] = opts.Mode
+	}
+	if opts.Owner != "" {
+		params["owner"] = opts.Owner
+	}
+	if opts.Group != "" {
+		params["group"] = opts.Group
+	}
+	if len(opts.Vars) > 0 {
+		params["vars"] = opts.Vars
+	}
+
+	return o.newStep(&sdk.Op{
+		Operation: opFileDeployExecute,
+		Target:    target,
+		Params:    params,
+	})
+}
+
+// FileStatusGet creates a step that checks the status of a deployed
+// file on the target agent. Returns whether the file is in-sync,
+// drifted, or missing compared to the expected state.
+func (o *Orchestrator) FileStatusGet(
+	target string,
+	path string,
+) *Step {
+	return o.newStep(&sdk.Op{
+		Operation: opFileStatusGet,
+		Target:    target,
+		Params: map[string]any{
+			"path": path,
+		},
+	})
+}
+
+// FileUpload creates a step that uploads file content to the Object
+// Store via the OSAPI REST API. Returns the object name that can be
+// used in subsequent FileDeploy steps. This is a convenience wrapper
+// that uses TaskFunc to call the file upload API directly.
+//
+// NOTE: Requires osapi-sdk FileService (not yet available). This
+// operation will return an error until the SDK file endpoints are
+// merged.
+func (o *Orchestrator) FileUpload(
+	name string,
+	_ []byte,
+) *Step {
+	prefix := "upload-file"
+	o.nameCount[prefix]++
+
+	taskName := prefix
+	if o.nameCount[prefix] > 1 {
+		taskName = fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
+	}
+
+	task := o.plan.TaskFunc(
+		taskName,
+		func(
+			_ context.Context,
+			_ *osapi.Client,
+		) (*sdk.Result, error) {
+			// TODO(sdk): Wire to c.File.Upload() when osapi-sdk
+			// FileService is available.
+			return nil, fmt.Errorf(
+				"upload file %s: SDK FileService not yet available",
+				name,
+			)
+		},
+	)
+
+	return &Step{task: task}
 }
 
 // AgentList creates a step that lists all active agents with their facts.

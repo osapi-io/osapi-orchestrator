@@ -350,6 +350,75 @@ func (s *OpsTestSuite) TestAgentGet() {
 	}
 }
 
+func (s *OpsTestSuite) TestFileUpload() {
+	tests := []struct {
+		name        string
+		newOrch     bool
+		expectErr   bool
+		errContains string
+		expectName  string
+	}{
+		{
+			name:        "Returns error because SDK FileService not available",
+			expectErr:   true,
+			errContains: "SDK FileService not yet available",
+		},
+		{
+			name:       "First name has no suffix",
+			newOrch:    true,
+			expectName: "upload-file",
+		},
+		{
+			name:       "Duplicate name gets counter suffix",
+			expectName: "upload-file-2",
+		},
+	}
+
+	var sharedOrch *Orchestrator
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusOK)
+			}))
+			defer server.Close()
+
+			if tc.newOrch || sharedOrch == nil {
+				sharedOrch = New(server.URL, "test-token")
+			}
+
+			if tc.expectName != "" {
+				step := sharedOrch.FileUpload("test.txt", []byte("content"))
+				s.Equal(tc.expectName, step.task.Name())
+
+				return
+			}
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.FileUpload("test.txt", []byte("content"))
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+		})
+	}
+}
+
 func (s *OpsTestSuite) TestMustRawToMap() {
 	tests := []struct {
 		name   string

@@ -147,6 +147,42 @@ func (s *OpsPublicTestSuite) TestOperations() {
 				return s.orch.AgentGet("server1")
 			},
 		},
+		{
+			name: "FileDeploy",
+			newFn: func() *orchestrator.Step {
+				return s.orch.FileDeploy("_any", orchestrator.FileDeployOpts{
+					ObjectName:  "config.yaml",
+					Path:        "/etc/app/config.yaml",
+					ContentType: "raw",
+					Mode:        "0644",
+					Owner:       "root",
+					Group:       "root",
+				})
+			},
+		},
+		{
+			name: "FileDeployWithVars",
+			newFn: func() *orchestrator.Step {
+				return s.orch.FileDeploy("_any", orchestrator.FileDeployOpts{
+					ObjectName:  "config.tmpl",
+					Path:        "/etc/app/config.yaml",
+					ContentType: "template",
+					Vars:        map[string]any{"env": "prod"},
+				})
+			},
+		},
+		{
+			name: "FileStatusGet",
+			newFn: func() *orchestrator.Step {
+				return s.orch.FileStatusGet("_any", "/etc/app/config.yaml")
+			},
+		},
+		{
+			name: "FileUpload",
+			newFn: func() *orchestrator.Step {
+				return s.orch.FileUpload("test.txt", []byte("hello"))
+			},
+		},
 	}
 
 	for _, tc := range tests {

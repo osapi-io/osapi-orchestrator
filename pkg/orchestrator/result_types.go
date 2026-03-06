@@ -150,3 +150,41 @@ type InterfaceResult struct {
 	MAC    string `json:"mac,omitempty"`
 	Family string `json:"family,omitempty"`
 }
+
+// FileDeployOpts holds parameters for the FileDeploy operation.
+type FileDeployOpts struct {
+	// ObjectName is the name of the object in the NATS Object Store.
+	ObjectName string
+	// Path is the destination path on the target filesystem.
+	Path string
+	// ContentType specifies whether the content is "raw" or "template".
+	ContentType string
+	// Mode is the file permission mode (e.g., "0644"). Optional.
+	Mode string
+	// Owner is the file owner user. Optional.
+	Owner string
+	// Group is the file owner group. Optional.
+	Group string
+	// Vars contains template variables when ContentType is "template".
+	Vars map[string]any
+}
+
+// FileDeployResult holds typed file deploy output.
+type FileDeployResult struct {
+	Changed bool   `json:"changed"`
+	SHA256  string `json:"sha256"`
+	Path    string `json:"path"`
+}
+
+// FileStatusResult holds typed file status output.
+type FileStatusResult struct {
+	Path   string `json:"path"`
+	Status string `json:"status"`
+	SHA256 string `json:"sha256,omitempty"`
+}
+
+// FileUploadResult holds typed file upload output.
+type FileUploadResult struct {
+	Name string `json:"name"`
+	Size int    `json:"size,omitempty"`
+}
