@@ -95,6 +95,7 @@ type AgentListResult struct {
 type AgentResult struct {
 	Hostname      string            `json:"hostname"`
 	Status        string            `json:"status"`
+	State         string            `json:"state,omitempty"`
 	Labels        map[string]string `json:"labels,omitempty"`
 	Architecture  string            `json:"architecture,omitempty"`
 	KernelVersion string            `json:"kernel_version,omitempty"`
@@ -105,11 +106,20 @@ type AgentResult struct {
 	LoadAverage   *AgentLoadAverage `json:"load_average,omitempty"`
 	Memory        *AgentMemory      `json:"memory,omitempty"`
 	OSInfo        *AgentOSInfo      `json:"os_info,omitempty"`
+	Conditions    []ConditionResult `json:"conditions,omitempty"`
 	Interfaces    []InterfaceResult `json:"interfaces,omitempty"`
 	Uptime        string            `json:"uptime,omitempty"`
 	StartedAt     time.Time         `json:"started_at,omitempty"`
 	RegisteredAt  time.Time         `json:"registered_at,omitempty"`
 	Facts         map[string]any    `json:"facts,omitempty"`
+}
+
+// ConditionResult holds a node condition from the agent.
+type ConditionResult struct {
+	Type               string    `json:"type"`
+	Status             bool      `json:"status"`
+	Reason             string    `json:"reason,omitempty"`
+	LastTransitionTime time.Time `json:"last_transition_time"`
 }
 
 // AgentLoadAverage holds system load averages from agent heartbeat.

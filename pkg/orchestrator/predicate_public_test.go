@@ -326,6 +326,160 @@ func (s *PredicatePublicTestSuite) TestFactEquals() {
 	}
 }
 
+func (s *PredicatePublicTestSuite) TestHasCondition() {
+	tests := []struct {
+		name          string
+		conditionType string
+		agent         orchestrator.AgentResult
+		expected      bool
+	}{
+		{
+			name:          "Matches active condition",
+			conditionType: "DiskPressure",
+			agent: orchestrator.AgentResult{
+				Conditions: []orchestrator.ConditionResult{
+					{Type: "DiskPressure", Status: true},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:          "No match when condition is inactive",
+			conditionType: "DiskPressure",
+			agent: orchestrator.AgentResult{
+				Conditions: []orchestrator.ConditionResult{
+					{Type: "DiskPressure", Status: false},
+				},
+			},
+			expected: false,
+		},
+		{
+			name:          "No match for wrong type",
+			conditionType: "MemoryPressure",
+			agent: orchestrator.AgentResult{
+				Conditions: []orchestrator.ConditionResult{
+					{Type: "DiskPressure", Status: true},
+				},
+			},
+			expected: false,
+		},
+		{
+			name:          "No match when conditions are nil",
+			conditionType: "DiskPressure",
+			agent:         orchestrator.AgentResult{},
+			expected:      false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			predicate := orchestrator.HasCondition(tc.conditionType)
+			s.Equal(tc.expected, predicate(tc.agent))
+		})
+	}
+}
+
+func (s *PredicatePublicTestSuite) TestNoCondition() {
+	tests := []struct {
+		name          string
+		conditionType string
+		agent         orchestrator.AgentResult
+		expected      bool
+	}{
+		{
+			name:          "No match when condition is active",
+			conditionType: "DiskPressure",
+			agent: orchestrator.AgentResult{
+				Conditions: []orchestrator.ConditionResult{
+					{Type: "DiskPressure", Status: true},
+				},
+			},
+			expected: false,
+		},
+		{
+			name:          "Matches when condition is inactive",
+			conditionType: "DiskPressure",
+			agent: orchestrator.AgentResult{
+				Conditions: []orchestrator.ConditionResult{
+					{Type: "DiskPressure", Status: false},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:          "Matches when type is missing",
+			conditionType: "MemoryPressure",
+			agent: orchestrator.AgentResult{
+				Conditions: []orchestrator.ConditionResult{
+					{Type: "DiskPressure", Status: true},
+				},
+			},
+			expected: true,
+		},
+		{
+			name:          "Matches when conditions are nil",
+			conditionType: "DiskPressure",
+			agent:         orchestrator.AgentResult{},
+			expected:      true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			predicate := orchestrator.NoCondition(tc.conditionType)
+			s.Equal(tc.expected, predicate(tc.agent))
+		})
+	}
+}
+
+func (s *PredicatePublicTestSuite) TestHealthy() {
+	tests := []struct {
+		name     string
+		agent    orchestrator.AgentResult
+		expected bool
+	}{
+		{
+			name:     "Matches when no conditions",
+			agent:    orchestrator.AgentResult{},
+			expected: true,
+		},
+		{
+			name: "Matches when all conditions inactive",
+			agent: orchestrator.AgentResult{
+				Conditions: []orchestrator.ConditionResult{
+					{Type: "DiskPressure", Status: false},
+					{Type: "MemoryPressure", Status: false},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "No match when one condition active",
+			agent: orchestrator.AgentResult{
+				Conditions: []orchestrator.ConditionResult{
+					{Type: "DiskPressure", Status: false},
+					{Type: "MemoryPressure", Status: true},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "Matches with empty conditions slice",
+			agent: orchestrator.AgentResult{
+				Conditions: []orchestrator.ConditionResult{},
+			},
+			expected: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			predicate := orchestrator.Healthy()
+			s.Equal(tc.expected, predicate(tc.agent))
+		})
+	}
+}
+
 func (s *PredicatePublicTestSuite) TestMatchAll() {
 	tests := []struct {
 		name       string

@@ -95,6 +95,52 @@ func FactEquals(
 	}
 }
 
+// HasCondition returns a predicate that matches agents with an active
+// condition (Status=true) of the given type.
+func HasCondition(
+	conditionType string,
+) Predicate {
+	return func(a AgentResult) bool {
+		for _, c := range a.Conditions {
+			if strings.EqualFold(c.Type, conditionType) && c.Status {
+				return true
+			}
+		}
+
+		return false
+	}
+}
+
+// NoCondition returns a predicate that matches agents that do NOT have
+// an active condition of the given type.
+func NoCondition(
+	conditionType string,
+) Predicate {
+	return func(a AgentResult) bool {
+		for _, c := range a.Conditions {
+			if strings.EqualFold(c.Type, conditionType) && c.Status {
+				return false
+			}
+		}
+
+		return true
+	}
+}
+
+// Healthy returns a predicate that matches agents with no active
+// conditions (all conditions are false or the list is empty).
+func Healthy() Predicate {
+	return func(a AgentResult) bool {
+		for _, c := range a.Conditions {
+			if c.Status {
+				return false
+			}
+		}
+
+		return true
+	}
+}
+
 // MatchAll returns true if the agent matches all given predicates.
 // Returns true if no predicates are provided.
 func MatchAll(
