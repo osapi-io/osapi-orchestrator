@@ -67,6 +67,9 @@ string constants.
 | `NetworkPingDo`    | `network.ping.do`       | [docs](docs/usage/network-ping-do.md)    | [`ops.go`](pkg/orchestrator/ops.go) |
 | `CommandExec`      | `command.exec.execute`  | [docs](docs/usage/command-exec.md)       | [`ops.go`](pkg/orchestrator/ops.go) |
 | `CommandShell`     | `command.shell.execute` | [docs](docs/usage/command-shell.md)      | [`ops.go`](pkg/orchestrator/ops.go) |
+| `FileDeploy`       | `file.deploy.execute`   | [docs](docs/usage/file-deploy.md)        | [`ops.go`](pkg/orchestrator/ops.go) |
+| `FileStatusGet`    | `file.status.get`       | [docs](docs/usage/file-status-get.md)    | [`ops.go`](pkg/orchestrator/ops.go) |
+| `FileUpload`       | Upload to Object Store  | [docs](docs/usage/file-upload.md)        | [`ops.go`](pkg/orchestrator/ops.go) |
 | `AgentList`        | List active agents      | [docs](docs/usage/agent-list.md)         | [`ops.go`](pkg/orchestrator/ops.go) |
 | `AgentGet`         | Get agent details       | [docs](docs/usage/agent-get.md)          | [`ops.go`](pkg/orchestrator/ops.go) |
 
@@ -85,6 +88,9 @@ Decode step results into typed structs instead of digging through
 | `PingResult`      | `PacketsSent`, `PacketsReceived`, `PacketLoss`, `Error` |
 | `DNSConfigResult` | `DNSServers`, `SearchDomains`                           |
 | `DNSUpdateResult` | `Success`, `Message`, `Error`                           |
+| `FileDeployResult`| `Changed`, `SHA256`, `Path`                             |
+| `FileStatusResult`| `Path`, `Status`, `SHA256`                              |
+| `FileUploadResult`| `Name`, `Size`                                          |
 | `AgentListResult` | `Agents` (slice of `AgentResult`), `Total`              |
 | `AgentResult`     | `Hostname`, `Status`, `Architecture`, `OSInfo`, `Memory` |
 
@@ -272,6 +278,12 @@ Each example is a standalone Go program you can read and run.
 | [broadcast](examples/broadcast/main.go)              | Per-host results from broadcast operations         |
 | [task-func](examples/task-func/main.go)              | Custom steps with typed result decoding            |
 | [dns-update](examples/dns-update/main.go)            | Read-then-write pattern with DNS operations        |
+
+### File Management
+
+| Example                                              | What it shows                                      |
+| ---------------------------------------------------- | -------------------------------------------------- |
+| [file-deploy](examples/file-deploy/main.go)          | Upload, deploy, and verify a file end-to-end       |
 
 ### Agent Discovery
 

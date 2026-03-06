@@ -45,19 +45,19 @@ func mustRawToMap(
 
 // Operation constants matching the OSAPI agent's supported operations.
 const (
-	opNodeHostnameGet    = "node.hostname.get"
-	opNodeStatusGet      = "node.status.get"
-	opNodeUptimeGet      = "node.uptime.get"
-	opNodeDiskGet        = "node.disk.get"
-	opNodeMemoryGet      = "node.memory.get"
-	opNodeLoadGet        = "node.load.get"
-	opNetworkDNSGet      = "network.dns.get"
-	opNetworkDNSUpdate   = "network.dns.update"
-	opNetworkPingDo      = "network.ping.do"
-	opCommandExec        = "command.exec.execute"
-	opCommandShell       = "command.shell.execute"
-	opFileDeployExecute  = "file.deploy.execute"
-	opFileStatusGet      = "file.status.get"
+	opNodeHostnameGet   = "node.hostname.get"
+	opNodeStatusGet     = "node.status.get"
+	opNodeUptimeGet     = "node.uptime.get"
+	opNodeDiskGet       = "node.disk.get"
+	opNodeMemoryGet     = "node.memory.get"
+	opNodeLoadGet       = "node.load.get"
+	opNetworkDNSGet     = "network.dns.get"
+	opNetworkDNSUpdate  = "network.dns.update"
+	opNetworkPingDo     = "network.ping.do"
+	opCommandExec       = "command.exec.execute"
+	opCommandShell      = "command.shell.execute"
+	opFileDeployExecute = "file.deploy.execute"
+	opFileStatusGet     = "file.status.get"
 )
 
 func (o *Orchestrator) newStep(
