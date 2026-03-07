@@ -18,15 +18,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates file deployment: upload a file to the
-// Object Store, deploy it to a target agent, then verify its status.
+// Package main demonstrates conditional file upload using FileChanged.
+// Checks whether local content differs from the Object Store version,
+// then only uploads and deploys if changes are detected.
 //
 // DAG:
 //
 //	health-check
-//	    └── upload-file
-//	            └── deploy-file
-//	                    └── file-status
+//	    └── check-file
+//	            └── upload-file (OnlyIfChanged)
+//	                    └── deploy-file (OnlyIfChanged)
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run main.go
 package main
@@ -50,39 +51,39 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
+	configData := []byte("server:\n  port: 8080\n  debug: false\n")
+
 	o := orchestrator.New(url, token)
 
 	// Level 0: verify the API is reachable.
 	health := o.HealthCheck("_any")
 
-	// Level 1: upload the file to the Object Store.
-	upload := o.FileUpload(
-		"app-config.yaml",
-		"raw",
-		[]byte("server:\n  port: 8080\n  debug: false\n"),
-	).After(health)
+	// Level 1: check if the file content has changed.
+	check := o.FileChanged("app-config.yaml", configData).After(health)
 
-	// Level 2: deploy the uploaded file to the target agent.
-	deploy := o.FileDeploy("_any", orchestrator.FileDeployOpts{
+	// Level 2: upload only if the content differs from stored version.
+	upload := o.FileUpload("app-config.yaml", "raw", configData).
+		After(check).
+		OnlyIfChanged()
+
+	// Level 3: deploy only if a new version was uploaded.
+	o.FileDeploy("_any", orchestrator.FileDeployOpts{
 		ObjectName:  "app-config.yaml",
 		Path:        "/tmp/app-config.yaml",
 		ContentType: "raw",
 		Mode:        "0644",
-		Owner:       "root",
-		Group:       "root",
-	}).After(upload)
-
-	// Level 3: verify the deployed file is in sync.
-	o.FileStatusGet("_any", "/tmp/app-config.yaml").After(deploy)
+	}).After(upload).
+		OnlyIfChanged()
 
 	report, err := o.Run()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Decode typed results from the report.
-	var status orchestrator.FileStatusResult
-	if err := report.Decode("file-status", &status); err == nil {
-		fmt.Printf("File %s status: %s\n", status.Path, status.Status)
+	// Decode the change check result.
+	var changed orchestrator.FileChangedResult
+	if err := report.Decode("check-file", &changed); err == nil {
+		fmt.Printf("File %s changed: %v (sha256: %s)\n",
+			changed.Name, changed.Changed, changed.SHA256[:12])
 	}
 }

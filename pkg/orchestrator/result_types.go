@@ -185,6 +185,16 @@ type FileStatusResult struct {
 
 // FileUploadResult holds typed file upload output.
 type FileUploadResult struct {
-	Name string `json:"name"`
-	Size int    `json:"size,omitempty"`
+	Name        string `json:"name"`
+	SHA256      string `json:"sha256,omitempty"`
+	Size        int    `json:"size,omitempty"`
+	Changed     bool   `json:"changed"`
+	ContentType string `json:"content_type,omitempty"`
+}
+
+// FileChangedResult holds typed file change detection output.
+type FileChangedResult struct {
+	Name    string `json:"name"`
+	Changed bool   `json:"changed"`
+	SHA256  string `json:"sha256"`
 }

@@ -21,6 +21,7 @@
 package orchestrator
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -288,14 +289,12 @@ func (o *Orchestrator) FileStatusGet(
 // FileUpload creates a step that uploads file content to the Object
 // Store via the OSAPI REST API. Returns the object name that can be
 // used in subsequent FileDeploy steps. This is a convenience wrapper
-// that uses TaskFunc to call the file upload API directly.
-//
-// NOTE: Requires osapi-sdk FileService (not yet available). This
-// operation will return an error until the SDK file endpoints are
-// merged.
+// that uses TaskFunc to call the file upload API directly. Uses
+// WithForce to always upload regardless of content changes.
 func (o *Orchestrator) FileUpload(
 	name string,
-	_ []byte,
+	contentType string,
+	data []byte,
 ) *Step {
 	prefix := "upload-file"
 	o.nameCount[prefix]++
@@ -308,15 +307,69 @@ func (o *Orchestrator) FileUpload(
 	task := o.plan.TaskFunc(
 		taskName,
 		func(
-			_ context.Context,
-			_ *osapi.Client,
+			ctx context.Context,
+			c *osapi.Client,
 		) (*sdk.Result, error) {
-			// TODO(sdk): Wire to c.File.Upload() when osapi-sdk
-			// FileService is available.
-			return nil, fmt.Errorf(
-				"upload file %s: SDK FileService not yet available",
+			resp, err := c.File.Upload(
+				ctx,
 				name,
+				contentType,
+				bytes.NewReader(data),
+				osapi.WithForce(),
 			)
+			if err != nil {
+				return nil, fmt.Errorf("upload file %s: %w", name, err)
+			}
+
+			return &sdk.Result{
+				Changed: resp.Data.Changed,
+				Data:    mustRawToMap(resp.RawJSON()),
+			}, nil
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// FileChanged creates a step that checks whether local content differs
+// from the version stored in the Object Store. Computes SHA-256 locally
+// and compares against the stored hash. Pairs with OnlyIfChanged to
+// skip uploads when content is unchanged.
+func (o *Orchestrator) FileChanged(
+	name string,
+	data []byte,
+) *Step {
+	prefix := "check-file"
+	o.nameCount[prefix]++
+
+	taskName := prefix
+	if o.nameCount[prefix] > 1 {
+		taskName = fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
+	}
+
+	task := o.plan.TaskFunc(
+		taskName,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.File.Changed(
+				ctx,
+				name,
+				bytes.NewReader(data),
+			)
+			if err != nil {
+				return nil, fmt.Errorf("check file %s: %w", name, err)
+			}
+
+			return &sdk.Result{
+				Changed: resp.Data.Changed,
+				Data: map[string]any{
+					"name":    resp.Data.Name,
+					"changed": resp.Data.Changed,
+					"sha256":  resp.Data.SHA256,
+				},
+			}, nil
 		},
 	)
 

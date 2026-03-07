@@ -354,22 +354,54 @@ func (s *OpsTestSuite) TestFileUpload() {
 	tests := []struct {
 		name        string
 		newOrch     bool
+		handler     http.HandlerFunc
+		closeServer bool
 		expectErr   bool
 		errContains string
 		expectName  string
 	}{
 		{
-			name:        "Returns error because SDK FileService not available",
-			expectErr:   true,
-			errContains: "SDK FileService not yet available",
+			name: "Returns success with upload data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusCreated)
+				_, _ = w.Write([]byte(`{"name":"test.txt","sha256":"abc123","size":7,"changed":true,"content_type":"raw"}`))
+			}),
 		},
 		{
-			name:       "First name has no suffix",
-			newOrch:    true,
+			name: "Returns error on connection failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusOK)
+			}),
+			closeServer: true,
+			expectErr:   true,
+			errContains: "upload file",
+		},
+		{
+			name:    "First name has no suffix",
+			newOrch: true,
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusOK)
+			}),
 			expectName: "upload-file",
 		},
 		{
-			name:       "Duplicate name gets counter suffix",
+			name: "Duplicate name gets counter suffix",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusOK)
+			}),
 			expectName: "upload-file-2",
 		},
 	}
@@ -378,20 +410,19 @@ func (s *OpsTestSuite) TestFileUpload() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			server := httptest.NewServer(http.HandlerFunc(func(
-				w http.ResponseWriter,
-				_ *http.Request,
-			) {
-				w.WriteHeader(http.StatusOK)
-			}))
+			server := httptest.NewServer(tc.handler)
 			defer server.Close()
+
+			if tc.closeServer {
+				server.Close()
+			}
 
 			if tc.newOrch || sharedOrch == nil {
 				sharedOrch = New(server.URL, "test-token")
 			}
 
 			if tc.expectName != "" {
-				step := sharedOrch.FileUpload("test.txt", []byte("content"))
+				step := sharedOrch.FileUpload("test.txt", "raw", []byte("content"))
 				s.Equal(tc.expectName, step.task.Name())
 
 				return
@@ -400,7 +431,7 @@ func (s *OpsTestSuite) TestFileUpload() {
 			client := osapi.New(server.URL, "test-token")
 
 			orch := New(server.URL, "test-token")
-			step := orch.FileUpload("test.txt", []byte("content"))
+			step := orch.FileUpload("test.txt", "raw", []byte("content"))
 			fn := step.task.Fn()
 			s.Require().NotNil(fn)
 
@@ -415,6 +446,115 @@ func (s *OpsTestSuite) TestFileUpload() {
 			}
 
 			s.Require().NoError(fnErr)
+			s.True(result.Changed)
+			s.NotNil(result.Data)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestFileChanged() {
+	tests := []struct {
+		name        string
+		newOrch     bool
+		handler     http.HandlerFunc
+		closeServer bool
+		expectErr   bool
+		errContains string
+		expectName  string
+	}{
+		{
+			name: "Returns success with changed data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				r *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				if r.Method == http.MethodGet {
+					w.WriteHeader(http.StatusOK)
+					_, _ = w.Write([]byte(`{"name":"test.txt","sha256":"different","size":7,"content_type":"raw"}`))
+
+					return
+				}
+				w.WriteHeader(http.StatusOK)
+			}),
+		},
+		{
+			name: "Returns error on connection failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusOK)
+			}),
+			closeServer: true,
+			expectErr:   true,
+			errContains: "check file",
+		},
+		{
+			name:    "First name has no suffix",
+			newOrch: true,
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusOK)
+			}),
+			expectName: "check-file",
+		},
+		{
+			name: "Duplicate name gets counter suffix",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusOK)
+			}),
+			expectName: "check-file-2",
+		},
+	}
+
+	var sharedOrch *Orchestrator
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			if tc.closeServer {
+				server.Close()
+			}
+
+			if tc.newOrch || sharedOrch == nil {
+				sharedOrch = New(server.URL, "test-token")
+			}
+
+			if tc.expectName != "" {
+				step := sharedOrch.FileChanged("test.txt", []byte("content"))
+				s.Equal(tc.expectName, step.task.Name())
+
+				return
+			}
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.FileChanged("test.txt", []byte("content"))
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.True(result.Changed)
+			s.NotNil(result.Data)
 		})
 	}
 }

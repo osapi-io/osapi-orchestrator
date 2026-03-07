@@ -180,7 +180,13 @@ func (s *OpsPublicTestSuite) TestOperations() {
 		{
 			name: "FileUpload",
 			newFn: func() *orchestrator.Step {
-				return s.orch.FileUpload("test.txt", []byte("hello"))
+				return s.orch.FileUpload("test.txt", "raw", []byte("hello"))
+			},
+		},
+		{
+			name: "FileChanged",
+			newFn: func() *orchestrator.Step {
+				return s.orch.FileChanged("test.txt", []byte("hello"))
 			},
 		},
 	}

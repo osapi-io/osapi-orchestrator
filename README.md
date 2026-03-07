@@ -70,6 +70,7 @@ string constants.
 | `FileDeploy`       | `file.deploy.execute`   | [docs](docs/usage/file-deploy.md)        | [`ops.go`](pkg/orchestrator/ops.go) |
 | `FileStatusGet`    | `file.status.get`       | [docs](docs/usage/file-status-get.md)    | [`ops.go`](pkg/orchestrator/ops.go) |
 | `FileUpload`       | Upload to Object Store  | [docs](docs/usage/file-upload.md)        | [`ops.go`](pkg/orchestrator/ops.go) |
+| `FileChanged`      | Check file drift        | [docs](docs/usage/file-changed.md)       | [`ops.go`](pkg/orchestrator/ops.go) |
 | `AgentList`        | List active agents      | [docs](docs/usage/agent-list.md)         | [`ops.go`](pkg/orchestrator/ops.go) |
 | `AgentGet`         | Get agent details       | [docs](docs/usage/agent-get.md)          | [`ops.go`](pkg/orchestrator/ops.go) |
 
@@ -90,7 +91,8 @@ Decode step results into typed structs instead of digging through
 | `DNSUpdateResult` | `Success`, `Message`, `Error`                           |
 | `FileDeployResult`| `Changed`, `SHA256`, `Path`                             |
 | `FileStatusResult`| `Path`, `Status`, `SHA256`                              |
-| `FileUploadResult`| `Name`, `Size`                                          |
+| `FileUploadResult`| `Name`, `SHA256`, `Size`, `Changed`, `ContentType`      |
+| `FileChangedResult`| `Name`, `Changed`, `SHA256`                            |
 | `AgentListResult` | `Agents` (slice of `AgentResult`), `Total`              |
 | `AgentResult`     | `Hostname`, `Status`, `Architecture`, `OSInfo`, `Memory` |
 
@@ -284,6 +286,7 @@ Each example is a standalone Go program you can read and run.
 | Example                                              | What it shows                                      |
 | ---------------------------------------------------- | -------------------------------------------------- |
 | [file-deploy](examples/file-deploy/main.go)          | Upload, deploy, and verify a file end-to-end       |
+| [file-changed](examples/file-changed/main.go)        | Conditional upload with FileChanged + OnlyIfChanged |
 
 ### Agent Discovery
 

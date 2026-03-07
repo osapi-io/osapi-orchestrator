@@ -36,6 +36,9 @@ report, err := o.Run()
 | [`FileDeploy`](file-deploy.md)              | `file.deploy.execute`   | Yes        | File     |
 | [`FileStatusGet`](file-status-get.md)       | `file.status.get`       | Read-only  | File     |
 | [`FileUpload`](file-upload.md)              | Upload to Object Store  | No         | File     |
+| [`FileChanged`](file-changed.md)            | Check file drift        | Read-only  | File     |
+| [`AgentList`](agent-list.md)                | List active agents      | Read-only  | Agent    |
+| [`AgentGet`](agent-get.md)                  | Get agent details       | Read-only  | Agent    |
 
 ## Step Chaining
 
@@ -74,7 +77,10 @@ fmt.Println(h.Hostname)
 | `DNSUpdateResult`  | `Success`, `Message`, `Error`                           |
 | `FileDeployResult` | `Changed`, `SHA256`, `Path`                             |
 | `FileStatusResult` | `Path`, `Status`, `SHA256`                              |
-| `FileUploadResult` | `Name`, `Size`                                          |
+| `FileUploadResult` | `Name`, `SHA256`, `Size`, `Changed`, `ContentType`      |
+| `FileChangedResult`| `Name`, `Changed`, `SHA256`                             |
+| `AgentListResult`  | `Agents` (slice of `AgentResult`), `Total`              |
+| `AgentResult`      | `Hostname`, `Status`, `Architecture`, `OSInfo`, `Memory` |
 
 ## Predicates
 
