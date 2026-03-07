@@ -37,6 +37,21 @@ func WithVerbose() Option {
 	}
 }
 
+// UploadOption configures the FileUpload operation.
+type UploadOption func(*uploadConfig)
+
+type uploadConfig struct {
+	force bool
+}
+
+// WithForce makes FileUpload bypass the SHA-256 pre-check and always
+// upload regardless of whether the content has changed. Without this
+// option FileUpload is idempotent — the SDK compares digests and
+// skips the upload when content is unchanged.
+func WithForce() UploadOption {
+	return func(c *uploadConfig) { c.force = true }
+}
+
 // ErrorStrategy controls what happens when a step fails.
 type ErrorStrategy int
 

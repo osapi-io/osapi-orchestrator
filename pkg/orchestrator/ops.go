@@ -289,13 +289,21 @@ func (o *Orchestrator) FileStatusGet(
 // FileUpload creates a step that uploads file content to the Object
 // Store via the OSAPI REST API. Returns the object name that can be
 // used in subsequent FileDeploy steps. This is a convenience wrapper
-// that uses TaskFunc to call the file upload API directly. Uses
-// WithForce to always upload regardless of content changes.
+// that uses TaskFunc to call the file upload API directly. By default
+// the upload is idempotent — the SDK compares SHA-256 digests and
+// skips the upload when content is unchanged. Pass WithForce to always
+// upload regardless of content changes.
 func (o *Orchestrator) FileUpload(
 	name string,
 	contentType string,
 	data []byte,
+	opts ...UploadOption,
 ) *Step {
+	cfg := &uploadConfig{}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
 	prefix := "upload-file"
 	o.nameCount[prefix]++
 
@@ -310,12 +318,17 @@ func (o *Orchestrator) FileUpload(
 			ctx context.Context,
 			c *osapi.Client,
 		) (*sdk.Result, error) {
+			var uploadOpts []osapi.UploadOption
+			if cfg.force {
+				uploadOpts = append(uploadOpts, osapi.WithForce())
+			}
+
 			resp, err := c.File.Upload(
 				ctx,
 				name,
 				contentType,
 				bytes.NewReader(data),
-				osapi.WithForce(),
+				uploadOpts...,
 			)
 			if err != nil {
 				return nil, fmt.Errorf("upload file %s: %w", name, err)

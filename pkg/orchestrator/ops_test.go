@@ -244,16 +244,35 @@ func (s *OpsTestSuite) TestFileUpload() {
 	tests := []struct {
 		name        string
 		handler     http.HandlerFunc
+		opts        []UploadOption
 		closeServer bool
 		expectErr   bool
 		errContains string
 	}{
 		{
-			name: "Returns success with upload data",
+			name: "Returns success without force",
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
-				_ *http.Request,
+				r *http.Request,
 			) {
+				s.Empty(r.URL.Query().Get("force"), "force param should not be set")
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusCreated)
+				_, _ = w.Write(
+					[]byte(
+						`{"name":"test.txt","sha256":"abc123","size":7,"changed":true,"content_type":"raw"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns success with force",
+			opts: []UploadOption{WithForce()},
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				r *http.Request,
+			) {
+				s.Equal("true", r.URL.Query().Get("force"), "force param should be set")
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusCreated)
 				_, _ = w.Write(
@@ -289,7 +308,7 @@ func (s *OpsTestSuite) TestFileUpload() {
 			client := osapi.New(server.URL, "test-token")
 
 			orch := New(server.URL, "test-token")
-			step := orch.FileUpload("test.txt", "raw", []byte("content"))
+			step := orch.FileUpload("test.txt", "raw", []byte("content"), tc.opts...)
 			fn := step.task.Fn()
 			s.Require().NotNil(fn)
 
