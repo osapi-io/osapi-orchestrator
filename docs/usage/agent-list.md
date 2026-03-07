@@ -1,9 +1,9 @@
 # AgentList
 
-Lists all active agents registered with the OSAPI server. Returns agent
-metadata including hostname, status, architecture, OS info, memory, load
-averages, labels, and network interfaces. This is a convenience wrapper that
-uses `TaskFunc` to call the agent list API directly.
+Lists all active agents registered with the OSAPI server. Returns agent metadata
+including hostname, status, architecture, OS info, memory, load averages,
+labels, and network interfaces. This is a convenience wrapper that uses
+`TaskFunc` to call the agent list API directly.
 
 ## Usage
 
@@ -29,22 +29,22 @@ err := results.Decode("list-agents", &result)
 
 ### AgentResult
 
-| Field           | Type               | Description                        |
-| --------------- | ------------------ | ---------------------------------- |
-| `Hostname`      | `string`           | Agent hostname.                    |
-| `Status`        | `string`           | Agent status (e.g., `Ready`).      |
-| `Architecture`  | `string`           | CPU architecture (e.g., `amd64`).  |
-| `KernelVersion` | `string`           | Kernel version string.             |
-| `CPUCount`      | `int`              | Number of CPUs.                    |
-| `FQDN`          | `string`           | Fully qualified domain name.       |
-| `ServiceMgr`    | `string`           | Service manager (e.g., `systemd`). |
-| `PackageMgr`    | `string`           | Package manager (e.g., `apt`).     |
-| `Labels`        | `map[string]string` | Agent labels for targeting.       |
-| `OSInfo`        | `*AgentOSInfo`     | OS distribution and version.       |
-| `Memory`        | `*AgentMemory`     | Memory usage stats.                |
-| `LoadAverage`   | `*AgentLoadAverage` | System load averages.             |
-| `Interfaces`    | `[]InterfaceResult` | Network interfaces.               |
-| `Uptime`        | `string`           | System uptime.                     |
+| Field           | Type                | Description                        |
+| --------------- | ------------------- | ---------------------------------- |
+| `Hostname`      | `string`            | Agent hostname.                    |
+| `Status`        | `string`            | Agent status (e.g., `Ready`).      |
+| `Architecture`  | `string`            | CPU architecture (e.g., `amd64`).  |
+| `KernelVersion` | `string`            | Kernel version string.             |
+| `CPUCount`      | `int`               | Number of CPUs.                    |
+| `FQDN`          | `string`            | Fully qualified domain name.       |
+| `ServiceMgr`    | `string`            | Service manager (e.g., `systemd`). |
+| `PackageMgr`    | `string`            | Package manager (e.g., `apt`).     |
+| `Labels`        | `map[string]string` | Agent labels for targeting.        |
+| `OSInfo`        | `*AgentOSInfo`      | OS distribution and version.       |
+| `Memory`        | `*AgentMemory`      | Memory usage stats.                |
+| `LoadAverage`   | `*AgentLoadAverage` | System load averages.              |
+| `Interfaces`    | `[]InterfaceResult` | Network interfaces.                |
+| `Uptime`        | `string`            | System uptime.                     |
 
 ## Idempotency
 

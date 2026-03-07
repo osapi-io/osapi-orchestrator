@@ -65,22 +65,22 @@ err := results.Decode("node.hostname.get-1", &h)
 fmt.Println(h.Hostname)
 ```
 
-| Struct             | Fields                                                  |
-| ------------------ | ------------------------------------------------------- |
-| `HostnameResult`   | `Hostname`, `Labels`                                    |
-| `DiskResult`       | `Disks` (slice of `DiskUsage`)                          |
-| `MemoryResult`     | `Total`, `Free`, `Cached`                               |
-| `LoadResult`       | `Load1`, `Load5`, `Load15`                              |
-| `CommandResult`    | `Stdout`, `Stderr`, `ExitCode`, `DurationMs`, `Error`   |
-| `PingResult`       | `PacketsSent`, `PacketsReceived`, `PacketLoss`, `Error` |
-| `DNSConfigResult`  | `DNSServers`, `SearchDomains`                           |
-| `DNSUpdateResult`  | `Success`, `Message`, `Error`                           |
-| `FileDeployResult` | `Changed`, `SHA256`, `Path`                             |
-| `FileStatusResult` | `Path`, `Status`, `SHA256`                              |
-| `FileUploadResult` | `Name`, `SHA256`, `Size`, `Changed`, `ContentType`      |
-| `FileChangedResult`| `Name`, `Changed`, `SHA256`                             |
-| `AgentListResult`  | `Agents` (slice of `AgentResult`), `Total`              |
-| `AgentResult`      | `Hostname`, `Status`, `Architecture`, `OSInfo`, `Memory` |
+| Struct              | Fields                                                   |
+| ------------------- | -------------------------------------------------------- |
+| `HostnameResult`    | `Hostname`, `Labels`                                     |
+| `DiskResult`        | `Disks` (slice of `DiskUsage`)                           |
+| `MemoryResult`      | `Total`, `Free`, `Cached`                                |
+| `LoadResult`        | `Load1`, `Load5`, `Load15`                               |
+| `CommandResult`     | `Stdout`, `Stderr`, `ExitCode`, `DurationMs`, `Error`    |
+| `PingResult`        | `PacketsSent`, `PacketsReceived`, `PacketLoss`, `Error`  |
+| `DNSConfigResult`   | `DNSServers`, `SearchDomains`                            |
+| `DNSUpdateResult`   | `Success`, `Message`, `Error`                            |
+| `FileDeployResult`  | `Changed`, `SHA256`, `Path`                              |
+| `FileStatusResult`  | `Path`, `Status`, `SHA256`                               |
+| `FileUploadResult`  | `Name`, `SHA256`, `Size`, `Changed`, `ContentType`       |
+| `FileChangedResult` | `Name`, `Changed`, `SHA256`                              |
+| `AgentListResult`   | `Agents` (slice of `AgentResult`), `Total`               |
+| `AgentResult`       | `Hostname`, `Status`, `Architecture`, `OSInfo`, `Memory` |
 
 ## Predicates
 

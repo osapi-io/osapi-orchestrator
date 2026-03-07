@@ -12,7 +12,7 @@ tool (
 
 require (
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/osapi-io/osapi-sdk v0.0.0-20260306215606-a4a92064f67f
+	github.com/osapi-io/osapi-sdk v0.0.0-20260307055727-ba9d92f92610
 	github.com/stretchr/testify v1.11.1
 )
 
@@ -263,5 +263,3 @@ require (
 	mvdan.cc/unparam v0.0.0-20251027182757-5beb8c8f8f15 // indirect
 	mvdan.cc/xurls/v2 v2.2.0 // indirect
 )
-
-replace github.com/osapi-io/osapi-sdk => ../osapi-sdk

@@ -1,8 +1,8 @@
 # FileChanged
 
 Checks whether local content differs from the version stored in the Object
-Store. Computes SHA-256 locally and compares against the stored hash. Pairs
-with `OnlyIfChanged` to skip uploads or deploys when content is unchanged.
+Store. Computes SHA-256 locally and compares against the stored hash. Pairs with
+`OnlyIfChanged` to skip uploads or deploys when content is unchanged.
 
 ## Usage
 
@@ -15,10 +15,10 @@ o.FileUpload("config.yaml", "raw", localContent).
 
 ## Parameters
 
-| Parameter | Type     | Description                        |
-| --------- | -------- | ---------------------------------- |
-| `name`    | `string` | Object name in the Object Store.   |
-| `data`    | `[]byte` | Local file content to compare.     |
+| Parameter | Type     | Description                      |
+| --------- | -------- | -------------------------------- |
+| `name`    | `string` | Object name in the Object Store. |
+| `data`    | `[]byte` | Local file content to compare.   |
 
 ## Result Type
 

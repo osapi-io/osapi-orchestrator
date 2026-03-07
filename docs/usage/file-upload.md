@@ -18,11 +18,11 @@ step := o.FileUpload(
 
 ## Parameters
 
-| Parameter     | Type     | Description                                        |
-| ------------- | -------- | -------------------------------------------------- |
-| `name`        | `string` | Object name to store the file under.               |
-| `contentType` | `string` | Content type: `"raw"` or `"template"`.             |
-| `data`        | `[]byte` | Raw file content to upload.                        |
+| Parameter     | Type     | Description                            |
+| ------------- | -------- | -------------------------------------- |
+| `name`        | `string` | Object name to store the file under.   |
+| `contentType` | `string` | Content type: `"raw"` or `"template"`. |
+| `data`        | `[]byte` | Raw file content to upload.            |
 
 ## Result Type
 

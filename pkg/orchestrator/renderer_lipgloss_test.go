@@ -36,54 +36,78 @@ type RendererLipglossTestSuite struct {
 	suite.Suite
 }
 
-func (s *RendererLipglossTestSuite) TestNewLipglossRenderer() {
-	r := newLipglossRenderer()
-
-	s.NotNil(r)
-	s.NotNil(r.w)
-}
-
-func (s *RendererLipglossTestSuite) TestPlanStart() {
-	var buf bytes.Buffer
-	r := newLipglossRendererWithWriter(&buf)
-
-	summary := sdk.PlanSummary{
-		TotalTasks: 3,
-		Steps: []sdk.StepSummary{
-			{Tasks: []string{"health-check", "dns-update"}, Parallel: true},
-			{Tasks: []string{"get-hostname"}, Parallel: false},
+func (s *RendererLipglossTestSuite) TestPlanLifecycle() {
+	tests := []struct {
+		name        string
+		setupFunc   func(r *lipglossRenderer)
+		contains    []string
+		notContains []string
+	}{
+		{
+			name: "NewLipglossRenderer creates valid renderer",
+			setupFunc: func(_ *lipglossRenderer) {
+				r := newLipglossRenderer()
+				s.NotNil(r)
+				s.NotNil(r.w)
+			},
+		},
+		{
+			name: "PlanStart renders execution plan",
+			setupFunc: func(r *lipglossRenderer) {
+				r.PlanStart(sdk.PlanSummary{
+					TotalTasks: 3,
+					Steps: []sdk.StepSummary{
+						{Tasks: []string{"health-check", "dns-update"}, Parallel: true},
+						{Tasks: []string{"get-hostname"}, Parallel: false},
+					},
+				})
+			},
+			contains: []string{
+				"Execution Plan",
+				"Plan: 3 tasks, 2 steps",
+				"Step 1 (parallel): health-check, dns-update",
+				"Step 2 (sequential): get-hostname",
+			},
+			notContains: []string{"==="},
+		},
+		{
+			name: "PlanDone renders completion summary",
+			setupFunc: func(r *lipglossRenderer) {
+				r.PlanDone(&Report{
+					Tasks: []sdk.TaskResult{
+						{Name: "a", Status: sdk.StatusChanged, Changed: true},
+						{Name: "b", Status: sdk.StatusUnchanged},
+					},
+					Duration: 287 * time.Millisecond,
+				})
+			},
+			contains: []string{
+				"Complete:",
+				"2 tasks",
+				"1 changed",
+				"1 unchanged",
+				"287ms",
+			},
+			notContains: []string{"==="},
 		},
 	}
-	r.PlanStart(summary)
 
-	output := buf.String()
-	s.Contains(output, "Execution Plan")
-	s.NotContains(output, "===")
-	s.Contains(output, "Plan: 3 tasks, 2 steps")
-	s.Contains(output, "Step 1 (parallel): health-check, dns-update")
-	s.Contains(output, "Step 2 (sequential): get-hostname")
-}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var buf bytes.Buffer
+			r := newLipglossRendererWithWriter(&buf)
 
-func (s *RendererLipglossTestSuite) TestPlanDone() {
-	var buf bytes.Buffer
-	r := newLipglossRendererWithWriter(&buf)
+			tc.setupFunc(r)
 
-	report := &Report{
-		Tasks: []sdk.TaskResult{
-			{Name: "a", Status: sdk.StatusChanged, Changed: true},
-			{Name: "b", Status: sdk.StatusUnchanged},
-		},
-		Duration: 287 * time.Millisecond,
+			output := buf.String()
+			for _, c := range tc.contains {
+				s.Contains(output, c)
+			}
+			for _, c := range tc.notContains {
+				s.NotContains(output, c)
+			}
+		})
 	}
-	r.PlanDone(report)
-
-	output := buf.String()
-	s.Contains(output, "Complete:")
-	s.NotContains(output, "===")
-	s.Contains(output, "2 tasks")
-	s.Contains(output, "1 changed")
-	s.Contains(output, "1 unchanged")
-	s.Contains(output, "287ms")
 }
 
 func (s *RendererLipglossTestSuite) TestLevelStart() {
@@ -165,16 +189,48 @@ func (s *RendererLipglossTestSuite) TestLevelDone() {
 	}
 }
 
-func (s *RendererLipglossTestSuite) TestTaskStart() {
-	var buf bytes.Buffer
-	r := newLipglossRendererWithWriter(&buf)
+func (s *RendererLipglossTestSuite) TestTaskEvents() {
+	tests := []struct {
+		name     string
+		callFunc func(r *lipglossRenderer)
+		contains []string
+	}{
+		{
+			name: "TaskStart renders start tag and details",
+			callFunc: func(r *lipglossRenderer) {
+				r.TaskStart("health-check", "target=_any")
+			},
+			contains: []string{"[start]", "health-check", "target=_any"},
+		},
+		{
+			name: "TaskRetry renders retry tag with attempt",
+			callFunc: func(r *lipglossRenderer) {
+				r.TaskRetry("run-command", 1, errors.New("timeout"))
+			},
+			contains: []string{"[retry]", "run-command", "attempt=1", "timeout"},
+		},
+		{
+			name: "TaskSkip renders skip tag with reason",
+			callFunc: func(r *lipglossRenderer) {
+				r.TaskSkip("whoami", "dependency failed")
+			},
+			contains: []string{"[skip]", "whoami", "dependency failed"},
+		},
+	}
 
-	r.TaskStart("health-check", "target=_any")
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var buf bytes.Buffer
+			r := newLipglossRendererWithWriter(&buf)
 
-	output := buf.String()
-	s.Contains(output, "[start]")
-	s.Contains(output, "health-check")
-	s.Contains(output, "target=_any")
+			tc.callFunc(r)
+
+			output := buf.String()
+			for _, c := range tc.contains {
+				s.Contains(output, c)
+			}
+		})
+	}
 }
 
 func (s *RendererLipglossTestSuite) TestTaskDone() {
@@ -437,31 +493,6 @@ func (s *RendererLipglossTestSuite) TestFormatValue() {
 			s.Equal(tc.expected, got)
 		})
 	}
-}
-
-func (s *RendererLipglossTestSuite) TestTaskRetry() {
-	var buf bytes.Buffer
-	r := newLipglossRendererWithWriter(&buf)
-
-	r.TaskRetry("run-command", 1, errors.New("timeout"))
-
-	output := buf.String()
-	s.Contains(output, "[retry]")
-	s.Contains(output, "run-command")
-	s.Contains(output, "attempt=1")
-	s.Contains(output, "timeout")
-}
-
-func (s *RendererLipglossTestSuite) TestTaskSkip() {
-	var buf bytes.Buffer
-	r := newLipglossRendererWithWriter(&buf)
-
-	r.TaskSkip("whoami", "dependency failed")
-
-	output := buf.String()
-	s.Contains(output, "[skip]")
-	s.Contains(output, "whoami")
-	s.Contains(output, "dependency failed")
 }
 
 func (s *RendererLipglossTestSuite) TestFormatDuration() {

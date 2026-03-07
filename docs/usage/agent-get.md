@@ -1,8 +1,8 @@
 # AgentGet
 
-Retrieves detailed information about a specific agent by hostname. Returns
-the same rich metadata as `AgentList` but for a single agent. This is a
-convenience wrapper that uses `TaskFunc` to call the agent get API directly.
+Retrieves detailed information about a specific agent by hostname. Returns the
+same rich metadata as `AgentList` but for a single agent. This is a convenience
+wrapper that uses `TaskFunc` to call the agent get API directly.
 
 ## Usage
 
