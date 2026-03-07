@@ -21,6 +21,7 @@
 package orchestrator
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -45,17 +46,19 @@ func mustRawToMap(
 
 // Operation constants matching the OSAPI agent's supported operations.
 const (
-	opNodeHostnameGet  = "node.hostname.get"
-	opNodeStatusGet    = "node.status.get"
-	opNodeUptimeGet    = "node.uptime.get"
-	opNodeDiskGet      = "node.disk.get"
-	opNodeMemoryGet    = "node.memory.get"
-	opNodeLoadGet      = "node.load.get"
-	opNetworkDNSGet    = "network.dns.get"
-	opNetworkDNSUpdate = "network.dns.update"
-	opNetworkPingDo    = "network.ping.do"
-	opCommandExec      = "command.exec.execute"
-	opCommandShell     = "command.shell.execute"
+	opNodeHostnameGet   = "node.hostname.get"
+	opNodeStatusGet     = "node.status.get"
+	opNodeUptimeGet     = "node.uptime.get"
+	opNodeDiskGet       = "node.disk.get"
+	opNodeMemoryGet     = "node.memory.get"
+	opNodeLoadGet       = "node.load.get"
+	opNetworkDNSGet     = "network.dns.get"
+	opNetworkDNSUpdate  = "network.dns.update"
+	opNetworkPingDo     = "network.ping.do"
+	opCommandExec       = "command.exec.execute"
+	opCommandShell      = "command.shell.execute"
+	opFileDeployExecute = "file.deploy.execute"
+	opFileStatusGet     = "file.status.get"
 )
 
 func (o *Orchestrator) newStep(
@@ -231,6 +234,159 @@ func (o *Orchestrator) CommandShell(
 			"command": command,
 		},
 	})
+}
+
+// FileDeploy creates a step that deploys a file from the Object Store
+// to the target agent's filesystem. The objectName must reference a
+// file previously uploaded to the Object Store. ContentType should be
+// "raw" for literal content or "template" for Go-template rendering
+// with vars and agent facts.
+func (o *Orchestrator) FileDeploy(
+	target string,
+	opts FileDeployOpts,
+) *Step {
+	params := map[string]any{
+		"object_name":  opts.ObjectName,
+		"path":         opts.Path,
+		"content_type": opts.ContentType,
+	}
+	if opts.Mode != "" {
+		params["mode"] = opts.Mode
+	}
+	if opts.Owner != "" {
+		params["owner"] = opts.Owner
+	}
+	if opts.Group != "" {
+		params["group"] = opts.Group
+	}
+	if len(opts.Vars) > 0 {
+		params["vars"] = opts.Vars
+	}
+
+	return o.newStep(&sdk.Op{
+		Operation: opFileDeployExecute,
+		Target:    target,
+		Params:    params,
+	})
+}
+
+// FileStatusGet creates a step that checks the status of a deployed
+// file on the target agent. Returns whether the file is in-sync,
+// drifted, or missing compared to the expected state.
+func (o *Orchestrator) FileStatusGet(
+	target string,
+	path string,
+) *Step {
+	return o.newStep(&sdk.Op{
+		Operation: opFileStatusGet,
+		Target:    target,
+		Params: map[string]any{
+			"path": path,
+		},
+	})
+}
+
+// FileUpload creates a step that uploads file content to the Object
+// Store via the OSAPI REST API. Returns the object name that can be
+// used in subsequent FileDeploy steps. This is a convenience wrapper
+// that uses TaskFunc to call the file upload API directly. By default
+// the upload is idempotent — the SDK compares SHA-256 digests and
+// skips the upload when content is unchanged. Pass WithForce to always
+// upload regardless of content changes.
+func (o *Orchestrator) FileUpload(
+	name string,
+	contentType string,
+	data []byte,
+	opts ...UploadOption,
+) *Step {
+	cfg := &uploadConfig{}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	prefix := "upload-file"
+	o.nameCount[prefix]++
+
+	taskName := prefix
+	if o.nameCount[prefix] > 1 {
+		taskName = fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
+	}
+
+	task := o.plan.TaskFunc(
+		taskName,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			var uploadOpts []osapi.UploadOption
+			if cfg.force {
+				uploadOpts = append(uploadOpts, osapi.WithForce())
+			}
+
+			resp, err := c.File.Upload(
+				ctx,
+				name,
+				contentType,
+				bytes.NewReader(data),
+				uploadOpts...,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("upload file %s: %w", name, err)
+			}
+
+			return &sdk.Result{
+				Changed: resp.Data.Changed,
+				Data:    mustRawToMap(resp.RawJSON()),
+			}, nil
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// FileChanged creates a step that checks whether local content differs
+// from the version stored in the Object Store. Computes SHA-256 locally
+// and compares against the stored hash. Pairs with OnlyIfChanged to
+// skip uploads when content is unchanged.
+func (o *Orchestrator) FileChanged(
+	name string,
+	data []byte,
+) *Step {
+	prefix := "check-file"
+	o.nameCount[prefix]++
+
+	taskName := prefix
+	if o.nameCount[prefix] > 1 {
+		taskName = fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
+	}
+
+	task := o.plan.TaskFunc(
+		taskName,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.File.Changed(
+				ctx,
+				name,
+				bytes.NewReader(data),
+			)
+			if err != nil {
+				return nil, fmt.Errorf("check file %s: %w", name, err)
+			}
+
+			return &sdk.Result{
+				Changed: resp.Data.Changed,
+				Data: map[string]any{
+					"name":    resp.Data.Name,
+					"changed": resp.Data.Changed,
+					"sha256":  resp.Data.SHA256,
+				},
+			}, nil
+		},
+	)
+
+	return &Step{task: task}
 }
 
 // AgentList creates a step that lists all active agents with their facts.

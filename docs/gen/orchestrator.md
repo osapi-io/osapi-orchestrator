@@ -26,6 +26,11 @@ retries, and reporting.
 - [type DiskResult](#DiskResult)
 - [type DiskUsage](#DiskUsage)
 - [type ErrorStrategy](#ErrorStrategy)
+- [type FileChangedResult](#FileChangedResult)
+- [type FileDeployOpts](#FileDeployOpts)
+- [type FileDeployResult](#FileDeployResult)
+- [type FileStatusResult](#FileStatusResult)
+- [type FileUploadResult](#FileUploadResult)
 - [type HostResult](#HostResult)
   - [func \(h HostResult\) Decode\(v any\) error](#HostResult.Decode)
 - [type HostnameResult](#HostnameResult)
@@ -41,6 +46,10 @@ retries, and reporting.
   - [func \(o \*Orchestrator\) CommandExec\(target string, command string, args ...string\) \*Step](#Orchestrator.CommandExec)
   - [func \(o \*Orchestrator\) CommandShell\(target string, command string\) \*Step](#Orchestrator.CommandShell)
   - [func \(o \*Orchestrator\) Discover\(ctx context.Context, predicates ...Predicate\) \(\[\]AgentResult, error\)](#Orchestrator.Discover)
+  - [func \(o \*Orchestrator\) FileChanged\(name string, data \[\]byte\) \*Step](#Orchestrator.FileChanged)
+  - [func \(o \*Orchestrator\) FileDeploy\(target string, opts FileDeployOpts\) \*Step](#Orchestrator.FileDeploy)
+  - [func \(o \*Orchestrator\) FileStatusGet\(target string, path string\) \*Step](#Orchestrator.FileStatusGet)
+  - [func \(o \*Orchestrator\) FileUpload\(name string, contentType string, data \[\]byte, opts ...UploadOption\) \*Step](#Orchestrator.FileUpload)
   - [func \(o \*Orchestrator\) GroupByFact\(ctx context.Context, key string, predicates ...Predicate\) \(map\[string\]\[\]AgentResult, error\)](#Orchestrator.GroupByFact)
   - [func \(o \*Orchestrator\) HealthCheck\(\_ string\) \*Step](#Orchestrator.HealthCheck)
   - [func \(o \*Orchestrator\) NetworkDNSGet\(target string, interfaceName string\) \*Step](#Orchestrator.NetworkDNSGet)
@@ -84,6 +93,8 @@ retries, and reporting.
   - [func \(s \*Step\) When\(fn func\(Results\) bool\) \*Step](#Step.When)
   - [func \(s \*Step\) WhenFact\(agentListStep string, fn Predicate\) \*Step](#Step.WhenFact)
 - [type TaskStatus](#TaskStatus)
+- [type UploadOption](#UploadOption)
+  - [func WithForce\(\) UploadOption](#WithForce)
 
 <a name="MatchAll"></a>
 
@@ -267,7 +278,7 @@ type DiskUsage struct {
 
 <a name="ErrorStrategy"></a>
 
-## type [ErrorStrategy](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L41)
+## type [ErrorStrategy](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L56)
 
 ErrorStrategy controls what happens when a step fails.
 
@@ -284,6 +295,89 @@ const (
     // Continue skips dependent steps and continues with the rest.
     Continue
 )
+```
+
+<a name="FileChangedResult"></a>
+
+## type [FileChangedResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L196-L200)
+
+FileChangedResult holds typed file change detection output.
+
+```go
+type FileChangedResult struct {
+    Name    string `json:"name"`
+    Changed bool   `json:"changed"`
+    SHA256  string `json:"sha256"`
+}
+```
+
+<a name="FileDeployOpts"></a>
+
+## type [FileDeployOpts](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L155-L170)
+
+FileDeployOpts holds parameters for the FileDeploy operation.
+
+```go
+type FileDeployOpts struct {
+    // ObjectName is the name of the object in the NATS Object Store.
+    ObjectName string
+    // Path is the destination path on the target filesystem.
+    Path string
+    // ContentType specifies whether the content is "raw" or "template".
+    ContentType string
+    // Mode is the file permission mode (e.g., "0644"). Optional.
+    Mode string
+    // Owner is the file owner user. Optional.
+    Owner string
+    // Group is the file owner group. Optional.
+    Group string
+    // Vars contains template variables when ContentType is "template".
+    Vars map[string]any
+}
+```
+
+<a name="FileDeployResult"></a>
+
+## type [FileDeployResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L173-L177)
+
+FileDeployResult holds typed file deploy output.
+
+```go
+type FileDeployResult struct {
+    Changed bool   `json:"changed"`
+    SHA256  string `json:"sha256"`
+    Path    string `json:"path"`
+}
+```
+
+<a name="FileStatusResult"></a>
+
+## type [FileStatusResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L180-L184)
+
+FileStatusResult holds typed file status output.
+
+```go
+type FileStatusResult struct {
+    Path   string `json:"path"`
+    Status string `json:"status"`
+    SHA256 string `json:"sha256,omitempty"`
+}
+```
+
+<a name="FileUploadResult"></a>
+
+## type [FileUploadResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L187-L193)
+
+FileUploadResult holds typed file upload output.
+
+```go
+type FileUploadResult struct {
+    Name        string `json:"name"`
+    SHA256      string `json:"sha256,omitempty"`
+    Size        int    `json:"size,omitempty"`
+    Changed     bool   `json:"changed"`
+    ContentType string `json:"content_type,omitempty"`
+}
 ```
 
 <a name="HostResult"></a>
@@ -414,7 +508,7 @@ New creates an Orchestrator connected to the given OSAPI server.
 
 <a name="Orchestrator.AgentGet"></a>
 
-### func \(\*Orchestrator\) [AgentGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L268-L270)
+### func \(\*Orchestrator\) [AgentGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L424-L426)
 
 ```go
 func (o *Orchestrator) AgentGet(hostname string) *Step
@@ -424,7 +518,7 @@ AgentGet creates a step that retrieves detailed info about a specific agent.
 
 <a name="Orchestrator.AgentList"></a>
 
-### func \(\*Orchestrator\) [AgentList](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L237)
+### func \(\*Orchestrator\) [AgentList](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L393)
 
 ```go
 func (o *Orchestrator) AgentList() *Step
@@ -434,7 +528,7 @@ AgentList creates a step that lists all active agents with their facts.
 
 <a name="Orchestrator.CommandExec"></a>
 
-### func \(\*Orchestrator\) [CommandExec](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L207-L211)
+### func \(\*Orchestrator\) [CommandExec](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L210-L214)
 
 ```go
 func (o *Orchestrator) CommandExec(target string, command string, args ...string) *Step
@@ -444,7 +538,7 @@ CommandExec creates a step that executes a command.
 
 <a name="Orchestrator.CommandShell"></a>
 
-### func \(\*Orchestrator\) [CommandShell](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L223-L226)
+### func \(\*Orchestrator\) [CommandShell](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L226-L229)
 
 ```go
 func (o *Orchestrator) CommandShell(target string, command string) *Step
@@ -463,6 +557,59 @@ func (o *Orchestrator) Discover(ctx context.Context, predicates ...Predicate) ([
 Discover queries active agents and returns those matching all predicates. Runs
 synchronously at plan\-build time. With no predicates, returns all agents.
 
+<a name="Orchestrator.FileChanged"></a>
+
+### func \(\*Orchestrator\) [FileChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L351-L354)
+
+```go
+func (o *Orchestrator) FileChanged(name string, data []byte) *Step
+```
+
+FileChanged creates a step that checks whether local content differs from the
+version stored in the Object Store. Computes SHA\-256 locally and compares
+against the stored hash. Pairs with OnlyIfChanged to skip uploads when content
+is unchanged.
+
+<a name="Orchestrator.FileDeploy"></a>
+
+### func \(\*Orchestrator\) [FileDeploy](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L244-L247)
+
+```go
+func (o *Orchestrator) FileDeploy(target string, opts FileDeployOpts) *Step
+```
+
+FileDeploy creates a step that deploys a file from the Object Store to the
+target agent's filesystem. The objectName must reference a file previously
+uploaded to the Object Store. ContentType should be "raw" for literal content or
+"template" for Go\-template rendering with vars and agent facts.
+
+<a name="Orchestrator.FileStatusGet"></a>
+
+### func \(\*Orchestrator\) [FileStatusGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L276-L279)
+
+```go
+func (o *Orchestrator) FileStatusGet(target string, path string) *Step
+```
+
+FileStatusGet creates a step that checks the status of a deployed file on the
+target agent. Returns whether the file is in\-sync, drifted, or missing compared
+to the expected state.
+
+<a name="Orchestrator.FileUpload"></a>
+
+### func \(\*Orchestrator\) [FileUpload](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L296-L301)
+
+```go
+func (o *Orchestrator) FileUpload(name string, contentType string, data []byte, opts ...UploadOption) *Step
+```
+
+FileUpload creates a step that uploads file content to the Object Store via the
+OSAPI REST API. Returns the object name that can be used in subsequent
+FileDeploy steps. This is a convenience wrapper that uses TaskFunc to call the
+file upload API directly. By default the upload is idempotent — the SDK compares
+SHA\-256 digests and skips the upload when content is unchanged. Pass WithForce
+to always upload regardless of content changes.
+
 <a name="Orchestrator.GroupByFact"></a>
 
 ### func \(\*Orchestrator\) [GroupByFact](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/discover.go#L111-L115)
@@ -476,7 +623,7 @@ by the string value at the given key.
 
 <a name="Orchestrator.HealthCheck"></a>
 
-### func \(\*Orchestrator\) [HealthCheck](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L71-L73)
+### func \(\*Orchestrator\) [HealthCheck](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L74-L76)
 
 ```go
 func (o *Orchestrator) HealthCheck(_ string) *Step
@@ -486,7 +633,7 @@ HealthCheck creates a health check step against the given target.
 
 <a name="Orchestrator.NetworkDNSGet"></a>
 
-### func \(\*Orchestrator\) [NetworkDNSGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L161-L164)
+### func \(\*Orchestrator\) [NetworkDNSGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L164-L167)
 
 ```go
 func (o *Orchestrator) NetworkDNSGet(target string, interfaceName string) *Step
@@ -496,7 +643,7 @@ NetworkDNSGet creates a step that retrieves DNS configuration.
 
 <a name="Orchestrator.NetworkDNSUpdate"></a>
 
-### func \(\*Orchestrator\) [NetworkDNSUpdate](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L175-L180)
+### func \(\*Orchestrator\) [NetworkDNSUpdate](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L178-L183)
 
 ```go
 func (o *Orchestrator) NetworkDNSUpdate(target string, interfaceName string, servers []string, searchDomains []string) *Step
@@ -506,7 +653,7 @@ NetworkDNSUpdate creates a step that updates DNS configuration.
 
 <a name="Orchestrator.NetworkPingDo"></a>
 
-### func \(\*Orchestrator\) [NetworkPingDo](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L193-L196)
+### func \(\*Orchestrator\) [NetworkPingDo](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L196-L199)
 
 ```go
 func (o *Orchestrator) NetworkPingDo(target string, address string) *Step
@@ -516,7 +663,7 @@ NetworkPingDo creates a step that pings an address.
 
 <a name="Orchestrator.NodeDiskGet"></a>
 
-### func \(\*Orchestrator\) [NodeDiskGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L131-L133)
+### func \(\*Orchestrator\) [NodeDiskGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L134-L136)
 
 ```go
 func (o *Orchestrator) NodeDiskGet(target string) *Step
@@ -526,7 +673,7 @@ NodeDiskGet creates a step that retrieves disk usage.
 
 <a name="Orchestrator.NodeHostnameGet"></a>
 
-### func \(\*Orchestrator\) [NodeHostnameGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L101-L103)
+### func \(\*Orchestrator\) [NodeHostnameGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L104-L106)
 
 ```go
 func (o *Orchestrator) NodeHostnameGet(target string) *Step
@@ -536,7 +683,7 @@ NodeHostnameGet creates a step that retrieves the hostname.
 
 <a name="Orchestrator.NodeLoadGet"></a>
 
-### func \(\*Orchestrator\) [NodeLoadGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L151-L153)
+### func \(\*Orchestrator\) [NodeLoadGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L154-L156)
 
 ```go
 func (o *Orchestrator) NodeLoadGet(target string) *Step
@@ -546,7 +693,7 @@ NodeLoadGet creates a step that retrieves load averages.
 
 <a name="Orchestrator.NodeMemoryGet"></a>
 
-### func \(\*Orchestrator\) [NodeMemoryGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L141-L143)
+### func \(\*Orchestrator\) [NodeMemoryGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L144-L146)
 
 ```go
 func (o *Orchestrator) NodeMemoryGet(target string) *Step
@@ -556,7 +703,7 @@ NodeMemoryGet creates a step that retrieves memory stats.
 
 <a name="Orchestrator.NodeStatusGet"></a>
 
-### func \(\*Orchestrator\) [NodeStatusGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L111-L113)
+### func \(\*Orchestrator\) [NodeStatusGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L114-L116)
 
 ```go
 func (o *Orchestrator) NodeStatusGet(target string) *Step
@@ -566,7 +713,7 @@ NodeStatusGet creates a step that retrieves node status.
 
 <a name="Orchestrator.NodeUptimeGet"></a>
 
-### func \(\*Orchestrator\) [NodeUptimeGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L121-L123)
+### func \(\*Orchestrator\) [NodeUptimeGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L124-L126)
 
 ```go
 func (o *Orchestrator) NodeUptimeGet(target string) *Step
@@ -939,5 +1086,28 @@ const (
     TaskStatusFailed
 )
 ```
+
+<a name="UploadOption"></a>
+
+## type [UploadOption](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L41)
+
+UploadOption configures the FileUpload operation.
+
+```go
+type UploadOption func(*uploadConfig)
+```
+
+<a name="WithForce"></a>
+
+### func [WithForce](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L51)
+
+```go
+func WithForce() UploadOption
+```
+
+WithForce makes FileUpload bypass the SHA\-256 pre\-check and always upload
+regardless of whether the content has changed. Without this option FileUpload is
+idempotent — the SDK compares digests and skips the upload when content is
+unchanged.
 
 Generated by [gomarkdoc](https://github.com/princjef/gomarkdoc)

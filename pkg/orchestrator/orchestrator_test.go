@@ -142,209 +142,176 @@ func (s *OrchestratorTestSuite) TestRunWithHealthCheck() {
 }
 
 func (s *OrchestratorTestSuite) TestRendererHooks() {
-	s.Run("BeforePlan calls PlanStart", func() {
-		m := &mockRenderer{}
-		hooks := rendererHooks(m)
+	retryErr := errors.New("transient error")
 
-		summary := sdk.PlanSummary{
-			TotalTasks: 3,
-			Steps: []sdk.StepSummary{
-				{Tasks: []string{"a", "b"}, Parallel: true},
-				{Tasks: []string{"c"}, Parallel: false},
+	tests := []struct {
+		name         string
+		setupFunc    func(hooks sdk.Hooks)
+		validateFunc func(m *mockRenderer)
+	}{
+		{
+			name: "BeforePlan calls PlanStart",
+			setupFunc: func(hooks sdk.Hooks) {
+				hooks.BeforePlan(sdk.PlanSummary{
+					TotalTasks: 3,
+					Steps: []sdk.StepSummary{
+						{Tasks: []string{"a", "b"}, Parallel: true},
+						{Tasks: []string{"c"}, Parallel: false},
+					},
+				})
 			},
-		}
-		hooks.BeforePlan(summary)
-
-		s.True(m.planStartCalled)
-		s.Equal(summary, m.planStartSummary)
-	})
-
-	s.Run("AfterPlan calls PlanDone", func() {
-		m := &mockRenderer{}
-		hooks := rendererHooks(m)
-
-		hooks.AfterPlan(&sdk.Report{
-			Tasks:    []sdk.TaskResult{{Name: "a", Status: sdk.StatusChanged}},
-			Duration: 5 * time.Second,
-		})
-
-		s.True(m.planDoneCalled)
-		s.Require().NotNil(m.planDoneReport)
-		s.Len(m.planDoneReport.Tasks, 1)
-		s.Equal(5*time.Second, m.planDoneReport.Duration)
-	})
-
-	s.Run("BeforeLevel calls LevelStart", func() {
-		tests := []struct {
-			name          string
-			tasks         []*sdk.Task
-			parallel      bool
-			expectedNames []string
-		}{
-			{
-				name:          "Sequential single task",
-				tasks:         []*sdk.Task{sdk.NewTask("task-1", nil)},
-				parallel:      false,
-				expectedNames: []string{"task-1"},
+			validateFunc: func(m *mockRenderer) {
+				s.True(m.planStartCalled)
+				s.Equal(3, m.planStartSummary.TotalTasks)
+				s.Len(m.planStartSummary.Steps, 2)
 			},
-			{
-				name: "Parallel multiple tasks",
-				tasks: []*sdk.Task{
-					sdk.NewTask("task-1", nil),
-					sdk.NewTask("task-2", nil),
-				},
-				parallel:      true,
-				expectedNames: []string{"task-1", "task-2"},
+		},
+		{
+			name: "AfterPlan calls PlanDone",
+			setupFunc: func(hooks sdk.Hooks) {
+				hooks.AfterPlan(&sdk.Report{
+					Tasks:    []sdk.TaskResult{{Name: "a", Status: sdk.StatusChanged}},
+					Duration: 5 * time.Second,
+				})
 			},
-		}
-
-		for _, tc := range tests {
-			s.Run(tc.name, func() {
-				m := &mockRenderer{}
-				hooks := rendererHooks(m)
-
-				hooks.BeforeLevel(0, tc.tasks, tc.parallel)
-
+			validateFunc: func(m *mockRenderer) {
+				s.True(m.planDoneCalled)
+				s.Require().NotNil(m.planDoneReport)
+				s.Len(m.planDoneReport.Tasks, 1)
+				s.Equal(5*time.Second, m.planDoneReport.Duration)
+			},
+		},
+		{
+			name: "BeforeLevel sequential single task",
+			setupFunc: func(hooks sdk.Hooks) {
+				hooks.BeforeLevel(0, []*sdk.Task{sdk.NewTask("task-1", nil)}, false)
+			},
+			validateFunc: func(m *mockRenderer) {
 				s.True(m.levelStartCalled)
 				s.Equal(0, m.levelStartLevel)
-				s.Equal(tc.expectedNames, m.levelStartTasks)
-				s.Equal(tc.parallel, m.levelStartParallel)
-			})
-		}
-	})
-
-	s.Run("AfterLevel calls LevelDone", func() {
-		tests := []struct {
-			name             string
-			parallel         bool
-			results          []sdk.TaskResult
-			expectedChanged  int
-			expectedTotal    int
-			expectedParallel bool
-		}{
-			{
-				name:             "No results sequential",
-				parallel:         false,
-				results:          nil,
-				expectedChanged:  0,
-				expectedTotal:    0,
-				expectedParallel: false,
+				s.Equal([]string{"task-1"}, m.levelStartTasks)
+				s.False(m.levelStartParallel)
 			},
-			{
-				name:     "With changed results parallel",
-				parallel: true,
-				results: []sdk.TaskResult{
-					{Name: "a", Status: sdk.StatusChanged, Changed: true},
-					{Name: "b", Status: sdk.StatusUnchanged},
-				},
-				expectedChanged:  1,
-				expectedTotal:    2,
-				expectedParallel: true,
+		},
+		{
+			name: "BeforeLevel parallel multiple tasks",
+			setupFunc: func(hooks sdk.Hooks) {
+				hooks.BeforeLevel(0, []*sdk.Task{
+					sdk.NewTask("task-1", nil),
+					sdk.NewTask("task-2", nil),
+				}, true)
 			},
-		}
-
-		for _, tc := range tests {
-			s.Run(tc.name, func() {
-				m := &mockRenderer{}
-				hooks := rendererHooks(m)
-
-				// BeforeLevel sets the parallel state for the level.
-				hooks.BeforeLevel(1, []*sdk.Task{sdk.NewTask("t", nil)}, tc.parallel)
-				hooks.AfterLevel(1, tc.results)
-
+			validateFunc: func(m *mockRenderer) {
+				s.True(m.levelStartCalled)
+				s.Equal([]string{"task-1", "task-2"}, m.levelStartTasks)
+				s.True(m.levelStartParallel)
+			},
+		},
+		{
+			name: "AfterLevel no results sequential",
+			setupFunc: func(hooks sdk.Hooks) {
+				hooks.BeforeLevel(1, []*sdk.Task{sdk.NewTask("t", nil)}, false)
+				hooks.AfterLevel(1, nil)
+			},
+			validateFunc: func(m *mockRenderer) {
 				s.True(m.levelDoneCalled)
 				s.Equal(1, m.levelDoneLevel)
-				s.Equal(tc.expectedChanged, m.levelDoneChanged)
-				s.Equal(tc.expectedTotal, m.levelDoneTotal)
-				s.Equal(tc.expectedParallel, m.levelDoneParallel)
-			})
-		}
-	})
-
-	s.Run("BeforeTask calls TaskStart", func() {
-		tests := []struct {
-			name           string
-			task           *sdk.Task
-			expectedName   string
-			expectedDetail string
-		}{
-			{
-				name: "Op task",
-				task: sdk.NewTask("op-task", &sdk.Op{
+				s.Equal(0, m.levelDoneChanged)
+				s.Equal(0, m.levelDoneTotal)
+				s.False(m.levelDoneParallel)
+			},
+		},
+		{
+			name: "AfterLevel with changed results parallel",
+			setupFunc: func(hooks sdk.Hooks) {
+				hooks.BeforeLevel(1, []*sdk.Task{sdk.NewTask("t", nil)}, true)
+				hooks.AfterLevel(1, []sdk.TaskResult{
+					{Name: "a", Status: sdk.StatusChanged, Changed: true},
+					{Name: "b", Status: sdk.StatusUnchanged},
+				})
+			},
+			validateFunc: func(m *mockRenderer) {
+				s.True(m.levelDoneCalled)
+				s.Equal(1, m.levelDoneChanged)
+				s.Equal(2, m.levelDoneTotal)
+				s.True(m.levelDoneParallel)
+			},
+		},
+		{
+			name: "BeforeTask op task",
+			setupFunc: func(hooks sdk.Hooks) {
+				hooks.BeforeTask(sdk.NewTask("op-task", &sdk.Op{
 					Operation: "node.hostname.get",
 					Target:    "_any",
-				}),
-				expectedName:   "op-task",
-				expectedDetail: "operation=node.hostname.get target=_any",
+				}))
 			},
-			{
-				name:           "Func task",
-				task:           sdk.NewTaskFunc("fn-task", nil),
-				expectedName:   "fn-task",
-				expectedDetail: "(custom function)",
-			},
-		}
-
-		for _, tc := range tests {
-			s.Run(tc.name, func() {
-				m := &mockRenderer{}
-				hooks := rendererHooks(m)
-
-				hooks.BeforeTask(tc.task)
-
+			validateFunc: func(m *mockRenderer) {
 				s.True(m.taskStartCalled)
-				s.Equal(tc.expectedName, m.taskStartName)
-				s.Equal(tc.expectedDetail, m.taskStartDetail)
-			})
-		}
-	})
+				s.Equal("op-task", m.taskStartName)
+				s.Equal("operation=node.hostname.get target=_any", m.taskStartDetail)
+			},
+		},
+		{
+			name: "BeforeTask func task",
+			setupFunc: func(hooks sdk.Hooks) {
+				hooks.BeforeTask(sdk.NewTaskFunc("fn-task", nil))
+			},
+			validateFunc: func(m *mockRenderer) {
+				s.True(m.taskStartCalled)
+				s.Equal("fn-task", m.taskStartName)
+				s.Equal("(custom function)", m.taskStartDetail)
+			},
+		},
+		{
+			name: "AfterTask calls TaskDone",
+			setupFunc: func(hooks sdk.Hooks) {
+				hooks.AfterTask(nil, sdk.TaskResult{
+					Name:     "task-1",
+					Status:   sdk.StatusChanged,
+					Changed:  true,
+					Duration: time.Second,
+				})
+			},
+			validateFunc: func(m *mockRenderer) {
+				s.True(m.taskDoneCalled)
+				s.Equal("task-1", m.taskDoneResult.Name)
+				s.Equal(sdk.StatusChanged, m.taskDoneResult.Status)
+			},
+		},
+		{
+			name: "OnRetry calls TaskRetry",
+			setupFunc: func(hooks sdk.Hooks) {
+				hooks.OnRetry(sdk.NewTask("retry-task", nil), 2, retryErr)
+			},
+			validateFunc: func(m *mockRenderer) {
+				s.True(m.taskRetryCalled)
+				s.Equal("retry-task", m.taskRetryName)
+				s.Equal(2, m.taskRetryAttempt)
+				s.Equal(retryErr, m.taskRetryErr)
+			},
+		},
+		{
+			name: "OnSkip calls TaskSkip",
+			setupFunc: func(hooks sdk.Hooks) {
+				hooks.OnSkip(sdk.NewTask("skip-task", nil), "dependency failed")
+			},
+			validateFunc: func(m *mockRenderer) {
+				s.True(m.taskSkipCalled)
+				s.Equal("skip-task", m.taskSkipName)
+				s.Equal("dependency failed", m.taskSkipReason)
+			},
+		},
+	}
 
-	s.Run("AfterTask calls TaskDone", func() {
-		m := &mockRenderer{}
-		hooks := rendererHooks(m)
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			m := &mockRenderer{}
+			hooks := rendererHooks(m)
 
-		result := sdk.TaskResult{
-			Name:     "task-1",
-			Status:   sdk.StatusChanged,
-			Changed:  true,
-			Duration: time.Second,
-		}
-		hooks.AfterTask(nil, result)
-
-		s.True(m.taskDoneCalled)
-		s.Equal(result, m.taskDoneResult)
-	})
-
-	s.Run("OnRetry calls TaskRetry", func() {
-		m := &mockRenderer{}
-		hooks := rendererHooks(m)
-		retryErr := errors.New("transient error")
-
-		hooks.OnRetry(
-			sdk.NewTask("retry-task", nil),
-			2,
-			retryErr,
-		)
-
-		s.True(m.taskRetryCalled)
-		s.Equal("retry-task", m.taskRetryName)
-		s.Equal(2, m.taskRetryAttempt)
-		s.Equal(retryErr, m.taskRetryErr)
-	})
-
-	s.Run("OnSkip calls TaskSkip", func() {
-		m := &mockRenderer{}
-		hooks := rendererHooks(m)
-
-		hooks.OnSkip(
-			sdk.NewTask("skip-task", nil),
-			"dependency failed",
-		)
-
-		s.True(m.taskSkipCalled)
-		s.Equal("skip-task", m.taskSkipName)
-		s.Equal("dependency failed", m.taskSkipReason)
-	})
+			tc.setupFunc(hooks)
+			tc.validateFunc(m)
+		})
+	}
 }
 
 // mockRenderer records renderer calls for verification.

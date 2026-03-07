@@ -33,6 +33,12 @@ report, err := o.Run()
 | [`NetworkPingDo`](network-ping-do.md)       | `network.ping.do`       | Read-only  | Network  |
 | [`CommandExec`](command-exec.md)            | `command.exec.execute`  | No         | Command  |
 | [`CommandShell`](command-shell.md)          | `command.shell.execute` | No         | Command  |
+| [`FileDeploy`](file-deploy.md)              | `file.deploy.execute`   | Yes        | File     |
+| [`FileStatusGet`](file-status-get.md)       | `file.status.get`       | Read-only  | File     |
+| [`FileUpload`](file-upload.md)              | Upload to Object Store  | No         | File     |
+| [`FileChanged`](file-changed.md)            | Check file drift        | Read-only  | File     |
+| [`AgentList`](agent-list.md)                | List active agents      | Read-only  | Agent    |
+| [`AgentGet`](agent-get.md)                  | Get agent details       | Read-only  | Agent    |
 
 ## Step Chaining
 
@@ -59,16 +65,22 @@ err := results.Decode("node.hostname.get-1", &h)
 fmt.Println(h.Hostname)
 ```
 
-| Struct            | Fields                                                  |
-| ----------------- | ------------------------------------------------------- |
-| `HostnameResult`  | `Hostname`, `Labels`                                    |
-| `DiskResult`      | `Disks` (slice of `DiskUsage`)                          |
-| `MemoryResult`    | `Total`, `Free`, `Cached`                               |
-| `LoadResult`      | `Load1`, `Load5`, `Load15`                              |
-| `CommandResult`   | `Stdout`, `Stderr`, `ExitCode`, `DurationMs`, `Error`   |
-| `PingResult`      | `PacketsSent`, `PacketsReceived`, `PacketLoss`, `Error` |
-| `DNSConfigResult` | `DNSServers`, `SearchDomains`                           |
-| `DNSUpdateResult` | `Success`, `Message`, `Error`                           |
+| Struct              | Fields                                                   |
+| ------------------- | -------------------------------------------------------- |
+| `HostnameResult`    | `Hostname`, `Labels`                                     |
+| `DiskResult`        | `Disks` (slice of `DiskUsage`)                           |
+| `MemoryResult`      | `Total`, `Free`, `Cached`                                |
+| `LoadResult`        | `Load1`, `Load5`, `Load15`                               |
+| `CommandResult`     | `Stdout`, `Stderr`, `ExitCode`, `DurationMs`, `Error`    |
+| `PingResult`        | `PacketsSent`, `PacketsReceived`, `PacketLoss`, `Error`  |
+| `DNSConfigResult`   | `DNSServers`, `SearchDomains`                            |
+| `DNSUpdateResult`   | `Success`, `Message`, `Error`                            |
+| `FileDeployResult`  | `Changed`, `SHA256`, `Path`                              |
+| `FileStatusResult`  | `Path`, `Status`, `SHA256`                               |
+| `FileUploadResult`  | `Name`, `SHA256`, `Size`, `Changed`, `ContentType`       |
+| `FileChangedResult` | `Name`, `Changed`, `SHA256`                              |
+| `AgentListResult`   | `Agents` (slice of `AgentResult`), `Total`               |
+| `AgentResult`       | `Hostname`, `Status`, `Architecture`, `OSInfo`, `Memory` |
 
 ## Predicates
 

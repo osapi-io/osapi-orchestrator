@@ -98,10 +98,31 @@ func (s *StepTestSuite) TestNamedSetsTaskName() {
 	)
 	defer server.Close()
 
-	orch := New(server.URL, "test-token")
-	step := orch.NodeHostnameGet("_any").Named("custom-name")
+	tests := []struct {
+		name         string
+		customName   string
+		expectedName string
+	}{
+		{
+			name:         "Named sets custom name",
+			customName:   "custom-name",
+			expectedName: "custom-name",
+		},
+		{
+			name:         "Named overrides auto-generated name",
+			customName:   "my-hostname-check",
+			expectedName: "my-hostname-check",
+		},
+	}
 
-	s.Equal("custom-name", step.task.Name())
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			step := orch.NodeHostnameGet("_any").Named(tc.customName)
+
+			s.Equal(tc.expectedName, step.task.Name())
+		})
+	}
 }
 
 func (s *StepTestSuite) TestOnlyIfFailedGuard() {
