@@ -10,11 +10,9 @@ tool (
 	mvdan.cc/gofumpt
 )
 
-replace github.com/retr0h/osapi => ../osapi
-
 require (
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/retr0h/osapi v0.0.0-00010101000000-000000000000
+	github.com/retr0h/osapi v0.0.0-20260308055508-c9315425ff34
 	github.com/stretchr/testify v1.11.1
 )
 
