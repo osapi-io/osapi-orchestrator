@@ -15,6 +15,8 @@ For setup, prerequisites, and contributing guidelines:
 
 - @docs/development.md - Prerequisites, setup, code style, testing, commits
 - @docs/contributing.md - PR workflow and contribution guidelines
+- @docs/operations/README.md - Per-operation reference (18 typed constructors)
+- @docs/features/README.md - Feature guides (guards, retry, discovery, etc.)
 
 ## Quick Reference
 
@@ -91,4 +93,4 @@ When committing via Claude Code, end with:
 - `Co-Authored-By: Claude <noreply@anthropic.com>`
 
 [OSAPI]: https://github.com/osapi-io/osapi
-[osapi-sdk]: https://github.com/osapi-io/osapi-sdk
+[osapi-sdk]: https://github.com/osapi-io/osapi/tree/main/pkg/sdk

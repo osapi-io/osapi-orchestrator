@@ -20,7 +20,7 @@
 
 package orchestrator
 
-import sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
+import sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 
 // Orchestrator is the top-level entry point for building and running
 // infrastructure plans.

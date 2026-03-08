@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
+	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 )
 
 // Results provides access to completed step results inside When guards.

@@ -28,7 +28,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
+	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 )
 
 // tagWidth is the visible width of the longest status tag ([unchanged]).

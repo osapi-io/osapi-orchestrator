@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
+	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"

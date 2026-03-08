@@ -20,7 +20,7 @@
 
 package orchestrator
 
-import sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
+import sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 
 // Step represents a single operation in the plan. Users chain methods
 // to declare ordering, conditions, and error handling.
