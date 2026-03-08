@@ -231,6 +231,15 @@ func (r *lipglossRenderer) TaskDone(
 		r.printHostResults(result.HostResults)
 	}
 
+	// Verbose mode: show job ID when present.
+	if r.verbose && result.JobID != "" {
+		r.printf(
+			"%s%s\n",
+			strings.Repeat(" ", tagWidth+2),
+			r.dim.Render(fmt.Sprintf("job_id: %s", result.JobID)),
+		)
+	}
+
 	// Verbose mode: show response data on success.
 	if r.verbose && result.Data != nil {
 		r.printResultData(result.Data)
