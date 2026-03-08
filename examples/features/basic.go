@@ -18,23 +18,18 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates composing multiple fact predicates.
-// Discovers agents that are Ubuntu, amd64, with at least 4 CPUs
-// and 8GB memory, then queries their load averages.
+// Package main demonstrates the simplest orchestrator DAG: a health check
+// followed by a hostname query.
 //
-// DAG (per matching host):
+// DAG:
 //
 //	health-check
-//	    └── get-load (target=<host>)
+//	    └── get-hostname
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run fact-predicates.go
+// Run with: OSAPI_TOKEN="<jwt>" go run basic.go
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
 	"os"
 
@@ -54,34 +49,11 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	// Compose predicates: Ubuntu + amd64 + 4 CPUs + 8GB.
-	agents, err := o.Discover(
-		context.Background(),
-		orchestrator.OS("Ubuntu"),
-		orchestrator.Arch("amd64"),
-		orchestrator.MinCPU(4),
-		orchestrator.MinMemory(8000),
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("Found %d agents matching all predicates\n", len(agents))
-
-	for _, a := range agents {
-		fmt.Printf("  %s (%s %s, %d CPUs)\n",
-			a.Hostname,
-			a.OSInfo.Distribution,
-			a.Architecture,
-			a.CPUCount,
-		)
-	}
-
+	// Level 0: verify the API is reachable.
 	health := o.HealthCheck("_any")
 
-	for _, a := range agents {
-		o.NodeLoadGet(a.Hostname).After(health)
-	}
+	// Level 1: query hostname from any available agent.
+	o.NodeHostnameGet("_any").After(health)
 
 	if _, err := o.Run(); err != nil {
 		log.Fatal(err)

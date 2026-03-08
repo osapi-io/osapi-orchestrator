@@ -18,17 +18,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates broadcast targeting with _all. The command
-// is sent to every registered agent and per-host results are displayed
-// automatically by the renderer.
+// Package main demonstrates parallel task execution. Multiple operations
+// at the same DAG level run concurrently.
 //
 // DAG:
 //
-//	hostname-all (_all broadcast)
+//	health-check
+//	    ├── get-hostname
+//	    ├── get-disk
+//	    ├── get-memory
+//	    ├── get-load
+//	    └── get-uptime
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run broadcast.go
+// Run with: OSAPI_TOKEN="<jwt>" go run parallel.go
 package main
 
 import (
@@ -51,9 +53,16 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	// Target _all: the job is delivered to every registered agent.
-	// The renderer shows per-host results automatically.
-	o.NodeHostnameGet("_all")
+	// Level 0: health gate.
+	health := o.HealthCheck("_any")
+
+	// Level 1: five queries run in parallel — all share the same
+	// dependency so the orchestrator schedules them concurrently.
+	o.NodeHostnameGet("_any").After(health)
+	o.NodeDiskGet("_any").After(health)
+	o.NodeMemoryGet("_any").After(health)
+	o.NodeLoadGet("_any").After(health)
+	o.NodeUptimeGet("_any").After(health)
 
 	if _, err := o.Run(); err != nil {
 		log.Fatal(err)

@@ -18,21 +18,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates parallel task execution. Multiple operations
-// at the same DAG level run concurrently.
+// Package main demonstrates conditional execution with When guards.
+//
+// The whoami command only runs if the hostname was successfully retrieved
+// and is non-empty. The guard uses Results.Decode for typed access to
+// prior step data.
 //
 // DAG:
 //
 //	health-check
-//	    ├── get-hostname
-//	    ├── get-disk
-//	    ├── get-memory
-//	    ├── get-load
-//	    └── get-uptime
+//	    └── get-hostname
+//	            └── whoami (when: hostname != "")
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run parallel.go
+// Run with: OSAPI_TOKEN="<jwt>" go run guards.go
 package main
 
 import (
@@ -55,16 +53,20 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	// Level 0: health gate.
 	health := o.HealthCheck("_any")
+	hostname := o.NodeHostnameGet("_any").After(health)
 
-	// Level 1: five queries run in parallel — all share the same
-	// dependency so the orchestrator schedules them concurrently.
-	o.NodeHostnameGet("_any").After(health)
-	o.NodeDiskGet("_any").After(health)
-	o.NodeMemoryGet("_any").After(health)
-	o.NodeLoadGet("_any").After(health)
-	o.NodeUptimeGet("_any").After(health)
+	// Guard: decode the hostname result and only proceed if non-empty.
+	o.CommandExec("_any", "whoami").
+		After(hostname).
+		When(func(r orchestrator.Results) bool {
+			var h orchestrator.HostnameResult
+			if err := r.Decode("get-hostname", &h); err != nil {
+				return false
+			}
+
+			return h.Hostname != ""
+		})
 
 	if _, err := o.Run(); err != nil {
 		log.Fatal(err)

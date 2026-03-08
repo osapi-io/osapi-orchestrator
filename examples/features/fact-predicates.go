@@ -18,20 +18,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates automatic retry on failure. The load query
-// is configured to retry up to 3 times before giving up.
+// Package main demonstrates composing multiple fact predicates.
+// Discovers agents that are Ubuntu, amd64, with at least 4 CPUs
+// and 8GB memory, then queries their load averages.
 //
-// DAG:
+// DAG (per matching host):
 //
 //	health-check
-//	    └── get-load [retry:3]
+//	    └── get-load (target=<host>)
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run retry.go
+// Run with: OSAPI_TOKEN="<jwt>" go run fact-predicates.go
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -51,12 +52,34 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
+	// Compose predicates: Ubuntu + amd64 + 4 CPUs + 8GB.
+	agents, err := o.Discover(
+		context.Background(),
+		orchestrator.OS("Ubuntu"),
+		orchestrator.Arch("amd64"),
+		orchestrator.MinCPU(4),
+		orchestrator.MinMemory(8000),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("Found %d agents matching all predicates\n", len(agents))
+
+	for _, a := range agents {
+		fmt.Printf("  %s (%s %s, %d CPUs)\n",
+			a.Hostname,
+			a.OSInfo.Distribution,
+			a.Architecture,
+			a.CPUCount,
+		)
+	}
+
 	health := o.HealthCheck("_any")
 
-	// Retry up to 3 times on transient failure.
-	o.NodeLoadGet("_any").
-		After(health).
-		Retry(3)
+	for _, a := range agents {
+		o.NodeLoadGet(a.Hostname).After(health)
+	}
 
 	if _, err := o.Run(); err != nil {
 		log.Fatal(err)

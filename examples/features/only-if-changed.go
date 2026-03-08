@@ -18,23 +18,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates condition-based agent filtering.
-// Discovers agents without DiskPressure, then retrieves the
-// hostname from each healthy host.
+// Package main demonstrates OnlyIfChanged — a step that is skipped
+// unless at least one dependency reported a change.
 //
-// DAG (per discovered host):
+// DAG:
 //
 //	health-check
-//	    └── get-hostname (target=<healthy host>)
+//	    ├── get-hostname
+//	    └── get-disk
+//	            └── run-df (only-if-changed)
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run condition-filter.go
+// Run with: OSAPI_TOKEN="<jwt>" go run only-if-changed.go
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
 	"os"
 
@@ -54,24 +51,15 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	// Discover agents without DiskPressure at plan-build time.
-	agents, err := o.Discover(
-		context.Background(),
-		orchestrator.NoCondition("DiskPressure"),
-		orchestrator.Healthy(),
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("Discovered %d healthy agents\n", len(agents))
-
 	health := o.HealthCheck("_any")
+	o.NodeHostnameGet("_any").After(health)
+	disk := o.NodeDiskGet("_any").After(health)
 
-	// Create a hostname step for each healthy agent.
-	for _, a := range agents {
-		o.NodeHostnameGet(a.Hostname).After(health)
-	}
+	// Only runs if the disk query reported changes.
+	o.CommandExec("_any", "df", "-h").
+		Named("run-df").
+		After(disk).
+		OnlyIfChanged()
 
 	if _, err := o.Run(); err != nil {
 		log.Fatal(err)

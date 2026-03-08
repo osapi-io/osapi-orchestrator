@@ -18,21 +18,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates the read-then-write pattern: read DNS
-// configuration first, then update it with new servers.
+// Package main demonstrates agent discovery with fact predicates.
+// Discovers agents running Ubuntu on amd64, then retrieves the
+// hostname from each matching host.
 //
-// DAG:
+// DAG (per discovered host):
 //
 //	health-check
-//	    └── get-dns
-//	            └── update-dns
+//	    └── get-hostname (target=<discovered host>)
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run dns-update.go
+// Run with: OSAPI_TOKEN="<jwt>" go run discover.go
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -50,25 +50,26 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
-	iface := os.Getenv("OSAPI_INTERFACE")
-	if iface == "" {
-		iface = "eth0"
+	o := orchestrator.New(url, token)
+
+	// Discover Ubuntu agents at plan-build time.
+	agents, err := o.Discover(
+		context.Background(),
+		orchestrator.OS("Ubuntu"),
+		orchestrator.Arch("amd64"),
+	)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	o := orchestrator.New(url, token)
+	fmt.Printf("Discovered %d matching agents\n", len(agents))
 
 	health := o.HealthCheck("_any")
 
-	// Read current DNS configuration.
-	getDNS := o.NetworkDNSGet("_any", iface).After(health)
-
-	// Write new DNS servers after reading the current config.
-	o.NetworkDNSUpdate(
-		"_any",
-		iface,
-		[]string{"8.8.8.8", "8.8.4.4"},
-		[]string{"example.com"},
-	).After(getDNS)
+	// Create a hostname step for each discovered agent.
+	for _, a := range agents {
+		o.NodeHostnameGet(a.Hostname).After(health)
+	}
 
 	if _, err := o.Run(); err != nil {
 		log.Fatal(err)

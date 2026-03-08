@@ -18,19 +18,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates the WhenFact execution-time guard.
-// Lists agents, then conditionally runs a command only if the target
-// agent is running Ubuntu.
+// Package main demonstrates automatic retry on failure. The load query
+// is configured to retry up to 3 times before giving up.
 //
 // DAG:
 //
 //	health-check
-//	    └── list-agents
-//	            └── shell-apt-update (when-fact: os == Ubuntu)
+//	    └── get-load [retry:3]
 //
-// Run with: OSAPI_TOKEN="<jwt>" OSAPI_TARGET="<hostname>" go run when-fact.go
+// Run with: OSAPI_TOKEN="<jwt>" go run retry.go
 package main
 
 import (
@@ -51,23 +47,14 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
-	target := os.Getenv("OSAPI_TARGET")
-	if target == "" {
-		target = "_any"
-	}
-
 	o := orchestrator.New(url, token)
 
 	health := o.HealthCheck("_any")
-	agents := o.AgentList().After(health)
 
-	// Guard: only run if the target agent is Ubuntu.
-	o.CommandShell(target, "apt-get update -qq").
-		After(agents).
-		WhenFact("list-agents", func(a orchestrator.AgentResult) bool {
-			return a.OSInfo != nil &&
-				a.OSInfo.Distribution == "Ubuntu"
-		})
+	// Retry up to 3 times on transient failure.
+	o.NodeLoadGet("_any").
+		After(health).
+		Retry(3)
 
 	if _, err := o.Run(); err != nil {
 		log.Fatal(err)

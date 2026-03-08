@@ -18,23 +18,22 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates filtering agents by labels and facts.
-// Uses HasLabel to find agents with a specific label key-value pair
-// and FactEquals to match agents by arbitrary fact values.
+// Package main demonstrates error recovery with Continue strategy and
+// OnlyIfFailed cleanup steps.
 //
-// DAG (per matching host):
+// The deploy step uses Continue so independent tasks keep running even
+// if it fails. The cleanup step only executes when deploy has failed,
+// providing a pattern for failure-triggered recovery.
 //
-//	health-check
-//	    └── get-hostname (target=<host>)
+// DAG:
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run label-filter.go
+//	deploy (_all, continue on error)
+//	    └── cleanup (only-if-failed)
+//
+// Run with: OSAPI_TOKEN="<jwt>" go run error-recovery.go
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
 	"os"
 
@@ -54,27 +53,17 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	// Discover agents labeled as production web servers.
-	agents, err := o.Discover(
-		context.Background(),
-		orchestrator.HasLabel("role", "web"),
-		orchestrator.FactEquals("env", "prod"),
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// Broadcast deploy to all hosts. Continue allows the plan to
+	// proceed even if some hosts fail.
+	deploy := o.CommandExec("_all", "echo", "deploying").
+		Named("deploy").
+		OnError(orchestrator.Continue)
 
-	fmt.Printf("Found %d prod web agents\n", len(agents))
-
-	for _, a := range agents {
-		fmt.Printf("  %s (labels=%v)\n", a.Hostname, a.Labels)
-	}
-
-	health := o.HealthCheck("_any")
-
-	for _, a := range agents {
-		o.NodeHostnameGet(a.Hostname).After(health)
-	}
+	// Recovery step — only runs if deploy failed on at least one host.
+	o.CommandExec("_any", "echo", "running-cleanup").
+		Named("cleanup").
+		After(deploy).
+		OnlyIfFailed()
 
 	if _, err := o.Run(); err != nil {
 		log.Fatal(err)

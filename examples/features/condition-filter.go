@@ -18,19 +18,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates TaskFunc for custom logic and inter-task
-// data passing. The summarize step reads typed results from prior
-// steps and returns aggregated data available in Report.Decode().
+// Package main demonstrates condition-based agent filtering.
+// Discovers agents without DiskPressure, then retrieves the
+// hostname from each healthy host.
 //
-// DAG:
+// DAG (per discovered host):
 //
 //	health-check
-//	    └── get-hostname
-//	            └── summarize (TaskFunc: reads hostname data)
+//	    └── get-hostname (target=<healthy host>)
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run task-func.go
+// Run with: OSAPI_TOKEN="<jwt>" go run condition-filter.go
 package main
 
 import (
@@ -38,8 +35,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
@@ -57,37 +52,26 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	health := o.HealthCheck("_any")
-	hostname := o.NodeHostnameGet("_any").After(health)
-
-	// TaskFunc receives Results from prior steps.
-	o.TaskFunc(
-		"summarize",
-		func(_ context.Context, r orchestrator.Results) (*sdk.Result, error) {
-			var h orchestrator.HostnameResult
-			if err := r.Decode("get-hostname", &h); err != nil {
-				return &sdk.Result{Changed: false}, nil
-			}
-
-			fmt.Printf("  Hostname: %s\n", h.Hostname)
-
-			return &sdk.Result{
-				Changed: true,
-				Data: map[string]any{
-					"host": h.Hostname,
-				},
-			}, nil
-		},
-	).After(hostname)
-
-	report, err := o.Run()
+	// Discover agents without DiskPressure at plan-build time.
+	agents, err := o.Discover(
+		context.Background(),
+		orchestrator.NoCondition("DiskPressure"),
+		orchestrator.Healthy(),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Post-execution: decode typed results from the report.
-	var h orchestrator.HostnameResult
-	if err := report.Decode("get-hostname", &h); err == nil {
-		fmt.Printf("Report hostname: %s\n", h.Hostname)
+	fmt.Printf("Discovered %d healthy agents\n", len(agents))
+
+	health := o.HealthCheck("_any")
+
+	// Create a hostname step for each healthy agent.
+	for _, a := range agents {
+		o.NodeHostnameGet(a.Hostname).After(health)
+	}
+
+	if _, err := o.Run(); err != nil {
+		log.Fatal(err)
 	}
 }

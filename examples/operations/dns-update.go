@@ -18,21 +18,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates conditional execution with When guards.
-//
-// The whoami command only runs if the hostname was successfully retrieved
-// and is non-empty. The guard uses Results.Decode for typed access to
-// prior step data.
+// Package main demonstrates the read-then-write pattern: read DNS
+// configuration first, then update it with new servers.
 //
 // DAG:
 //
 //	health-check
-//	    └── get-hostname
-//	            └── whoami (when: hostname != "")
+//	    └── get-dns
+//	            └── update-dns
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run guards.go
+// Run with: OSAPI_TOKEN="<jwt>" go run dns-update.go
 package main
 
 import (
@@ -53,22 +48,25 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
+	iface := os.Getenv("OSAPI_INTERFACE")
+	if iface == "" {
+		iface = "eth0"
+	}
+
 	o := orchestrator.New(url, token)
 
 	health := o.HealthCheck("_any")
-	hostname := o.NodeHostnameGet("_any").After(health)
 
-	// Guard: decode the hostname result and only proceed if non-empty.
-	o.CommandExec("_any", "whoami").
-		After(hostname).
-		When(func(r orchestrator.Results) bool {
-			var h orchestrator.HostnameResult
-			if err := r.Decode("get-hostname", &h); err != nil {
-				return false
-			}
+	// Read current DNS configuration.
+	getDNS := o.NetworkDNSGet("_any", iface).After(health)
 
-			return h.Hostname != ""
-		})
+	// Write new DNS servers after reading the current config.
+	o.NetworkDNSUpdate(
+		"_any",
+		iface,
+		[]string{"8.8.8.8", "8.8.4.4"},
+		[]string{"example.com"},
+	).After(getDNS)
 
 	if _, err := o.Run(); err != nil {
 		log.Fatal(err)

@@ -18,18 +18,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates agent discovery with fact predicates.
-// Discovers agents running Ubuntu on amd64, then retrieves the
-// hostname from each matching host.
+// Package main demonstrates filtering agents by labels and facts.
+// Uses HasLabel to find agents with a specific label key-value pair
+// and FactEquals to match agents by arbitrary fact values.
 //
-// DAG (per discovered host):
+// DAG (per matching host):
 //
 //	health-check
-//	    └── get-hostname (target=<discovered host>)
+//	    └── get-hostname (target=<host>)
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run discover.go
+// Run with: OSAPI_TOKEN="<jwt>" go run label-filter.go
 package main
 
 import (
@@ -54,21 +52,24 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	// Discover Ubuntu agents at plan-build time.
+	// Discover agents labeled as production web servers.
 	agents, err := o.Discover(
 		context.Background(),
-		orchestrator.OS("Ubuntu"),
-		orchestrator.Arch("amd64"),
+		orchestrator.HasLabel("role", "web"),
+		orchestrator.FactEquals("env", "prod"),
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Discovered %d matching agents\n", len(agents))
+	fmt.Printf("Found %d prod web agents\n", len(agents))
+
+	for _, a := range agents {
+		fmt.Printf("  %s (labels=%v)\n", a.Hostname, a.Labels)
+	}
 
 	health := o.HealthCheck("_any")
 
-	// Create a hostname step for each discovered agent.
 	for _, a := range agents {
 		o.NodeHostnameGet(a.Hostname).After(health)
 	}

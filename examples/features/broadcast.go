@@ -18,41 +18,23 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates grouping agents by a fact value.
-// Groups the fleet by OS distribution and runs a distro-specific
-// package update command on each group.
+// Package main demonstrates broadcast targeting with _all. The command
+// is sent to every registered agent and per-host results are displayed
+// automatically by the renderer.
 //
-// DAG (per group, per host):
+// DAG:
 //
-//	health-check
-//	    └── shell-<update-cmd> (target=<host>)
+//	hostname-all (_all broadcast)
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run group-by-fact.go
+// Run with: OSAPI_TOKEN="<jwt>" go run broadcast.go
 package main
 
 import (
-	"context"
-	"fmt"
 	"log"
 	"os"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
-
-func installCmd(
-	distro string,
-) string {
-	switch distro {
-	case "Ubuntu", "Debian":
-		return "apt-get update -qq"
-	case "CentOS", "Rocky", "AlmaLinux":
-		return "yum check-update -q"
-	default:
-		return "echo unsupported"
-	}
-}
 
 func main() {
 	token := os.Getenv("OSAPI_TOKEN")
@@ -67,24 +49,9 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	groups, err := o.GroupByFact(
-		context.Background(),
-		"os.distribution",
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	health := o.HealthCheck("_any")
-
-	for distro, agents := range groups {
-		cmd := installCmd(distro)
-		fmt.Printf("Group %s (%d hosts): %s\n", distro, len(agents), cmd)
-
-		for _, a := range agents {
-			o.CommandShell(a.Hostname, cmd).After(health)
-		}
-	}
+	// Target _all: the job is delivered to every registered agent.
+	// The renderer shows per-host results automatically.
+	o.NodeHostnameGet("_all")
 
 	if _, err := o.Run(); err != nil {
 		log.Fatal(err)

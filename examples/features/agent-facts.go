@@ -18,8 +18,6 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
 // Package main demonstrates fleet discovery with AgentList and AgentGet.
 // Lists all registered agents, then retrieves comprehensive facts for the
 // first agent — OS info, load averages, memory stats, network interfaces,

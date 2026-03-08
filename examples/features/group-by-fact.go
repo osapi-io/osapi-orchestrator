@@ -18,29 +18,39 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates error recovery with Continue strategy and
-// OnlyIfFailed cleanup steps.
+// Package main demonstrates grouping agents by a fact value.
+// Groups the fleet by OS distribution and runs a distro-specific
+// package update command on each group.
 //
-// The deploy step uses Continue so independent tasks keep running even
-// if it fails. The cleanup step only executes when deploy has failed,
-// providing a pattern for failure-triggered recovery.
+// DAG (per group, per host):
 //
-// DAG:
+//	health-check
+//	    └── shell-<update-cmd> (target=<host>)
 //
-//	deploy (_all, continue on error)
-//	    └── cleanup (only-if-failed)
-//
-// Run with: OSAPI_TOKEN="<jwt>" go run error-recovery.go
+// Run with: OSAPI_TOKEN="<jwt>" go run group-by-fact.go
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"os"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
+
+func installCmd(
+	distro string,
+) string {
+	switch distro {
+	case "Ubuntu", "Debian":
+		return "apt-get update -qq"
+	case "CentOS", "Rocky", "AlmaLinux":
+		return "yum check-update -q"
+	default:
+		return "echo unsupported"
+	}
+}
 
 func main() {
 	token := os.Getenv("OSAPI_TOKEN")
@@ -55,17 +65,24 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	// Broadcast deploy to all hosts. Continue allows the plan to
-	// proceed even if some hosts fail.
-	deploy := o.CommandExec("_all", "echo", "deploying").
-		Named("deploy").
-		OnError(orchestrator.Continue)
+	groups, err := o.GroupByFact(
+		context.Background(),
+		"os.distribution",
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// Recovery step — only runs if deploy failed on at least one host.
-	o.CommandExec("_any", "echo", "running-cleanup").
-		Named("cleanup").
-		After(deploy).
-		OnlyIfFailed()
+	health := o.HealthCheck("_any")
+
+	for distro, agents := range groups {
+		cmd := installCmd(distro)
+		fmt.Printf("Group %s (%d hosts): %s\n", distro, len(agents), cmd)
+
+		for _, a := range agents {
+			o.CommandShell(a.Hostname, cmd).After(health)
+		}
+	}
 
 	if _, err := o.Run(); err != nil {
 		log.Fatal(err)

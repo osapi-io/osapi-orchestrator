@@ -18,22 +18,22 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates OnlyIfChanged — a step that is skipped
-// unless at least one dependency reported a change.
+// Package main demonstrates conditional file upload using FileChanged.
+// Checks whether local content differs from the Object Store version,
+// then only uploads and deploys if changes are detected.
 //
 // DAG:
 //
 //	health-check
-//	    ├── get-hostname
-//	    └── get-disk
-//	            └── run-df (only-if-changed)
+//	    └── check-file
+//	            └── upload-file (OnlyIfChanged)
+//	                    └── deploy-file (OnlyIfChanged)
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run only-if-changed.go
+// Run with: OSAPI_TOKEN="<jwt>" go run file-changed.go
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -51,19 +51,39 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
+	configData := []byte("server:\n  port: 8080\n  debug: false\n")
+
 	o := orchestrator.New(url, token)
 
+	// Level 0: verify the API is reachable.
 	health := o.HealthCheck("_any")
-	o.NodeHostnameGet("_any").After(health)
-	disk := o.NodeDiskGet("_any").After(health)
 
-	// Only runs if the disk query reported changes.
-	o.CommandExec("_any", "df", "-h").
-		Named("run-df").
-		After(disk).
+	// Level 1: check if the file content has changed.
+	check := o.FileChanged("app-config.yaml", configData).After(health)
+
+	// Level 2: upload only if the content differs from stored version.
+	upload := o.FileUpload("app-config.yaml", "raw", configData).
+		After(check).
 		OnlyIfChanged()
 
-	if _, err := o.Run(); err != nil {
+	// Level 3: deploy only if a new version was uploaded.
+	o.FileDeploy("_any", orchestrator.FileDeployOpts{
+		ObjectName:  "app-config.yaml",
+		Path:        "/tmp/app-config.yaml",
+		ContentType: "raw",
+		Mode:        "0644",
+	}).After(upload).
+		OnlyIfChanged()
+
+	report, err := o.Run()
+	if err != nil {
 		log.Fatal(err)
+	}
+
+	// Decode the change check result.
+	var changed orchestrator.FileChangedResult
+	if err := report.Decode("check-file", &changed); err == nil {
+		fmt.Printf("File %s changed: %v (sha256: %s)\n",
+			changed.Name, changed.Changed, changed.SHA256[:12])
 	}
 }

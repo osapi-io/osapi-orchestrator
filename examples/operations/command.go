@@ -18,20 +18,21 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates the simplest orchestrator DAG: a health check
-// followed by a hostname query.
+// Package main demonstrates command execution with both CommandExec
+// (direct) and CommandShell (shell-interpreted) operations, plus
+// typed result decoding from the report.
 //
 // DAG:
 //
 //	health-check
-//	    └── get-hostname
+//	    ├── run-uptime (exec)
+//	    └── shell-uname (shell)
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run basic.go
+// Run with: OSAPI_TOKEN="<jwt>" go run command.go
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -51,13 +52,26 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	// Level 0: verify the API is reachable.
 	health := o.HealthCheck("_any")
 
-	// Level 1: query hostname from any available agent.
-	o.NodeHostnameGet("_any").After(health)
+	// Direct execution: runs the binary with args.
+	o.CommandExec("_any", "uptime").After(health)
 
-	if _, err := o.Run(); err != nil {
+	// Shell execution: interpreted by /bin/sh, supports pipes.
+	o.CommandShell("_any", "uname -a").After(health)
+
+	report, err := o.Run()
+	if err != nil {
 		log.Fatal(err)
+	}
+
+	// Decode typed command results from the report.
+	var cmd orchestrator.CommandResult
+	if err := report.Decode("run-uptime", &cmd); err == nil {
+		fmt.Printf("uptime stdout: %s\n", cmd.Stdout)
+	}
+
+	if err := report.Decode("shell-uname", &cmd); err == nil {
+		fmt.Printf("uname stdout:  %s\n", cmd.Stdout)
 	}
 }

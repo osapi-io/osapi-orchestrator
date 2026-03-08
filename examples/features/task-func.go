@@ -18,23 +18,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//go:build ignore
-
-// Package main demonstrates WithVerbose() for detailed output mode.
-// When enabled, the renderer shows stdout, stderr, and full response
-// data for every task.
+// Package main demonstrates TaskFunc for custom logic and inter-task
+// data passing. The summarize step reads typed results from prior
+// steps and returns aggregated data available in Report.Decode().
 //
 // DAG:
 //
 //	health-check
 //	    └── get-hostname
+//	            └── summarize (TaskFunc: reads hostname data)
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run verbose.go
+// Run with: OSAPI_TOKEN="<jwt>" go run task-func.go
 package main
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"os"
+
+	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
@@ -50,13 +53,39 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
-	// WithVerbose enables detailed output for every task.
-	o := orchestrator.New(url, token, orchestrator.WithVerbose())
+	o := orchestrator.New(url, token)
 
 	health := o.HealthCheck("_any")
-	o.NodeHostnameGet("_any").After(health)
+	hostname := o.NodeHostnameGet("_any").After(health)
 
-	if _, err := o.Run(); err != nil {
+	// TaskFunc receives Results from prior steps.
+	o.TaskFunc(
+		"summarize",
+		func(_ context.Context, r orchestrator.Results) (*sdk.Result, error) {
+			var h orchestrator.HostnameResult
+			if err := r.Decode("get-hostname", &h); err != nil {
+				return &sdk.Result{Changed: false}, nil
+			}
+
+			fmt.Printf("  Hostname: %s\n", h.Hostname)
+
+			return &sdk.Result{
+				Changed: true,
+				Data: map[string]any{
+					"host": h.Hostname,
+				},
+			}, nil
+		},
+	).After(hostname)
+
+	report, err := o.Run()
+	if err != nil {
 		log.Fatal(err)
+	}
+
+	// Post-execution: decode typed results from the report.
+	var h orchestrator.HostnameResult
+	if err := report.Decode("get-hostname", &h); err == nil {
+		fmt.Printf("Report hostname: %s\n", h.Hostname)
 	}
 }
