@@ -402,6 +402,45 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 				"web-",
 			},
 		},
+		{
+			name:    "Verbose shows job ID when present",
+			verbose: true,
+			result: sdk.TaskResult{
+				JobID:    "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+				Name:     "set-dns",
+				Status:   sdk.StatusChanged,
+				Changed:  true,
+				Duration: 50 * time.Millisecond,
+			},
+			contains: []string{
+				"job_id: aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+			},
+		},
+		{
+			name: "Normal mode hides job ID",
+			result: sdk.TaskResult{
+				JobID:    "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+				Name:     "set-dns",
+				Status:   sdk.StatusChanged,
+				Changed:  true,
+				Duration: 50 * time.Millisecond,
+			},
+			notContains: []string{
+				"job_id:",
+			},
+		},
+		{
+			name:    "Verbose hides job ID when empty",
+			verbose: true,
+			result: sdk.TaskResult{
+				Name:     "health-check",
+				Status:   sdk.StatusUnchanged,
+				Duration: 10 * time.Millisecond,
+			},
+			notContains: []string{
+				"job_id:",
+			},
+		},
 	}
 
 	for _, tc := range tests {
