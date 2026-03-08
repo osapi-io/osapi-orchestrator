@@ -481,6 +481,47 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 			},
 		},
 		{
+			name:    "Verbose shows job duration when present",
+			verbose: true,
+			result: sdk.TaskResult{
+				Name:        "set-dns",
+				Status:      sdk.StatusChanged,
+				Changed:     true,
+				Duration:    50 * time.Millisecond,
+				JobDuration: 30 * time.Millisecond,
+			},
+			contains: []string{
+				"(job: 30ms)",
+			},
+		},
+		{
+			name:    "Verbose shows host data but skips internal keys",
+			verbose: true,
+			result: sdk.TaskResult{
+				Name:     "broadcast-cmd",
+				Status:   sdk.StatusChanged,
+				Changed:  true,
+				Duration: 100 * time.Millisecond,
+				HostResults: []sdk.HostResult{
+					{
+						Hostname: "web-01",
+						Changed:  true,
+						Data: map[string]any{
+							"stdout":    "deployed",
+							"exit_code": float64(0),
+						},
+					},
+				},
+			},
+			contains: []string{
+				"[web-01]",
+				"stdout: deployed",
+			},
+			notContains: []string{
+				"exit_code:",
+			},
+		},
+		{
 			name:    "Verbose hides job ID when empty",
 			verbose: true,
 			result: sdk.TaskResult{

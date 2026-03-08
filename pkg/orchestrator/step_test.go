@@ -396,6 +396,17 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailedGuard() {
 			hasDeps:  false,
 			expected: false,
 		},
+		{
+			name: "Returns false when dep has no HostResults (unicast)",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status:  sdk.StatusFailed,
+					Changed: true,
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
 	}
 
 	for _, tc := range tests {
@@ -470,6 +481,17 @@ func (s *StepTestSuite) TestOnlyIfAnyHostChangedGuard() {
 			hasDeps:  false,
 			expected: false,
 		},
+		{
+			name: "Returns false when dep has no HostResults (unicast)",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status:  sdk.StatusChanged,
+					Changed: true,
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
 	}
 
 	for _, tc := range tests {
@@ -542,6 +564,17 @@ func (s *StepTestSuite) TestOnlyIfAllHostsChangedGuard() {
 			name:     "Returns false with no dependencies",
 			results:  sdk.Results{},
 			hasDeps:  false,
+			expected: false,
+		},
+		{
+			name: "Returns false when dep has no HostResults (unicast)",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status:  sdk.StatusChanged,
+					Changed: true,
+				},
+			},
+			hasDeps:  true,
 			expected: false,
 		},
 	}
