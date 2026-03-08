@@ -8,20 +8,20 @@ DAG-based plans with typed results, guards, retry, and discovery.
 Every operation returns a `*Step`. Chain methods to declare ordering,
 conditions, and error handling:
 
-| Method                  | What it does                                      |
-| ----------------------- | ------------------------------------------------- |
-| `After`                 | Run after the given steps complete                |
-| `Retry`                 | Retry on failure up to N times                    |
-| `OnlyIfChanged`         | Skip unless a dependency reported changes         |
-| `OnlyIfFailed`          | Skip unless at least one dependency failed        |
-| `OnlyIfAllChanged`      | Skip unless all dependencies reported changes     |
-| `OnlyIfAnyHostFailed`   | Skip unless any host in a dependency has an error |
-| `OnlyIfAllHostsFailed`  | Skip unless all hosts in dependencies have errors |
-| `OnlyIfAnyHostChanged`  | Skip unless any host in a dependency changed      |
-| `OnlyIfAllHostsChanged` | Skip unless all hosts in dependencies changed     |
-| `When`                  | Guard -- only run if predicate returns true       |
-| `WhenFact`              | Guard -- only run if agent fact matches           |
-| `OnError`               | Set error strategy (`StopAll` or `Continue`)      |
+| Method                  | What it does                                       |
+| ----------------------- | -------------------------------------------------- |
+| `After`                 | Run after the given steps complete                 |
+| `Retry`                 | Retry on failure with optional exponential backoff |
+| `OnlyIfChanged`         | Skip unless a dependency reported changes          |
+| `OnlyIfFailed`          | Skip unless at least one dependency failed         |
+| `OnlyIfAllChanged`      | Skip unless all dependencies reported changes      |
+| `OnlyIfAnyHostFailed`   | Skip unless any host in a dependency has an error  |
+| `OnlyIfAllHostsFailed`  | Skip unless all hosts in dependencies have errors  |
+| `OnlyIfAnyHostChanged`  | Skip unless any host in a dependency changed       |
+| `OnlyIfAllHostsChanged` | Skip unless all hosts in dependencies changed      |
+| `When`                  | Guard -- only run if predicate returns true        |
+| `WhenFact`              | Guard -- only run if agent fact matches            |
+| `OnError`               | Set error strategy (`StopAll` or `Continue`)       |
 
 ## Typed Results
 

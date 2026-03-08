@@ -83,6 +83,9 @@ retries, and reporting.
   - [func \(r Results\) Decode\(name string, v any\) error](#Results.Decode)
   - [func \(r Results\) HostResults\(name string\) \[\]HostResult](#Results.HostResults)
   - [func \(r Results\) Status\(name string\) TaskStatus](#Results.Status)
+- [type RetryOption](#RetryOption)
+  - [func WithBackoff\(initial time.Duration, maxInterval time.Duration\) RetryOption](#WithBackoff)
+  - [func WithExponentialBackoff\(\) RetryOption](#WithExponentialBackoff)
 - [type Step](#Step)
   - [func \(s \*Step\) After\(deps ...\*Step\) \*Step](#Step.After)
   - [func \(s \*Step\) Named\(name string\) \*Step](#Step.Named)
@@ -94,7 +97,7 @@ retries, and reporting.
   - [func \(s \*Step\) OnlyIfAnyHostFailed\(\) \*Step](#Step.OnlyIfAnyHostFailed)
   - [func \(s \*Step\) OnlyIfChanged\(\) \*Step](#Step.OnlyIfChanged)
   - [func \(s \*Step\) OnlyIfFailed\(\) \*Step](#Step.OnlyIfFailed)
-  - [func \(s \*Step\) Retry\(n int\) \*Step](#Step.Retry)
+  - [func \(s \*Step\) Retry\(n int, opts ...RetryOption\) \*Step](#Step.Retry)
   - [func \(s \*Step\) When\(fn func\(Results\) bool\) \*Step](#Step.When)
   - [func \(s \*Step\) WhenFact\(agentListStep string, fn Predicate\) \*Step](#Step.WhenFact)
 - [type TaskStatus](#TaskStatus)
@@ -283,7 +286,7 @@ type DiskUsage struct {
 
 <a name="ErrorStrategy"></a>
 
-## type [ErrorStrategy](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L56)
+## type [ErrorStrategy](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L60)
 
 ErrorStrategy controls what happens when a step fails.
 
@@ -469,7 +472,7 @@ type MemoryResult struct {
 
 <a name="Option"></a>
 
-## type [Option](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L26)
+## type [Option](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L30)
 
 Option configures the Orchestrator.
 
@@ -479,7 +482,7 @@ type Option func(*config)
 
 <a name="WithVerbose"></a>
 
-### func [WithVerbose](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L34)
+### func [WithVerbose](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L38)
 
 ```go
 func WithVerbose() Option
@@ -969,6 +972,39 @@ func (r Results) Status(name string) TaskStatus
 
 Status returns the terminal status of a completed dependency step.
 
+<a name="RetryOption"></a>
+
+## type [RetryOption](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L82)
+
+RetryOption configures the Retry behavior.
+
+```go
+type RetryOption func(*retryConfig)
+```
+
+<a name="WithBackoff"></a>
+
+### func [WithBackoff](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L101-L104)
+
+```go
+func WithBackoff(initial time.Duration, maxInterval time.Duration) RetryOption
+```
+
+WithBackoff sets custom initial and max intervals for exponential backoff
+between retry attempts. The delay doubles on each attempt, clamped to
+maxInterval.
+
+<a name="WithExponentialBackoff"></a>
+
+### func [WithExponentialBackoff](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L91)
+
+```go
+func WithExponentialBackoff() RetryOption
+```
+
+WithExponentialBackoff enables exponential backoff between retry attempts with
+sensible defaults \(1s initial, 30s max\).
+
 <a name="Step"></a>
 
 ## type [Step](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L27-L29)
@@ -1004,7 +1040,7 @@ Named overrides the auto\-generated step name.
 
 <a name="Step.OnError"></a>
 
-### func \(\*Step\) [OnError](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L269-L271)
+### func \(\*Step\) [OnError](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L284-L286)
 
 ```go
 func (s *Step) OnError(strategy ErrorStrategy) *Step
@@ -1014,7 +1050,7 @@ OnError sets the error strategy for this step.
 
 <a name="Step.OnlyIfAllChanged"></a>
 
-### func \(\*Step\) [OnlyIfAllChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L87)
+### func \(\*Step\) [OnlyIfAllChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L102)
 
 ```go
 func (s *Step) OnlyIfAllChanged() *Step
@@ -1024,7 +1060,7 @@ OnlyIfAllChanged skips this step unless all dependencies reported changes.
 
 <a name="Step.OnlyIfAllHostsChanged"></a>
 
-### func \(\*Step\) [OnlyIfAllHostsChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L193)
+### func \(\*Step\) [OnlyIfAllHostsChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L208)
 
 ```go
 func (s *Step) OnlyIfAllHostsChanged() *Step
@@ -1035,7 +1071,7 @@ reported changes. Only meaningful for broadcast operations.
 
 <a name="Step.OnlyIfAllHostsFailed"></a>
 
-### func \(\*Step\) [OnlyIfAllHostsFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L137)
+### func \(\*Step\) [OnlyIfAllHostsFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L152)
 
 ```go
 func (s *Step) OnlyIfAllHostsFailed() *Step
@@ -1046,7 +1082,7 @@ an error. Only meaningful for broadcast operations.
 
 <a name="Step.OnlyIfAnyHostChanged"></a>
 
-### func \(\*Step\) [OnlyIfAnyHostChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L165)
+### func \(\*Step\) [OnlyIfAnyHostChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L180)
 
 ```go
 func (s *Step) OnlyIfAnyHostChanged() *Step
@@ -1057,7 +1093,7 @@ changes. Only meaningful for broadcast operations.
 
 <a name="Step.OnlyIfAnyHostFailed"></a>
 
-### func \(\*Step\) [OnlyIfAnyHostFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L109)
+### func \(\*Step\) [OnlyIfAnyHostFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L124)
 
 ```go
 func (s *Step) OnlyIfAnyHostFailed() *Step
@@ -1068,7 +1104,7 @@ error. Only meaningful for broadcast operations.
 
 <a name="Step.OnlyIfChanged"></a>
 
-### func \(\*Step\) [OnlyIfChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L64)
+### func \(\*Step\) [OnlyIfChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L79)
 
 ```go
 func (s *Step) OnlyIfChanged() *Step
@@ -1078,7 +1114,7 @@ OnlyIfChanged skips this step unless a dependency reported changes.
 
 <a name="Step.OnlyIfFailed"></a>
 
-### func \(\*Step\) [OnlyIfFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L71)
+### func \(\*Step\) [OnlyIfFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L86)
 
 ```go
 func (s *Step) OnlyIfFailed() *Step
@@ -1088,17 +1124,18 @@ OnlyIfFailed skips this step unless at least one dependency failed.
 
 <a name="Step.Retry"></a>
 
-### func \(\*Step\) [Retry](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L55-L57)
+### func \(\*Step\) [Retry](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L56-L59)
 
 ```go
-func (s *Step) Retry(n int) *Step
+func (s *Step) Retry(n int, opts ...RetryOption) *Step
 ```
 
-Retry sets the number of retry attempts on failure.
+Retry sets the number of retry attempts on failure. Options configure
+exponential backoff between attempts.
 
 <a name="Step.When"></a>
 
-### func \(\*Step\) [When](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L221-L223)
+### func \(\*Step\) [When](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L236-L238)
 
 ```go
 func (s *Step) When(fn func(Results) bool) *Step
@@ -1108,7 +1145,7 @@ When adds a guard condition — the step only runs if the predicate returns true
 
 <a name="Step.WhenFact"></a>
 
-### func \(\*Step\) [WhenFact](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L237-L240)
+### func \(\*Step\) [WhenFact](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L252-L255)
 
 ```go
 func (s *Step) WhenFact(agentListStep string, fn Predicate) *Step
@@ -1149,7 +1186,7 @@ const (
 
 <a name="UploadOption"></a>
 
-## type [UploadOption](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L41)
+## type [UploadOption](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L45)
 
 UploadOption configures the FileUpload operation.
 
@@ -1159,7 +1196,7 @@ type UploadOption func(*uploadConfig)
 
 <a name="WithForce"></a>
 
-### func [WithForce](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L51)
+### func [WithForce](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/options.go#L55)
 
 ```go
 func WithForce() UploadOption

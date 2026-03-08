@@ -10,6 +10,8 @@ tool (
 	mvdan.cc/gofumpt
 )
 
+replace github.com/retr0h/osapi => ../osapi
+
 require (
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/retr0h/osapi v0.0.0-20260308221849-e2789ca6cdb0
@@ -64,6 +66,7 @@ require (
 	github.com/butuzov/mirror v1.3.0 // indirect
 	github.com/catenacyber/perfsprint v0.10.1 // indirect
 	github.com/ccojocar/zxcvbn-go v1.0.4 // indirect
+	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charithe/durationcheck v0.0.11 // indirect
 	github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc // indirect

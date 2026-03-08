@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 	"github.com/stretchr/testify/suite"
@@ -762,6 +763,61 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 			guard := step.task.Guard()
 			s.Require().NotNil(guard)
 			s.Equal(tc.wantResult, guard(tc.results))
+		})
+	}
+}
+
+func (s *StepTestSuite) TestRetrySetsErrorStrategy() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	orch := New(server.URL, "test-token")
+
+	tests := []struct {
+		name               string
+		retryCount         int
+		opts               []RetryOption
+		expectedString     string
+		expectedRetryCount int
+	}{
+		{
+			name:               "Retry without options (backwards compatible)",
+			retryCount:         3,
+			opts:               nil,
+			expectedString:     "retry(3)",
+			expectedRetryCount: 3,
+		},
+		{
+			name:               "Retry with default exponential backoff",
+			retryCount:         3,
+			opts:               []RetryOption{WithExponentialBackoff()},
+			expectedString:     "retry(3)",
+			expectedRetryCount: 3,
+		},
+		{
+			name:               "Retry with custom backoff",
+			retryCount:         5,
+			opts:               []RetryOption{WithBackoff(2*time.Second, 30*time.Second)},
+			expectedString:     "retry(5)",
+			expectedRetryCount: 5,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := orch.NodeHostnameGet("_any").Retry(tc.retryCount, tc.opts...)
+
+			strategy := step.task.ErrorStrategy()
+			s.Require().NotNil(strategy)
+			s.Equal(tc.expectedString, strategy.String())
+			s.Equal(tc.expectedRetryCount, strategy.RetryCount())
 		})
 	}
 }
