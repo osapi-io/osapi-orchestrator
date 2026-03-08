@@ -4,11 +4,9 @@ go 1.25.7
 
 replace github.com/osapi-io/osapi-orchestrator => ../..
 
-replace github.com/retr0h/osapi => ../../../osapi
-
 require (
 	github.com/osapi-io/osapi-orchestrator v0.0.0-00010101000000-000000000000
-	github.com/retr0h/osapi v0.0.0-20260308221849-e2789ca6cdb0
+	github.com/retr0h/osapi v0.0.0-20260308233420-14f39908a7fe
 )
 
 require (
