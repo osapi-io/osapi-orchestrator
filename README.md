@@ -50,31 +50,38 @@ the request:
 
 Each example is a standalone Go file. Run with:
 
-    cd examples
+    cd examples/features
     OSAPI_TOKEN="<jwt>" go run basic.go
 
-| Example                                        | What it shows                                       |
-| ---------------------------------------------- | --------------------------------------------------- |
-| [basic.go](examples/basic.go)                  | Simple DAG with health check and hostname query     |
-| [parallel.go](examples/parallel.go)            | Five parallel queries depending on health check     |
-| [retry.go](examples/retry.go)                  | Retry on failure with configurable attempts         |
-| [command.go](examples/command.go)              | Command exec and shell with result decoding         |
-| [verbose.go](examples/verbose.go)              | Verbose output with stdout/stderr/response data     |
-| [guards.go](examples/guards.go)                | When predicate for conditional execution            |
-| [only-if-changed.go](examples/only-if-changed.go) | Skip step unless dependency reported changes     |
-| [error-recovery.go](examples/error-recovery.go) | Continue strategy with OnlyIfFailed cleanup        |
-| [broadcast.go](examples/broadcast.go)          | Per-host results from broadcast operations          |
-| [task-func.go](examples/task-func.go)          | Custom steps with typed result decoding             |
-| [dns-update.go](examples/dns-update.go)        | Read-then-write pattern with DNS operations         |
-| [file-deploy.go](examples/file-deploy.go)      | Upload, deploy, and verify a file end-to-end        |
-| [file-changed.go](examples/file-changed.go)    | Conditional upload with FileChanged + OnlyIfChanged |
-| [agent-facts.go](examples/agent-facts.go)      | List agents with OS, load, memory, and interfaces   |
-| [discover.go](examples/discover.go)            | Find agents by OS and architecture predicates       |
-| [group-by-fact.go](examples/group-by-fact.go)  | Group agents by distro, run per-group commands      |
-| [when-fact.go](examples/when-fact.go)          | Fact-based guard on a step                          |
-| [fact-predicates.go](examples/fact-predicates.go) | Compose multiple predicates for discovery        |
-| [label-filter.go](examples/label-filter.go)    | Filter by labels and arbitrary fact values          |
-| [condition-filter.go](examples/condition-filter.go) | Filter by node conditions (e.g., DiskPressure) |
+### Features
+
+| Example                                                          | What it shows                                       |
+| ---------------------------------------------------------------- | --------------------------------------------------- |
+| [basic.go](examples/features/basic.go)                          | Simple DAG with health check and hostname query     |
+| [parallel.go](examples/features/parallel.go)                    | Five parallel queries depending on health check     |
+| [retry.go](examples/features/retry.go)                          | Retry on failure with configurable attempts         |
+| [verbose.go](examples/features/verbose.go)                      | Verbose output with stdout/stderr/response data     |
+| [guards.go](examples/features/guards.go)                        | When predicate for conditional execution            |
+| [only-if-changed.go](examples/features/only-if-changed.go)      | Skip step unless dependency reported changes        |
+| [error-recovery.go](examples/features/error-recovery.go)        | Continue strategy with OnlyIfFailed cleanup         |
+| [broadcast.go](examples/features/broadcast.go)                  | Per-host results from broadcast operations          |
+| [task-func.go](examples/features/task-func.go)                  | Custom steps with typed result decoding             |
+| [agent-facts.go](examples/features/agent-facts.go)              | List agents with OS, load, memory, and interfaces   |
+| [discover.go](examples/features/discover.go)                    | Find agents by OS and architecture predicates       |
+| [group-by-fact.go](examples/features/group-by-fact.go)          | Group agents by distro, run per-group commands      |
+| [when-fact.go](examples/features/when-fact.go)                  | Fact-based guard on a step                          |
+| [fact-predicates.go](examples/features/fact-predicates.go)      | Compose multiple predicates for discovery           |
+| [label-filter.go](examples/features/label-filter.go)            | Filter by labels and arbitrary fact values           |
+| [condition-filter.go](examples/features/condition-filter.go)    | Filter by node conditions (e.g., DiskPressure)      |
+
+### Operations
+
+| Example                                                          | What it shows                                       |
+| ---------------------------------------------------------------- | --------------------------------------------------- |
+| [command.go](examples/operations/command.go)                    | Command exec and shell with result decoding         |
+| [dns-update.go](examples/operations/dns-update.go)              | Read-then-write pattern with DNS operations         |
+| [file-deploy.go](examples/operations/file-deploy.go)            | Upload, deploy, and verify a file end-to-end        |
+| [file-changed.go](examples/operations/file-changed.go)          | Conditional upload with FileChanged + OnlyIfChanged |
 
 ## Contributing
 
