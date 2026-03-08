@@ -20,7 +20,7 @@
 
 package orchestrator
 
-import sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
+import sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 
 // renderer defines the internal output contract for plan execution.
 type renderer interface {

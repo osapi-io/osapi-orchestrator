@@ -24,8 +24,8 @@ import (
 	"context"
 	"fmt"
 
-	sdk "github.com/osapi-io/osapi-sdk/pkg/orchestrator"
-	"github.com/osapi-io/osapi-sdk/pkg/osapi"
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
+	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 )
 
 // Discover queries active agents and returns those matching all
