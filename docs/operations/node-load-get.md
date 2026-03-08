@@ -39,5 +39,5 @@ Requires `node:read` permission.
 ## Example
 
 See
-[`examples/retry.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/retry.go)
+[`examples/features/parallel.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/parallel.go)
 for a complete working example.

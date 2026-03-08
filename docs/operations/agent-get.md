@@ -36,5 +36,5 @@ Requires `agent:read` permission.
 ## Example
 
 See
-[`examples/agent-facts.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/agent-facts.go)
+[`examples/features/agent-facts.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/agent-facts.go)
 for a complete working example.

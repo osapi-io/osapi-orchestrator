@@ -39,7 +39,7 @@ o.FileUpload("config.yaml", "raw", data, orchestrator.WithForce())
 ## Example
 
 See
-[`examples/file-deploy.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/file-deploy.go)
+[`examples/operations/file-deploy.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/file-deploy.go)
 and
-[`examples/file-changed.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/file-changed.go)
+[`examples/operations/file-changed.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/file-changed.go)
 for complete working examples.

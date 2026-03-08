@@ -48,10 +48,10 @@ for distro, agents := range groups {
 ## Example
 
 See
-[`examples/discover.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/discover.go),
-[`examples/group-by-fact.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/group-by-fact.go),
-[`examples/fact-predicates.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/fact-predicates.go),
-[`examples/label-filter.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/label-filter.go),
+[`examples/features/discover.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/discover.go),
+[`examples/features/group-by-fact.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/group-by-fact.go),
+[`examples/features/fact-predicates.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/fact-predicates.go),
+[`examples/features/label-filter.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/label-filter.go),
 and
-[`examples/condition-filter.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/condition-filter.go)
+[`examples/features/condition-filter.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/condition-filter.go)
 for complete working examples.

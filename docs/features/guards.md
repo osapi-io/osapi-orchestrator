@@ -40,7 +40,7 @@ See [OnlyIfChanged](only-if-changed.md).
 ## Example
 
 See
-[`examples/guards.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/guards.go)
+[`examples/features/guards.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/guards.go)
 and
-[`examples/when-fact.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/when-fact.go)
+[`examples/features/when-fact.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/when-fact.go)
 for complete working examples.

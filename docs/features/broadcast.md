@@ -18,5 +18,5 @@ o.CommandExec("group:web", "uptime")
 ## Example
 
 See
-[`examples/broadcast.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/broadcast.go)
+[`examples/features/broadcast.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/broadcast.go)
 for a complete working example.
