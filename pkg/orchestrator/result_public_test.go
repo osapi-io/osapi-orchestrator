@@ -344,6 +344,45 @@ func (s *ResultPublicTestSuite) TestStatus() {
 	}
 }
 
+func (s *ResultPublicTestSuite) TestChanged() {
+	tests := []struct {
+		name       string
+		results    sdk.Results
+		lookupName string
+		want       bool
+	}{
+		{
+			name: "Returns true when step reported changes",
+			results: sdk.Results{
+				"deploy": &sdk.Result{Changed: true, Status: sdk.StatusChanged},
+			},
+			lookupName: "deploy",
+			want:       true,
+		},
+		{
+			name: "Returns false when step did not report changes",
+			results: sdk.Results{
+				"deploy": &sdk.Result{Changed: false, Status: sdk.StatusUnchanged},
+			},
+			lookupName: "deploy",
+			want:       false,
+		},
+		{
+			name:       "Returns false when step not found",
+			results:    sdk.Results{},
+			lookupName: "nonexistent",
+			want:       false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			r := orchestrator.NewResults(tc.results)
+			s.Equal(tc.want, r.Changed(tc.lookupName))
+		})
+	}
+}
+
 func (s *ResultPublicTestSuite) TestHostResults() {
 	tests := []struct {
 		name       string

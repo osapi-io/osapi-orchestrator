@@ -126,6 +126,34 @@ func (s *StepPublicTestSuite) TestChaining() {
 			},
 		},
 		{
+			name: "OnlyIfAnyHostFailed returns non-nil step",
+			chainFn: func() *orchestrator.Step {
+				return s.orch.NodeHostnameGet("_any").
+					OnlyIfAnyHostFailed()
+			},
+		},
+		{
+			name: "OnlyIfAllHostsFailed returns non-nil step",
+			chainFn: func() *orchestrator.Step {
+				return s.orch.NodeHostnameGet("_any").
+					OnlyIfAllHostsFailed()
+			},
+		},
+		{
+			name: "OnlyIfAnyHostChanged returns non-nil step",
+			chainFn: func() *orchestrator.Step {
+				return s.orch.NodeHostnameGet("_any").
+					OnlyIfAnyHostChanged()
+			},
+		},
+		{
+			name: "OnlyIfAllHostsChanged returns non-nil step",
+			chainFn: func() *orchestrator.Step {
+				return s.orch.NodeHostnameGet("_any").
+					OnlyIfAllHostsChanged()
+			},
+		},
+		{
 			name: "Named returns same step",
 			chainFn: func() *orchestrator.Step {
 				return s.orch.NodeHostnameGet("_any").Named("custom")

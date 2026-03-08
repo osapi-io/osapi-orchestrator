@@ -25,6 +25,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
@@ -39,6 +40,7 @@ const nameWidth = 25
 
 // lipglossRenderer implements renderer with colored terminal output.
 type lipglossRenderer struct {
+	mu      sync.Mutex
 	w       io.Writer
 	verbose bool
 	header  lipgloss.Style
@@ -175,6 +177,9 @@ func (r *lipglossRenderer) TaskStart(
 	name string,
 	detail string,
 ) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	tag := padTag(r.dim.Render("[start]"), len("[start]"))
 	r.printf(
 		"  %s %-*s %s\n",
@@ -194,6 +199,9 @@ func (r *lipglossRenderer) TaskDone(
 		return
 	}
 
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	label := fmt.Sprintf("[%s]", result.Status)
 
 	var tag string
@@ -208,13 +216,18 @@ func (r *lipglossRenderer) TaskDone(
 		changedStr = r.greenB.Render(changedStr)
 	}
 
+	durationStr := formatDuration(result.Duration)
+	if r.verbose && result.JobDuration > 0 {
+		durationStr += fmt.Sprintf(" (job: %s)", formatDuration(result.JobDuration))
+	}
+
 	r.printf(
 		"  %s %-*s %s  %s\n",
 		tag,
 		nameWidth,
 		result.Name,
 		changedStr,
-		r.dim.Render(formatDuration(result.Duration)),
+		r.dim.Render(durationStr),
 	)
 
 	// Always show error detail on failure.
@@ -226,8 +239,9 @@ func (r *lipglossRenderer) TaskDone(
 		)
 	}
 
-	// Always show per-host results for broadcast operations.
-	if len(result.HostResults) > 0 {
+	// Show per-host results for broadcast operations.
+	hasBroadcast := len(result.HostResults) > 0
+	if hasBroadcast {
 		r.printHostResults(result.HostResults)
 	}
 
@@ -241,16 +255,21 @@ func (r *lipglossRenderer) TaskDone(
 	}
 
 	// Verbose mode: show response data on success.
-	if r.verbose && result.Data != nil {
+	// Skip when per-host results are shown — the aggregated data
+	// is redundant with the per-host breakdown.
+	if r.verbose && result.Data != nil && !hasBroadcast {
 		r.printResultData(result.Data)
 	}
 }
 
 // printHostResults renders per-host results for broadcast operations.
+// Each host gets a bracketed header line with status and optional timing,
+// followed by indented response data in verbose mode.
 func (r *lipglossRenderer) printHostResults(
 	hostResults []sdk.HostResult,
 ) {
 	indent := strings.Repeat(" ", tagWidth+2)
+	dataIndent := indent + "  "
 
 	for _, hr := range hostResults {
 		status := r.green.Render("ok")
@@ -263,13 +282,38 @@ func (r *lipglossRenderer) printHostResults(
 			changed = r.greenB.Render(" changed")
 		}
 
+		duration := ""
+		if r.verbose && hr.JobDuration > 0 {
+			duration = r.dim.Render(
+				fmt.Sprintf(" (job: %s)", formatDuration(hr.JobDuration)),
+			)
+		}
+
 		r.printf(
-			"%s%s %s%s\n",
+			"%s%s %s%s%s\n",
 			indent,
-			r.dim.Render(hr.Hostname),
+			r.cyan.Render(fmt.Sprintf("[%s]", hr.Hostname)),
 			status,
 			changed,
+			duration,
 		)
+
+		if r.verbose && hr.Data != nil {
+			for key, v := range hr.Data {
+				if skipKeys[key] {
+					continue
+				}
+
+				str := formatValue(v)
+				if str != "" {
+					r.printf(
+						"%s%s\n",
+						dataIndent,
+						r.dim.Render(fmt.Sprintf("%s: %s", key, str)),
+					)
+				}
+			}
+		}
 	}
 }
 
@@ -337,6 +381,9 @@ func (r *lipglossRenderer) TaskRetry(
 	attempt int,
 	err error,
 ) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	tag := padTag(r.yellow.Render("[retry]"), len("[retry]"))
 	r.printf(
 		"  %s %-*s attempt=%d error=%q\n",
@@ -352,6 +399,9 @@ func (r *lipglossRenderer) TaskSkip(
 	name string,
 	reason string,
 ) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	dimYellow := r.yellow.Faint(true)
 	tag := padTag(dimYellow.Render("[skip]"), len("[skip]"))
 	r.printf(

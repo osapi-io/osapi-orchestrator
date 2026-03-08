@@ -79,6 +79,7 @@ retries, and reporting.
   - [func \(r \*Report\) Summary\(\) string](#Report.Summary)
 - [type Results](#Results)
   - [func NewResults\(sdkResults sdk.Results\) Results](#NewResults)
+  - [func \(r Results\) Changed\(name string\) bool](#Results.Changed)
   - [func \(r Results\) Decode\(name string, v any\) error](#Results.Decode)
   - [func \(r Results\) HostResults\(name string\) \[\]HostResult](#Results.HostResults)
   - [func \(r Results\) Status\(name string\) TaskStatus](#Results.Status)
@@ -87,6 +88,10 @@ retries, and reporting.
   - [func \(s \*Step\) Named\(name string\) \*Step](#Step.Named)
   - [func \(s \*Step\) OnError\(strategy ErrorStrategy\) \*Step](#Step.OnError)
   - [func \(s \*Step\) OnlyIfAllChanged\(\) \*Step](#Step.OnlyIfAllChanged)
+  - [func \(s \*Step\) OnlyIfAllHostsChanged\(\) \*Step](#Step.OnlyIfAllHostsChanged)
+  - [func \(s \*Step\) OnlyIfAllHostsFailed\(\) \*Step](#Step.OnlyIfAllHostsFailed)
+  - [func \(s \*Step\) OnlyIfAnyHostChanged\(\) \*Step](#Step.OnlyIfAnyHostChanged)
+  - [func \(s \*Step\) OnlyIfAnyHostFailed\(\) \*Step](#Step.OnlyIfAnyHostFailed)
   - [func \(s \*Step\) OnlyIfChanged\(\) \*Step](#Step.OnlyIfChanged)
   - [func \(s \*Step\) OnlyIfFailed\(\) \*Step](#Step.OnlyIfFailed)
   - [func \(s \*Step\) Retry\(n int\) \*Step](#Step.Retry)
@@ -382,7 +387,7 @@ type FileUploadResult struct {
 
 <a name="HostResult"></a>
 
-## type [HostResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L85-L90)
+## type [HostResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L95-L100)
 
 HostResult represents a single host's response within a broadcast operation.
 
@@ -397,7 +402,7 @@ type HostResult struct {
 
 <a name="HostResult.Decode"></a>
 
-### func \(HostResult\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L93-L95)
+### func \(HostResult\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L103-L105)
 
 ```go
 func (h HostResult) Decode(v any) error
@@ -867,7 +872,7 @@ OS returns a predicate that matches agents running the given distribution
 
 <a name="Report"></a>
 
-## type [Report](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L155-L158)
+## type [Report](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L165-L168)
 
 Report summarizes plan execution.
 
@@ -880,7 +885,7 @@ type Report struct {
 
 <a name="Report.Decode"></a>
 
-### func \(\*Report\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L162-L165)
+### func \(\*Report\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L172-L175)
 
 ```go
 func (r *Report) Decode(name string, v any) error
@@ -891,7 +896,7 @@ the given typed struct.
 
 <a name="Report.Summary"></a>
 
-### func \(\*Report\) [Summary](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L189)
+### func \(\*Report\) [Summary](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L199)
 
 ```go
 func (r *Report) Summary() string
@@ -921,9 +926,20 @@ func NewResults(sdkResults sdk.Results) Results
 
 NewResults creates a Results from SDK results. Intended for testing.
 
+<a name="Results.Changed"></a>
+
+### func \(Results\) [Changed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L85-L87)
+
+```go
+func (r Results) Changed(name string) bool
+```
+
+Changed returns whether the named step reported changes. Returns false if the
+step is not found or did not report changes.
+
 <a name="Results.Decode"></a>
 
-### func \(Results\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L133-L136)
+### func \(Results\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L143-L146)
 
 ```go
 func (r Results) Decode(name string, v any) error
@@ -934,7 +950,7 @@ struct.
 
 <a name="Results.HostResults"></a>
 
-### func \(Results\) [HostResults](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L110-L112)
+### func \(Results\) [HostResults](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L120-L122)
 
 ```go
 func (r Results) HostResults(name string) []HostResult
@@ -988,7 +1004,7 @@ Named overrides the auto\-generated step name.
 
 <a name="Step.OnError"></a>
 
-### func \(\*Step\) [OnError](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L157-L159)
+### func \(\*Step\) [OnError](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L269-L271)
 
 ```go
 func (s *Step) OnError(strategy ErrorStrategy) *Step
@@ -1005,6 +1021,50 @@ func (s *Step) OnlyIfAllChanged() *Step
 ```
 
 OnlyIfAllChanged skips this step unless all dependencies reported changes.
+
+<a name="Step.OnlyIfAllHostsChanged"></a>
+
+### func \(\*Step\) [OnlyIfAllHostsChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L193)
+
+```go
+func (s *Step) OnlyIfAllHostsChanged() *Step
+```
+
+OnlyIfAllHostsChanged skips this step unless every host in every dependency
+reported changes. Only meaningful for broadcast operations.
+
+<a name="Step.OnlyIfAllHostsFailed"></a>
+
+### func \(\*Step\) [OnlyIfAllHostsFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L137)
+
+```go
+func (s *Step) OnlyIfAllHostsFailed() *Step
+```
+
+OnlyIfAllHostsFailed skips this step unless every host in every dependency has
+an error. Only meaningful for broadcast operations.
+
+<a name="Step.OnlyIfAnyHostChanged"></a>
+
+### func \(\*Step\) [OnlyIfAnyHostChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L165)
+
+```go
+func (s *Step) OnlyIfAnyHostChanged() *Step
+```
+
+OnlyIfAnyHostChanged skips this step unless any host in any dependency reported
+changes. Only meaningful for broadcast operations.
+
+<a name="Step.OnlyIfAnyHostFailed"></a>
+
+### func \(\*Step\) [OnlyIfAnyHostFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L109)
+
+```go
+func (s *Step) OnlyIfAnyHostFailed() *Step
+```
+
+OnlyIfAnyHostFailed skips this step unless any host in any dependency has an
+error. Only meaningful for broadcast operations.
 
 <a name="Step.OnlyIfChanged"></a>
 
@@ -1038,7 +1098,7 @@ Retry sets the number of retry attempts on failure.
 
 <a name="Step.When"></a>
 
-### func \(\*Step\) [When](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L109-L111)
+### func \(\*Step\) [When](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L221-L223)
 
 ```go
 func (s *Step) When(fn func(Results) bool) *Step
@@ -1048,7 +1108,7 @@ When adds a guard condition — the step only runs if the predicate returns true
 
 <a name="Step.WhenFact"></a>
 
-### func \(\*Step\) [WhenFact](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L125-L128)
+### func \(\*Step\) [WhenFact](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L237-L240)
 
 ```go
 func (s *Step) WhenFact(agentListStep string, fn Predicate) *Step

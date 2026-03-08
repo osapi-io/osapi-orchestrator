@@ -93,13 +93,125 @@ func (s *Step) OnlyIfAllChanged() *Step {
 
 		for _, dep := range deps {
 			r := sdkResults.Get(dep.Name())
-			if r == nil || r.Status != sdk.StatusChanged {
+			if r == nil || !r.Changed {
 				return false
 			}
 		}
 
 		return true
 	}, "only-if-all-changed: not all dependencies changed")
+
+	return s
+}
+
+// OnlyIfAnyHostFailed skips this step unless any host in any
+// dependency has an error. Only meaningful for broadcast operations.
+func (s *Step) OnlyIfAnyHostFailed() *Step {
+	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+		deps := s.task.Dependencies()
+		if len(deps) == 0 {
+			return false
+		}
+
+		for _, dep := range deps {
+			r := sdkResults.Get(dep.Name())
+			if r == nil || len(r.HostResults) == 0 {
+				continue
+			}
+
+			for _, hr := range r.HostResults {
+				if hr.Error != "" {
+					return true
+				}
+			}
+		}
+
+		return false
+	}, "only-if-any-host-failed: no host failed")
+
+	return s
+}
+
+// OnlyIfAllHostsFailed skips this step unless every host in every
+// dependency has an error. Only meaningful for broadcast operations.
+func (s *Step) OnlyIfAllHostsFailed() *Step {
+	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+		deps := s.task.Dependencies()
+		if len(deps) == 0 {
+			return false
+		}
+
+		for _, dep := range deps {
+			r := sdkResults.Get(dep.Name())
+			if r == nil || len(r.HostResults) == 0 {
+				return false
+			}
+
+			for _, hr := range r.HostResults {
+				if hr.Error == "" {
+					return false
+				}
+			}
+		}
+
+		return true
+	}, "only-if-all-hosts-failed: not all hosts failed")
+
+	return s
+}
+
+// OnlyIfAnyHostChanged skips this step unless any host in any
+// dependency reported changes. Only meaningful for broadcast operations.
+func (s *Step) OnlyIfAnyHostChanged() *Step {
+	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+		deps := s.task.Dependencies()
+		if len(deps) == 0 {
+			return false
+		}
+
+		for _, dep := range deps {
+			r := sdkResults.Get(dep.Name())
+			if r == nil || len(r.HostResults) == 0 {
+				continue
+			}
+
+			for _, hr := range r.HostResults {
+				if hr.Changed {
+					return true
+				}
+			}
+		}
+
+		return false
+	}, "only-if-any-host-changed: no host changed")
+
+	return s
+}
+
+// OnlyIfAllHostsChanged skips this step unless every host in every
+// dependency reported changes. Only meaningful for broadcast operations.
+func (s *Step) OnlyIfAllHostsChanged() *Step {
+	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+		deps := s.task.Dependencies()
+		if len(deps) == 0 {
+			return false
+		}
+
+		for _, dep := range deps {
+			r := sdkResults.Get(dep.Name())
+			if r == nil || len(r.HostResults) == 0 {
+				return false
+			}
+
+			for _, hr := range r.HostResults {
+				if !hr.Changed {
+					return false
+				}
+			}
+		}
+
+		return true
+	}, "only-if-all-hosts-changed: not all hosts changed")
 
 	return s
 }
