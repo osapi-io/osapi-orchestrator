@@ -2,7 +2,10 @@ module github.com/osapi-io/osapi-orchestrator/examples/features
 
 go 1.25.7
 
-replace github.com/osapi-io/osapi-orchestrator => ../..
+replace (
+	github.com/osapi-io/osapi-orchestrator => ../..
+	github.com/retr0h/osapi => ../../../osapi
+)
 
 require (
 	github.com/osapi-io/osapi-orchestrator v0.0.0-00010101000000-000000000000

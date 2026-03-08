@@ -198,8 +198,8 @@ func (s *StepTestSuite) TestOnlyIfAllChangedGuard() {
 		{
 			name: "Returns true when all deps changed",
 			results: sdk.Results{
-				"dep-a": &sdk.Result{Status: sdk.StatusChanged},
-				"dep-b": &sdk.Result{Status: sdk.StatusChanged},
+				"dep-a": &sdk.Result{Status: sdk.StatusChanged, Changed: true},
+				"dep-b": &sdk.Result{Status: sdk.StatusChanged, Changed: true},
 			},
 			hasDeps:  true,
 			expected: true,
@@ -207,11 +207,20 @@ func (s *StepTestSuite) TestOnlyIfAllChangedGuard() {
 		{
 			name: "Returns false when one dep unchanged",
 			results: sdk.Results{
-				"dep-a": &sdk.Result{Status: sdk.StatusChanged},
+				"dep-a": &sdk.Result{Status: sdk.StatusChanged, Changed: true},
 				"dep-b": &sdk.Result{Status: sdk.StatusUnchanged},
 			},
 			hasDeps:  true,
 			expected: false,
+		},
+		{
+			name: "Returns true when dep failed but Changed=true (broadcast partial failure)",
+			results: sdk.Results{
+				"dep-a": &sdk.Result{Status: sdk.StatusFailed, Changed: true},
+				"dep-b": &sdk.Result{Status: sdk.StatusChanged, Changed: true},
+			},
+			hasDeps:  true,
+			expected: true,
 		},
 		{
 			name: "Returns false when dep missing from results",
@@ -240,6 +249,313 @@ func (s *StepTestSuite) TestOnlyIfAllChangedGuard() {
 					OnlyIfAllChanged()
 			} else {
 				step = orch.NodeHostnameGet("_any").OnlyIfAllChanged()
+			}
+
+			guard := step.task.Guard()
+			s.Require().NotNil(guard)
+			s.Equal(tc.expected, guard(tc.results))
+		})
+	}
+}
+
+func (s *StepTestSuite) TestOnlyIfAnyHostFailedGuard() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	orch := New(server.URL, "test-token")
+
+	tests := []struct {
+		name     string
+		results  sdk.Results
+		hasDeps  bool
+		expected bool
+	}{
+		{
+			name: "Returns true when one host has Error",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusFailed,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Error: "timeout"},
+						{Hostname: "web-02"},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: true,
+		},
+		{
+			name: "Returns false when no hosts have Error",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusChanged,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Changed: true},
+						{Hostname: "web-02", Changed: true},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+		{
+			name:     "Returns false with no dependencies",
+			results:  sdk.Results{},
+			hasDeps:  false,
+			expected: false,
+		},
+		{
+			name: "Returns false when dep has no HostResults (unicast)",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status:  sdk.StatusChanged,
+					Changed: true,
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var step *Step
+			if tc.hasDeps {
+				dep := orch.NodeHostnameGet("_all").Named("dep")
+				step = orch.NodeHostnameGet("_any").
+					After(dep).
+					OnlyIfAnyHostFailed()
+			} else {
+				step = orch.NodeHostnameGet("_any").OnlyIfAnyHostFailed()
+			}
+
+			guard := step.task.Guard()
+			s.Require().NotNil(guard)
+			s.Equal(tc.expected, guard(tc.results))
+		})
+	}
+}
+
+func (s *StepTestSuite) TestOnlyIfAllHostsFailedGuard() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	orch := New(server.URL, "test-token")
+
+	tests := []struct {
+		name     string
+		results  sdk.Results
+		hasDeps  bool
+		expected bool
+	}{
+		{
+			name: "Returns true when all hosts have Error",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusFailed,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Error: "timeout"},
+						{Hostname: "web-02", Error: "connection refused"},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: true,
+		},
+		{
+			name: "Returns false when one host has no Error",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusFailed,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Error: "timeout"},
+						{Hostname: "web-02", Changed: true},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+		{
+			name:     "Returns false with no dependencies",
+			results:  sdk.Results{},
+			hasDeps:  false,
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var step *Step
+			if tc.hasDeps {
+				dep := orch.NodeHostnameGet("_all").Named("dep")
+				step = orch.NodeHostnameGet("_any").
+					After(dep).
+					OnlyIfAllHostsFailed()
+			} else {
+				step = orch.NodeHostnameGet("_any").OnlyIfAllHostsFailed()
+			}
+
+			guard := step.task.Guard()
+			s.Require().NotNil(guard)
+			s.Equal(tc.expected, guard(tc.results))
+		})
+	}
+}
+
+func (s *StepTestSuite) TestOnlyIfAnyHostChangedGuard() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	orch := New(server.URL, "test-token")
+
+	tests := []struct {
+		name     string
+		results  sdk.Results
+		hasDeps  bool
+		expected bool
+	}{
+		{
+			name: "Returns true when one host Changed=true",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusChanged,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Changed: true},
+						{Hostname: "web-02", Changed: false},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: true,
+		},
+		{
+			name: "Returns false when no hosts Changed",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusUnchanged,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Changed: false},
+						{Hostname: "web-02", Changed: false},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+		{
+			name:     "Returns false with no dependencies",
+			results:  sdk.Results{},
+			hasDeps:  false,
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var step *Step
+			if tc.hasDeps {
+				dep := orch.NodeHostnameGet("_all").Named("dep")
+				step = orch.NodeHostnameGet("_any").
+					After(dep).
+					OnlyIfAnyHostChanged()
+			} else {
+				step = orch.NodeHostnameGet("_any").OnlyIfAnyHostChanged()
+			}
+
+			guard := step.task.Guard()
+			s.Require().NotNil(guard)
+			s.Equal(tc.expected, guard(tc.results))
+		})
+	}
+}
+
+func (s *StepTestSuite) TestOnlyIfAllHostsChangedGuard() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	orch := New(server.URL, "test-token")
+
+	tests := []struct {
+		name     string
+		results  sdk.Results
+		hasDeps  bool
+		expected bool
+	}{
+		{
+			name: "Returns true when all hosts Changed=true",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusChanged,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Changed: true},
+						{Hostname: "web-02", Changed: true},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: true,
+		},
+		{
+			name: "Returns false when one host Changed=false",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusChanged,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Changed: true},
+						{Hostname: "web-02", Changed: false},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+		{
+			name:     "Returns false with no dependencies",
+			results:  sdk.Results{},
+			hasDeps:  false,
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var step *Step
+			if tc.hasDeps {
+				dep := orch.NodeHostnameGet("_all").Named("dep")
+				step = orch.NodeHostnameGet("_any").
+					After(dep).
+					OnlyIfAllHostsChanged()
+			} else {
+				step = orch.NodeHostnameGet("_any").OnlyIfAllHostsChanged()
 			}
 
 			guard := step.task.Guard()

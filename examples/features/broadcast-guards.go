@@ -18,23 +18,17 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates parallel task execution. Multiple operations
-// at the same DAG level run concurrently.
-//
-// The final level runs cat /proc/version which succeeds on Linux hosts
-// but fails on macOS, demonstrating per-host error rendering.
+// Package main demonstrates broadcast-aware guards. A deploy step
+// broadcasts to all hosts with Continue error strategy. Downstream
+// steps use host-level guards to react to per-host outcomes.
 //
 // DAG:
 //
-//	health-check
-//	    ├── get-hostname
-//	    ├── get-disk
-//	    ├── get-memory
-//	    ├── get-load
-//	    └── get-uptime
-//	          └── shell-cat /proc/version (continue on error)
+//	deploy (_all, continue on error)
+//	    ├── cleanup (only-if-any-host-failed)
+//	    └── verify (only-if-all-hosts-changed)
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run parallel.go
+// Run with: OSAPI_TOKEN="<jwt>" go run broadcast-guards.go
 package main
 
 import (
@@ -57,22 +51,23 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	// Level 0: health gate.
-	health := o.HealthCheck("_any")
-
-	// Level 1: five queries run in parallel — all share the same
-	// dependency so the orchestrator schedules them concurrently.
-	o.NodeHostnameGet("_any").After(health)
-	o.NodeDiskGet("_any").After(health)
-	o.NodeMemoryGet("_any").After(health)
-	o.NodeLoadGet("_any").After(health)
-	uptime := o.NodeUptimeGet("_any").After(health)
-
-	// Level 2: read /proc/version — exists on Linux, missing on
-	// macOS. Demonstrates per-host error rendering with Continue.
-	o.CommandShell("_any", "cat /proc/version").
-		After(uptime).
+	// Broadcast deploy to all hosts. Continue allows the plan to
+	// proceed even if some hosts fail.
+	deploy := o.CommandExec("_all", "echo", "deploying").
+		Named("deploy").
 		OnError(orchestrator.Continue)
+
+	// Cleanup runs only if at least one host reported an error.
+	o.CommandExec("_any", "echo", "running-cleanup").
+		Named("cleanup").
+		After(deploy).
+		OnlyIfAnyHostFailed()
+
+	// Verification runs only if every host reported a change.
+	o.CommandExec("_all", "echo", "verifying").
+		Named("verify").
+		After(deploy).
+		OnlyIfAllHostsChanged()
 
 	if _, err := o.Run(); err != nil {
 		log.Fatal(err)

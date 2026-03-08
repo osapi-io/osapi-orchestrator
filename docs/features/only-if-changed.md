@@ -26,6 +26,21 @@ A stricter variant that requires **all** dependencies to report changes:
 step.OnlyIfAllChanged()
 ```
 
+## Host-Level Variants
+
+For broadcast operations, two host-level variants inspect per-host `Changed`
+status instead of the task-level `Changed` bool:
+
+```go
+// Run if any host in the dependency reported changes.
+step.OnlyIfAnyHostChanged()
+
+// Run only if every host in the dependency reported changes.
+step.OnlyIfAllHostsChanged()
+```
+
+See [Guards — Broadcast Guards](guards.md#broadcast-guards) for details.
+
 ## Example
 
 See

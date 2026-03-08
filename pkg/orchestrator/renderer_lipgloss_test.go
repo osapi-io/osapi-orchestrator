@@ -376,7 +376,7 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 			},
 		},
 		{
-			name: "Shows per-host results",
+			name: "Shows per-host results with bracketed hostnames",
 			result: sdk.TaskResult{
 				Name:    "deploy-all",
 				Status:  sdk.StatusChanged,
@@ -387,9 +387,60 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 				},
 			},
 			contains: []string{
-				"web-01",
-				"web-02",
+				"[web-01]",
+				"[web-02]",
 				"error: timeout",
+			},
+		},
+		{
+			name:    "Verbose shows per-host data and suppresses inline data",
+			verbose: true,
+			result: sdk.TaskResult{
+				Name:     "get-hostname-all",
+				Status:   sdk.StatusUnchanged,
+				Duration: 1500 * time.Millisecond,
+				Data: map[string]any{
+					"hostname": "nerd",
+				},
+				HostResults: []sdk.HostResult{
+					{
+						Hostname:    "nerd",
+						JobDuration: 2 * time.Millisecond,
+						Data: map[string]any{
+							"hostname": "nerd",
+						},
+					},
+				},
+			},
+			contains: []string{
+				"[nerd]",
+				"(job: 2ms)",
+			},
+			notContains: []string{
+				// Inline data is suppressed when per-host results
+				// are present — the per-host section already shows it.
+				"             hostname: nerd\n             hostname: nerd",
+			},
+		},
+		{
+			name: "Normal mode hides per-host data",
+			result: sdk.TaskResult{
+				Name:   "get-hostname-all",
+				Status: sdk.StatusUnchanged,
+				HostResults: []sdk.HostResult{
+					{
+						Hostname: "nerd",
+						Data: map[string]any{
+							"hostname": "nerd",
+						},
+					},
+				},
+			},
+			contains: []string{
+				"[nerd]",
+			},
+			notContains: []string{
+				"hostname: nerd",
 			},
 		},
 		{

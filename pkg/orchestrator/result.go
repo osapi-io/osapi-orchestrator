@@ -80,6 +80,16 @@ func (r Results) Status(
 	}
 }
 
+// Changed returns whether the named step reported changes. Returns
+// false if the step is not found or did not report changes.
+func (r Results) Changed(
+	name string,
+) bool {
+	result := r.results.Get(name)
+
+	return result != nil && result.Changed
+}
+
 // HostResult represents a single host's response within a broadcast
 // operation.
 type HostResult struct {
