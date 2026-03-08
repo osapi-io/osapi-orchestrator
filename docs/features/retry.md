@@ -16,5 +16,5 @@ immediately without backoff.
 ## Example
 
 See
-[`examples/retry.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/retry.go)
+[`examples/features/retry.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/retry.go)
 for a complete working example.

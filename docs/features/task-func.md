@@ -26,5 +26,5 @@ TaskFunc results are available in the report via `report.Decode()`.
 ## Example
 
 See
-[`examples/task-func.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/task-func.go)
+[`examples/features/task-func.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/task-func.go)
 for a complete working example.

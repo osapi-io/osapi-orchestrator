@@ -12,5 +12,5 @@ o := orchestrator.New(url, token, orchestrator.WithVerbose())
 ## Example
 
 See
-[`examples/verbose.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/verbose.go)
+[`examples/features/verbose.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/verbose.go)
 for a complete working example.

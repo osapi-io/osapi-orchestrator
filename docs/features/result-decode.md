@@ -28,7 +28,7 @@ status := report.Status("step-name")
 ## Example
 
 See
-[`examples/command.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/command.go)
+[`examples/operations/command.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/command.go)
 and
-[`examples/task-func.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/task-func.go)
+[`examples/features/task-func.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/task-func.go)
 for complete working examples.

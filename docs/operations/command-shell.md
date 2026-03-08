@@ -54,5 +54,5 @@ Requires `command:execute` permission.
 ## Example
 
 See
-[`examples/command.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/command.go)
+[`examples/operations/command.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/command.go)
 for a complete working example.

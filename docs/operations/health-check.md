@@ -32,5 +32,5 @@ Requires `health:read` permission.
 ## Example
 
 See
-[`examples/basic.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/basic.go)
+[`examples/features/basic.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/basic.go)
 for a complete working example.

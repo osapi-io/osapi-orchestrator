@@ -29,5 +29,5 @@ cleanup step only runs when at least one dependency failed.
 ## Example
 
 See
-[`examples/error-recovery.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/error-recovery.go)
+[`examples/features/error-recovery.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/error-recovery.go)
 for a complete working example.

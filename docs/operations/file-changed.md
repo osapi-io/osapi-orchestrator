@@ -45,5 +45,5 @@ Requires `file:read` permission.
 ## Example
 
 See
-[`examples/file-changed.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/file-changed.go)
+[`examples/operations/file-changed.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/file-changed.go)
 for a complete working example.

@@ -27,3 +27,9 @@ available through the SDK result's `Data` field as `map[string]any`.
 ## Permissions
 
 Requires `node:read` permission.
+
+## Example
+
+See
+[`examples/features/parallel.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/parallel.go)
+for a complete working example.

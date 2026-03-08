@@ -29,5 +29,5 @@ step.OnlyIfAllChanged()
 ## Example
 
 See
-[`examples/only-if-changed.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/only-if-changed.go)
+[`examples/features/only-if-changed.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/only-if-changed.go)
 for a complete working example.

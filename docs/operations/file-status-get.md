@@ -50,5 +50,5 @@ Requires `file:read` permission.
 ## Example
 
 See
-[`examples/file-deploy.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/file-deploy.go)
+[`examples/operations/file-deploy.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/file-deploy.go)
 for a complete working example.

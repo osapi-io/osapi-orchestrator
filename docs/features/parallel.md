@@ -21,5 +21,5 @@ concurrently after the health check passes.
 ## Example
 
 See
-[`examples/parallel.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/parallel.go)
+[`examples/features/parallel.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/parallel.go)
 for a complete working example.
