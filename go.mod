@@ -12,7 +12,7 @@ tool (
 
 require (
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/retr0h/osapi v0.0.0-20260308195857-6e1e7bbe61c4 // replaced locally
+	github.com/retr0h/osapi v0.0.0-20260308221849-e2789ca6cdb0
 	github.com/stretchr/testify v1.11.1
 )
 
@@ -263,5 +263,3 @@ require (
 	mvdan.cc/unparam v0.0.0-20251027182757-5beb8c8f8f15 // indirect
 	mvdan.cc/xurls/v2 v2.2.0 // indirect
 )
-
-replace github.com/retr0h/osapi => ../osapi

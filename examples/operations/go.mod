@@ -2,10 +2,7 @@ module github.com/osapi-io/osapi-orchestrator/examples/operations
 
 go 1.25.7
 
-replace (
-	github.com/osapi-io/osapi-orchestrator => ../..
-	github.com/retr0h/osapi => ../../../osapi
-)
+replace github.com/osapi-io/osapi-orchestrator => ../..
 
 require github.com/osapi-io/osapi-orchestrator v0.0.0-20260307062306-1d8135903db8
 
@@ -26,7 +23,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/oapi-codegen/runtime v1.2.0 // indirect
-	github.com/retr0h/osapi v0.0.0-20260308195857-6e1e7bbe61c4 // indirect
+	github.com/retr0h/osapi v0.0.0-20260308221849-e2789ca6cdb0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
