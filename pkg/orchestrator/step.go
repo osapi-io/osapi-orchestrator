@@ -244,11 +244,8 @@ func (s *Step) When(
 }
 
 // WhenFact adds a fact-based guard. The step runs only if the
-// predicate returns true for the target agent. Requires a prior
+// predicate returns true for at least one agent. Requires a prior
 // AgentList step referenced by name.
-//
-// For broadcast targets (_all, labels), the guard passes if at
-// least one agent matches the predicate.
 func (s *Step) WhenFact(
 	agentListStep string,
 	fn Predicate,
@@ -261,16 +258,9 @@ func (s *Step) WhenFact(
 			return false
 		}
 
-		target := ""
-		if op := s.task.Operation(); op != nil {
-			target = op.Target
-		}
-
 		for _, a := range list.Agents {
-			if target == "_all" || target == a.Hostname {
-				if fn(a) {
-					return true
-				}
+			if fn(a) {
+				return true
 			}
 		}
 

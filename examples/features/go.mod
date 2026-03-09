@@ -2,7 +2,10 @@ module github.com/osapi-io/osapi-orchestrator/examples/features
 
 go 1.25.7
 
-replace github.com/osapi-io/osapi-orchestrator => ../..
+replace (
+	github.com/osapi-io/osapi-orchestrator => ../..
+	github.com/retr0h/osapi => ../../../osapi
+)
 
 require (
 	github.com/osapi-io/osapi-orchestrator v0.0.0-00010101000000-000000000000
@@ -12,7 +15,6 @@ require (
 require (
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
-	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc // indirect
 	github.com/charmbracelet/lipgloss v1.1.0 // indirect

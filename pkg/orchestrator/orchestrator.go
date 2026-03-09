@@ -26,7 +26,6 @@ package orchestrator
 
 import (
 	"context"
-	"fmt"
 
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
@@ -90,48 +89,6 @@ func (o *Orchestrator) TaskFunc(
 	return &Step{task: task}
 }
 
-// friendlyNames maps operation strings to short, human-readable prefixes.
-var friendlyNames = map[string]string{
-	opNodeHostnameGet:   "get-hostname",
-	opNodeStatusGet:     "get-status",
-	opNodeUptimeGet:     "get-uptime",
-	opNodeDiskGet:       "get-disk",
-	opNodeMemoryGet:     "get-memory",
-	opNodeLoadGet:       "get-load",
-	opNetworkDNSGet:     "get-dns",
-	opNetworkDNSUpdate:  "update-dns",
-	opNetworkPingDo:     "ping",
-	opCommandExec:       "run",
-	opCommandShell:      "shell",
-	opFileDeployExecute: "deploy-file",
-	opFileStatusGet:     "file-status",
-}
-
-// nextName generates a human-readable task name from the operation.
-// For command operations, appends the command name (e.g. "run-uptime").
-// Appends a counter suffix on collision (e.g. "run-echo-2").
-func (o *Orchestrator) nextName(
-	operation string,
-	params map[string]any,
-) string {
-	prefix := friendlyNames[operation]
-	if prefix == "" {
-		prefix = operation
-	}
-
-	// For command ops, include the command name.
-	if cmd, ok := params["command"].(string); ok && cmd != "" {
-		prefix = fmt.Sprintf("%s-%s", prefix, cmd)
-	}
-
-	o.nameCount[prefix]++
-	if o.nameCount[prefix] > 1 {
-		return fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
-	}
-
-	return prefix
-}
-
 // rendererHooks translates SDK hook callbacks into renderer calls.
 func rendererHooks(
 	r renderer,
@@ -182,18 +139,7 @@ func rendererHooks(
 		BeforeTask: func(
 			task *sdk.Task,
 		) {
-			var detail string
-			if op := task.Operation(); op != nil {
-				detail = fmt.Sprintf(
-					"operation=%s target=%s",
-					op.Operation,
-					op.Target,
-				)
-			} else {
-				detail = "(custom function)"
-			}
-
-			r.TaskStart(task.Name(), detail)
+			r.TaskStart(task.Name(), "")
 		},
 		AfterTask: func(
 			_ *sdk.Task,
