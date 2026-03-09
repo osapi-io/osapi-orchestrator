@@ -55,22 +55,23 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
-	o := orchestrator.New(url, token)
+	// o := orchestrator.New(url, token)
+	o := orchestrator.New(url, token, orchestrator.WithVerbose())
 
 	// Level 0: health gate.
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck("_all")
 
 	// Level 1: five queries run in parallel — all share the same
 	// dependency so the orchestrator schedules them concurrently.
-	o.NodeHostnameGet("_any").After(health)
-	o.NodeDiskGet("_any").After(health)
-	o.NodeMemoryGet("_any").After(health)
-	o.NodeLoadGet("_any").After(health)
-	uptime := o.NodeUptimeGet("_any").After(health)
+	o.NodeHostnameGet("_all").After(health)
+	o.NodeDiskGet("_all").After(health)
+	o.NodeMemoryGet("_all").After(health)
+	o.NodeLoadGet("_all").After(health)
+	uptime := o.NodeUptimeGet("_all").After(health)
 
 	// Level 2: read /proc/version — exists on Linux, missing on
 	// macOS. Demonstrates per-host error rendering with Continue.
-	o.CommandShell("_any", "cat /proc/version").
+	o.CommandShell("_all", "cat /proc/version").
 		After(uptime).
 		OnError(orchestrator.Continue)
 

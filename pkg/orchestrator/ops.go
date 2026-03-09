@@ -44,9 +44,27 @@ func mustRawToMap(
 	return data
 }
 
+// toMap converts a struct to map[string]any via JSON round-trip.
+// Used to populate HostResult.Data for per-host verbose output.
+func toMap(
+	v any,
+) map[string]any {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return nil
+	}
+
+	var m map[string]any
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil
+	}
+
+	return m
+}
+
 // buildResult builds an sdk.Result from a collection response by
-// iterating results through a mapping function that extracts per-host
-// details.
+// extracting per-host fields through a mapping function and
+// serializing each result into HostResult.Data for verbose output.
 func buildResult[T any](
 	resp *osapi.Response[osapi.Collection[T]],
 	toHostResult func(T) sdk.HostResult,
@@ -59,6 +77,9 @@ func buildResult[T any](
 
 	for _, r := range col.Results {
 		hr := toHostResult(r)
+		if hr.Data == nil {
+			hr.Data = toMap(r)
+		}
 		hostResults = append(hostResults, hr)
 
 		if hr.Changed {
@@ -413,7 +434,7 @@ func (o *Orchestrator) CommandExec(
 				return sdk.HostResult{
 					Hostname: r.Hostname,
 					Changed:  r.Changed,
-					Error:    r.Error,
+					Error:    commandError(r),
 				}
 			}), nil
 		},
@@ -447,13 +468,30 @@ func (o *Orchestrator) CommandShell(
 				return sdk.HostResult{
 					Hostname: r.Hostname,
 					Changed:  r.Changed,
-					Error:    r.Error,
+					Error:    commandError(r),
 				}
 			}), nil
 		},
 	)
 
 	return &Step{task: task}
+}
+
+// commandError returns an error string for a command result. If the
+// server set an explicit error, that takes precedence. Otherwise a
+// non-zero exit code is treated as a failure.
+func commandError(
+	r osapi.CommandResult,
+) string {
+	if r.Error != "" {
+		return r.Error
+	}
+
+	if r.ExitCode != 0 {
+		return fmt.Sprintf("exit code %d", r.ExitCode)
+	}
+
+	return ""
 }
 
 // FileDeploy creates a step that deploys a file from the Object Store
