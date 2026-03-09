@@ -20,7 +20,11 @@
 
 package orchestrator
 
-import sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+import (
+	"time"
+
+	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+)
 
 // Option configures the Orchestrator.
 type Option func(*config)
@@ -71,5 +75,35 @@ func toSDKStrategy(
 		return sdk.Continue
 	default:
 		return sdk.StopAll
+	}
+}
+
+// RetryOption configures the Retry behavior.
+type RetryOption func(*retryConfig)
+
+type retryConfig struct {
+	initialInterval time.Duration
+	maxInterval     time.Duration
+}
+
+// WithExponentialBackoff enables exponential backoff between retry
+// attempts with sensible defaults (1s initial, 30s max).
+func WithExponentialBackoff() RetryOption {
+	return func(c *retryConfig) {
+		c.initialInterval = 1 * time.Second
+		c.maxInterval = 30 * time.Second
+	}
+}
+
+// WithBackoff sets custom initial and max intervals for exponential
+// backoff between retry attempts. The delay doubles on each attempt,
+// clamped to maxInterval.
+func WithBackoff(
+	initial time.Duration,
+	maxInterval time.Duration,
+) RetryOption {
+	return func(c *retryConfig) {
+		c.initialInterval = initial
+		c.maxInterval = maxInterval
 	}
 }

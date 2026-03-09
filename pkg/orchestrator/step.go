@@ -51,11 +51,26 @@ func (s *Step) After(
 	return s
 }
 
-// Retry sets the number of retry attempts on failure.
+// Retry sets the number of retry attempts on failure. Options
+// configure exponential backoff between attempts.
 func (s *Step) Retry(
 	n int,
+	opts ...RetryOption,
 ) *Step {
-	s.task.OnError(sdk.Retry(n))
+	cfg := &retryConfig{}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	var sdkOpts []sdk.RetryOption
+	if cfg.initialInterval > 0 {
+		sdkOpts = append(
+			sdkOpts,
+			sdk.WithRetryBackoff(cfg.initialInterval, cfg.maxInterval),
+		)
+	}
+
+	s.task.OnError(sdk.Retry(n, sdkOpts...))
 
 	return s
 }

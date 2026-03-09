@@ -22,6 +22,7 @@ package orchestrator
 
 import (
 	"testing"
+	"time"
 
 	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 	"github.com/stretchr/testify/suite"
@@ -58,6 +59,65 @@ func (s *OptionsTestSuite) TestToSDKStrategy() {
 		s.Run(tc.name, func() {
 			got := toSDKStrategy(tc.input)
 			s.Equal(tc.expected, got)
+		})
+	}
+}
+
+func (s *OptionsTestSuite) TestWithExponentialBackoff() {
+	tests := []struct {
+		name                    string
+		expectedInitialInterval time.Duration
+		expectedMaxInterval     time.Duration
+	}{
+		{
+			name:                    "Sets sensible defaults",
+			expectedInitialInterval: 1 * time.Second,
+			expectedMaxInterval:     30 * time.Second,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			cfg := &retryConfig{}
+			WithExponentialBackoff()(cfg)
+
+			s.Equal(tc.expectedInitialInterval, cfg.initialInterval)
+			s.Equal(tc.expectedMaxInterval, cfg.maxInterval)
+		})
+	}
+}
+
+func (s *OptionsTestSuite) TestWithBackoff() {
+	tests := []struct {
+		name                    string
+		initial                 time.Duration
+		maxInterval             time.Duration
+		expectedInitialInterval time.Duration
+		expectedMaxInterval     time.Duration
+	}{
+		{
+			name:                    "Sets custom intervals",
+			initial:                 2 * time.Second,
+			maxInterval:             30 * time.Second,
+			expectedInitialInterval: 2 * time.Second,
+			expectedMaxInterval:     30 * time.Second,
+		},
+		{
+			name:                    "Sets short intervals",
+			initial:                 100 * time.Millisecond,
+			maxInterval:             5 * time.Second,
+			expectedInitialInterval: 100 * time.Millisecond,
+			expectedMaxInterval:     5 * time.Second,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			cfg := &retryConfig{}
+			WithBackoff(tc.initial, tc.maxInterval)(cfg)
+
+			s.Equal(tc.expectedInitialInterval, cfg.initialInterval)
+			s.Equal(tc.expectedMaxInterval, cfg.maxInterval)
 		})
 	}
 }
