@@ -35,44 +35,36 @@ type OrchestratorTestSuite struct {
 	suite.Suite
 }
 
-func (s *OrchestratorTestSuite) TestNextName() {
+func (s *OrchestratorTestSuite) TestNextOpName() {
 	tests := []struct {
-		name      string
-		operation string
-		params    map[string]any
-		expected  string
+		name     string
+		prefix   string
+		expected string
 	}{
 		{
-			name:      "Maps operation to friendly name",
-			operation: opNodeHostnameGet,
-			expected:  "get-hostname",
+			name:     "First use returns prefix as-is",
+			prefix:   "get-hostname",
+			expected: "get-hostname",
 		},
 		{
-			name:      "Different operation gets its friendly name",
-			operation: opNodeDiskGet,
-			expected:  "get-disk",
+			name:     "Different prefix returns as-is",
+			prefix:   "get-disk",
+			expected: "get-disk",
 		},
 		{
-			name:      "Duplicate friendly name gets counter suffix",
-			operation: opNodeHostnameGet,
-			expected:  "get-hostname-2",
+			name:     "Duplicate prefix gets counter suffix",
+			prefix:   "get-hostname",
+			expected: "get-hostname-2",
 		},
 		{
-			name:      "Command includes command name",
-			operation: opCommandExec,
-			params:    map[string]any{"command": "uptime"},
-			expected:  "run-uptime",
+			name:     "Command prefix includes command name",
+			prefix:   "run-uptime",
+			expected: "run-uptime",
 		},
 		{
-			name:      "Duplicate command gets counter suffix",
-			operation: opCommandExec,
-			params:    map[string]any{"command": "uptime"},
-			expected:  "run-uptime-2",
-		},
-		{
-			name:      "Unknown operation falls back to raw name",
-			operation: "custom.op",
-			expected:  "custom.op",
+			name:     "Duplicate command prefix gets counter suffix",
+			prefix:   "run-uptime",
+			expected: "run-uptime-2",
 		},
 	}
 
@@ -80,7 +72,7 @@ func (s *OrchestratorTestSuite) TestNextName() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			got := o.nextName(tc.operation, tc.params)
+			got := o.nextOpName(tc.prefix)
 			s.Equal(tc.expected, got)
 		})
 	}
@@ -184,7 +176,7 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		{
 			name: "BeforeLevel sequential single task",
 			setupFunc: func(hooks sdk.Hooks) {
-				hooks.BeforeLevel(0, []*sdk.Task{sdk.NewTask("task-1", nil)}, false)
+				hooks.BeforeLevel(0, []*sdk.Task{sdk.NewTaskFunc("task-1", nil)}, false)
 			},
 			validateFunc: func(m *mockRenderer) {
 				s.True(m.levelStartCalled)
@@ -197,8 +189,8 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 			name: "BeforeLevel parallel multiple tasks",
 			setupFunc: func(hooks sdk.Hooks) {
 				hooks.BeforeLevel(0, []*sdk.Task{
-					sdk.NewTask("task-1", nil),
-					sdk.NewTask("task-2", nil),
+					sdk.NewTaskFunc("task-1", nil),
+					sdk.NewTaskFunc("task-2", nil),
 				}, true)
 			},
 			validateFunc: func(m *mockRenderer) {
@@ -210,7 +202,7 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		{
 			name: "AfterLevel no results sequential",
 			setupFunc: func(hooks sdk.Hooks) {
-				hooks.BeforeLevel(1, []*sdk.Task{sdk.NewTask("t", nil)}, false)
+				hooks.BeforeLevel(1, []*sdk.Task{sdk.NewTaskFunc("t", nil)}, false)
 				hooks.AfterLevel(1, nil)
 			},
 			validateFunc: func(m *mockRenderer) {
@@ -224,7 +216,7 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		{
 			name: "AfterLevel with changed results parallel",
 			setupFunc: func(hooks sdk.Hooks) {
-				hooks.BeforeLevel(1, []*sdk.Task{sdk.NewTask("t", nil)}, true)
+				hooks.BeforeLevel(1, []*sdk.Task{sdk.NewTaskFunc("t", nil)}, true)
 				hooks.AfterLevel(1, []sdk.TaskResult{
 					{Name: "a", Status: sdk.StatusChanged, Changed: true},
 					{Name: "b", Status: sdk.StatusUnchanged},
@@ -238,28 +230,14 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 			},
 		},
 		{
-			name: "BeforeTask op task",
-			setupFunc: func(hooks sdk.Hooks) {
-				hooks.BeforeTask(sdk.NewTask("op-task", &sdk.Op{
-					Operation: "node.hostname.get",
-					Target:    "_any",
-				}))
-			},
-			validateFunc: func(m *mockRenderer) {
-				s.True(m.taskStartCalled)
-				s.Equal("op-task", m.taskStartName)
-				s.Equal("operation=node.hostname.get target=_any", m.taskStartDetail)
-			},
-		},
-		{
-			name: "BeforeTask func task",
+			name: "BeforeTask calls TaskStart with name",
 			setupFunc: func(hooks sdk.Hooks) {
 				hooks.BeforeTask(sdk.NewTaskFunc("fn-task", nil))
 			},
 			validateFunc: func(m *mockRenderer) {
 				s.True(m.taskStartCalled)
 				s.Equal("fn-task", m.taskStartName)
-				s.Equal("(custom function)", m.taskStartDetail)
+				s.Empty(m.taskStartDetail)
 			},
 		},
 		{
@@ -281,7 +259,7 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		{
 			name: "OnRetry calls TaskRetry",
 			setupFunc: func(hooks sdk.Hooks) {
-				hooks.OnRetry(sdk.NewTask("retry-task", nil), 2, retryErr)
+				hooks.OnRetry(sdk.NewTaskFunc("retry-task", nil), 2, retryErr)
 			},
 			validateFunc: func(m *mockRenderer) {
 				s.True(m.taskRetryCalled)
@@ -293,7 +271,7 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		{
 			name: "OnSkip calls TaskSkip",
 			setupFunc: func(hooks sdk.Hooks) {
-				hooks.OnSkip(sdk.NewTask("skip-task", nil), "dependency failed")
+				hooks.OnSkip(sdk.NewTaskFunc("skip-task", nil), "dependency failed")
 			},
 			validateFunc: func(m *mockRenderer) {
 				s.True(m.taskSkipCalled)

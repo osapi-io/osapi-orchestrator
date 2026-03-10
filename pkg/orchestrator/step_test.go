@@ -679,7 +679,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 			wantResult: false,
 		},
 		{
-			name: "Returns false when target hostname does not match any agent",
+			name: "Returns true when predicate matches any agent regardless of target",
 			results: sdk.Results{
 				"list-agents": &sdk.Result{
 					Data: map[string]any{
@@ -697,7 +697,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 			predicate: func(_ AgentResult) bool {
 				return true
 			},
-			wantResult: false,
+			wantResult: true,
 		},
 		{
 			name: "Returns true for _all target when any agent matches predicate",

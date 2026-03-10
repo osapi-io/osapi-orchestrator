@@ -44,43 +44,75 @@ func mustRawToMap(
 	return data
 }
 
-// Operation constants matching the OSAPI agent's supported operations.
-const (
-	opNodeHostnameGet   = "node.hostname.get"
-	opNodeStatusGet     = "node.status.get"
-	opNodeUptimeGet     = "node.uptime.get"
-	opNodeDiskGet       = "node.disk.get"
-	opNodeMemoryGet     = "node.memory.get"
-	opNodeLoadGet       = "node.load.get"
-	opNetworkDNSGet     = "network.dns.get"
-	opNetworkDNSUpdate  = "network.dns.update"
-	opNetworkPingDo     = "network.ping.do"
-	opCommandExec       = "command.exec.execute"
-	opCommandShell      = "command.shell.execute"
-	opFileDeployExecute = "file.deploy.execute"
-	opFileStatusGet     = "file.status.get"
-)
+// toMap converts a struct to map[string]any via JSON round-trip.
+// Used to populate HostResult.Data for per-host verbose output.
+func toMap(
+	v any,
+) map[string]any {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return nil
+	}
 
-func (o *Orchestrator) newStep(
-	op *sdk.Op,
-) *Step {
-	name := o.nextName(op.Operation, op.Params)
-	task := o.plan.Task(name, op)
+	var m map[string]any
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil
+	}
 
-	return &Step{task: task}
+	return m
+}
+
+// buildResult builds an sdk.Result from a collection response by
+// extracting per-host fields through a mapping function and
+// serializing each result into HostResult.Data for verbose output.
+func buildResult[T any](
+	resp *osapi.Response[osapi.Collection[T]],
+	toHostResult func(T) sdk.HostResult,
+) *sdk.Result {
+	col := resp.Data
+
+	var changed bool
+
+	hostResults := make([]sdk.HostResult, 0, len(col.Results))
+
+	for _, r := range col.Results {
+		hr := toHostResult(r)
+		if hr.Data == nil {
+			hr.Data = toMap(r)
+		}
+		hostResults = append(hostResults, hr)
+
+		if hr.Changed {
+			changed = true
+		}
+	}
+
+	return &sdk.Result{
+		JobID:       col.JobID,
+		Changed:     changed,
+		Data:        mustRawToMap(resp.RawJSON()),
+		HostResults: hostResults,
+	}
+}
+
+// nextOpName generates a human-readable task name from a prefix.
+// Appends a counter suffix on collision (e.g. "get-hostname-2").
+func (o *Orchestrator) nextOpName(
+	prefix string,
+) string {
+	o.nameCount[prefix]++
+	if o.nameCount[prefix] > 1 {
+		return fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
+	}
+
+	return prefix
 }
 
 // HealthCheck creates a health check step against the given target.
 func (o *Orchestrator) HealthCheck(
 	_ string,
 ) *Step {
-	prefix := "health-check"
-	o.nameCount[prefix]++
-
-	name := prefix
-	if o.nameCount[prefix] > 1 {
-		name = fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
-	}
+	name := o.nextOpName("health-check")
 
 	task := o.plan.TaskFunc(
 		name,
@@ -104,60 +136,180 @@ func (o *Orchestrator) HealthCheck(
 func (o *Orchestrator) NodeHostnameGet(
 	target string,
 ) *Step {
-	return o.newStep(&sdk.Op{
-		Operation: opNodeHostnameGet,
-		Target:    target,
-	})
+	name := o.nextOpName("get-hostname")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.Hostname(ctx, target)
+			if err != nil {
+				return nil, fmt.Errorf("get hostname: %w", err)
+			}
+
+			return buildResult(resp, func(r osapi.HostnameResult) sdk.HostResult {
+				return sdk.HostResult{
+					Hostname: r.Hostname,
+					Changed:  r.Changed,
+					Error:    r.Error,
+				}
+			}), nil
+		},
+	)
+
+	return &Step{task: task}
 }
 
 // NodeStatusGet creates a step that retrieves node status.
 func (o *Orchestrator) NodeStatusGet(
 	target string,
 ) *Step {
-	return o.newStep(&sdk.Op{
-		Operation: opNodeStatusGet,
-		Target:    target,
-	})
+	name := o.nextOpName("get-status")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.Status(ctx, target)
+			if err != nil {
+				return nil, fmt.Errorf("get status: %w", err)
+			}
+
+			return buildResult(resp, func(r osapi.NodeStatus) sdk.HostResult {
+				return sdk.HostResult{
+					Hostname: r.Hostname,
+					Changed:  r.Changed,
+					Error:    r.Error,
+				}
+			}), nil
+		},
+	)
+
+	return &Step{task: task}
 }
 
 // NodeUptimeGet creates a step that retrieves system uptime.
 func (o *Orchestrator) NodeUptimeGet(
 	target string,
 ) *Step {
-	return o.newStep(&sdk.Op{
-		Operation: opNodeUptimeGet,
-		Target:    target,
-	})
+	name := o.nextOpName("get-uptime")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.Uptime(ctx, target)
+			if err != nil {
+				return nil, fmt.Errorf("get uptime: %w", err)
+			}
+
+			return buildResult(resp, func(r osapi.UptimeResult) sdk.HostResult {
+				return sdk.HostResult{
+					Hostname: r.Hostname,
+					Changed:  r.Changed,
+					Error:    r.Error,
+				}
+			}), nil
+		},
+	)
+
+	return &Step{task: task}
 }
 
 // NodeDiskGet creates a step that retrieves disk usage.
 func (o *Orchestrator) NodeDiskGet(
 	target string,
 ) *Step {
-	return o.newStep(&sdk.Op{
-		Operation: opNodeDiskGet,
-		Target:    target,
-	})
+	name := o.nextOpName("get-disk")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.Disk(ctx, target)
+			if err != nil {
+				return nil, fmt.Errorf("get disk: %w", err)
+			}
+
+			return buildResult(resp, func(r osapi.DiskResult) sdk.HostResult {
+				return sdk.HostResult{
+					Hostname: r.Hostname,
+					Changed:  r.Changed,
+					Error:    r.Error,
+				}
+			}), nil
+		},
+	)
+
+	return &Step{task: task}
 }
 
 // NodeMemoryGet creates a step that retrieves memory stats.
 func (o *Orchestrator) NodeMemoryGet(
 	target string,
 ) *Step {
-	return o.newStep(&sdk.Op{
-		Operation: opNodeMemoryGet,
-		Target:    target,
-	})
+	name := o.nextOpName("get-memory")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.Memory(ctx, target)
+			if err != nil {
+				return nil, fmt.Errorf("get memory: %w", err)
+			}
+
+			return buildResult(resp, func(r osapi.MemoryResult) sdk.HostResult {
+				return sdk.HostResult{
+					Hostname: r.Hostname,
+					Changed:  r.Changed,
+					Error:    r.Error,
+				}
+			}), nil
+		},
+	)
+
+	return &Step{task: task}
 }
 
 // NodeLoadGet creates a step that retrieves load averages.
 func (o *Orchestrator) NodeLoadGet(
 	target string,
 ) *Step {
-	return o.newStep(&sdk.Op{
-		Operation: opNodeLoadGet,
-		Target:    target,
-	})
+	name := o.nextOpName("get-load")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.Load(ctx, target)
+			if err != nil {
+				return nil, fmt.Errorf("get load: %w", err)
+			}
+
+			return buildResult(resp, func(r osapi.LoadResult) sdk.HostResult {
+				return sdk.HostResult{
+					Hostname: r.Hostname,
+					Changed:  r.Changed,
+					Error:    r.Error,
+				}
+			}), nil
+		},
+	)
+
+	return &Step{task: task}
 }
 
 // NetworkDNSGet creates a step that retrieves DNS configuration.
@@ -165,13 +317,30 @@ func (o *Orchestrator) NetworkDNSGet(
 	target string,
 	interfaceName string,
 ) *Step {
-	return o.newStep(&sdk.Op{
-		Operation: opNetworkDNSGet,
-		Target:    target,
-		Params: map[string]any{
-			"interface": interfaceName,
+	name := o.nextOpName("get-dns")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.GetDNS(ctx, target, interfaceName)
+			if err != nil {
+				return nil, fmt.Errorf("get dns: %w", err)
+			}
+
+			return buildResult(resp, func(r osapi.DNSConfig) sdk.HostResult {
+				return sdk.HostResult{
+					Hostname: r.Hostname,
+					Changed:  r.Changed,
+					Error:    r.Error,
+				}
+			}), nil
 		},
-	})
+	)
+
+	return &Step{task: task}
 }
 
 // NetworkDNSUpdate creates a step that updates DNS configuration.
@@ -181,15 +350,30 @@ func (o *Orchestrator) NetworkDNSUpdate(
 	servers []string,
 	searchDomains []string,
 ) *Step {
-	return o.newStep(&sdk.Op{
-		Operation: opNetworkDNSUpdate,
-		Target:    target,
-		Params: map[string]any{
-			"interface":      interfaceName,
-			"servers":        servers,
-			"search_domains": searchDomains,
+	name := o.nextOpName("update-dns")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.UpdateDNS(ctx, target, interfaceName, servers, searchDomains)
+			if err != nil {
+				return nil, fmt.Errorf("update dns: %w", err)
+			}
+
+			return buildResult(resp, func(r osapi.DNSUpdateResult) sdk.HostResult {
+				return sdk.HostResult{
+					Hostname: r.Hostname,
+					Changed:  r.Changed,
+					Error:    r.Error,
+				}
+			}), nil
 		},
-	})
+	)
+
+	return &Step{task: task}
 }
 
 // NetworkPingDo creates a step that pings an address.
@@ -197,13 +381,30 @@ func (o *Orchestrator) NetworkPingDo(
 	target string,
 	address string,
 ) *Step {
-	return o.newStep(&sdk.Op{
-		Operation: opNetworkPingDo,
-		Target:    target,
-		Params: map[string]any{
-			"address": address,
+	name := o.nextOpName("ping")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.Ping(ctx, target, address)
+			if err != nil {
+				return nil, fmt.Errorf("ping: %w", err)
+			}
+
+			return buildResult(resp, func(r osapi.PingResult) sdk.HostResult {
+				return sdk.HostResult{
+					Hostname: r.Hostname,
+					Changed:  r.Changed,
+					Error:    r.Error,
+				}
+			}), nil
 		},
-	})
+	)
+
+	return &Step{task: task}
 }
 
 // CommandExec creates a step that executes a command.
@@ -212,14 +413,34 @@ func (o *Orchestrator) CommandExec(
 	command string,
 	args ...string,
 ) *Step {
-	return o.newStep(&sdk.Op{
-		Operation: opCommandExec,
-		Target:    target,
-		Params: map[string]any{
-			"command": command,
-			"args":    args,
+	name := o.nextOpName(fmt.Sprintf("run-%s", command))
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.Exec(ctx, osapi.ExecRequest{
+				Command: command,
+				Args:    args,
+				Target:  target,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("exec command: %w", err)
+			}
+
+			return buildResult(resp, func(r osapi.CommandResult) sdk.HostResult {
+				return sdk.HostResult{
+					Hostname: r.Hostname,
+					Changed:  r.Changed,
+					Error:    commandError(r),
+				}
+			}), nil
 		},
-	})
+	)
+
+	return &Step{task: task}
 }
 
 // CommandShell creates a step that executes a shell command string.
@@ -227,13 +448,50 @@ func (o *Orchestrator) CommandShell(
 	target string,
 	command string,
 ) *Step {
-	return o.newStep(&sdk.Op{
-		Operation: opCommandShell,
-		Target:    target,
-		Params: map[string]any{
-			"command": command,
+	name := o.nextOpName(fmt.Sprintf("shell-%s", command))
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.Shell(ctx, osapi.ShellRequest{
+				Command: command,
+				Target:  target,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("shell command: %w", err)
+			}
+
+			return buildResult(resp, func(r osapi.CommandResult) sdk.HostResult {
+				return sdk.HostResult{
+					Hostname: r.Hostname,
+					Changed:  r.Changed,
+					Error:    commandError(r),
+				}
+			}), nil
 		},
-	})
+	)
+
+	return &Step{task: task}
+}
+
+// commandError returns an error string for a command result. If the
+// server set an explicit error, that takes precedence. Otherwise a
+// non-zero exit code is treated as a failure.
+func commandError(
+	r osapi.CommandResult,
+) string {
+	if r.Error != "" {
+		return r.Error
+	}
+
+	if r.ExitCode != 0 {
+		return fmt.Sprintf("exit code %d", r.ExitCode)
+	}
+
+	return ""
 }
 
 // FileDeploy creates a step that deploys a file from the Object Store
@@ -245,29 +503,37 @@ func (o *Orchestrator) FileDeploy(
 	target string,
 	opts FileDeployOpts,
 ) *Step {
-	params := map[string]any{
-		"object_name":  opts.ObjectName,
-		"path":         opts.Path,
-		"content_type": opts.ContentType,
-	}
-	if opts.Mode != "" {
-		params["mode"] = opts.Mode
-	}
-	if opts.Owner != "" {
-		params["owner"] = opts.Owner
-	}
-	if opts.Group != "" {
-		params["group"] = opts.Group
-	}
-	if len(opts.Vars) > 0 {
-		params["vars"] = opts.Vars
-	}
+	name := o.nextOpName("deploy-file")
 
-	return o.newStep(&sdk.Op{
-		Operation: opFileDeployExecute,
-		Target:    target,
-		Params:    params,
-	})
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.FileDeploy(ctx, osapi.FileDeployOpts{
+				ObjectName:  opts.ObjectName,
+				Path:        opts.Path,
+				ContentType: opts.ContentType,
+				Mode:        opts.Mode,
+				Owner:       opts.Owner,
+				Group:       opts.Group,
+				Vars:        opts.Vars,
+				Target:      target,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("deploy file: %w", err)
+			}
+
+			return &sdk.Result{
+				JobID:   resp.Data.JobID,
+				Changed: resp.Data.Changed,
+				Data:    mustRawToMap(resp.RawJSON()),
+			}, nil
+		},
+	)
+
+	return &Step{task: task}
 }
 
 // FileStatusGet creates a step that checks the status of a deployed
@@ -277,13 +543,28 @@ func (o *Orchestrator) FileStatusGet(
 	target string,
 	path string,
 ) *Step {
-	return o.newStep(&sdk.Op{
-		Operation: opFileStatusGet,
-		Target:    target,
-		Params: map[string]any{
-			"path": path,
+	name := o.nextOpName("file-status")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.FileStatus(ctx, target, path)
+			if err != nil {
+				return nil, fmt.Errorf("file status: %w", err)
+			}
+
+			return &sdk.Result{
+				JobID:   resp.Data.JobID,
+				Changed: resp.Data.Changed,
+				Data:    mustRawToMap(resp.RawJSON()),
+			}, nil
 		},
-	})
+	)
+
+	return &Step{task: task}
 }
 
 // FileUpload creates a step that uploads file content to the Object
@@ -304,13 +585,7 @@ func (o *Orchestrator) FileUpload(
 		opt(cfg)
 	}
 
-	prefix := "upload-file"
-	o.nameCount[prefix]++
-
-	taskName := prefix
-	if o.nameCount[prefix] > 1 {
-		taskName = fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
-	}
+	taskName := o.nextOpName("upload-file")
 
 	task := o.plan.TaskFunc(
 		taskName,
@@ -352,13 +627,7 @@ func (o *Orchestrator) FileChanged(
 	name string,
 	data []byte,
 ) *Step {
-	prefix := "check-file"
-	o.nameCount[prefix]++
-
-	taskName := prefix
-	if o.nameCount[prefix] > 1 {
-		taskName = fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
-	}
+	taskName := o.nextOpName("check-file")
 
 	task := o.plan.TaskFunc(
 		taskName,
@@ -391,13 +660,7 @@ func (o *Orchestrator) FileChanged(
 
 // AgentList creates a step that lists all active agents with their facts.
 func (o *Orchestrator) AgentList() *Step {
-	prefix := "list-agents"
-	o.nameCount[prefix]++
-
-	name := prefix
-	if o.nameCount[prefix] > 1 {
-		name = fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
-	}
+	name := o.nextOpName("list-agents")
 
 	task := o.plan.TaskFunc(
 		name,
@@ -424,13 +687,7 @@ func (o *Orchestrator) AgentList() *Step {
 func (o *Orchestrator) AgentGet(
 	hostname string,
 ) *Step {
-	prefix := "get-agent"
-	o.nameCount[prefix]++
-
-	name := prefix
-	if o.nameCount[prefix] > 1 {
-		name = fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
-	}
+	name := o.nextOpName("get-agent")
 
 	task := o.plan.TaskFunc(
 		name,
