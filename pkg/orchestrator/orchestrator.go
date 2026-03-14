@@ -71,20 +71,22 @@ func (o *Orchestrator) Run(
 	}, nil
 }
 
-// TaskFunc creates a custom step that receives completed results
-// from prior steps.
+// TaskFunc creates a custom step that receives the OSAPI client and
+// completed results from prior steps. Use this for operations not
+// covered by the typed constructors — the client provides full access
+// to the SDK for calling any API endpoint.
 func (o *Orchestrator) TaskFunc(
 	name string,
-	fn func(ctx context.Context, r Results) (*sdk.Result, error),
+	fn func(ctx context.Context, c *osapi.Client, r Results) (*sdk.Result, error),
 ) *Step {
 	task := o.plan.TaskFuncWithResults(
 		name,
 		func(
 			ctx context.Context,
-			_ *osapi.Client,
+			c *osapi.Client,
 			results sdk.Results,
 		) (*sdk.Result, error) {
-			return fn(ctx, Results{results: results})
+			return fn(ctx, c, Results{results: results})
 		},
 	)
 

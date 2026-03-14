@@ -42,7 +42,7 @@ retries, and reporting.
   - [func \(o \*Orchestrator\) NodeStatusGet\(target string\) \*Step](#Orchestrator.NodeStatusGet)
   - [func \(o \*Orchestrator\) NodeUptimeGet\(target string\) \*Step](#Orchestrator.NodeUptimeGet)
   - [func \(o \*Orchestrator\) Run\(ctx context.Context\) \(\*Report, error\)](#Orchestrator.Run)
-  - [func \(o \*Orchestrator\) TaskFunc\(name string, fn func\(ctx context.Context, r Results\) \(\*sdk.Result, error\)\) \*Step](#Orchestrator.TaskFunc)
+  - [func \(o \*Orchestrator\) TaskFunc\(name string, fn func\(ctx context.Context, c \*osapi.Client, r Results\) \(\*sdk.Result, error\)\) \*Step](#Orchestrator.TaskFunc)
 - [type Predicate](#Predicate)
   - [func Arch\(architecture string\) Predicate](#Arch)
   - [func FactEquals\(key string, value any\) Predicate](#FactEquals)
@@ -411,13 +411,16 @@ Run executes the plan and returns a report.
 
 <a name="Orchestrator.TaskFunc"></a>
 
-### func \(\*Orchestrator\) [TaskFunc](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/orchestrator.go#L76-L79)
+### func \(\*Orchestrator\) [TaskFunc](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/orchestrator.go#L78-L81)
 
 ```go
-func (o *Orchestrator) TaskFunc(name string, fn func(ctx context.Context, r Results) (*sdk.Result, error)) *Step
+func (o *Orchestrator) TaskFunc(name string, fn func(ctx context.Context, c *osapi.Client, r Results) (*sdk.Result, error)) *Step
 ```
 
-TaskFunc creates a custom step that receives completed results from prior steps.
+TaskFunc creates a custom step that receives the OSAPI client and completed
+results from prior steps. Use this for operations not covered by the typed
+constructors — the client provides full access to the SDK for calling any API
+endpoint.
 
 <a name="Predicate"></a>
 

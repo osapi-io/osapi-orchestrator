@@ -26,6 +26,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 	"github.com/stretchr/testify/suite"
 
@@ -99,6 +100,7 @@ func (s *OrchestratorPublicTestSuite) TestRun() {
 					"custom",
 					func(
 						_ context.Context,
+						_ *osapi.Client,
 						_ orchestrator.Results,
 					) (*sdk.Result, error) {
 						return &sdk.Result{
@@ -165,6 +167,7 @@ func (s *OrchestratorPublicTestSuite) TestTaskFunc() {
 				"summarize",
 				func(
 					_ context.Context,
+					_ *osapi.Client,
 					_ orchestrator.Results,
 				) (*sdk.Result, error) {
 					called = true
