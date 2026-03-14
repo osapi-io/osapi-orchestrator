@@ -1679,8 +1679,8 @@ func (s *OpsTestSuite) TestCommandShellNameCounter() {
 	}{
 		{
 			name:       "Duplicate name gets counter suffix",
-			firstName:  "shell-echo hello",
-			secondName: "shell-echo hello-2",
+			firstName:  "shell-echo",
+			secondName: "shell-echo-2",
 		},
 	}
 

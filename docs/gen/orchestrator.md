@@ -195,7 +195,7 @@ New creates an Orchestrator connected to the given OSAPI server.
 
 <a name="Orchestrator.AgentGet"></a>
 
-### func \(\*Orchestrator\) [AgentGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L631-L633)
+### func \(\*Orchestrator\) [AgentGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L638-L640)
 
 ```go
 func (o *Orchestrator) AgentGet(hostname string) *Step
@@ -205,7 +205,7 @@ AgentGet creates a step that retrieves detailed info about a specific agent.
 
 <a name="Orchestrator.AgentList"></a>
 
-### func \(\*Orchestrator\) [AgentList](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L606)
+### func \(\*Orchestrator\) [AgentList](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L613)
 
 ```go
 func (o *Orchestrator) AgentList() *Step
@@ -215,7 +215,7 @@ AgentList creates a step that lists all active agents with their facts.
 
 <a name="Orchestrator.CommandExec"></a>
 
-### func \(\*Orchestrator\) [CommandExec](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L361-L365)
+### func \(\*Orchestrator\) [CommandExec](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L363-L367)
 
 ```go
 func (o *Orchestrator) CommandExec(target string, command string, args ...string) *Step
@@ -225,7 +225,7 @@ CommandExec creates a step that executes a command.
 
 <a name="Orchestrator.CommandShell"></a>
 
-### func \(\*Orchestrator\) [CommandShell](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L399-L402)
+### func \(\*Orchestrator\) [CommandShell](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L401-L404)
 
 ```go
 func (o *Orchestrator) CommandShell(target string, command string) *Step
@@ -246,7 +246,7 @@ synchronously at plan\-build time. With no predicates, returns all agents.
 
 <a name="Orchestrator.DockerCreate"></a>
 
-### func \(\*Orchestrator\) [DockerCreate](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L691-L694)
+### func \(\*Orchestrator\) [DockerCreate](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L698-L701)
 
 ```go
 func (o *Orchestrator) DockerCreate(target string, opts osapi.DockerCreateOpts) *Step
@@ -256,7 +256,7 @@ DockerCreate creates a step that creates a new container on the target host.
 
 <a name="Orchestrator.DockerExec"></a>
 
-### func \(\*Orchestrator\) [DockerExec](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L825-L829)
+### func \(\*Orchestrator\) [DockerExec](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L832-L836)
 
 ```go
 func (o *Orchestrator) DockerExec(target string, id string, opts osapi.DockerExecOpts) *Step
@@ -266,7 +266,7 @@ DockerExec creates a step that executes a command inside a running container.
 
 <a name="Orchestrator.DockerImageRemove"></a>
 
-### func \(\*Orchestrator\) [DockerImageRemove](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L926-L930)
+### func \(\*Orchestrator\) [DockerImageRemove](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L933-L937)
 
 ```go
 func (o *Orchestrator) DockerImageRemove(target string, imageName string, params *osapi.DockerImageRemoveParams) *Step
@@ -277,7 +277,7 @@ host.
 
 <a name="Orchestrator.DockerInspect"></a>
 
-### func \(\*Orchestrator\) [DockerInspect](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L859-L862)
+### func \(\*Orchestrator\) [DockerInspect](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L866-L869)
 
 ```go
 func (o *Orchestrator) DockerInspect(target string, id string) *Step
@@ -287,7 +287,7 @@ DockerInspect creates a step that retrieves detailed info about a container.
 
 <a name="Orchestrator.DockerList"></a>
 
-### func \(\*Orchestrator\) [DockerList](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L892-L895)
+### func \(\*Orchestrator\) [DockerList](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L899-L902)
 
 ```go
 func (o *Orchestrator) DockerList(target string, params *osapi.DockerListParams) *Step
@@ -297,7 +297,7 @@ DockerList creates a step that lists containers on the target host.
 
 <a name="Orchestrator.DockerPull"></a>
 
-### func \(\*Orchestrator\) [DockerPull](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L658-L661)
+### func \(\*Orchestrator\) [DockerPull](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L665-L668)
 
 ```go
 func (o *Orchestrator) DockerPull(target string, opts osapi.DockerPullOpts) *Step
@@ -307,7 +307,7 @@ DockerPull creates a step that pulls a Docker image on the target host.
 
 <a name="Orchestrator.DockerRemove"></a>
 
-### func \(\*Orchestrator\) [DockerRemove](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L791-L795)
+### func \(\*Orchestrator\) [DockerRemove](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L798-L802)
 
 ```go
 func (o *Orchestrator) DockerRemove(target string, id string, params *osapi.DockerRemoveParams) *Step
@@ -317,7 +317,7 @@ DockerRemove creates a step that removes a container from the target host.
 
 <a name="Orchestrator.DockerStart"></a>
 
-### func \(\*Orchestrator\) [DockerStart](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L724-L727)
+### func \(\*Orchestrator\) [DockerStart](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L731-L734)
 
 ```go
 func (o *Orchestrator) DockerStart(target string, id string) *Step
@@ -327,7 +327,7 @@ DockerStart creates a step that starts a stopped container on the target host.
 
 <a name="Orchestrator.DockerStop"></a>
 
-### func \(\*Orchestrator\) [DockerStop](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L757-L761)
+### func \(\*Orchestrator\) [DockerStop](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L764-L768)
 
 ```go
 func (o *Orchestrator) DockerStop(target string, id string, opts osapi.DockerStopOpts) *Step
@@ -337,7 +337,7 @@ DockerStop creates a step that stops a running container on the target host.
 
 <a name="Orchestrator.FileChanged"></a>
 
-### func \(\*Orchestrator\) [FileChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L574-L577)
+### func \(\*Orchestrator\) [FileChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L581-L584)
 
 ```go
 func (o *Orchestrator) FileChanged(name string, data []byte) *Step
@@ -350,7 +350,7 @@ is unchanged.
 
 <a name="Orchestrator.FileDeploy"></a>
 
-### func \(\*Orchestrator\) [FileDeploy](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L457-L460)
+### func \(\*Orchestrator\) [FileDeploy](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L464-L467)
 
 ```go
 func (o *Orchestrator) FileDeploy(target string, opts osapi.FileDeployOpts) *Step
@@ -363,7 +363,7 @@ uploaded to the Object Store. ContentType should be "raw" for literal content or
 
 <a name="Orchestrator.FileStatusGet"></a>
 
-### func \(\*Orchestrator\) [FileStatusGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L490-L493)
+### func \(\*Orchestrator\) [FileStatusGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L497-L500)
 
 ```go
 func (o *Orchestrator) FileStatusGet(target string, path string) *Step
@@ -375,7 +375,7 @@ to the expected state.
 
 <a name="Orchestrator.FileUpload"></a>
 
-### func \(\*Orchestrator\) [FileUpload](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L525-L530)
+### func \(\*Orchestrator\) [FileUpload](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L532-L537)
 
 ```go
 func (o *Orchestrator) FileUpload(name string, contentType string, data []byte, opts ...UploadOption) *Step
@@ -401,7 +401,7 @@ by the string value at the given key.
 
 <a name="Orchestrator.HealthCheck"></a>
 
-### func \(\*Orchestrator\) [HealthCheck](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L46)
+### func \(\*Orchestrator\) [HealthCheck](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L48)
 
 ```go
 func (o *Orchestrator) HealthCheck() *Step
@@ -411,7 +411,7 @@ HealthCheck creates a health check step.
 
 <a name="Orchestrator.NetworkDNSGet"></a>
 
-### func \(\*Orchestrator\) [NetworkDNSGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L260-L263)
+### func \(\*Orchestrator\) [NetworkDNSGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L262-L265)
 
 ```go
 func (o *Orchestrator) NetworkDNSGet(target string, interfaceName string) *Step
@@ -421,7 +421,7 @@ NetworkDNSGet creates a step that retrieves DNS configuration.
 
 <a name="Orchestrator.NetworkDNSUpdate"></a>
 
-### func \(\*Orchestrator\) [NetworkDNSUpdate](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L293-L298)
+### func \(\*Orchestrator\) [NetworkDNSUpdate](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L295-L300)
 
 ```go
 func (o *Orchestrator) NetworkDNSUpdate(target string, interfaceName string, servers []string, searchDomains []string) *Step
@@ -431,7 +431,7 @@ NetworkDNSUpdate creates a step that updates DNS configuration.
 
 <a name="Orchestrator.NetworkPingDo"></a>
 
-### func \(\*Orchestrator\) [NetworkPingDo](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L328-L331)
+### func \(\*Orchestrator\) [NetworkPingDo](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L330-L333)
 
 ```go
 func (o *Orchestrator) NetworkPingDo(target string, address string) *Step
@@ -441,7 +441,7 @@ NetworkPingDo creates a step that pings an address.
 
 <a name="Orchestrator.NodeDiskGet"></a>
 
-### func \(\*Orchestrator\) [NodeDiskGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L164-L166)
+### func \(\*Orchestrator\) [NodeDiskGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L166-L168)
 
 ```go
 func (o *Orchestrator) NodeDiskGet(target string) *Step
@@ -451,7 +451,7 @@ NodeDiskGet creates a step that retrieves disk usage.
 
 <a name="Orchestrator.NodeHostnameGet"></a>
 
-### func \(\*Orchestrator\) [NodeHostnameGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L68-L70)
+### func \(\*Orchestrator\) [NodeHostnameGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L70-L72)
 
 ```go
 func (o *Orchestrator) NodeHostnameGet(target string) *Step
@@ -461,7 +461,7 @@ NodeHostnameGet creates a step that retrieves the hostname.
 
 <a name="Orchestrator.NodeLoadGet"></a>
 
-### func \(\*Orchestrator\) [NodeLoadGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L228-L230)
+### func \(\*Orchestrator\) [NodeLoadGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L230-L232)
 
 ```go
 func (o *Orchestrator) NodeLoadGet(target string) *Step
@@ -471,7 +471,7 @@ NodeLoadGet creates a step that retrieves load averages.
 
 <a name="Orchestrator.NodeMemoryGet"></a>
 
-### func \(\*Orchestrator\) [NodeMemoryGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L196-L198)
+### func \(\*Orchestrator\) [NodeMemoryGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L198-L200)
 
 ```go
 func (o *Orchestrator) NodeMemoryGet(target string) *Step
@@ -481,7 +481,7 @@ NodeMemoryGet creates a step that retrieves memory stats.
 
 <a name="Orchestrator.NodeStatusGet"></a>
 
-### func \(\*Orchestrator\) [NodeStatusGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L100-L102)
+### func \(\*Orchestrator\) [NodeStatusGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L102-L104)
 
 ```go
 func (o *Orchestrator) NodeStatusGet(target string) *Step
@@ -491,7 +491,7 @@ NodeStatusGet creates a step that retrieves node status.
 
 <a name="Orchestrator.NodeUptimeGet"></a>
 
-### func \(\*Orchestrator\) [NodeUptimeGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L132-L134)
+### func \(\*Orchestrator\) [NodeUptimeGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L134-L136)
 
 ```go
 func (o *Orchestrator) NodeUptimeGet(target string) *Step
@@ -774,7 +774,7 @@ sensible defaults \(1s initial, 30s max\).
 
 <a name="Step"></a>
 
-## type [Step](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L30-L32)
+## type [Step](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L32-L34)
 
 Step represents a single operation in the plan. Users chain methods to declare
 ordering, conditions, and error handling.
@@ -787,7 +787,7 @@ type Step struct {
 
 <a name="Step.After"></a>
 
-### func \(\*Step\) [After](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L44-L46)
+### func \(\*Step\) [After](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L46-L48)
 
 ```go
 func (s *Step) After(deps ...*Step) *Step
@@ -797,7 +797,7 @@ After declares that this step runs after the given steps complete.
 
 <a name="Step.Named"></a>
 
-### func \(\*Step\) [Named](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L35-L37)
+### func \(\*Step\) [Named](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L37-L39)
 
 ```go
 func (s *Step) Named(name string) *Step
@@ -807,7 +807,7 @@ Named overrides the auto\-generated step name.
 
 <a name="Step.OnError"></a>
 
-### func \(\*Step\) [OnError](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L277-L279)
+### func \(\*Step\) [OnError](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L294-L296)
 
 ```go
 func (s *Step) OnError(strategy ErrorStrategy) *Step
@@ -817,7 +817,7 @@ OnError sets the error strategy for this step.
 
 <a name="Step.OnlyIfAllChanged"></a>
 
-### func \(\*Step\) [OnlyIfAllChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L105)
+### func \(\*Step\) [OnlyIfAllChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L107)
 
 ```go
 func (s *Step) OnlyIfAllChanged() *Step
@@ -827,7 +827,7 @@ OnlyIfAllChanged skips this step unless all dependencies reported changes.
 
 <a name="Step.OnlyIfAllHostsChanged"></a>
 
-### func \(\*Step\) [OnlyIfAllHostsChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L211)
+### func \(\*Step\) [OnlyIfAllHostsChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L213)
 
 ```go
 func (s *Step) OnlyIfAllHostsChanged() *Step
@@ -838,7 +838,7 @@ reported changes. Only meaningful for broadcast operations.
 
 <a name="Step.OnlyIfAllHostsFailed"></a>
 
-### func \(\*Step\) [OnlyIfAllHostsFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L155)
+### func \(\*Step\) [OnlyIfAllHostsFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L157)
 
 ```go
 func (s *Step) OnlyIfAllHostsFailed() *Step
@@ -849,7 +849,7 @@ an error. Only meaningful for broadcast operations.
 
 <a name="Step.OnlyIfAnyHostChanged"></a>
 
-### func \(\*Step\) [OnlyIfAnyHostChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L183)
+### func \(\*Step\) [OnlyIfAnyHostChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L185)
 
 ```go
 func (s *Step) OnlyIfAnyHostChanged() *Step
@@ -860,7 +860,7 @@ changes. Only meaningful for broadcast operations.
 
 <a name="Step.OnlyIfAnyHostFailed"></a>
 
-### func \(\*Step\) [OnlyIfAnyHostFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L127)
+### func \(\*Step\) [OnlyIfAnyHostFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L129)
 
 ```go
 func (s *Step) OnlyIfAnyHostFailed() *Step
@@ -871,7 +871,7 @@ error. Only meaningful for broadcast operations.
 
 <a name="Step.OnlyIfChanged"></a>
 
-### func \(\*Step\) [OnlyIfChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L82)
+### func \(\*Step\) [OnlyIfChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L84)
 
 ```go
 func (s *Step) OnlyIfChanged() *Step
@@ -881,7 +881,7 @@ OnlyIfChanged skips this step unless a dependency reported changes.
 
 <a name="Step.OnlyIfFailed"></a>
 
-### func \(\*Step\) [OnlyIfFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L89)
+### func \(\*Step\) [OnlyIfFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L91)
 
 ```go
 func (s *Step) OnlyIfFailed() *Step
@@ -891,7 +891,7 @@ OnlyIfFailed skips this step unless at least one dependency failed.
 
 <a name="Step.Retry"></a>
 
-### func \(\*Step\) [Retry](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L59-L62)
+### func \(\*Step\) [Retry](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L61-L64)
 
 ```go
 func (s *Step) Retry(n int, opts ...RetryOption) *Step
@@ -902,7 +902,7 @@ exponential backoff between attempts.
 
 <a name="Step.When"></a>
 
-### func \(\*Step\) [When](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L239-L241)
+### func \(\*Step\) [When](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L241-L243)
 
 ```go
 func (s *Step) When(fn func(Results) bool) *Step
@@ -912,7 +912,7 @@ When adds a guard condition — the step only runs if the predicate returns true
 
 <a name="Step.WhenFact"></a>
 
-### func \(\*Step\) [WhenFact](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L252-L255)
+### func \(\*Step\) [WhenFact](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L255-L258)
 
 ```go
 func (s *Step) WhenFact(agentListStep string, fn Predicate) *Step
@@ -920,6 +920,8 @@ func (s *Step) WhenFact(agentListStep string, fn Predicate) *Step
 
 WhenFact adds a fact\-based guard. The step runs only if the predicate returns
 true for at least one agent. Requires a prior AgentList step referenced by name.
+The skip reason distinguishes between a missing/mistyped step name and no
+matching agents.
 
 <a name="TaskStatus"></a>
 

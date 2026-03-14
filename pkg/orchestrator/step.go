@@ -21,6 +21,8 @@
 package orchestrator
 
 import (
+	"fmt"
+
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 )
@@ -248,7 +250,8 @@ func (s *Step) When(
 
 // WhenFact adds a fact-based guard. The step runs only if the
 // predicate returns true for at least one agent. Requires a prior
-// AgentList step referenced by name.
+// AgentList step referenced by name. The skip reason distinguishes
+// between a missing/mistyped step name and no matching agents.
 func (s *Step) WhenFact(
 	agentListStep string,
 	fn Predicate,
@@ -258,6 +261,20 @@ func (s *Step) WhenFact(
 
 		var list osapi.AgentList
 		if err := r.Decode(agentListStep, &list); err != nil {
+			s.task.SetGuardReason(
+				fmt.Sprintf(
+					"when-fact: step %q not found or decode failed: %v",
+					agentListStep,
+					err,
+				),
+			)
+
+			return false
+		}
+
+		if len(list.Agents) == 0 {
+			s.task.SetGuardReason("when-fact: no agents returned")
+
 			return false
 		}
 
