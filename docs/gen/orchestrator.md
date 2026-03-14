@@ -28,6 +28,7 @@ retries, and reporting.
   - [func \(o \*Orchestrator\) Discover\(ctx context.Context, predicates ...Predicate\) \(\[\]osapi.Agent, error\)](#Orchestrator.Discover)
   - [func \(o \*Orchestrator\) DockerCreate\(target string, opts osapi.DockerCreateOpts\) \*Step](#Orchestrator.DockerCreate)
   - [func \(o \*Orchestrator\) DockerExec\(target string, id string, opts osapi.DockerExecOpts\) \*Step](#Orchestrator.DockerExec)
+  - [func \(o \*Orchestrator\) DockerImageRemove\(target string, imageName string, params \*osapi.DockerImageRemoveParams\) \*Step](#Orchestrator.DockerImageRemove)
   - [func \(o \*Orchestrator\) DockerInspect\(target string, id string\) \*Step](#Orchestrator.DockerInspect)
   - [func \(o \*Orchestrator\) DockerList\(target string, params \*osapi.DockerListParams\) \*Step](#Orchestrator.DockerList)
   - [func \(o \*Orchestrator\) DockerPull\(target string, opts osapi.DockerPullOpts\) \*Step](#Orchestrator.DockerPull)
@@ -262,6 +263,17 @@ func (o *Orchestrator) DockerExec(target string, id string, opts osapi.DockerExe
 ```
 
 DockerExec creates a step that executes a command inside a running container.
+
+<a name="Orchestrator.DockerImageRemove"></a>
+
+### func \(\*Orchestrator\) [DockerImageRemove](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L926-L930)
+
+```go
+func (o *Orchestrator) DockerImageRemove(target string, imageName string, params *osapi.DockerImageRemoveParams) *Step
+```
+
+DockerImageRemove creates a step that removes a container image from the target
+host.
 
 <a name="Orchestrator.DockerInspect"></a>
 
