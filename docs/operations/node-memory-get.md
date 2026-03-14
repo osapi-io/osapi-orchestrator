@@ -18,7 +18,7 @@ step := o.NodeMemoryGet("web-01")
 ## Result Type
 
 ```go
-var result orchestrator.MemoryResult
+var result osapi.MemoryResult
 err := results.Decode("node.memory.get-1", &result)
 ```
 

@@ -18,7 +18,7 @@ None.
 ## Result Type
 
 ```go
-var result orchestrator.AgentListResult
+var result osapi.AgentList
 err := results.Decode("list-agents", &result)
 ```
 
@@ -29,22 +29,27 @@ err := results.Decode("list-agents", &result)
 
 ### AgentResult
 
-| Field           | Type                | Description                        |
-| --------------- | ------------------- | ---------------------------------- |
-| `Hostname`      | `string`            | Agent hostname.                    |
-| `Status`        | `string`            | Agent status (e.g., `Ready`).      |
-| `Architecture`  | `string`            | CPU architecture (e.g., `amd64`).  |
-| `KernelVersion` | `string`            | Kernel version string.             |
-| `CPUCount`      | `int`               | Number of CPUs.                    |
-| `FQDN`          | `string`            | Fully qualified domain name.       |
-| `ServiceMgr`    | `string`            | Service manager (e.g., `systemd`). |
-| `PackageMgr`    | `string`            | Package manager (e.g., `apt`).     |
-| `Labels`        | `map[string]string` | Agent labels for targeting.        |
-| `OSInfo`        | `*AgentOSInfo`      | OS distribution and version.       |
-| `Memory`        | `*AgentMemory`      | Memory usage stats.                |
-| `LoadAverage`   | `*AgentLoadAverage` | System load averages.              |
-| `Interfaces`    | `[]InterfaceResult` | Network interfaces.                |
-| `Uptime`        | `string`            | System uptime.                     |
+| Field           | Type                | Description                         |
+| --------------- | ------------------- | ----------------------------------- |
+| `Hostname`      | `string`            | Agent hostname.                     |
+| `Status`        | `string`            | Agent status (e.g., `Ready`).       |
+| `Architecture`  | `string`            | CPU architecture (e.g., `amd64`).   |
+| `KernelVersion` | `string`            | Kernel version string.              |
+| `CPUCount`      | `int`               | Number of CPUs.                     |
+| `FQDN`          | `string`            | Fully qualified domain name.        |
+| `ServiceMgr`    | `string`            | Service manager (e.g., `systemd`).  |
+| `PackageMgr`    | `string`            | Package manager (e.g., `apt`).      |
+| `Labels`        | `map[string]string` | Agent labels for targeting.         |
+| `OSInfo`        | `*AgentOSInfo`      | OS distribution and version.        |
+| `Memory`        | `*AgentMemory`      | Memory usage stats.                 |
+| `LoadAverage`   | `*AgentLoadAverage` | System load averages.               |
+| `Interfaces`    | `[]InterfaceResult` | Network interfaces.                 |
+| `Conditions`    | `[]ConditionResult` | Node conditions.                    |
+| `Uptime`        | `string`            | System uptime.                      |
+| `StartedAt`     | `time.Time`         | Timestamp when agent started.       |
+| `RegisteredAt`  | `time.Time`         | Timestamp when agent registered.    |
+| `State`         | `string`            | Agent state (e.g., `active`).       |
+| `Facts`         | `map[string]any`    | Agent facts for template rendering. |
 
 ## Idempotency
 

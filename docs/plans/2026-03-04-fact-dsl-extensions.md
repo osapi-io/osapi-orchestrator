@@ -1154,7 +1154,7 @@ func (s *StepPublicTestSuite) TestWhenFact() {
 		{
 			name: "WhenFact chains with After",
 			chainFn: func() *orchestrator.Step {
-				health := s.orch.HealthCheck("_any")
+				health := s.orch.HealthCheck()
 
 				return s.orch.NodeHostnameGet("_any").
 					After(health).
@@ -1168,7 +1168,7 @@ func (s *StepPublicTestSuite) TestWhenFact() {
 		{
 			name: "WhenFact in full chain",
 			chainFn: func() *orchestrator.Step {
-				health := s.orch.HealthCheck("_any")
+				health := s.orch.HealthCheck()
 
 				return s.orch.NodeHostnameGet("_any").
 					After(health).
@@ -1338,7 +1338,7 @@ func main() {
 
 	fmt.Printf("Discovered %d matching agents\n", len(agents))
 
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 
 	// Create a hostname step for each discovered agent.
 	for _, a := range agents {
@@ -1434,7 +1434,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 
 	for distro, agents := range groups {
 		cmd := installCmd(distro)
@@ -1518,7 +1518,7 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 	agents := o.AgentList().After(health)
 
 	// Guard: only run if the target agent is Ubuntu.
@@ -1620,7 +1620,7 @@ func main() {
 		)
 	}
 
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 
 	for _, a := range agents {
 		o.NodeLoadGet(a.Hostname).After(health)

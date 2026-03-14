@@ -54,58 +54,130 @@ func (s *OrchestratorPublicTestSuite) TearDownTest() {
 }
 
 func (s *OrchestratorPublicTestSuite) TestNew() {
-	o := orchestrator.New(s.server.URL, "test-token")
-	s.NotNil(o)
-}
-
-func (s *OrchestratorPublicTestSuite) TestRunEmptyPlan() {
-	o := orchestrator.New(s.server.URL, "test-token")
-
-	report, err := o.Run()
-
-	s.Require().NoError(err)
-	s.NotNil(report)
-	s.Empty(report.Tasks)
-}
-
-func (s *OrchestratorPublicTestSuite) TestTaskFuncReturnsStep() {
-	o := orchestrator.New(s.server.URL, "test-token")
-
-	step := o.TaskFunc(
-		"summarize",
-		func(
-			_ context.Context,
-			_ orchestrator.Results,
-		) (*sdk.Result, error) {
-			return &sdk.Result{Changed: true}, nil
+	tests := []struct {
+		name         string
+		validateFunc func(o *orchestrator.Orchestrator)
+	}{
+		{
+			name: "Returns non-nil orchestrator",
+			validateFunc: func(o *orchestrator.Orchestrator) {
+				s.NotNil(o)
+			},
 		},
-	)
+	}
 
-	s.NotNil(step)
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			o := orchestrator.New(s.server.URL, "test-token")
+			tc.validateFunc(o)
+		})
+	}
 }
 
-func (s *OrchestratorPublicTestSuite) TestTaskFuncExecutes() {
-	o := orchestrator.New(s.server.URL, "test-token")
-
-	var called bool
-	o.TaskFunc(
-		"custom",
-		func(
-			_ context.Context,
-			_ orchestrator.Results,
-		) (*sdk.Result, error) {
-			called = true
-			return &sdk.Result{Changed: true, Data: map[string]any{"key": "val"}}, nil
+func (s *OrchestratorPublicTestSuite) TestRun() {
+	tests := []struct {
+		name         string
+		setupFunc    func(o *orchestrator.Orchestrator)
+		validateFunc func(report *orchestrator.Report, err error)
+	}{
+		{
+			name:      "Empty plan returns empty report",
+			setupFunc: func(_ *orchestrator.Orchestrator) {},
+			validateFunc: func(
+				report *orchestrator.Report,
+				err error,
+			) {
+				s.Require().NoError(err)
+				s.NotNil(report)
+				s.Empty(report.Tasks)
+			},
 		},
-	)
+		{
+			name: "TaskFunc executes and returns result",
+			setupFunc: func(o *orchestrator.Orchestrator) {
+				o.TaskFunc(
+					"custom",
+					func(
+						_ context.Context,
+						_ orchestrator.Results,
+					) (*sdk.Result, error) {
+						return &sdk.Result{
+							Changed: true,
+							Data:    map[string]any{"key": "val"},
+						}, nil
+					},
+				)
+			},
+			validateFunc: func(
+				report *orchestrator.Report,
+				err error,
+			) {
+				s.Require().NoError(err)
+				s.Len(report.Tasks, 1)
+				s.Equal("custom", report.Tasks[0].Name)
+				s.True(report.Tasks[0].Changed)
+			},
+		},
+	}
 
-	report, err := o.Run()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			o := orchestrator.New(s.server.URL, "test-token")
+			tc.setupFunc(o)
 
-	s.Require().NoError(err)
-	s.True(called)
-	s.Len(report.Tasks, 1)
-	s.Equal("custom", report.Tasks[0].Name)
-	s.True(report.Tasks[0].Changed)
+			report, err := o.Run()
+			tc.validateFunc(report, err)
+		})
+	}
+}
+
+func (s *OrchestratorPublicTestSuite) TestTaskFunc() {
+	tests := []struct {
+		name         string
+		validateFunc func(step *orchestrator.Step, called *bool)
+	}{
+		{
+			name: "Returns non-nil step",
+			validateFunc: func(
+				step *orchestrator.Step,
+				_ *bool,
+			) {
+				s.NotNil(step)
+			},
+		},
+		{
+			name: "Executes callback when plan runs",
+			validateFunc: func(
+				_ *orchestrator.Step,
+				called *bool,
+			) {
+				s.True(*called)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			o := orchestrator.New(s.server.URL, "test-token")
+
+			var called bool
+			step := o.TaskFunc(
+				"summarize",
+				func(
+					_ context.Context,
+					_ orchestrator.Results,
+				) (*sdk.Result, error) {
+					called = true
+					return &sdk.Result{Changed: true}, nil
+				},
+			)
+
+			_, err := o.Run()
+			s.Require().NoError(err)
+
+			tc.validateFunc(step, &called)
+		})
+	}
 }
 
 func TestOrchestratorPublicTestSuite(

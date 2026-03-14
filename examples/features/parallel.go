@@ -59,7 +59,7 @@ func main() {
 	o := orchestrator.New(url, token, orchestrator.WithVerbose())
 
 	// Level 0: health gate.
-	health := o.HealthCheck("_all")
+	health := o.HealthCheck()
 
 	// Level 1: five queries run in parallel — all share the same
 	// dependency so the orchestrator schedules them concurrently.

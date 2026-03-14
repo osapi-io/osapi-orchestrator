@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 	"github.com/stretchr/testify/suite"
 )
@@ -34,7 +35,7 @@ type StepTestSuite struct {
 	suite.Suite
 }
 
-func (s *StepTestSuite) TestWhenGuardCallbackInvoked() {
+func (s *StepTestSuite) TestWhen() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -88,7 +89,7 @@ func (s *StepTestSuite) TestWhenGuardCallbackInvoked() {
 	}
 }
 
-func (s *StepTestSuite) TestNamedSetsTaskName() {
+func (s *StepTestSuite) TestNamed() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -126,7 +127,7 @@ func (s *StepTestSuite) TestNamedSetsTaskName() {
 	}
 }
 
-func (s *StepTestSuite) TestOnlyIfFailedGuard() {
+func (s *StepTestSuite) TestOnlyIfFailed() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -177,7 +178,7 @@ func (s *StepTestSuite) TestOnlyIfFailedGuard() {
 	}
 }
 
-func (s *StepTestSuite) TestOnlyIfAllChangedGuard() {
+func (s *StepTestSuite) TestOnlyIfAllChanged() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -259,7 +260,7 @@ func (s *StepTestSuite) TestOnlyIfAllChangedGuard() {
 	}
 }
 
-func (s *StepTestSuite) TestOnlyIfAnyHostFailedGuard() {
+func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -344,7 +345,7 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailedGuard() {
 	}
 }
 
-func (s *StepTestSuite) TestOnlyIfAllHostsFailedGuard() {
+func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -429,7 +430,7 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailedGuard() {
 	}
 }
 
-func (s *StepTestSuite) TestOnlyIfAnyHostChangedGuard() {
+func (s *StepTestSuite) TestOnlyIfAnyHostChanged() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -514,7 +515,7 @@ func (s *StepTestSuite) TestOnlyIfAnyHostChangedGuard() {
 	}
 }
 
-func (s *StepTestSuite) TestOnlyIfAllHostsChangedGuard() {
+func (s *StepTestSuite) TestOnlyIfAllHostsChanged() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -599,7 +600,7 @@ func (s *StepTestSuite) TestOnlyIfAllHostsChangedGuard() {
 	}
 }
 
-func (s *StepTestSuite) TestWhenFactGuardBehavior() {
+func (s *StepTestSuite) TestWhenFact() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -625,7 +626,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 			results:  sdk.Results{},
 			stepName: "list-agents",
 			target:   "web-01",
-			predicate: func(_ AgentResult) bool {
+			predicate: func(_ osapi.Agent) bool {
 				return true
 			},
 			wantResult: false,
@@ -649,7 +650,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 			},
 			stepName: "list-agents",
 			target:   "web-01",
-			predicate: func(a AgentResult) bool {
+			predicate: func(a osapi.Agent) bool {
 				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
 			},
 			wantResult: true,
@@ -673,7 +674,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 			},
 			stepName: "list-agents",
 			target:   "web-01",
-			predicate: func(a AgentResult) bool {
+			predicate: func(a osapi.Agent) bool {
 				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
 			},
 			wantResult: false,
@@ -694,7 +695,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 			},
 			stepName: "list-agents",
 			target:   "web-01",
-			predicate: func(_ AgentResult) bool {
+			predicate: func(_ osapi.Agent) bool {
 				return true
 			},
 			wantResult: true,
@@ -724,7 +725,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 			},
 			stepName: "list-agents",
 			target:   "_all",
-			predicate: func(a AgentResult) bool {
+			predicate: func(a osapi.Agent) bool {
 				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
 			},
 			wantResult: true,
@@ -748,7 +749,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 			},
 			stepName: "list-agents",
 			target:   "_all",
-			predicate: func(a AgentResult) bool {
+			predicate: func(a osapi.Agent) bool {
 				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
 			},
 			wantResult: false,
@@ -767,7 +768,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 	}
 }
 
-func (s *StepTestSuite) TestRetrySetsErrorStrategy() {
+func (s *StepTestSuite) TestRetry() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,

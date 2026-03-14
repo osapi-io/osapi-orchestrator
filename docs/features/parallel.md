@@ -6,7 +6,7 @@ dependency to fan out:
 ## Usage
 
 ```go
-health := o.HealthCheck("_any")
+health := o.HealthCheck()
 
 o.NodeHostnameGet("_any").After(health)
 o.NodeDiskGet("_any").After(health)

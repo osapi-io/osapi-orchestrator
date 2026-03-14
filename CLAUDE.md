@@ -28,7 +28,7 @@ just fetch / just deps / just test / just go::unit / just go::vet / just go::fmt
 
 - **`pkg/orchestrator/`** — User-facing DSL
   - Typed operation constructors (NodeHostnameGet, CommandExec, etc.)
-  - Typed result structs (HostnameResult, DiskResult, etc.)
+  - Uses SDK types directly (`osapi.HostnameResult`, `osapi.Agent`, etc.)
   - Porcelain over osapi-sdk's orchestrator engine
 
 ## Code Standards (MANDATORY)

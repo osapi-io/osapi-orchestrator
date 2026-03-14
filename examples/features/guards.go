@@ -37,6 +37,8 @@ import (
 	"log"
 	"os"
 
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
+
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
@@ -53,14 +55,14 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 	hostname := o.NodeHostnameGet("_any").After(health)
 
 	// Guard: decode the hostname result and only proceed if non-empty.
 	o.CommandExec("_any", "whoami").
 		After(hostname).
 		When(func(r orchestrator.Results) bool {
-			var h orchestrator.HostnameResult
+			var h osapi.HostnameResult
 			if err := r.Decode("get-hostname", &h); err != nil {
 				return false
 			}

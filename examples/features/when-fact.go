@@ -35,6 +35,8 @@ import (
 	"log"
 	"os"
 
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
+
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
@@ -56,13 +58,13 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 	agents := o.AgentList().After(health)
 
 	// Guard: only run if the target agent is Ubuntu.
 	o.CommandShell(target, "apt-get update -qq").
 		After(agents).
-		WhenFact("list-agents", func(a orchestrator.AgentResult) bool {
+		WhenFact("list-agents", func(a osapi.Agent) bool {
 			return a.OSInfo != nil &&
 				a.OSInfo.Distribution == "Ubuntu"
 		})

@@ -23,6 +23,7 @@ package orchestrator_test
 import (
 	"testing"
 
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
@@ -36,14 +37,14 @@ func (s *PredicatePublicTestSuite) TestOS() {
 	tests := []struct {
 		name         string
 		distribution string
-		agent        orchestrator.AgentResult
+		agent        osapi.Agent
 		expected     bool
 	}{
 		{
 			name:         "Matches exact distribution",
 			distribution: "ubuntu",
-			agent: orchestrator.AgentResult{
-				OSInfo: &orchestrator.AgentOSInfo{
+			agent: osapi.Agent{
+				OSInfo: &osapi.OSInfo{
 					Distribution: "ubuntu",
 				},
 			},
@@ -52,8 +53,8 @@ func (s *PredicatePublicTestSuite) TestOS() {
 		{
 			name:         "Matches case-insensitive distribution",
 			distribution: "Ubuntu",
-			agent: orchestrator.AgentResult{
-				OSInfo: &orchestrator.AgentOSInfo{
+			agent: osapi.Agent{
+				OSInfo: &osapi.OSInfo{
 					Distribution: "ubuntu",
 				},
 			},
@@ -62,14 +63,14 @@ func (s *PredicatePublicTestSuite) TestOS() {
 		{
 			name:         "Returns false when OSInfo is nil",
 			distribution: "ubuntu",
-			agent:        orchestrator.AgentResult{},
+			agent:        osapi.Agent{},
 			expected:     false,
 		},
 		{
 			name:         "Returns false for non-matching distribution",
 			distribution: "debian",
-			agent: orchestrator.AgentResult{
-				OSInfo: &orchestrator.AgentOSInfo{
+			agent: osapi.Agent{
+				OSInfo: &osapi.OSInfo{
 					Distribution: "ubuntu",
 				},
 			},
@@ -89,13 +90,13 @@ func (s *PredicatePublicTestSuite) TestArch() {
 	tests := []struct {
 		name         string
 		architecture string
-		agent        orchestrator.AgentResult
+		agent        osapi.Agent
 		expected     bool
 	}{
 		{
 			name:         "Matches architecture",
 			architecture: "x86_64",
-			agent: orchestrator.AgentResult{
+			agent: osapi.Agent{
 				Architecture: "x86_64",
 			},
 			expected: true,
@@ -103,7 +104,7 @@ func (s *PredicatePublicTestSuite) TestArch() {
 		{
 			name:         "Matches case-insensitive architecture",
 			architecture: "X86_64",
-			agent: orchestrator.AgentResult{
+			agent: osapi.Agent{
 				Architecture: "x86_64",
 			},
 			expected: true,
@@ -111,7 +112,7 @@ func (s *PredicatePublicTestSuite) TestArch() {
 		{
 			name:         "Returns false for non-matching architecture",
 			architecture: "arm64",
-			agent: orchestrator.AgentResult{
+			agent: osapi.Agent{
 				Architecture: "x86_64",
 			},
 			expected: false,
@@ -130,14 +131,14 @@ func (s *PredicatePublicTestSuite) TestMinMemory() {
 	tests := []struct {
 		name     string
 		total    int
-		agent    orchestrator.AgentResult
+		agent    osapi.Agent
 		expected bool
 	}{
 		{
 			name:  "Matches when memory exceeds minimum",
 			total: 4096,
-			agent: orchestrator.AgentResult{
-				Memory: &orchestrator.AgentMemory{
+			agent: osapi.Agent{
+				Memory: &osapi.Memory{
 					Total: 8192,
 				},
 			},
@@ -146,8 +147,8 @@ func (s *PredicatePublicTestSuite) TestMinMemory() {
 		{
 			name:  "Matches when memory equals minimum",
 			total: 4096,
-			agent: orchestrator.AgentResult{
-				Memory: &orchestrator.AgentMemory{
+			agent: osapi.Agent{
+				Memory: &osapi.Memory{
 					Total: 4096,
 				},
 			},
@@ -156,8 +157,8 @@ func (s *PredicatePublicTestSuite) TestMinMemory() {
 		{
 			name:  "Returns false when memory below minimum",
 			total: 8192,
-			agent: orchestrator.AgentResult{
-				Memory: &orchestrator.AgentMemory{
+			agent: osapi.Agent{
+				Memory: &osapi.Memory{
 					Total: 4096,
 				},
 			},
@@ -166,7 +167,7 @@ func (s *PredicatePublicTestSuite) TestMinMemory() {
 		{
 			name:     "Returns false when Memory is nil",
 			total:    4096,
-			agent:    orchestrator.AgentResult{},
+			agent:    osapi.Agent{},
 			expected: false,
 		},
 	}
@@ -183,13 +184,13 @@ func (s *PredicatePublicTestSuite) TestMinCPU() {
 	tests := []struct {
 		name     string
 		count    int
-		agent    orchestrator.AgentResult
+		agent    osapi.Agent
 		expected bool
 	}{
 		{
 			name:  "Matches when CPU count exceeds minimum",
 			count: 2,
-			agent: orchestrator.AgentResult{
+			agent: osapi.Agent{
 				CPUCount: 4,
 			},
 			expected: true,
@@ -197,7 +198,7 @@ func (s *PredicatePublicTestSuite) TestMinCPU() {
 		{
 			name:  "Matches when CPU count equals minimum",
 			count: 4,
-			agent: orchestrator.AgentResult{
+			agent: osapi.Agent{
 				CPUCount: 4,
 			},
 			expected: true,
@@ -205,7 +206,7 @@ func (s *PredicatePublicTestSuite) TestMinCPU() {
 		{
 			name:  "Returns false when CPU count below minimum",
 			count: 8,
-			agent: orchestrator.AgentResult{
+			agent: osapi.Agent{
 				CPUCount: 4,
 			},
 			expected: false,
@@ -225,14 +226,14 @@ func (s *PredicatePublicTestSuite) TestHasLabel() {
 		name     string
 		key      string
 		value    string
-		agent    orchestrator.AgentResult
+		agent    osapi.Agent
 		expected bool
 	}{
 		{
 			name:  "Matches label key-value pair",
 			key:   "env",
 			value: "prod",
-			agent: orchestrator.AgentResult{
+			agent: osapi.Agent{
 				Labels: map[string]string{
 					"env":  "prod",
 					"team": "infra",
@@ -244,7 +245,7 @@ func (s *PredicatePublicTestSuite) TestHasLabel() {
 			name:  "Returns false for wrong value",
 			key:   "env",
 			value: "prod",
-			agent: orchestrator.AgentResult{
+			agent: osapi.Agent{
 				Labels: map[string]string{
 					"env": "staging",
 				},
@@ -255,7 +256,7 @@ func (s *PredicatePublicTestSuite) TestHasLabel() {
 			name:     "Returns false when labels are nil",
 			key:      "env",
 			value:    "prod",
-			agent:    orchestrator.AgentResult{},
+			agent:    osapi.Agent{},
 			expected: false,
 		},
 	}
@@ -273,14 +274,14 @@ func (s *PredicatePublicTestSuite) TestFactEquals() {
 		name     string
 		key      string
 		value    any
-		agent    orchestrator.AgentResult
+		agent    osapi.Agent
 		expected bool
 	}{
 		{
 			name:  "Matches string fact",
 			key:   "datacenter",
 			value: "us-east-1",
-			agent: orchestrator.AgentResult{
+			agent: osapi.Agent{
 				Facts: map[string]any{
 					"datacenter": "us-east-1",
 				},
@@ -291,7 +292,7 @@ func (s *PredicatePublicTestSuite) TestFactEquals() {
 			name:  "Matches numeric fact (float64)",
 			key:   "version",
 			value: float64(3),
-			agent: orchestrator.AgentResult{
+			agent: osapi.Agent{
 				Facts: map[string]any{
 					"version": float64(3),
 				},
@@ -302,7 +303,7 @@ func (s *PredicatePublicTestSuite) TestFactEquals() {
 			name:  "Returns false for wrong value",
 			key:   "datacenter",
 			value: "us-west-2",
-			agent: orchestrator.AgentResult{
+			agent: osapi.Agent{
 				Facts: map[string]any{
 					"datacenter": "us-east-1",
 				},
@@ -313,7 +314,7 @@ func (s *PredicatePublicTestSuite) TestFactEquals() {
 			name:     "Returns false when facts are nil",
 			key:      "datacenter",
 			value:    "us-east-1",
-			agent:    orchestrator.AgentResult{},
+			agent:    osapi.Agent{},
 			expected: false,
 		},
 	}
@@ -330,14 +331,14 @@ func (s *PredicatePublicTestSuite) TestHasCondition() {
 	tests := []struct {
 		name          string
 		conditionType string
-		agent         orchestrator.AgentResult
+		agent         osapi.Agent
 		expected      bool
 	}{
 		{
 			name:          "Matches active condition",
 			conditionType: "DiskPressure",
-			agent: orchestrator.AgentResult{
-				Conditions: []orchestrator.ConditionResult{
+			agent: osapi.Agent{
+				Conditions: []osapi.Condition{
 					{Type: "DiskPressure", Status: true},
 				},
 			},
@@ -346,8 +347,8 @@ func (s *PredicatePublicTestSuite) TestHasCondition() {
 		{
 			name:          "No match when condition is inactive",
 			conditionType: "DiskPressure",
-			agent: orchestrator.AgentResult{
-				Conditions: []orchestrator.ConditionResult{
+			agent: osapi.Agent{
+				Conditions: []osapi.Condition{
 					{Type: "DiskPressure", Status: false},
 				},
 			},
@@ -356,8 +357,8 @@ func (s *PredicatePublicTestSuite) TestHasCondition() {
 		{
 			name:          "No match for wrong type",
 			conditionType: "MemoryPressure",
-			agent: orchestrator.AgentResult{
-				Conditions: []orchestrator.ConditionResult{
+			agent: osapi.Agent{
+				Conditions: []osapi.Condition{
 					{Type: "DiskPressure", Status: true},
 				},
 			},
@@ -366,7 +367,7 @@ func (s *PredicatePublicTestSuite) TestHasCondition() {
 		{
 			name:          "No match when conditions are nil",
 			conditionType: "DiskPressure",
-			agent:         orchestrator.AgentResult{},
+			agent:         osapi.Agent{},
 			expected:      false,
 		},
 	}
@@ -383,14 +384,14 @@ func (s *PredicatePublicTestSuite) TestNoCondition() {
 	tests := []struct {
 		name          string
 		conditionType string
-		agent         orchestrator.AgentResult
+		agent         osapi.Agent
 		expected      bool
 	}{
 		{
 			name:          "No match when condition is active",
 			conditionType: "DiskPressure",
-			agent: orchestrator.AgentResult{
-				Conditions: []orchestrator.ConditionResult{
+			agent: osapi.Agent{
+				Conditions: []osapi.Condition{
 					{Type: "DiskPressure", Status: true},
 				},
 			},
@@ -399,8 +400,8 @@ func (s *PredicatePublicTestSuite) TestNoCondition() {
 		{
 			name:          "Matches when condition is inactive",
 			conditionType: "DiskPressure",
-			agent: orchestrator.AgentResult{
-				Conditions: []orchestrator.ConditionResult{
+			agent: osapi.Agent{
+				Conditions: []osapi.Condition{
 					{Type: "DiskPressure", Status: false},
 				},
 			},
@@ -409,8 +410,8 @@ func (s *PredicatePublicTestSuite) TestNoCondition() {
 		{
 			name:          "Matches when type is missing",
 			conditionType: "MemoryPressure",
-			agent: orchestrator.AgentResult{
-				Conditions: []orchestrator.ConditionResult{
+			agent: osapi.Agent{
+				Conditions: []osapi.Condition{
 					{Type: "DiskPressure", Status: true},
 				},
 			},
@@ -419,7 +420,7 @@ func (s *PredicatePublicTestSuite) TestNoCondition() {
 		{
 			name:          "Matches when conditions are nil",
 			conditionType: "DiskPressure",
-			agent:         orchestrator.AgentResult{},
+			agent:         osapi.Agent{},
 			expected:      true,
 		},
 	}
@@ -435,18 +436,18 @@ func (s *PredicatePublicTestSuite) TestNoCondition() {
 func (s *PredicatePublicTestSuite) TestHealthy() {
 	tests := []struct {
 		name     string
-		agent    orchestrator.AgentResult
+		agent    osapi.Agent
 		expected bool
 	}{
 		{
 			name:     "Matches when no conditions",
-			agent:    orchestrator.AgentResult{},
+			agent:    osapi.Agent{},
 			expected: true,
 		},
 		{
 			name: "Matches when all conditions inactive",
-			agent: orchestrator.AgentResult{
-				Conditions: []orchestrator.ConditionResult{
+			agent: osapi.Agent{
+				Conditions: []osapi.Condition{
 					{Type: "DiskPressure", Status: false},
 					{Type: "MemoryPressure", Status: false},
 				},
@@ -455,8 +456,8 @@ func (s *PredicatePublicTestSuite) TestHealthy() {
 		},
 		{
 			name: "No match when one condition active",
-			agent: orchestrator.AgentResult{
-				Conditions: []orchestrator.ConditionResult{
+			agent: osapi.Agent{
+				Conditions: []osapi.Condition{
 					{Type: "DiskPressure", Status: false},
 					{Type: "MemoryPressure", Status: true},
 				},
@@ -465,8 +466,8 @@ func (s *PredicatePublicTestSuite) TestHealthy() {
 		},
 		{
 			name: "Matches with empty conditions slice",
-			agent: orchestrator.AgentResult{
-				Conditions: []orchestrator.ConditionResult{},
+			agent: osapi.Agent{
+				Conditions: []osapi.Condition{},
 			},
 			expected: true,
 		},
@@ -483,16 +484,16 @@ func (s *PredicatePublicTestSuite) TestHealthy() {
 func (s *PredicatePublicTestSuite) TestMatchAll() {
 	tests := []struct {
 		name       string
-		agent      orchestrator.AgentResult
+		agent      osapi.Agent
 		predicates []orchestrator.Predicate
 		expected   bool
 	}{
 		{
 			name: "Returns true when all predicates match",
-			agent: orchestrator.AgentResult{
+			agent: osapi.Agent{
 				Architecture: "x86_64",
 				CPUCount:     8,
-				OSInfo: &orchestrator.AgentOSInfo{
+				OSInfo: &osapi.OSInfo{
 					Distribution: "ubuntu",
 				},
 			},
@@ -505,10 +506,10 @@ func (s *PredicatePublicTestSuite) TestMatchAll() {
 		},
 		{
 			name: "Returns false when one predicate fails",
-			agent: orchestrator.AgentResult{
+			agent: osapi.Agent{
 				Architecture: "x86_64",
 				CPUCount:     2,
-				OSInfo: &orchestrator.AgentOSInfo{
+				OSInfo: &osapi.OSInfo{
 					Distribution: "ubuntu",
 				},
 			},
@@ -520,7 +521,7 @@ func (s *PredicatePublicTestSuite) TestMatchAll() {
 		},
 		{
 			name:       "Returns true when no predicates are provided",
-			agent:      orchestrator.AgentResult{},
+			agent:      osapi.Agent{},
 			predicates: nil,
 			expected:   true,
 		},

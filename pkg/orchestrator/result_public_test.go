@@ -24,6 +24,7 @@ import (
 	"testing"
 	"time"
 
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 	"github.com/stretchr/testify/suite"
 
@@ -56,7 +57,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 				},
 			},
 			lookupName: "get-hostname",
-			target:     &orchestrator.HostnameResult{},
+			target:     &osapi.HostnameResult{},
 			validateFunc: func() {
 				r := orchestrator.NewResults(sdk.Results{
 					"get-hostname": &sdk.Result{
@@ -66,7 +67,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 						},
 					},
 				})
-				var h orchestrator.HostnameResult
+				var h osapi.HostnameResult
 				err := r.Decode("get-hostname", &h)
 				s.Require().NoError(err)
 				s.Equal("web-01", h.Hostname)
@@ -86,7 +87,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 				},
 			},
 			lookupName: "run-uptime",
-			target:     &orchestrator.CommandResult{},
+			target:     &osapi.CommandResult{},
 			validateFunc: func() {
 				r := orchestrator.NewResults(sdk.Results{
 					"run-uptime": &sdk.Result{
@@ -97,7 +98,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 						},
 					},
 				})
-				var cmd orchestrator.CommandResult
+				var cmd osapi.CommandResult
 				err := r.Decode("run-uptime", &cmd)
 				s.Require().NoError(err)
 				s.Equal("12:34:56 up 10 days", cmd.Stdout)
@@ -111,13 +112,13 @@ func (s *ResultPublicTestSuite) TestDecode() {
 				"empty-task": &sdk.Result{Data: nil},
 			},
 			lookupName: "empty-task",
-			target:     &orchestrator.HostnameResult{},
+			target:     &osapi.HostnameResult{},
 		},
 		{
 			name:        "Returns error for missing result",
 			results:     sdk.Results{},
 			lookupName:  "nonexistent",
-			target:      &orchestrator.HostnameResult{},
+			target:      &osapi.HostnameResult{},
 			expectErr:   true,
 			errContains: "no result for",
 		},
@@ -136,7 +137,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 				},
 			},
 			lookupName: "run-cmd",
-			target:     &orchestrator.CommandResult{},
+			target:     &osapi.CommandResult{},
 			validateFunc: func() {
 				r := orchestrator.NewResults(sdk.Results{
 					"run-cmd": &sdk.Result{
@@ -150,7 +151,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 						},
 					},
 				})
-				var cmd orchestrator.CommandResult
+				var cmd osapi.CommandResult
 				err := r.Decode("run-cmd", &cmd)
 				s.Require().NoError(err)
 				s.Equal("exec failed", cmd.Error)
@@ -178,7 +179,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 				},
 			},
 			lookupName:  "bad-marshal",
-			target:      &orchestrator.HostnameResult{},
+			target:      &osapi.HostnameResult{},
 			expectErr:   true,
 			errContains: "marshal result data",
 		},
@@ -469,7 +470,7 @@ func (s *ResultPublicTestSuite) TestHostResultDecode() {
 		target      any
 		expectErr   bool
 		errContains string
-		validateFn  func(cmd orchestrator.CommandResult)
+		validateFn  func(cmd osapi.CommandResult)
 	}{
 		{
 			name: "Decodes host result data into typed struct",
@@ -482,7 +483,7 @@ func (s *ResultPublicTestSuite) TestHostResultDecode() {
 					"exit_code": float64(0),
 				},
 			},
-			validateFn: func(cmd orchestrator.CommandResult) {
+			validateFn: func(cmd osapi.CommandResult) {
 				s.Equal("hello", cmd.Stdout)
 				s.Equal(0, cmd.ExitCode)
 			},
@@ -516,7 +517,7 @@ func (s *ResultPublicTestSuite) TestHostResultDecode() {
 				return
 			}
 
-			var cmd orchestrator.CommandResult
+			var cmd osapi.CommandResult
 			err := tc.hostResult.Decode(&cmd)
 
 			if tc.expectErr {
@@ -543,7 +544,7 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 		target      any
 		expectErr   bool
 		errContains string
-		validateFn  func(cmd orchestrator.CommandResult)
+		validateFn  func(cmd osapi.CommandResult)
 	}{
 		{
 			name: "Decodes task result from report",
@@ -559,7 +560,7 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 				},
 			},
 			lookupName: "run-cmd",
-			validateFn: func(cmd orchestrator.CommandResult) {
+			validateFn: func(cmd osapi.CommandResult) {
 				s.Equal("hello", cmd.Stdout)
 				s.Equal(0, cmd.ExitCode)
 			},
@@ -626,7 +627,7 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 				return
 			}
 
-			var cmd orchestrator.CommandResult
+			var cmd osapi.CommandResult
 			err := report.Decode(tc.lookupName, &cmd)
 
 			if tc.expectErr {

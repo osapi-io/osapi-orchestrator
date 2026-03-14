@@ -25,8 +25,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
 type StepPublicTestSuite struct {
@@ -53,7 +55,7 @@ func (s *StepPublicTestSuite) TearDownTest() {
 	s.server.Close()
 }
 
-func (s *StepPublicTestSuite) TestChaining() {
+func (s *StepPublicTestSuite) TestAfter() {
 	tests := []struct {
 		name    string
 		chainFn func() *orchestrator.Step
@@ -61,7 +63,7 @@ func (s *StepPublicTestSuite) TestChaining() {
 		{
 			name: "After returns same step",
 			chainFn: func() *orchestrator.Step {
-				health := s.orch.HealthCheck("_any")
+				health := s.orch.HealthCheck()
 				step := s.orch.NodeHostnameGet("_any")
 
 				return step.After(health)
@@ -70,7 +72,7 @@ func (s *StepPublicTestSuite) TestChaining() {
 		{
 			name: "After with multiple dependencies",
 			chainFn: func() *orchestrator.Step {
-				health := s.orch.HealthCheck("_any")
+				health := s.orch.HealthCheck()
 				disk := s.orch.NodeDiskGet("_any")
 				step := s.orch.NodeHostnameGet("_any")
 
@@ -78,17 +80,79 @@ func (s *StepPublicTestSuite) TestChaining() {
 			},
 		},
 		{
+			name: "Full method chain",
+			chainFn: func() *orchestrator.Step {
+				health := s.orch.HealthCheck()
+
+				return s.orch.NodeHostnameGet("_any").
+					After(health).
+					Retry(2).
+					OnlyIfChanged().
+					When(func(
+						_ orchestrator.Results,
+					) bool {
+						return true
+					}).
+					OnError(orchestrator.Continue)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.chainFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestRetry() {
+	tests := []struct {
+		name    string
+		chainFn func() *orchestrator.Step
+	}{
+		{
 			name: "Retry returns same step",
 			chainFn: func() *orchestrator.Step {
 				return s.orch.NodeHostnameGet("_any").Retry(3)
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.chainFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestOnlyIfChanged() {
+	tests := []struct {
+		name    string
+		chainFn func() *orchestrator.Step
+	}{
 		{
 			name: "OnlyIfChanged returns same step",
 			chainFn: func() *orchestrator.Step {
 				return s.orch.NodeHostnameGet("_any").OnlyIfChanged()
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.chainFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestWhen() {
+	tests := []struct {
+		name    string
+		chainFn func() *orchestrator.Step
+	}{
 		{
 			name: "When returns same step",
 			chainFn: func() *orchestrator.Step {
@@ -99,6 +163,21 @@ func (s *StepPublicTestSuite) TestChaining() {
 				})
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.chainFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestOnError() {
+	tests := []struct {
+		name    string
+		chainFn func() *orchestrator.Step
+	}{
 		{
 			name: "OnError with Continue returns same step",
 			chainFn: func() *orchestrator.Step {
@@ -113,18 +192,63 @@ func (s *StepPublicTestSuite) TestChaining() {
 					OnError(orchestrator.StopAll)
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.chainFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestOnlyIfFailed() {
+	tests := []struct {
+		name    string
+		chainFn func() *orchestrator.Step
+	}{
 		{
 			name: "OnlyIfFailed returns non-nil step",
 			chainFn: func() *orchestrator.Step {
 				return s.orch.NodeHostnameGet("_any").OnlyIfFailed()
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.chainFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestOnlyIfAllChanged() {
+	tests := []struct {
+		name    string
+		chainFn func() *orchestrator.Step
+	}{
 		{
 			name: "OnlyIfAllChanged returns non-nil step",
 			chainFn: func() *orchestrator.Step {
 				return s.orch.NodeHostnameGet("_any").OnlyIfAllChanged()
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.chainFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestOnlyIfAnyHostFailed() {
+	tests := []struct {
+		name    string
+		chainFn func() *orchestrator.Step
+	}{
 		{
 			name: "OnlyIfAnyHostFailed returns non-nil step",
 			chainFn: func() *orchestrator.Step {
@@ -132,6 +256,21 @@ func (s *StepPublicTestSuite) TestChaining() {
 					OnlyIfAnyHostFailed()
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.chainFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestOnlyIfAllHostsFailed() {
+	tests := []struct {
+		name    string
+		chainFn func() *orchestrator.Step
+	}{
 		{
 			name: "OnlyIfAllHostsFailed returns non-nil step",
 			chainFn: func() *orchestrator.Step {
@@ -139,6 +278,21 @@ func (s *StepPublicTestSuite) TestChaining() {
 					OnlyIfAllHostsFailed()
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.chainFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestOnlyIfAnyHostChanged() {
+	tests := []struct {
+		name    string
+		chainFn func() *orchestrator.Step
+	}{
 		{
 			name: "OnlyIfAnyHostChanged returns non-nil step",
 			chainFn: func() *orchestrator.Step {
@@ -146,6 +300,21 @@ func (s *StepPublicTestSuite) TestChaining() {
 					OnlyIfAnyHostChanged()
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.chainFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestOnlyIfAllHostsChanged() {
+	tests := []struct {
+		name    string
+		chainFn func() *orchestrator.Step
+	}{
 		{
 			name: "OnlyIfAllHostsChanged returns non-nil step",
 			chainFn: func() *orchestrator.Step {
@@ -153,38 +322,51 @@ func (s *StepPublicTestSuite) TestChaining() {
 					OnlyIfAllHostsChanged()
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.chainFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestNamed() {
+	tests := []struct {
+		name    string
+		chainFn func() *orchestrator.Step
+	}{
 		{
 			name: "Named returns same step",
 			chainFn: func() *orchestrator.Step {
 				return s.orch.NodeHostnameGet("_any").Named("custom")
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.chainFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestWhenFact() {
+	tests := []struct {
+		name    string
+		chainFn func() *orchestrator.Step
+	}{
 		{
 			name: "WhenFact returns same step",
 			chainFn: func() *orchestrator.Step {
 				return s.orch.NodeHostnameGet("_any").
 					WhenFact("list-agents", func(
-						_ orchestrator.AgentResult,
+						_ osapi.Agent,
 					) bool {
 						return true
 					})
-			},
-		},
-		{
-			name: "Full method chain",
-			chainFn: func() *orchestrator.Step {
-				health := s.orch.HealthCheck("_any")
-
-				return s.orch.NodeHostnameGet("_any").
-					After(health).
-					Retry(2).
-					OnlyIfChanged().
-					When(func(
-						_ orchestrator.Results,
-					) bool {
-						return true
-					}).
-					OnError(orchestrator.Continue)
 			},
 		},
 	}

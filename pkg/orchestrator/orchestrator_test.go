@@ -78,7 +78,7 @@ func (s *OrchestratorTestSuite) TestNextOpName() {
 	}
 }
 
-func (s *OrchestratorTestSuite) TestRunWithHealthCheck() {
+func (s *OrchestratorTestSuite) TestRun() {
 	tests := []struct {
 		name      string
 		handler   http.HandlerFunc
@@ -115,7 +115,7 @@ func (s *OrchestratorTestSuite) TestRunWithHealthCheck() {
 			defer server.Close()
 
 			orch := New(server.URL, "test-token")
-			orch.HealthCheck("_any")
+			orch.HealthCheck()
 
 			report, err := orch.Run()
 

@@ -10,7 +10,7 @@ if err != nil {
     log.Fatal(err)
 }
 
-var cmd orchestrator.CommandResult
+var cmd osapi.CommandResult
 if err := report.Decode("run-uptime", &cmd); err == nil {
     fmt.Printf("stdout: %s\n", cmd.Stdout)
 }

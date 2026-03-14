@@ -23,6 +23,7 @@ package orchestrator
 import (
 	"testing"
 
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 	"github.com/stretchr/testify/suite"
 )
@@ -34,14 +35,14 @@ type DiscoverTestSuite struct {
 func (s *DiscoverTestSuite) TestFactValue() {
 	tests := []struct {
 		name     string
-		agent    AgentResult
+		agent    osapi.Agent
 		key      string
 		expected string
 	}{
 		{
 			name: "os.distribution with OSInfo returns Distribution",
-			agent: AgentResult{
-				OSInfo: &AgentOSInfo{
+			agent: osapi.Agent{
+				OSInfo: &osapi.OSInfo{
 					Distribution: "Ubuntu",
 					Version:      "22.04",
 				},
@@ -51,8 +52,8 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		},
 		{
 			name: "os.version with OSInfo returns Version",
-			agent: AgentResult{
-				OSInfo: &AgentOSInfo{
+			agent: osapi.Agent{
+				OSInfo: &osapi.OSInfo{
 					Distribution: "Ubuntu",
 					Version:      "22.04",
 				},
@@ -62,7 +63,7 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		},
 		{
 			name: "architecture returns Architecture",
-			agent: AgentResult{
+			agent: osapi.Agent{
 				Architecture: "amd64",
 			},
 			key:      "architecture",
@@ -70,7 +71,7 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		},
 		{
 			name: "service_manager returns ServiceMgr",
-			agent: AgentResult{
+			agent: osapi.Agent{
 				ServiceMgr: "systemd",
 			},
 			key:      "service_manager",
@@ -78,7 +79,7 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		},
 		{
 			name: "package_manager returns PackageMgr",
-			agent: AgentResult{
+			agent: osapi.Agent{
 				PackageMgr: "apt",
 			},
 			key:      "package_manager",
@@ -86,7 +87,7 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		},
 		{
 			name: "kernel_version returns KernelVersion",
-			agent: AgentResult{
+			agent: osapi.Agent{
 				KernelVersion: "5.15.0",
 			},
 			key:      "kernel_version",
@@ -94,7 +95,7 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		},
 		{
 			name: "Falls back to Facts map for unknown keys",
-			agent: AgentResult{
+			agent: osapi.Agent{
 				Facts: map[string]any{
 					"datacenter": "us-east-1",
 				},
@@ -104,19 +105,19 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		},
 		{
 			name:     "Returns empty for nil OSInfo on os.distribution",
-			agent:    AgentResult{},
+			agent:    osapi.Agent{},
 			key:      "os.distribution",
 			expected: "",
 		},
 		{
 			name:     "Returns empty for nil OSInfo on os.version",
-			agent:    AgentResult{},
+			agent:    osapi.Agent{},
 			key:      "os.version",
 			expected: "",
 		},
 		{
 			name:     "Returns empty for missing fact",
-			agent:    AgentResult{},
+			agent:    osapi.Agent{},
 			key:      "nonexistent",
 			expected: "",
 		},
@@ -172,7 +173,7 @@ func (s *DiscoverTestSuite) TestMustDecode() {
 				return
 			}
 
-			var result HostnameResult
+			var result osapi.HostnameResult
 			s.NotPanics(func() {
 				mustDecode(tc.report, tc.task, &result)
 			})

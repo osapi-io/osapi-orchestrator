@@ -19,7 +19,7 @@ step := o.NetworkDNSGet("web-01", "eth0")
 ## Result Type
 
 ```go
-var result orchestrator.DNSConfigResult
+var result osapi.DNSConfig
 err := results.Decode("network.dns.get-1", &result)
 ```
 

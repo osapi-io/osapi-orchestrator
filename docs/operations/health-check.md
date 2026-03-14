@@ -7,14 +7,12 @@ not go through the job system -- the probe calls the health endpoint directly.
 ## Usage
 
 ```go
-step := o.HealthCheck("_any")
+step := o.HealthCheck()
 ```
 
 ## Parameters
 
-| Parameter | Type     | Description                                               |
-| --------- | -------- | --------------------------------------------------------- |
-| `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
+None. The health check always targets the configured API server.
 
 ## Result Type
 

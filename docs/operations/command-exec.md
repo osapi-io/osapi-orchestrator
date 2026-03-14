@@ -22,7 +22,7 @@ step := o.CommandExec("web-01", "ls", "-la", "/var/log")
 ## Result Type
 
 ```go
-var result orchestrator.CommandResult
+var result osapi.CommandResult
 err := results.Decode("command.exec.execute-1", &result)
 ```
 

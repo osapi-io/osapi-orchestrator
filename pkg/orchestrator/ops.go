@@ -23,77 +23,11 @@ package orchestrator
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 )
-
-// mustRawToMap unmarshals raw JSON bytes into a map for sdk.Result.Data.
-// Panics on error because the SDK guarantees the response body is valid
-// JSON — an unmarshal failure here indicates a programming error.
-func mustRawToMap(
-	raw []byte,
-) map[string]any {
-	var data map[string]any
-	if err := json.Unmarshal(raw, &data); err != nil {
-		panic(fmt.Sprintf("unmarshal SDK response: %v", err))
-	}
-
-	return data
-}
-
-// toMap converts a struct to map[string]any via JSON round-trip.
-// Used to populate HostResult.Data for per-host verbose output.
-func toMap(
-	v any,
-) map[string]any {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return nil
-	}
-
-	var m map[string]any
-	if err := json.Unmarshal(b, &m); err != nil {
-		return nil
-	}
-
-	return m
-}
-
-// buildResult builds an sdk.Result from a collection response by
-// extracting per-host fields through a mapping function and
-// serializing each result into HostResult.Data for verbose output.
-func buildResult[T any](
-	resp *osapi.Response[osapi.Collection[T]],
-	toHostResult func(T) sdk.HostResult,
-) *sdk.Result {
-	col := resp.Data
-
-	var changed bool
-
-	hostResults := make([]sdk.HostResult, 0, len(col.Results))
-
-	for _, r := range col.Results {
-		hr := toHostResult(r)
-		if hr.Data == nil {
-			hr.Data = toMap(r)
-		}
-		hostResults = append(hostResults, hr)
-
-		if hr.Changed {
-			changed = true
-		}
-	}
-
-	return &sdk.Result{
-		JobID:       col.JobID,
-		Changed:     changed,
-		Data:        mustRawToMap(resp.RawJSON()),
-		HostResults: hostResults,
-	}
-}
 
 // nextOpName generates a human-readable task name from a prefix.
 // Appends a counter suffix on collision (e.g. "get-hostname-2").
@@ -108,10 +42,8 @@ func (o *Orchestrator) nextOpName(
 	return prefix
 }
 
-// HealthCheck creates a health check step against the given target.
-func (o *Orchestrator) HealthCheck(
-	_ string,
-) *Step {
+// HealthCheck creates a health check step.
+func (o *Orchestrator) HealthCheck() *Step {
 	name := o.nextOpName("health-check")
 
 	task := o.plan.TaskFunc(
@@ -149,13 +81,15 @@ func (o *Orchestrator) NodeHostnameGet(
 				return nil, fmt.Errorf("get hostname: %w", err)
 			}
 
-			return buildResult(resp, func(r osapi.HostnameResult) sdk.HostResult {
-				return sdk.HostResult{
-					Hostname: r.Hostname,
-					Changed:  r.Changed,
-					Error:    r.Error,
-				}
-			}), nil
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.HostnameResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
 	)
 
@@ -179,13 +113,15 @@ func (o *Orchestrator) NodeStatusGet(
 				return nil, fmt.Errorf("get status: %w", err)
 			}
 
-			return buildResult(resp, func(r osapi.NodeStatus) sdk.HostResult {
-				return sdk.HostResult{
-					Hostname: r.Hostname,
-					Changed:  r.Changed,
-					Error:    r.Error,
-				}
-			}), nil
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.NodeStatus) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
 	)
 
@@ -209,13 +145,15 @@ func (o *Orchestrator) NodeUptimeGet(
 				return nil, fmt.Errorf("get uptime: %w", err)
 			}
 
-			return buildResult(resp, func(r osapi.UptimeResult) sdk.HostResult {
-				return sdk.HostResult{
-					Hostname: r.Hostname,
-					Changed:  r.Changed,
-					Error:    r.Error,
-				}
-			}), nil
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.UptimeResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
 	)
 
@@ -239,13 +177,15 @@ func (o *Orchestrator) NodeDiskGet(
 				return nil, fmt.Errorf("get disk: %w", err)
 			}
 
-			return buildResult(resp, func(r osapi.DiskResult) sdk.HostResult {
-				return sdk.HostResult{
-					Hostname: r.Hostname,
-					Changed:  r.Changed,
-					Error:    r.Error,
-				}
-			}), nil
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DiskResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
 	)
 
@@ -269,13 +209,15 @@ func (o *Orchestrator) NodeMemoryGet(
 				return nil, fmt.Errorf("get memory: %w", err)
 			}
 
-			return buildResult(resp, func(r osapi.MemoryResult) sdk.HostResult {
-				return sdk.HostResult{
-					Hostname: r.Hostname,
-					Changed:  r.Changed,
-					Error:    r.Error,
-				}
-			}), nil
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.MemoryResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
 	)
 
@@ -299,13 +241,15 @@ func (o *Orchestrator) NodeLoadGet(
 				return nil, fmt.Errorf("get load: %w", err)
 			}
 
-			return buildResult(resp, func(r osapi.LoadResult) sdk.HostResult {
-				return sdk.HostResult{
-					Hostname: r.Hostname,
-					Changed:  r.Changed,
-					Error:    r.Error,
-				}
-			}), nil
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.LoadResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
 	)
 
@@ -330,13 +274,15 @@ func (o *Orchestrator) NetworkDNSGet(
 				return nil, fmt.Errorf("get dns: %w", err)
 			}
 
-			return buildResult(resp, func(r osapi.DNSConfig) sdk.HostResult {
-				return sdk.HostResult{
-					Hostname: r.Hostname,
-					Changed:  r.Changed,
-					Error:    r.Error,
-				}
-			}), nil
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DNSConfig) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
 	)
 
@@ -363,13 +309,15 @@ func (o *Orchestrator) NetworkDNSUpdate(
 				return nil, fmt.Errorf("update dns: %w", err)
 			}
 
-			return buildResult(resp, func(r osapi.DNSUpdateResult) sdk.HostResult {
-				return sdk.HostResult{
-					Hostname: r.Hostname,
-					Changed:  r.Changed,
-					Error:    r.Error,
-				}
-			}), nil
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DNSUpdateResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
 	)
 
@@ -394,13 +342,15 @@ func (o *Orchestrator) NetworkPingDo(
 				return nil, fmt.Errorf("ping: %w", err)
 			}
 
-			return buildResult(resp, func(r osapi.PingResult) sdk.HostResult {
-				return sdk.HostResult{
-					Hostname: r.Hostname,
-					Changed:  r.Changed,
-					Error:    r.Error,
-				}
-			}), nil
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.PingResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			), nil
 		},
 	)
 
@@ -430,13 +380,15 @@ func (o *Orchestrator) CommandExec(
 				return nil, fmt.Errorf("exec command: %w", err)
 			}
 
-			return buildResult(resp, func(r osapi.CommandResult) sdk.HostResult {
-				return sdk.HostResult{
-					Hostname: r.Hostname,
-					Changed:  r.Changed,
-					Error:    commandError(r),
-				}
-			}), nil
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CommandResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    commandError(r),
+					}
+				},
+			), nil
 		},
 	)
 
@@ -464,13 +416,15 @@ func (o *Orchestrator) CommandShell(
 				return nil, fmt.Errorf("shell command: %w", err)
 			}
 
-			return buildResult(resp, func(r osapi.CommandResult) sdk.HostResult {
-				return sdk.HostResult{
-					Hostname: r.Hostname,
-					Changed:  r.Changed,
-					Error:    commandError(r),
-				}
-			}), nil
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CommandResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    commandError(r),
+					}
+				},
+			), nil
 		},
 	)
 
@@ -501,7 +455,7 @@ func commandError(
 // with vars and agent facts.
 func (o *Orchestrator) FileDeploy(
 	target string,
-	opts FileDeployOpts,
+	opts osapi.FileDeployOpts,
 ) *Step {
 	name := o.nextOpName("deploy-file")
 
@@ -511,16 +465,9 @@ func (o *Orchestrator) FileDeploy(
 			ctx context.Context,
 			c *osapi.Client,
 		) (*sdk.Result, error) {
-			resp, err := c.Node.FileDeploy(ctx, osapi.FileDeployOpts{
-				ObjectName:  opts.ObjectName,
-				Path:        opts.Path,
-				ContentType: opts.ContentType,
-				Mode:        opts.Mode,
-				Owner:       opts.Owner,
-				Group:       opts.Group,
-				Vars:        opts.Vars,
-				Target:      target,
-			})
+			opts.Target = target
+
+			resp, err := c.Node.FileDeploy(ctx, opts)
 			if err != nil {
 				return nil, fmt.Errorf("deploy file: %w", err)
 			}
@@ -528,7 +475,7 @@ func (o *Orchestrator) FileDeploy(
 			return &sdk.Result{
 				JobID:   resp.Data.JobID,
 				Changed: resp.Data.Changed,
-				Data:    mustRawToMap(resp.RawJSON()),
+				Data:    sdk.StructToMap(resp.Data),
 			}, nil
 		},
 	)
@@ -559,7 +506,7 @@ func (o *Orchestrator) FileStatusGet(
 			return &sdk.Result{
 				JobID:   resp.Data.JobID,
 				Changed: resp.Data.Changed,
-				Data:    mustRawToMap(resp.RawJSON()),
+				Data:    sdk.StructToMap(resp.Data),
 			}, nil
 		},
 	)
@@ -611,7 +558,7 @@ func (o *Orchestrator) FileUpload(
 
 			return &sdk.Result{
 				Changed: resp.Data.Changed,
-				Data:    mustRawToMap(resp.RawJSON()),
+				Data:    sdk.StructToMap(resp.Data),
 			}, nil
 		},
 	)
@@ -646,11 +593,7 @@ func (o *Orchestrator) FileChanged(
 
 			return &sdk.Result{
 				Changed: resp.Data.Changed,
-				Data: map[string]any{
-					"name":    resp.Data.Name,
-					"changed": resp.Data.Changed,
-					"sha256":  resp.Data.SHA256,
-				},
+				Data:    sdk.StructToMap(resp.Data),
 			}, nil
 		},
 	)
@@ -675,7 +618,7 @@ func (o *Orchestrator) AgentList() *Step {
 
 			return &sdk.Result{
 				Changed: false,
-				Data:    mustRawToMap(resp.RawJSON()),
+				Data:    sdk.StructToMap(resp.Data),
 			}, nil
 		},
 	)
@@ -702,7 +645,7 @@ func (o *Orchestrator) AgentGet(
 
 			return &sdk.Result{
 				Changed: false,
-				Data:    mustRawToMap(resp.RawJSON()),
+				Data:    sdk.StructToMap(resp.Data),
 			}, nil
 		},
 	)

@@ -55,7 +55,7 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 
 	// Read current DNS configuration.
 	getDNS := o.NetworkDNSGet("_any", iface).After(health)

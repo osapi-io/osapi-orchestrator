@@ -17,7 +17,7 @@ step := o.NodeHostnameGet("web-01")
 ## Result Type
 
 ```go
-var result orchestrator.HostnameResult
+var result osapi.HostnameResult
 err := results.Decode("node.hostname.get-1", &result)
 ```
 

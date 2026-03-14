@@ -68,7 +68,7 @@ func main() {
 		fmt.Printf("  %s (labels=%v)\n", a.Hostname, a.Labels)
 	}
 
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 
 	for _, a := range agents {
 		o.NodeHostnameGet(a.Hostname).After(health)

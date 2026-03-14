@@ -20,17 +20,21 @@
 
 package orchestrator
 
-import "strings"
+import (
+	"strings"
+
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
+)
 
 // Predicate filters agents by their facts and properties.
-type Predicate func(AgentResult) bool
+type Predicate func(osapi.Agent) bool
 
 // OS returns a predicate that matches agents running the given
 // distribution (case-insensitive).
 func OS(
 	distribution string,
 ) Predicate {
-	return func(a AgentResult) bool {
+	return func(a osapi.Agent) bool {
 		if a.OSInfo == nil {
 			return false
 		}
@@ -44,17 +48,17 @@ func OS(
 func Arch(
 	architecture string,
 ) Predicate {
-	return func(a AgentResult) bool {
+	return func(a osapi.Agent) bool {
 		return strings.EqualFold(a.Architecture, architecture)
 	}
 }
 
 // MinMemory returns a predicate that matches agents with at least
-// the given total memory (in the same unit as AgentMemory.Total).
+// the given total memory (in the same unit as Memory.Total).
 func MinMemory(
 	total int,
 ) Predicate {
-	return func(a AgentResult) bool {
+	return func(a osapi.Agent) bool {
 		if a.Memory == nil {
 			return false
 		}
@@ -68,7 +72,7 @@ func MinMemory(
 func MinCPU(
 	count int,
 ) Predicate {
-	return func(a AgentResult) bool {
+	return func(a osapi.Agent) bool {
 		return a.CPUCount >= count
 	}
 }
@@ -79,7 +83,7 @@ func HasLabel(
 	key string,
 	value string,
 ) Predicate {
-	return func(a AgentResult) bool {
+	return func(a osapi.Agent) bool {
 		return a.Labels[key] == value
 	}
 }
@@ -90,7 +94,7 @@ func FactEquals(
 	key string,
 	value any,
 ) Predicate {
-	return func(a AgentResult) bool {
+	return func(a osapi.Agent) bool {
 		return a.Facts[key] == value
 	}
 }
@@ -100,7 +104,7 @@ func FactEquals(
 func HasCondition(
 	conditionType string,
 ) Predicate {
-	return func(a AgentResult) bool {
+	return func(a osapi.Agent) bool {
 		for _, c := range a.Conditions {
 			if strings.EqualFold(c.Type, conditionType) && c.Status {
 				return true
@@ -116,7 +120,7 @@ func HasCondition(
 func NoCondition(
 	conditionType string,
 ) Predicate {
-	return func(a AgentResult) bool {
+	return func(a osapi.Agent) bool {
 		for _, c := range a.Conditions {
 			if strings.EqualFold(c.Type, conditionType) && c.Status {
 				return false
@@ -130,7 +134,7 @@ func NoCondition(
 // Healthy returns a predicate that matches agents with no active
 // conditions (all conditions are false or the list is empty).
 func Healthy() Predicate {
-	return func(a AgentResult) bool {
+	return func(a osapi.Agent) bool {
 		for _, c := range a.Conditions {
 			if c.Status {
 				return false
@@ -144,7 +148,7 @@ func Healthy() Predicate {
 // MatchAll returns true if the agent matches all given predicates.
 // Returns true if no predicates are provided.
 func MatchAll(
-	agent AgentResult,
+	agent osapi.Agent,
 	predicates ...Predicate,
 ) bool {
 	for _, p := range predicates {

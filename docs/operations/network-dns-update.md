@@ -26,7 +26,7 @@ step := o.NetworkDNSUpdate(
 ## Result Type
 
 ```go
-var result orchestrator.DNSUpdateResult
+var result osapi.DNSUpdateResult
 err := results.Decode("network.dns.update-1", &result)
 ```
 
