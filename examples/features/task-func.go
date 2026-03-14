@@ -62,7 +62,7 @@ func main() {
 	// TaskFunc receives Results from prior steps.
 	o.TaskFunc(
 		"summarize",
-		func(_ context.Context, r orchestrator.Results) (*sdk.Result, error) {
+		func(_ context.Context, _ *osapi.Client, r orchestrator.Results) (*sdk.Result, error) {
 			var h osapi.HostnameResult
 			if err := r.Decode("get-hostname", &h); err != nil {
 				return &sdk.Result{Changed: false}, nil

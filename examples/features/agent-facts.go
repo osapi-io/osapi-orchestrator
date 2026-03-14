@@ -63,7 +63,7 @@ func main() {
 	// Use a TaskFunc to decode the agent list and display rich facts.
 	o.TaskFunc(
 		"print-agent-facts",
-		func(_ context.Context, r orchestrator.Results) (*sdk.Result, error) {
+		func(_ context.Context, _ *osapi.Client, r orchestrator.Results) (*sdk.Result, error) {
 			var list osapi.AgentList
 			if err := r.Decode("list-agents", &list); err != nil {
 				return &sdk.Result{Changed: false}, nil
