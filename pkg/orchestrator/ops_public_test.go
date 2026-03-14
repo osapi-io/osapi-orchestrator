@@ -456,6 +456,193 @@ func (s *OpsPublicTestSuite) TestFileChanged() {
 	}
 }
 
+func (s *OpsPublicTestSuite) TestDockerPull() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.DockerPull("_any", osapi.DockerPullOpts{
+					Image: "nginx:latest",
+				})
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestDockerCreate() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.DockerCreate("_any", osapi.DockerCreateOpts{
+					Image: "nginx",
+					Name:  "web",
+				})
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestDockerStart() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.DockerStart("_any", "c1")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestDockerStop() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.DockerStop("_any", "c1", osapi.DockerStopOpts{
+					Timeout: 10,
+				})
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestDockerRemove() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.DockerRemove(
+					"_any",
+					"c1",
+					&osapi.DockerRemoveParams{Force: true},
+				)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestDockerExec() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.DockerExec(
+					"_any",
+					"c1",
+					osapi.DockerExecOpts{
+						Command: []string{"echo", "hello"},
+					},
+				)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestDockerInspect() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.DockerInspect("_any", "c1")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestDockerList() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.DockerList("_any", &osapi.DockerListParams{
+					State: "running",
+				})
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
 func TestOpsPublicTestSuite(
 	t *testing.T,
 ) {

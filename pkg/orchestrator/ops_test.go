@@ -1949,6 +1949,834 @@ func (s *OpsTestSuite) TestCommandError() {
 	}
 }
 
+func (s *OpsTestSuite) TestDockerPull() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with pull result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"h1","image_id":"sha256:abc","tag":"latest","size":1024,"changed":true}]}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on server error",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"internal error"}`))
+			}),
+			expectErr:   true,
+			errContains: "docker pull",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.DockerPull("_any", osapi.DockerPullOpts{Image: "nginx:latest"})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.True(result.Changed)
+			s.NotNil(result.Data)
+			s.Equal("550e8400-e29b-41d4-a716-446655440000", result.JobID)
+			s.Len(result.HostResults, 1)
+			s.Equal("h1", result.HostResults[0].Hostname)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerCreate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with create result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"h1","id":"c1","name":"web","image":"nginx","state":"created","changed":true}]}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on server error",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"internal error"}`))
+			}),
+			expectErr:   true,
+			errContains: "docker create",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.DockerCreate("_any", osapi.DockerCreateOpts{Image: "nginx"})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.True(result.Changed)
+			s.NotNil(result.Data)
+			s.Equal("550e8400-e29b-41d4-a716-446655440000", result.JobID)
+			s.Len(result.HostResults, 1)
+			s.Equal("h1", result.HostResults[0].Hostname)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerStart() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with start result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"h1","id":"c1","message":"done","changed":true}]}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on server error",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"internal error"}`))
+			}),
+			expectErr:   true,
+			errContains: "docker start",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.DockerStart("_any", "c1")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.True(result.Changed)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerStop() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with stop result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"h1","id":"c1","message":"done","changed":true}]}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on server error",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"internal error"}`))
+			}),
+			expectErr:   true,
+			errContains: "docker stop",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.DockerStop("_any", "c1", osapi.DockerStopOpts{Timeout: 10})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.True(result.Changed)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerRemove() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with remove result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"h1","id":"c1","message":"done","changed":true}]}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on server error",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"internal error"}`))
+			}),
+			expectErr:   true,
+			errContains: "docker remove",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.DockerRemove(
+				"_any",
+				"c1",
+				&osapi.DockerRemoveParams{Force: true},
+			)
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.True(result.Changed)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerExec() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with exec result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"h1","stdout":"output","stderr":"","exit_code":0,"changed":true}]}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on server error",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"internal error"}`))
+			}),
+			expectErr:   true,
+			errContains: "docker exec",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.DockerExec(
+				"_any",
+				"c1",
+				osapi.DockerExecOpts{Command: []string{"echo", "hello"}},
+			)
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.True(result.Changed)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerInspect() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with inspect result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"h1","id":"c1","name":"web","image":"nginx","state":"running"}]}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on server error",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"internal error"}`))
+			}),
+			expectErr:   true,
+			errContains: "docker inspect",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.DockerInspect("_any", "c1")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.False(result.Changed)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+			s.Equal("h1", result.HostResults[0].Hostname)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerList() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with list result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"h1","containers":[{"id":"c1","name":"web","image":"nginx","state":"running"}]}]}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on server error",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"internal error"}`))
+			}),
+			expectErr:   true,
+			errContains: "docker list",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.DockerList("_any", &osapi.DockerListParams{State: "running"})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.False(result.Changed)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerPullNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "docker-pull",
+			secondName: "docker-pull-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			opts := osapi.DockerPullOpts{Image: "nginx:latest"}
+			first, second := orch.DockerPull("_any", opts), orch.DockerPull("_any", opts)
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerCreateNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "docker-create",
+			secondName: "docker-create-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			opts := osapi.DockerCreateOpts{Image: "nginx"}
+			first, second := orch.DockerCreate("_any", opts), orch.DockerCreate("_any", opts)
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerStartNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "docker-start",
+			secondName: "docker-start-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.DockerStart("_any", "c1"), orch.DockerStart("_any", "c1")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerStopNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "docker-stop",
+			secondName: "docker-stop-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.DockerStop("_any", "c1", osapi.DockerStopOpts{}),
+				orch.DockerStop("_any", "c1", osapi.DockerStopOpts{})
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerRemoveNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "docker-remove",
+			secondName: "docker-remove-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.DockerRemove("_any", "c1", nil),
+				orch.DockerRemove("_any", "c1", nil)
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerExecNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "docker-exec",
+			secondName: "docker-exec-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			opts := osapi.DockerExecOpts{Command: []string{"ls"}}
+			first, second := orch.DockerExec("_any", "c1", opts),
+				orch.DockerExec("_any", "c1", opts)
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerInspectNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "docker-inspect",
+			secondName: "docker-inspect-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.DockerInspect("_any", "c1"),
+				orch.DockerInspect("_any", "c1")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerListNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "docker-list",
+			secondName: "docker-list-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.DockerList("_any", nil), orch.DockerList("_any", nil)
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
 func TestOpsTestSuite(
 	t *testing.T,
 ) {
