@@ -61,7 +61,7 @@ func (s *StepPublicTestSuite) TestChaining() {
 		{
 			name: "After returns same step",
 			chainFn: func() *orchestrator.Step {
-				health := s.orch.HealthCheck("_any")
+				health := s.orch.HealthCheck()
 				step := s.orch.NodeHostnameGet("_any")
 
 				return step.After(health)
@@ -70,7 +70,7 @@ func (s *StepPublicTestSuite) TestChaining() {
 		{
 			name: "After with multiple dependencies",
 			chainFn: func() *orchestrator.Step {
-				health := s.orch.HealthCheck("_any")
+				health := s.orch.HealthCheck()
 				disk := s.orch.NodeDiskGet("_any")
 				step := s.orch.NodeHostnameGet("_any")
 
@@ -173,7 +173,7 @@ func (s *StepPublicTestSuite) TestChaining() {
 		{
 			name: "Full method chain",
 			chainFn: func() *orchestrator.Step {
-				health := s.orch.HealthCheck("_any")
+				health := s.orch.HealthCheck()
 
 				return s.orch.NodeHostnameGet("_any").
 					After(health).

@@ -92,7 +92,7 @@ func (s *OpsTestSuite) TestHealthCheck() {
 			client := osapi.New(server.URL, "test-token")
 
 			orch := New(server.URL, "test-token")
-			step := orch.HealthCheck("_any")
+			step := orch.HealthCheck()
 			fn := step.task.Fn()
 			s.Require().NotNil(fn)
 
@@ -1300,7 +1300,7 @@ func (s *OpsTestSuite) TestOperationNameCounter() {
 		{
 			name: "HealthCheck",
 			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.HealthCheck("_any"), orch.HealthCheck("_any")
+				return orch.HealthCheck(), orch.HealthCheck()
 			},
 			firstName:  "health-check",
 			secondName: "health-check-2",
@@ -1460,38 +1460,6 @@ func (s *OpsTestSuite) TestOperationNameCounter() {
 
 			s.Equal(tc.firstName, first.task.Name())
 			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestMustRawToMap() {
-	tests := []struct {
-		name   string
-		input  []byte
-		panics bool
-	}{
-		{
-			name:  "Valid JSON returns map",
-			input: []byte(`{"key":"value"}`),
-		},
-		{
-			name:   "Invalid JSON panics",
-			input:  []byte(`not json`),
-			panics: true,
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			if tc.panics {
-				s.Panics(func() { mustRawToMap(tc.input) })
-
-				return
-			}
-
-			data := mustRawToMap(tc.input)
-			s.NotNil(data)
-			s.Equal("value", data["key"])
 		})
 	}
 }

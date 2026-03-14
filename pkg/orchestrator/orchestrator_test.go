@@ -115,7 +115,7 @@ func (s *OrchestratorTestSuite) TestRunWithHealthCheck() {
 			defer server.Close()
 
 			orch := New(server.URL, "test-token")
-			orch.HealthCheck("_any")
+			orch.HealthCheck()
 
 			report, err := orch.Run()
 

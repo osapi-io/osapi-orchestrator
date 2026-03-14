@@ -61,7 +61,7 @@ func (s *OpsPublicTestSuite) TestOperations() {
 		{
 			name: "HealthCheck",
 			newFn: func() *orchestrator.Step {
-				return s.orch.HealthCheck("_any")
+				return s.orch.HealthCheck()
 			},
 		},
 		{

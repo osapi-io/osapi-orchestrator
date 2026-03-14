@@ -88,7 +88,7 @@ func (o *Orchestrator) fetchAgents(
 
 			return &sdk.Result{
 				Changed: false,
-				Data:    mustRawToMap(resp.RawJSON()),
+				Data:    sdk.StructToMap(resp.Data),
 			}, nil
 		},
 	)
