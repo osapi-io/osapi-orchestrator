@@ -13,17 +13,17 @@ step := o.DockerList("_any", &osapi.DockerListParams{
 
 ## Parameters
 
-| Parameter | Type                    | Description                             |
-| --------- | ----------------------- | --------------------------------------- |
-| `target`  | `string`                | Target host or routing value.           |
-| `params`  | `*osapi.DockerListParams`| Optional filter parameters.            |
+| Parameter | Type                      | Description                   |
+| --------- | ------------------------- | ----------------------------- |
+| `target`  | `string`                  | Target host or routing value. |
+| `params`  | `*osapi.DockerListParams` | Optional filter parameters.   |
 
 ### DockerListParams Fields
 
-| Field   | Type     | Description                                            |
-| ------- | -------- | ------------------------------------------------------ |
-| `State` | `string` | Filter by state: `"running"`, `"stopped"`, `"all"`.   |
-| `Limit` | `int`    | Maximum number of containers to return.                |
+| Field   | Type     | Description                                         |
+| ------- | -------- | --------------------------------------------------- |
+| `State` | `string` | Filter by state: `"running"`, `"stopped"`, `"all"`. |
+| `Limit` | `int`    | Maximum number of containers to return.             |
 
 ## Result Type
 
@@ -32,20 +32,20 @@ var result osapi.DockerListResult
 err := results.Decode("docker-list", &result)
 ```
 
-| Field        | Type                      | Description                         |
-| ------------ | ------------------------- | ----------------------------------- |
-| `Containers` | `[]osapi.DockerSummaryItem`| List of matching containers.        |
-| `Error`      | `string`                  | Error if listing failed.            |
+| Field        | Type                        | Description                  |
+| ------------ | --------------------------- | ---------------------------- |
+| `Containers` | `[]osapi.DockerSummaryItem` | List of matching containers. |
+| `Error`      | `string`                    | Error if listing failed.     |
 
 ### DockerSummaryItem Fields
 
-| Field     | Type     | Description                    |
-| --------- | -------- | ------------------------------ |
-| `ID`      | `string` | Container ID.                  |
-| `Name`    | `string` | Container name.                |
-| `Image`   | `string` | Image the container runs.      |
-| `State`   | `string` | Current container state.       |
-| `Created` | `string` | Container creation timestamp.  |
+| Field     | Type     | Description                   |
+| --------- | -------- | ----------------------------- |
+| `ID`      | `string` | Container ID.                 |
+| `Name`    | `string` | Container name.               |
+| `Image`   | `string` | Image the container runs.     |
+| `State`   | `string` | Current container state.      |
+| `Created` | `string` | Container creation timestamp. |
 
 ## Idempotency
 

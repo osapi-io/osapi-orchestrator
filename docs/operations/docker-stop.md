@@ -12,17 +12,17 @@ step := o.DockerStop("web-01", "c1a2b3d4e5f6", osapi.DockerStopOpts{
 
 ## Parameters
 
-| Parameter | Type                   | Description                             |
-| --------- | ---------------------- | --------------------------------------- |
-| `target`  | `string`               | Target host or routing value.           |
-| `id`      | `string`               | Container ID or name to stop.           |
-| `opts`    | `osapi.DockerStopOpts` | Stop options.                           |
+| Parameter | Type                   | Description                   |
+| --------- | ---------------------- | ----------------------------- |
+| `target`  | `string`               | Target host or routing value. |
+| `id`      | `string`               | Container ID or name to stop. |
+| `opts`    | `osapi.DockerStopOpts` | Stop options.                 |
 
 ### DockerStopOpts Fields
 
-| Field     | Type  | Description                                              |
-| --------- | ----- | -------------------------------------------------------- |
-| `Timeout` | `int` | Seconds to wait before killing. Zero uses the default.   |
+| Field     | Type  | Description                                            |
+| --------- | ----- | ------------------------------------------------------ |
+| `Timeout` | `int` | Seconds to wait before killing. Zero uses the default. |
 
 ## Result Type
 
@@ -31,11 +31,11 @@ var result osapi.DockerActionResult
 err := results.Decode("docker-stop", &result)
 ```
 
-| Field     | Type     | Description                          |
-| --------- | -------- | ------------------------------------ |
-| `ID`      | `string` | Container ID.                        |
-| `Message` | `string` | Status message from the operation.   |
-| `Error`   | `string` | Error if the stop failed.            |
+| Field     | Type     | Description                        |
+| --------- | -------- | ---------------------------------- |
+| `ID`      | `string` | Container ID.                      |
+| `Message` | `string` | Status message from the operation. |
+| `Error`   | `string` | Error if the stop failed.          |
 
 ## Idempotency
 

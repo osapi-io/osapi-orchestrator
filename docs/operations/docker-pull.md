@@ -33,8 +33,8 @@ err := results.Decode("docker-pull", &result)
 
 ## Idempotency
 
-**No.** Always pulls the latest version of the image from the registry,
-even if the image already exists locally.
+**No.** Always pulls the latest version of the image from the registry, even if
+the image already exists locally.
 
 ## Permissions
 

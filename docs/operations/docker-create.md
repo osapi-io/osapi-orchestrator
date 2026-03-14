@@ -24,15 +24,15 @@ step := o.DockerCreate("_any", osapi.DockerCreateOpts{
 
 ### DockerCreateOpts Fields
 
-| Field       | Type      | Description                                            |
-| ----------- | --------- | ------------------------------------------------------ |
-| `Image`     | `string`  | Container image reference (required).                  |
-| `Name`      | `string`  | Optional container name.                               |
-| `Command`   | `[]string`| Overrides the image's default command.                 |
-| `Env`       | `[]string`| Environment variables in `KEY=VALUE` format.           |
-| `Ports`     | `[]string`| Port mappings in `host_port:container_port` format.    |
-| `Volumes`   | `[]string`| Volume mounts in `host_path:container_path` format.    |
-| `AutoStart` | `*bool`   | Start the container after creation (default true).     |
+| Field       | Type       | Description                                         |
+| ----------- | ---------- | --------------------------------------------------- |
+| `Image`     | `string`   | Container image reference (required).               |
+| `Name`      | `string`   | Optional container name.                            |
+| `Command`   | `[]string` | Overrides the image's default command.              |
+| `Env`       | `[]string` | Environment variables in `KEY=VALUE` format.        |
+| `Ports`     | `[]string` | Port mappings in `host_port:container_port` format. |
+| `Volumes`   | `[]string` | Volume mounts in `host_path:container_path` format. |
+| `AutoStart` | `*bool`    | Start the container after creation (default true).  |
 
 ## Result Type
 
@@ -41,18 +41,18 @@ var result osapi.DockerResult
 err := results.Decode("docker-create", &result)
 ```
 
-| Field     | Type     | Description                        |
-| --------- | -------- | ---------------------------------- |
-| `ID`      | `string` | Container ID.                      |
-| `Name`    | `string` | Container name.                    |
-| `Image`   | `string` | Image used to create the container.|
-| `State`   | `string` | Container state after creation.    |
-| `Error`   | `string` | Error if creation failed.          |
+| Field   | Type     | Description                         |
+| ------- | -------- | ----------------------------------- |
+| `ID`    | `string` | Container ID.                       |
+| `Name`  | `string` | Container name.                     |
+| `Image` | `string` | Image used to create the container. |
+| `State` | `string` | Container state after creation.     |
+| `Error` | `string` | Error if creation failed.           |
 
 ## Idempotency
 
-**No.** Creates a new container each time the step runs. Use
-`DockerList` to check for an existing container before creating.
+**No.** Creates a new container each time the step runs. Use `DockerList` to
+check for an existing container before creating.
 
 ## Permissions
 

@@ -12,11 +12,11 @@ step := o.DockerRemove("web-01", "c1a2b3d4e5f6", &osapi.DockerRemoveParams{
 
 ## Parameters
 
-| Parameter | Type                      | Description                             |
-| --------- | ------------------------- | --------------------------------------- |
-| `target`  | `string`                  | Target host or routing value.           |
-| `id`      | `string`                  | Container ID or name to remove.         |
-| `params`  | `*osapi.DockerRemoveParams`| Optional remove parameters.            |
+| Parameter | Type                        | Description                     |
+| --------- | --------------------------- | ------------------------------- |
+| `target`  | `string`                    | Target host or routing value.   |
+| `id`      | `string`                    | Container ID or name to remove. |
+| `params`  | `*osapi.DockerRemoveParams` | Optional remove parameters.     |
 
 ### DockerRemoveParams Fields
 
@@ -31,16 +31,16 @@ var result osapi.DockerActionResult
 err := results.Decode("docker-remove", &result)
 ```
 
-| Field     | Type     | Description                          |
-| --------- | -------- | ------------------------------------ |
-| `ID`      | `string` | Container ID.                        |
-| `Message` | `string` | Status message from the operation.   |
-| `Error`   | `string` | Error if removal failed.             |
+| Field     | Type     | Description                        |
+| --------- | -------- | ---------------------------------- |
+| `ID`      | `string` | Container ID.                      |
+| `Message` | `string` | Status message from the operation. |
+| `Error`   | `string` | Error if removal failed.           |
 
 ## Idempotency
 
-**No.** Returns an error if the container does not exist. Use `OnError`
-with `Continue` for pre-cleanup patterns.
+**No.** Returns an error if the container does not exist. Use `OnError` with
+`Continue` for pre-cleanup patterns.
 
 ## Permissions
 

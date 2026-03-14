@@ -10,10 +10,10 @@ step := o.DockerStart("web-01", "c1a2b3d4e5f6")
 
 ## Parameters
 
-| Parameter | Type     | Description                             |
-| --------- | -------- | --------------------------------------- |
-| `target`  | `string` | Target host or routing value.           |
-| `id`      | `string` | Container ID or name to start.          |
+| Parameter | Type     | Description                    |
+| --------- | -------- | ------------------------------ |
+| `target`  | `string` | Target host or routing value.  |
+| `id`      | `string` | Container ID or name to start. |
 
 ## Result Type
 
@@ -22,11 +22,11 @@ var result osapi.DockerActionResult
 err := results.Decode("docker-start", &result)
 ```
 
-| Field     | Type     | Description                          |
-| --------- | -------- | ------------------------------------ |
-| `ID`      | `string` | Container ID.                        |
-| `Message` | `string` | Status message from the operation.   |
-| `Error`   | `string` | Error if the start failed.           |
+| Field     | Type     | Description                        |
+| --------- | -------- | ---------------------------------- |
+| `ID`      | `string` | Container ID.                      |
+| `Message` | `string` | Status message from the operation. |
+| `Error`   | `string` | Error if the start failed.         |
 
 ## Idempotency
 
