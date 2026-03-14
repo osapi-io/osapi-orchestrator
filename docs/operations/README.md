@@ -26,6 +26,14 @@ error handling.
 | [`FileChanged`](file-changed.md)            | Check file drift        | Read-only  | File     |
 | [`AgentList`](agent-list.md)                | List active agents      | Read-only  | Agent    |
 | [`AgentGet`](agent-get.md)                  | Get agent details       | Read-only  | Agent    |
+| [`DockerPull`](docker-pull.md)              | `docker.pull`           | No         | Docker   |
+| [`DockerCreate`](docker-create.md)          | `docker.create`         | No         | Docker   |
+| [`DockerStart`](docker-start.md)            | `docker.start`          | Yes        | Docker   |
+| [`DockerStop`](docker-stop.md)              | `docker.stop`           | Yes        | Docker   |
+| [`DockerRemove`](docker-remove.md)          | `docker.remove`         | No         | Docker   |
+| [`DockerExec`](docker-exec.md)              | `docker.exec`           | No         | Docker   |
+| [`DockerInspect`](docker-inspect.md)        | `docker.inspect`        | Read-only  | Docker   |
+| [`DockerList`](docker-list.md)              | `docker.list`           | Read-only  | Docker   |
 
 ## Idempotency
 

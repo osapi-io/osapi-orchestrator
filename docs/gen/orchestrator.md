@@ -26,6 +26,14 @@ retries, and reporting.
   - [func \(o \*Orchestrator\) CommandExec\(target string, command string, args ...string\) \*Step](#Orchestrator.CommandExec)
   - [func \(o \*Orchestrator\) CommandShell\(target string, command string\) \*Step](#Orchestrator.CommandShell)
   - [func \(o \*Orchestrator\) Discover\(ctx context.Context, predicates ...Predicate\) \(\[\]osapi.Agent, error\)](#Orchestrator.Discover)
+  - [func \(o \*Orchestrator\) DockerCreate\(target string, opts osapi.DockerCreateOpts\) \*Step](#Orchestrator.DockerCreate)
+  - [func \(o \*Orchestrator\) DockerExec\(target string, id string, opts osapi.DockerExecOpts\) \*Step](#Orchestrator.DockerExec)
+  - [func \(o \*Orchestrator\) DockerInspect\(target string, id string\) \*Step](#Orchestrator.DockerInspect)
+  - [func \(o \*Orchestrator\) DockerList\(target string, params \*osapi.DockerListParams\) \*Step](#Orchestrator.DockerList)
+  - [func \(o \*Orchestrator\) DockerPull\(target string, opts osapi.DockerPullOpts\) \*Step](#Orchestrator.DockerPull)
+  - [func \(o \*Orchestrator\) DockerRemove\(target string, id string, params \*osapi.DockerRemoveParams\) \*Step](#Orchestrator.DockerRemove)
+  - [func \(o \*Orchestrator\) DockerStart\(target string, id string\) \*Step](#Orchestrator.DockerStart)
+  - [func \(o \*Orchestrator\) DockerStop\(target string, id string, opts osapi.DockerStopOpts\) \*Step](#Orchestrator.DockerStop)
   - [func \(o \*Orchestrator\) FileChanged\(name string, data \[\]byte\) \*Step](#Orchestrator.FileChanged)
   - [func \(o \*Orchestrator\) FileDeploy\(target string, opts osapi.FileDeployOpts\) \*Step](#Orchestrator.FileDeploy)
   - [func \(o \*Orchestrator\) FileStatusGet\(target string, path string\) \*Step](#Orchestrator.FileStatusGet)
@@ -234,6 +242,86 @@ func (o *Orchestrator) Discover(ctx context.Context, predicates ...Predicate) ([
 
 Discover queries active agents and returns those matching all predicates. Runs
 synchronously at plan\-build time. With no predicates, returns all agents.
+
+<a name="Orchestrator.DockerCreate"></a>
+
+### func \(\*Orchestrator\) [DockerCreate](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L691-L694)
+
+```go
+func (o *Orchestrator) DockerCreate(target string, opts osapi.DockerCreateOpts) *Step
+```
+
+DockerCreate creates a step that creates a new container on the target host.
+
+<a name="Orchestrator.DockerExec"></a>
+
+### func \(\*Orchestrator\) [DockerExec](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L825-L829)
+
+```go
+func (o *Orchestrator) DockerExec(target string, id string, opts osapi.DockerExecOpts) *Step
+```
+
+DockerExec creates a step that executes a command inside a running container.
+
+<a name="Orchestrator.DockerInspect"></a>
+
+### func \(\*Orchestrator\) [DockerInspect](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L859-L862)
+
+```go
+func (o *Orchestrator) DockerInspect(target string, id string) *Step
+```
+
+DockerInspect creates a step that retrieves detailed info about a container.
+
+<a name="Orchestrator.DockerList"></a>
+
+### func \(\*Orchestrator\) [DockerList](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L892-L895)
+
+```go
+func (o *Orchestrator) DockerList(target string, params *osapi.DockerListParams) *Step
+```
+
+DockerList creates a step that lists containers on the target host.
+
+<a name="Orchestrator.DockerPull"></a>
+
+### func \(\*Orchestrator\) [DockerPull](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L658-L661)
+
+```go
+func (o *Orchestrator) DockerPull(target string, opts osapi.DockerPullOpts) *Step
+```
+
+DockerPull creates a step that pulls a Docker image on the target host.
+
+<a name="Orchestrator.DockerRemove"></a>
+
+### func \(\*Orchestrator\) [DockerRemove](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L791-L795)
+
+```go
+func (o *Orchestrator) DockerRemove(target string, id string, params *osapi.DockerRemoveParams) *Step
+```
+
+DockerRemove creates a step that removes a container from the target host.
+
+<a name="Orchestrator.DockerStart"></a>
+
+### func \(\*Orchestrator\) [DockerStart](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L724-L727)
+
+```go
+func (o *Orchestrator) DockerStart(target string, id string) *Step
+```
+
+DockerStart creates a step that starts a stopped container on the target host.
+
+<a name="Orchestrator.DockerStop"></a>
+
+### func \(\*Orchestrator\) [DockerStop](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L757-L761)
+
+```go
+func (o *Orchestrator) DockerStop(target string, id string, opts osapi.DockerStopOpts) *Step
+```
+
+DockerStop creates a step that stops a running container on the target host.
 
 <a name="Orchestrator.FileChanged"></a>
 

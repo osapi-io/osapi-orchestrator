@@ -653,3 +653,270 @@ func (o *Orchestrator) AgentGet(
 
 	return &Step{task: task}
 }
+
+// DockerPull creates a step that pulls a Docker image on the target host.
+func (o *Orchestrator) DockerPull(
+	target string,
+	opts osapi.DockerPullOpts,
+) *Step {
+	name := o.nextOpName("docker-pull")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Docker.Pull(ctx, target, opts)
+			if err != nil {
+				return nil, fmt.Errorf("docker pull: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerPullResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// DockerCreate creates a step that creates a new container on the target host.
+func (o *Orchestrator) DockerCreate(
+	target string,
+	opts osapi.DockerCreateOpts,
+) *Step {
+	name := o.nextOpName("docker-create")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Docker.Create(ctx, target, opts)
+			if err != nil {
+				return nil, fmt.Errorf("docker create: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// DockerStart creates a step that starts a stopped container on the target host.
+func (o *Orchestrator) DockerStart(
+	target string,
+	id string,
+) *Step {
+	name := o.nextOpName("docker-start")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Docker.Start(ctx, target, id)
+			if err != nil {
+				return nil, fmt.Errorf("docker start: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerActionResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// DockerStop creates a step that stops a running container on the target host.
+func (o *Orchestrator) DockerStop(
+	target string,
+	id string,
+	opts osapi.DockerStopOpts,
+) *Step {
+	name := o.nextOpName("docker-stop")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Docker.Stop(ctx, target, id, opts)
+			if err != nil {
+				return nil, fmt.Errorf("docker stop: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerActionResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// DockerRemove creates a step that removes a container from the target host.
+func (o *Orchestrator) DockerRemove(
+	target string,
+	id string,
+	params *osapi.DockerRemoveParams,
+) *Step {
+	name := o.nextOpName("docker-remove")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Docker.Remove(ctx, target, id, params)
+			if err != nil {
+				return nil, fmt.Errorf("docker remove: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerActionResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// DockerExec creates a step that executes a command inside a running container.
+func (o *Orchestrator) DockerExec(
+	target string,
+	id string,
+	opts osapi.DockerExecOpts,
+) *Step {
+	name := o.nextOpName("docker-exec")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Docker.Exec(ctx, target, id, opts)
+			if err != nil {
+				return nil, fmt.Errorf("docker exec: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerExecResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// DockerInspect creates a step that retrieves detailed info about a container.
+func (o *Orchestrator) DockerInspect(
+	target string,
+	id string,
+) *Step {
+	name := o.nextOpName("docker-inspect")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Docker.Inspect(ctx, target, id)
+			if err != nil {
+				return nil, fmt.Errorf("docker inspect: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerDetailResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// DockerList creates a step that lists containers on the target host.
+func (o *Orchestrator) DockerList(
+	target string,
+	params *osapi.DockerListParams,
+) *Step {
+	name := o.nextOpName("docker-list")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Docker.List(ctx, target, params)
+			if err != nil {
+				return nil, fmt.Errorf("docker list: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerListResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
