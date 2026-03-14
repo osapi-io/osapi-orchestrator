@@ -12,11 +12,9 @@ tool (
 
 require (
 	github.com/charmbracelet/lipgloss v1.1.0
-	github.com/retr0h/osapi v0.0.0-20260309202208-257923cc63c5
+	github.com/retr0h/osapi v0.0.0-20260314055732-feef75f77d14
 	github.com/stretchr/testify v1.11.1
 )
-
-replace github.com/retr0h/osapi => /Users/john/git/osapi-io/osapi
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.3.0 // indirect

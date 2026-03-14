@@ -894,7 +894,7 @@ func (s *OpsTestSuite) TestFileDeploy() {
 			client := osapi.New(server.URL, "test-token")
 
 			orch := New(server.URL, "test-token")
-			step := orch.FileDeploy("_any", FileDeployOpts{
+			step := orch.FileDeploy("_any", osapi.FileDeployOpts{
 				ObjectName:  "config.yaml",
 				Path:        "/etc/app/config.yaml",
 				ContentType: "raw",
@@ -1403,7 +1403,7 @@ func (s *OpsTestSuite) TestOperationNameCounter() {
 		{
 			name: "FileDeploy",
 			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				opts := FileDeployOpts{ObjectName: "f", Path: "/p", ContentType: "raw"}
+				opts := osapi.FileDeployOpts{ObjectName: "f", Path: "/p", ContentType: "raw"}
 				return orch.FileDeploy("_any", opts), orch.FileDeploy("_any", opts)
 			},
 			firstName:  "deploy-file",

@@ -20,7 +20,10 @@
 
 package orchestrator
 
-import sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+import (
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
+	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+)
 
 // Step represents a single operation in the plan. Users chain methods
 // to declare ordering, conditions, and error handling.
@@ -253,7 +256,7 @@ func (s *Step) WhenFact(
 	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
 		r := Results{results: sdkResults}
 
-		var list AgentListResult
+		var list osapi.AgentList
 		if err := r.Decode(agentListStep, &list); err != nil {
 			return false
 		}

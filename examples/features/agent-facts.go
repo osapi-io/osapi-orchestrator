@@ -38,6 +38,7 @@ import (
 	"log"
 	"os"
 
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
@@ -63,7 +64,7 @@ func main() {
 	o.TaskFunc(
 		"print-agent-facts",
 		func(_ context.Context, r orchestrator.Results) (*sdk.Result, error) {
-			var list orchestrator.AgentListResult
+			var list osapi.AgentList
 			if err := r.Decode("list-agents", &list); err != nil {
 				return &sdk.Result{Changed: false}, nil
 			}
@@ -76,7 +77,7 @@ func main() {
 				fmt.Printf("    Architecture: %s\n", a.Architecture)
 				fmt.Printf("    Kernel:       %s\n", a.KernelVersion)
 				fmt.Printf("    CPUs:         %d\n", a.CPUCount)
-				fmt.Printf("    FQDN:         %s\n", a.FQDN)
+				fmt.Printf("    FQDN:         %s\n", a.Fqdn)
 				fmt.Printf("    Package Mgr:  %s\n", a.PackageMgr)
 				fmt.Printf("    Service Mgr:  %s\n", a.ServiceMgr)
 				fmt.Printf("    Uptime:       %s\n", a.Uptime)

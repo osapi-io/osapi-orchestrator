@@ -25,8 +25,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
 type OpsPublicTestSuite struct {
@@ -150,7 +152,7 @@ func (s *OpsPublicTestSuite) TestOperations() {
 		{
 			name: "FileDeploy",
 			newFn: func() *orchestrator.Step {
-				return s.orch.FileDeploy("_any", orchestrator.FileDeployOpts{
+				return s.orch.FileDeploy("_any", osapi.FileDeployOpts{
 					ObjectName:  "config.yaml",
 					Path:        "/etc/app/config.yaml",
 					ContentType: "raw",
@@ -163,7 +165,7 @@ func (s *OpsPublicTestSuite) TestOperations() {
 		{
 			name: "FileDeployWithVars",
 			newFn: func() *orchestrator.Step {
-				return s.orch.FileDeploy("_any", orchestrator.FileDeployOpts{
+				return s.orch.FileDeploy("_any", osapi.FileDeployOpts{
 					ObjectName:  "config.tmpl",
 					Path:        "/etc/app/config.yaml",
 					ContentType: "template",

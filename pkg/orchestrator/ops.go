@@ -455,7 +455,7 @@ func commandError(
 // with vars and agent facts.
 func (o *Orchestrator) FileDeploy(
 	target string,
-	opts FileDeployOpts,
+	opts osapi.FileDeployOpts,
 ) *Step {
 	name := o.nextOpName("deploy-file")
 

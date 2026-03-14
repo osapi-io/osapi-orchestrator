@@ -37,6 +37,8 @@ import (
 	"log"
 	"os"
 
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
+
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
@@ -67,7 +69,7 @@ func main() {
 		OnlyIfChanged()
 
 	// Level 3: deploy only if a new version was uploaded.
-	o.FileDeploy("_any", orchestrator.FileDeployOpts{
+	o.FileDeploy("_any", osapi.FileDeployOpts{
 		ObjectName:  "app-config.yaml",
 		Path:        "/tmp/app-config.yaml",
 		ContentType: "raw",
@@ -81,7 +83,7 @@ func main() {
 	}
 
 	// Decode the change check result.
-	var changed orchestrator.FileChangedResult
+	var changed osapi.FileChanged
 	if err := report.Decode("check-file", &changed); err == nil {
 		fmt.Printf("File %s changed: %v (sha256: %s)\n",
 			changed.Name, changed.Changed, changed.SHA256[:12])

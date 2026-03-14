@@ -36,6 +36,8 @@ import (
 	"log"
 	"os"
 
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
+
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
@@ -66,7 +68,7 @@ func main() {
 	}
 
 	// Decode typed command results from the report.
-	var cmd orchestrator.CommandResult
+	var cmd osapi.CommandResult
 	if err := report.Decode("run-uptime", &cmd); err == nil {
 		fmt.Printf("uptime stdout: %s\n", cmd.Stdout)
 	}

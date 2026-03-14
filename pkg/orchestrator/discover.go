@@ -34,7 +34,7 @@ import (
 func (o *Orchestrator) Discover(
 	ctx context.Context,
 	predicates ...Predicate,
-) ([]AgentResult, error) {
+) ([]osapi.Agent, error) {
 	agents, err := o.fetchAgents(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("discover: %w", err)
@@ -44,7 +44,7 @@ func (o *Orchestrator) Discover(
 		return agents, nil
 	}
 
-	matched := make([]AgentResult, 0, len(agents))
+	matched := make([]osapi.Agent, 0, len(agents))
 	for _, a := range agents {
 		if MatchAll(a, predicates...) {
 			matched = append(matched, a)
@@ -71,7 +71,7 @@ func mustDecode(
 // the result.
 func (o *Orchestrator) fetchAgents(
 	ctx context.Context,
-) ([]AgentResult, error) {
+) ([]osapi.Agent, error) {
 	client := osapi.New(o.url, o.token)
 	plan := sdk.NewPlan(client)
 
@@ -100,7 +100,7 @@ func (o *Orchestrator) fetchAgents(
 
 	report := &Report{Tasks: sdkReport.Tasks, Duration: sdkReport.Duration}
 
-	var list AgentListResult
+	var list osapi.AgentList
 	mustDecode(report, "list-agents", &list)
 
 	return list.Agents, nil
@@ -112,13 +112,13 @@ func (o *Orchestrator) GroupByFact(
 	ctx context.Context,
 	key string,
 	predicates ...Predicate,
-) (map[string][]AgentResult, error) {
+) (map[string][]osapi.Agent, error) {
 	agents, err := o.Discover(ctx, predicates...)
 	if err != nil {
 		return nil, fmt.Errorf("group by fact: %w", err)
 	}
 
-	groups := make(map[string][]AgentResult)
+	groups := make(map[string][]osapi.Agent)
 	for _, a := range agents {
 		v := factValue(a, key)
 		if v == "" {
@@ -133,7 +133,7 @@ func (o *Orchestrator) GroupByFact(
 
 // factValue extracts a string value from an agent for grouping.
 func factValue(
-	a AgentResult,
+	a osapi.Agent,
 	key string,
 ) string {
 	switch key {

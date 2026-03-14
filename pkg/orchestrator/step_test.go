@@ -26,6 +26,7 @@ import (
 	"testing"
 	"time"
 
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 	"github.com/stretchr/testify/suite"
 )
@@ -625,7 +626,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 			results:  sdk.Results{},
 			stepName: "list-agents",
 			target:   "web-01",
-			predicate: func(_ AgentResult) bool {
+			predicate: func(_ osapi.Agent) bool {
 				return true
 			},
 			wantResult: false,
@@ -649,7 +650,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 			},
 			stepName: "list-agents",
 			target:   "web-01",
-			predicate: func(a AgentResult) bool {
+			predicate: func(a osapi.Agent) bool {
 				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
 			},
 			wantResult: true,
@@ -673,7 +674,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 			},
 			stepName: "list-agents",
 			target:   "web-01",
-			predicate: func(a AgentResult) bool {
+			predicate: func(a osapi.Agent) bool {
 				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
 			},
 			wantResult: false,
@@ -694,7 +695,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 			},
 			stepName: "list-agents",
 			target:   "web-01",
-			predicate: func(_ AgentResult) bool {
+			predicate: func(_ osapi.Agent) bool {
 				return true
 			},
 			wantResult: true,
@@ -724,7 +725,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 			},
 			stepName: "list-agents",
 			target:   "_all",
-			predicate: func(a AgentResult) bool {
+			predicate: func(a osapi.Agent) bool {
 				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
 			},
 			wantResult: true,
@@ -748,7 +749,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 			},
 			stepName: "list-agents",
 			target:   "_all",
-			predicate: func(a AgentResult) bool {
+			predicate: func(a osapi.Agent) bool {
 				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
 			},
 			wantResult: false,

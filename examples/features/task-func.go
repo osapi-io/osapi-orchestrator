@@ -37,6 +37,7 @@ import (
 	"log"
 	"os"
 
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
@@ -62,7 +63,7 @@ func main() {
 	o.TaskFunc(
 		"summarize",
 		func(_ context.Context, r orchestrator.Results) (*sdk.Result, error) {
-			var h orchestrator.HostnameResult
+			var h osapi.HostnameResult
 			if err := r.Decode("get-hostname", &h); err != nil {
 				return &sdk.Result{Changed: false}, nil
 			}
@@ -84,7 +85,7 @@ func main() {
 	}
 
 	// Post-execution: decode typed results from the report.
-	var h orchestrator.HostnameResult
+	var h osapi.HostnameResult
 	if err := report.Decode("get-hostname", &h); err == nil {
 		fmt.Printf("Report hostname: %s\n", h.Hostname)
 	}

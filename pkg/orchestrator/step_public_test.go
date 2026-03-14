@@ -25,8 +25,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
 type StepPublicTestSuite struct {
@@ -164,7 +166,7 @@ func (s *StepPublicTestSuite) TestChaining() {
 			chainFn: func() *orchestrator.Step {
 				return s.orch.NodeHostnameGet("_any").
 					WhenFact("list-agents", func(
-						_ orchestrator.AgentResult,
+						_ osapi.Agent,
 					) bool {
 						return true
 					})

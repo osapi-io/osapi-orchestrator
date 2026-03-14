@@ -39,6 +39,8 @@ import (
 	"log"
 	"os"
 
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
+
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
@@ -73,7 +75,7 @@ func main() {
 	).After(health)
 
 	// Level 2: deploy the uploaded file to the target agent.
-	deploy := o.FileDeploy("_any", orchestrator.FileDeployOpts{
+	deploy := o.FileDeploy("_any", osapi.FileDeployOpts{
 		ObjectName:  "app-config.yaml",
 		Path:        "/tmp/app-config.yaml",
 		ContentType: "raw",
@@ -91,7 +93,7 @@ func main() {
 	}
 
 	// Decode typed results from the report.
-	var status orchestrator.FileStatusResult
+	var status osapi.FileStatusResult
 	if err := report.Decode("file-status", &status); err == nil {
 		fmt.Printf("File %s status: %s\n", status.Path, status.Status)
 	}
