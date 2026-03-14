@@ -24,6 +24,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"path/filepath"
+	"strings"
 
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
@@ -363,7 +365,7 @@ func (o *Orchestrator) CommandExec(
 	command string,
 	args ...string,
 ) *Step {
-	name := o.nextOpName(fmt.Sprintf("run-%s", command))
+	name := o.nextOpName(fmt.Sprintf("run-%s", filepath.Base(command)))
 
 	task := o.plan.TaskFunc(
 		name,
@@ -400,7 +402,12 @@ func (o *Orchestrator) CommandShell(
 	target string,
 	command string,
 ) *Step {
-	name := o.nextOpName(fmt.Sprintf("shell-%s", command))
+	shellName := strings.Fields(command)
+	if len(shellName) > 0 {
+		shellName[0] = filepath.Base(shellName[0])
+	}
+
+	name := o.nextOpName(fmt.Sprintf("shell-%s", shellName[0]))
 
 	task := o.plan.TaskFunc(
 		name,
