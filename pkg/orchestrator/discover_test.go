@@ -137,6 +137,8 @@ func (s *DiscoverTestSuite) TestFetchAgents() {
 	tests := []struct {
 		name       string
 		handler    http.HandlerFunc
+		setup      func()
+		teardown   func()
 		validateFn func([]osapi.Agent, error)
 	}{
 		{
@@ -179,27 +181,43 @@ func (s *DiscoverTestSuite) TestFetchAgents() {
 			},
 		},
 		{
-			name: "returns error when API returns error",
+			name: "returns error when decode fails",
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
 			) {
 				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusInternalServerError)
-				_, _ = w.Write([]byte(`{"error":"internal"}`))
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(
+					`{"agents":[{"hostname":"web-01"}],"total":1}`,
+				))
 			}),
+			setup: func() {
+				fetchAgentsDecodeName = "wrong-name"
+			},
+			teardown: func() {
+				fetchAgentsDecodeName = "list-agents"
+			},
 			validateFn: func(
 				agents []osapi.Agent,
 				err error,
 			) {
 				s.Error(err)
 				s.Nil(agents)
+				s.Contains(err.Error(), "decode agent list")
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			if tc.setup != nil {
+				tc.setup()
+			}
+			if tc.teardown != nil {
+				defer tc.teardown()
+			}
+
 			server := httptest.NewServer(tc.handler)
 			defer server.Close()
 
