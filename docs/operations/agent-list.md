@@ -44,7 +44,12 @@ err := results.Decode("list-agents", &result)
 | `Memory`        | `*AgentMemory`      | Memory usage stats.                |
 | `LoadAverage`   | `*AgentLoadAverage` | System load averages.              |
 | `Interfaces`    | `[]InterfaceResult` | Network interfaces.                |
+| `Conditions`    | `[]ConditionResult` | Node conditions.                   |
 | `Uptime`        | `string`            | System uptime.                     |
+| `StartedAt`     | `time.Time`         | Timestamp when agent started.      |
+| `RegisteredAt`  | `time.Time`         | Timestamp when agent registered.   |
+| `State`         | `string`            | Agent state (e.g., `active`).      |
+| `Facts`         | `map[string]any`    | Agent facts for template rendering.|
 
 ## Idempotency
 
