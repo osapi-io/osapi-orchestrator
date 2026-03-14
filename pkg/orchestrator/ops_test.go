@@ -1464,6 +1464,52 @@ func (s *OpsTestSuite) TestOperationNameCounter() {
 	}
 }
 
+func (suite *OpsTestSuite) TestCommandError() {
+	tests := []struct {
+		name       string
+		result     osapi.CommandResult
+		validateFn func(string)
+	}{
+		{
+			name:   "returns error string when set",
+			result: osapi.CommandResult{Error: "connection refused"},
+			validateFn: func(s string) {
+				suite.Equal("connection refused", s)
+			},
+		},
+		{
+			name:   "returns exit code when non-zero",
+			result: osapi.CommandResult{ExitCode: 127},
+			validateFn: func(s string) {
+				suite.Equal("exit code 127", s)
+			},
+		},
+		{
+			name:   "returns empty string on success",
+			result: osapi.CommandResult{ExitCode: 0},
+			validateFn: func(s string) {
+				suite.Empty(s)
+			},
+		},
+		{
+			name: "error takes precedence over exit code",
+			result: osapi.CommandResult{
+				Error:    "timeout",
+				ExitCode: 1,
+			},
+			validateFn: func(s string) {
+				suite.Equal("timeout", s)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.validateFn(commandError(tt.result))
+		})
+	}
+}
+
 func TestOpsTestSuite(
 	t *testing.T,
 ) {

@@ -19,7 +19,7 @@ step := o.NetworkPingDo("web-01", "8.8.8.8")
 ## Result Type
 
 ```go
-var result orchestrator.PingResult
+var result osapi.PingResult
 err := results.Decode("network.ping.do-1", &result)
 ```
 

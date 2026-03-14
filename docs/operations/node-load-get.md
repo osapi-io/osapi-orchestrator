@@ -18,7 +18,7 @@ step := o.NodeLoadGet("web-01")
 ## Result Type
 
 ```go
-var result orchestrator.LoadResult
+var result osapi.LoadResult
 err := results.Decode("node.load.get-1", &result)
 ```
 

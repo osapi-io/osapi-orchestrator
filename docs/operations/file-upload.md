@@ -38,7 +38,7 @@ step := o.FileUpload(
 ## Result Type
 
 ```go
-var result orchestrator.FileUploadResult
+var result osapi.FileUpload
 err := results.Decode("upload-file", &result)
 ```
 

@@ -8,7 +8,7 @@ templates (`template`) with agent facts and user-supplied variables.
 ## Usage
 
 ```go
-step := o.FileDeploy("web-01", orchestrator.FileDeployOpts{
+step := o.FileDeploy("web-01", osapi.FileDeployOpts{
     ObjectName:  "app-config.yaml",
     Path:        "/etc/myapp/config.yaml",
     ContentType: "raw",
@@ -21,7 +21,7 @@ step := o.FileDeploy("web-01", orchestrator.FileDeployOpts{
 With template rendering:
 
 ```go
-step := o.FileDeploy("web-01", orchestrator.FileDeployOpts{
+step := o.FileDeploy("web-01", osapi.FileDeployOpts{
     ObjectName:  "nginx.conf.tmpl",
     Path:        "/etc/nginx/nginx.conf",
     ContentType: "template",
@@ -55,7 +55,7 @@ step := o.FileDeploy("web-01", orchestrator.FileDeployOpts{
 ## Result Type
 
 ```go
-var result orchestrator.FileDeployResult
+var result osapi.FileDeployResult
 err := results.Decode("file.deploy.execute-1", &result)
 ```
 

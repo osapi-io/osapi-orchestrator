@@ -17,7 +17,7 @@ step := o.NodeDiskGet("web-01")
 ## Result Type
 
 ```go
-var result orchestrator.DiskResult
+var result osapi.DiskResult
 err := results.Decode("node.disk.get-1", &result)
 ```
 

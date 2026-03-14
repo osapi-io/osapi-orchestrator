@@ -24,7 +24,7 @@ step := o.CommandShell(
 ## Result Type
 
 ```go
-var result orchestrator.CommandResult
+var result osapi.CommandResult
 err := results.Decode("command.shell.execute-1", &result)
 ```
 

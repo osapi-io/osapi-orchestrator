@@ -28,7 +28,7 @@ conditions, and error handling:
 Decode step results into typed structs:
 
 ```go
-var h orchestrator.HostnameResult
+var h osapi.HostnameResult
 err := results.Decode("node.hostname.get-1", &h)
 fmt.Println(h.Hostname)
 ```

@@ -13,30 +13,10 @@ retries, and reporting.
 
 ## Index
 
-- [func MatchAll\(agent AgentResult, predicates ...Predicate\) bool](#MatchAll)
-- [type AgentListResult](#AgentListResult)
-- [type AgentLoadAverage](#AgentLoadAverage)
-- [type AgentMemory](#AgentMemory)
-- [type AgentOSInfo](#AgentOSInfo)
-- [type AgentResult](#AgentResult)
-- [type CommandResult](#CommandResult)
-- [type ConditionResult](#ConditionResult)
-- [type DNSConfigResult](#DNSConfigResult)
-- [type DNSUpdateResult](#DNSUpdateResult)
-- [type DiskResult](#DiskResult)
-- [type DiskUsage](#DiskUsage)
+- [func MatchAll\(agent osapi.Agent, predicates ...Predicate\) bool](#MatchAll)
 - [type ErrorStrategy](#ErrorStrategy)
-- [type FileChangedResult](#FileChangedResult)
-- [type FileDeployOpts](#FileDeployOpts)
-- [type FileDeployResult](#FileDeployResult)
-- [type FileStatusResult](#FileStatusResult)
-- [type FileUploadResult](#FileUploadResult)
 - [type HostResult](#HostResult)
   - [func \(h HostResult\) Decode\(v any\) error](#HostResult.Decode)
-- [type HostnameResult](#HostnameResult)
-- [type InterfaceResult](#InterfaceResult)
-- [type LoadResult](#LoadResult)
-- [type MemoryResult](#MemoryResult)
 - [type Option](#Option)
   - [func WithVerbose\(\) Option](#WithVerbose)
 - [type Orchestrator](#Orchestrator)
@@ -45,12 +25,12 @@ retries, and reporting.
   - [func \(o \*Orchestrator\) AgentList\(\) \*Step](#Orchestrator.AgentList)
   - [func \(o \*Orchestrator\) CommandExec\(target string, command string, args ...string\) \*Step](#Orchestrator.CommandExec)
   - [func \(o \*Orchestrator\) CommandShell\(target string, command string\) \*Step](#Orchestrator.CommandShell)
-  - [func \(o \*Orchestrator\) Discover\(ctx context.Context, predicates ...Predicate\) \(\[\]AgentResult, error\)](#Orchestrator.Discover)
+  - [func \(o \*Orchestrator\) Discover\(ctx context.Context, predicates ...Predicate\) \(\[\]osapi.Agent, error\)](#Orchestrator.Discover)
   - [func \(o \*Orchestrator\) FileChanged\(name string, data \[\]byte\) \*Step](#Orchestrator.FileChanged)
-  - [func \(o \*Orchestrator\) FileDeploy\(target string, opts FileDeployOpts\) \*Step](#Orchestrator.FileDeploy)
+  - [func \(o \*Orchestrator\) FileDeploy\(target string, opts osapi.FileDeployOpts\) \*Step](#Orchestrator.FileDeploy)
   - [func \(o \*Orchestrator\) FileStatusGet\(target string, path string\) \*Step](#Orchestrator.FileStatusGet)
   - [func \(o \*Orchestrator\) FileUpload\(name string, contentType string, data \[\]byte, opts ...UploadOption\) \*Step](#Orchestrator.FileUpload)
-  - [func \(o \*Orchestrator\) GroupByFact\(ctx context.Context, key string, predicates ...Predicate\) \(map\[string\]\[\]AgentResult, error\)](#Orchestrator.GroupByFact)
+  - [func \(o \*Orchestrator\) GroupByFact\(ctx context.Context, key string, predicates ...Predicate\) \(map\[string\]\[\]osapi.Agent, error\)](#Orchestrator.GroupByFact)
   - [func \(o \*Orchestrator\) HealthCheck\(\) \*Step](#Orchestrator.HealthCheck)
   - [func \(o \*Orchestrator\) NetworkDNSGet\(target string, interfaceName string\) \*Step](#Orchestrator.NetworkDNSGet)
   - [func \(o \*Orchestrator\) NetworkDNSUpdate\(target string, interfaceName string, servers \[\]string, searchDomains \[\]string\) \*Step](#Orchestrator.NetworkDNSUpdate)
@@ -63,7 +43,6 @@ retries, and reporting.
   - [func \(o \*Orchestrator\) NodeUptimeGet\(target string\) \*Step](#Orchestrator.NodeUptimeGet)
   - [func \(o \*Orchestrator\) Run\(\) \(\*Report, error\)](#Orchestrator.Run)
   - [func \(o \*Orchestrator\) TaskFunc\(name string, fn func\(ctx context.Context, r Results\) \(\*sdk.Result, error\)\) \*Step](#Orchestrator.TaskFunc)
-- [type PingResult](#PingResult)
 - [type Predicate](#Predicate)
   - [func Arch\(architecture string\) Predicate](#Arch)
   - [func FactEquals\(key string, value any\) Predicate](#FactEquals)
@@ -106,124 +85,14 @@ retries, and reporting.
 
 <a name="MatchAll"></a>
 
-## func [MatchAll](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L146-L149)
+## func [MatchAll](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L150-L153)
 
 ```go
-func MatchAll(agent AgentResult, predicates ...Predicate) bool
+func MatchAll(agent osapi.Agent, predicates ...Predicate) bool
 ```
 
 MatchAll returns true if the agent matches all given predicates. Returns true if
 no predicates are provided.
-
-<a name="AgentListResult"></a>
-
-## type [AgentListResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L56)
-
-AgentListResult holds typed agent list output.
-
-```go
-type AgentListResult = osapi.AgentList
-```
-
-<a name="AgentLoadAverage"></a>
-
-## type [AgentLoadAverage](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L65)
-
-AgentLoadAverage holds system load averages from agent heartbeat.
-
-```go
-type AgentLoadAverage = osapi.LoadAverage
-```
-
-<a name="AgentMemory"></a>
-
-## type [AgentMemory](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L68)
-
-AgentMemory holds memory usage from agent heartbeat.
-
-```go
-type AgentMemory = osapi.Memory
-```
-
-<a name="AgentOSInfo"></a>
-
-## type [AgentOSInfo](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L71)
-
-AgentOSInfo holds operating system info from agent heartbeat.
-
-```go
-type AgentOSInfo = osapi.OSInfo
-```
-
-<a name="AgentResult"></a>
-
-## type [AgentResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L59)
-
-AgentResult holds typed agent details.
-
-```go
-type AgentResult = osapi.Agent
-```
-
-<a name="CommandResult"></a>
-
-## type [CommandResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L44)
-
-CommandResult holds typed command execution output.
-
-```go
-type CommandResult = osapi.CommandResult
-```
-
-<a name="ConditionResult"></a>
-
-## type [ConditionResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L62)
-
-ConditionResult holds a node condition from the agent.
-
-```go
-type ConditionResult = osapi.Condition
-```
-
-<a name="DNSConfigResult"></a>
-
-## type [DNSConfigResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L50)
-
-DNSConfigResult holds typed DNS configuration output.
-
-```go
-type DNSConfigResult = osapi.DNSConfig
-```
-
-<a name="DNSUpdateResult"></a>
-
-## type [DNSUpdateResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L53)
-
-DNSUpdateResult holds typed DNS update output.
-
-```go
-type DNSUpdateResult = osapi.DNSUpdateResult
-```
-
-<a name="DiskResult"></a>
-
-## type [DiskResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L32)
-
-DiskResult holds typed disk usage output.
-
-```go
-type DiskResult = osapi.DiskResult
-```
-
-<a name="DiskUsage"></a>
-
-## type [DiskUsage](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L35)
-
-DiskUsage represents a single disk's usage.
-
-```go
-type DiskUsage = osapi.Disk
-```
 
 <a name="ErrorStrategy"></a>
 
@@ -244,56 +113,6 @@ const (
     // Continue skips dependent steps and continues with the rest.
     Continue
 )
-```
-
-<a name="FileChangedResult"></a>
-
-## type [FileChangedResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L89)
-
-FileChangedResult holds typed file change detection output.
-
-```go
-type FileChangedResult = osapi.FileChanged
-```
-
-<a name="FileDeployOpts"></a>
-
-## type [FileDeployOpts](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L77)
-
-FileDeployOpts holds parameters for the FileDeploy operation.
-
-```go
-type FileDeployOpts = osapi.FileDeployOpts
-```
-
-<a name="FileDeployResult"></a>
-
-## type [FileDeployResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L80)
-
-FileDeployResult holds typed file deploy output.
-
-```go
-type FileDeployResult = osapi.FileDeployResult
-```
-
-<a name="FileStatusResult"></a>
-
-## type [FileStatusResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L83)
-
-FileStatusResult holds typed file status output.
-
-```go
-type FileStatusResult = osapi.FileStatusResult
-```
-
-<a name="FileUploadResult"></a>
-
-## type [FileUploadResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L86)
-
-FileUploadResult holds typed file upload output.
-
-```go
-type FileUploadResult = osapi.FileUpload
 ```
 
 <a name="HostResult"></a>
@@ -320,46 +139,6 @@ func (h HostResult) Decode(v any) error
 ```
 
 Decode unmarshals host\-specific data into a typed result struct.
-
-<a name="HostnameResult"></a>
-
-## type [HostnameResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L29)
-
-HostnameResult holds typed hostname output.
-
-```go
-type HostnameResult = osapi.HostnameResult
-```
-
-<a name="InterfaceResult"></a>
-
-## type [InterfaceResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L74)
-
-InterfaceResult holds typed network interface info.
-
-```go
-type InterfaceResult = osapi.NetworkInterface
-```
-
-<a name="LoadResult"></a>
-
-## type [LoadResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L41)
-
-LoadResult holds typed load averages.
-
-```go
-type LoadResult = osapi.LoadResult
-```
-
-<a name="MemoryResult"></a>
-
-## type [MemoryResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L38)
-
-MemoryResult holds typed memory stats.
-
-```go
-type MemoryResult = osapi.MemoryResult
-```
 
 <a name="Option"></a>
 
@@ -450,7 +229,7 @@ CommandShell creates a step that executes a shell command string.
 ### func \(\*Orchestrator\) [Discover](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/discover.go#L34-L37)
 
 ```go
-func (o *Orchestrator) Discover(ctx context.Context, predicates ...Predicate) ([]AgentResult, error)
+func (o *Orchestrator) Discover(ctx context.Context, predicates ...Predicate) ([]osapi.Agent, error)
 ```
 
 Discover queries active agents and returns those matching all predicates. Runs
@@ -474,7 +253,7 @@ is unchanged.
 ### func \(\*Orchestrator\) [FileDeploy](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L456-L459)
 
 ```go
-func (o *Orchestrator) FileDeploy(target string, opts FileDeployOpts) *Step
+func (o *Orchestrator) FileDeploy(target string, opts osapi.FileDeployOpts) *Step
 ```
 
 FileDeploy creates a step that deploys a file from the Object Store to the
@@ -514,7 +293,7 @@ to always upload regardless of content changes.
 ### func \(\*Orchestrator\) [GroupByFact](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/discover.go#L111-L115)
 
 ```go
-func (o *Orchestrator) GroupByFact(ctx context.Context, key string, predicates ...Predicate) (map[string][]AgentResult, error)
+func (o *Orchestrator) GroupByFact(ctx context.Context, key string, predicates ...Predicate) (map[string][]osapi.Agent, error)
 ```
 
 GroupByFact queries agents, optionally filters by predicates, and groups results
@@ -640,29 +419,19 @@ func (o *Orchestrator) TaskFunc(name string, fn func(ctx context.Context, r Resu
 
 TaskFunc creates a custom step that receives completed results from prior steps.
 
-<a name="PingResult"></a>
-
-## type [PingResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result_types.go#L47)
-
-PingResult holds typed ping output.
-
-```go
-type PingResult = osapi.PingResult
-```
-
 <a name="Predicate"></a>
 
-## type [Predicate](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L26)
+## type [Predicate](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L30)
 
 Predicate filters agents by their facts and properties.
 
 ```go
-type Predicate func(AgentResult) bool
+type Predicate func(osapi.Agent) bool
 ```
 
 <a name="Arch"></a>
 
-### func [Arch](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L44-L46)
+### func [Arch](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L48-L50)
 
 ```go
 func Arch(architecture string) Predicate
@@ -673,7 +442,7 @@ Arch returns a predicate that matches agents with the given architecture
 
 <a name="FactEquals"></a>
 
-### func [FactEquals](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L89-L92)
+### func [FactEquals](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L93-L96)
 
 ```go
 func FactEquals(key string, value any) Predicate
@@ -684,7 +453,7 @@ equals the expected value.
 
 <a name="HasCondition"></a>
 
-### func [HasCondition](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L100-L102)
+### func [HasCondition](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L104-L106)
 
 ```go
 func HasCondition(conditionType string) Predicate
@@ -695,7 +464,7 @@ HasCondition returns a predicate that matches agents with an active condition
 
 <a name="HasLabel"></a>
 
-### func [HasLabel](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L78-L81)
+### func [HasLabel](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L82-L85)
 
 ```go
 func HasLabel(key string, value string) Predicate
@@ -706,7 +475,7 @@ pair.
 
 <a name="Healthy"></a>
 
-### func [Healthy](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L132)
+### func [Healthy](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L136)
 
 ```go
 func Healthy() Predicate
@@ -717,7 +486,7 @@ conditions are false or the list is empty\).
 
 <a name="MinCPU"></a>
 
-### func [MinCPU](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L68-L70)
+### func [MinCPU](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L72-L74)
 
 ```go
 func MinCPU(count int) Predicate
@@ -728,18 +497,18 @@ CPUs.
 
 <a name="MinMemory"></a>
 
-### func [MinMemory](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L54-L56)
+### func [MinMemory](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L58-L60)
 
 ```go
 func MinMemory(total int) Predicate
 ```
 
 MinMemory returns a predicate that matches agents with at least the given total
-memory \(in the same unit as AgentMemory.Total\).
+memory \(in the same unit as Memory.Total\).
 
 <a name="NoCondition"></a>
 
-### func [NoCondition](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L116-L118)
+### func [NoCondition](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L120-L122)
 
 ```go
 func NoCondition(conditionType string) Predicate
@@ -750,7 +519,7 @@ condition of the given type.
 
 <a name="OS"></a>
 
-### func [OS](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L30-L32)
+### func [OS](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/predicate.go#L34-L36)
 
 ```go
 func OS(distribution string) Predicate
@@ -893,7 +662,7 @@ sensible defaults \(1s initial, 30s max\).
 
 <a name="Step"></a>
 
-## type [Step](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L27-L29)
+## type [Step](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L30-L32)
 
 Step represents a single operation in the plan. Users chain methods to declare
 ordering, conditions, and error handling.
@@ -906,7 +675,7 @@ type Step struct {
 
 <a name="Step.After"></a>
 
-### func \(\*Step\) [After](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L41-L43)
+### func \(\*Step\) [After](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L44-L46)
 
 ```go
 func (s *Step) After(deps ...*Step) *Step
@@ -916,7 +685,7 @@ After declares that this step runs after the given steps complete.
 
 <a name="Step.Named"></a>
 
-### func \(\*Step\) [Named](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L32-L34)
+### func \(\*Step\) [Named](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L35-L37)
 
 ```go
 func (s *Step) Named(name string) *Step
@@ -926,7 +695,7 @@ Named overrides the auto\-generated step name.
 
 <a name="Step.OnError"></a>
 
-### func \(\*Step\) [OnError](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L274-L276)
+### func \(\*Step\) [OnError](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L277-L279)
 
 ```go
 func (s *Step) OnError(strategy ErrorStrategy) *Step
@@ -936,7 +705,7 @@ OnError sets the error strategy for this step.
 
 <a name="Step.OnlyIfAllChanged"></a>
 
-### func \(\*Step\) [OnlyIfAllChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L102)
+### func \(\*Step\) [OnlyIfAllChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L105)
 
 ```go
 func (s *Step) OnlyIfAllChanged() *Step
@@ -946,7 +715,7 @@ OnlyIfAllChanged skips this step unless all dependencies reported changes.
 
 <a name="Step.OnlyIfAllHostsChanged"></a>
 
-### func \(\*Step\) [OnlyIfAllHostsChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L208)
+### func \(\*Step\) [OnlyIfAllHostsChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L211)
 
 ```go
 func (s *Step) OnlyIfAllHostsChanged() *Step
@@ -957,7 +726,7 @@ reported changes. Only meaningful for broadcast operations.
 
 <a name="Step.OnlyIfAllHostsFailed"></a>
 
-### func \(\*Step\) [OnlyIfAllHostsFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L152)
+### func \(\*Step\) [OnlyIfAllHostsFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L155)
 
 ```go
 func (s *Step) OnlyIfAllHostsFailed() *Step
@@ -968,7 +737,7 @@ an error. Only meaningful for broadcast operations.
 
 <a name="Step.OnlyIfAnyHostChanged"></a>
 
-### func \(\*Step\) [OnlyIfAnyHostChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L180)
+### func \(\*Step\) [OnlyIfAnyHostChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L183)
 
 ```go
 func (s *Step) OnlyIfAnyHostChanged() *Step
@@ -979,7 +748,7 @@ changes. Only meaningful for broadcast operations.
 
 <a name="Step.OnlyIfAnyHostFailed"></a>
 
-### func \(\*Step\) [OnlyIfAnyHostFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L124)
+### func \(\*Step\) [OnlyIfAnyHostFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L127)
 
 ```go
 func (s *Step) OnlyIfAnyHostFailed() *Step
@@ -990,7 +759,7 @@ error. Only meaningful for broadcast operations.
 
 <a name="Step.OnlyIfChanged"></a>
 
-### func \(\*Step\) [OnlyIfChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L79)
+### func \(\*Step\) [OnlyIfChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L82)
 
 ```go
 func (s *Step) OnlyIfChanged() *Step
@@ -1000,7 +769,7 @@ OnlyIfChanged skips this step unless a dependency reported changes.
 
 <a name="Step.OnlyIfFailed"></a>
 
-### func \(\*Step\) [OnlyIfFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L86)
+### func \(\*Step\) [OnlyIfFailed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L89)
 
 ```go
 func (s *Step) OnlyIfFailed() *Step
@@ -1010,7 +779,7 @@ OnlyIfFailed skips this step unless at least one dependency failed.
 
 <a name="Step.Retry"></a>
 
-### func \(\*Step\) [Retry](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L56-L59)
+### func \(\*Step\) [Retry](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L59-L62)
 
 ```go
 func (s *Step) Retry(n int, opts ...RetryOption) *Step
@@ -1021,7 +790,7 @@ exponential backoff between attempts.
 
 <a name="Step.When"></a>
 
-### func \(\*Step\) [When](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L236-L238)
+### func \(\*Step\) [When](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L239-L241)
 
 ```go
 func (s *Step) When(fn func(Results) bool) *Step
@@ -1031,7 +800,7 @@ When adds a guard condition — the step only runs if the predicate returns true
 
 <a name="Step.WhenFact"></a>
 
-### func \(\*Step\) [WhenFact](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L249-L252)
+### func \(\*Step\) [WhenFact](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/step.go#L252-L255)
 
 ```go
 func (s *Step) WhenFact(agentListStep string, fn Predicate) *Step

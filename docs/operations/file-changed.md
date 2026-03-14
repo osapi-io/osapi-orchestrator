@@ -23,7 +23,7 @@ o.FileUpload("config.yaml", "raw", localContent).
 ## Result Type
 
 ```go
-var result orchestrator.FileChangedResult
+var result osapi.FileChanged
 err := results.Decode("check-file", &result)
 ```
 

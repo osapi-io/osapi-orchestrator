@@ -7,7 +7,7 @@ managing files across agents.
 
 ```go
 upload := o.FileUpload("config.yaml", "raw", data).After(health)
-deploy := o.FileDeploy("_any", orchestrator.FileDeployOpts{
+deploy := o.FileDeploy("_any", osapi.FileDeployOpts{
     ObjectName:  "config.yaml",
     Path:        "/etc/myapp/config.yaml",
     ContentType: "raw",

@@ -20,7 +20,7 @@ step := o.FileStatusGet("web-01", "/etc/myapp/config.yaml")
 ## Result Type
 
 ```go
-var result orchestrator.FileStatusResult
+var result osapi.FileStatusResult
 err := results.Decode("file.status.get-1", &result)
 ```
 
