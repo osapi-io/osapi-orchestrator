@@ -7,7 +7,7 @@ The simplest orchestrator pattern: create a plan with ordered steps and run it.
 ```go
 o := orchestrator.New(url, token)
 
-health := o.HealthCheck("_any")
+health := o.HealthCheck()
 o.NodeHostnameGet("_any").After(health)
 
 report, err := o.Run()

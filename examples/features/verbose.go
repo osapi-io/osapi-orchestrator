@@ -51,7 +51,7 @@ func main() {
 	// WithVerbose enables detailed output for every task.
 	o := orchestrator.New(url, token, orchestrator.WithVerbose())
 
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 	o.NodeHostnameGet("_any").After(health)
 
 	if _, err := o.Run(); err != nil {

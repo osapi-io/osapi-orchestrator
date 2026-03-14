@@ -52,7 +52,7 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 
 	// Direct execution: runs the binary with args.
 	o.CommandExec("_any", "uptime").After(health)

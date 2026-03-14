@@ -64,7 +64,7 @@ func main() {
 
 	fmt.Printf("Discovered %d matching agents\n", len(agents))
 
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 
 	// Create a hostname step for each discovered agent.
 	for _, a := range agents {

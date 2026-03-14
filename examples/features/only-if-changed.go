@@ -51,7 +51,7 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 	o.NodeHostnameGet("_any").After(health)
 	disk := o.NodeDiskGet("_any").After(health)
 

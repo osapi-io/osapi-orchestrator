@@ -56,7 +56,7 @@ func main() {
 	o := orchestrator.New(url, token)
 
 	// Level 0: verify the API is reachable.
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 
 	// Level 1: upload the file to the Object Store.
 	// Use WithForce() to bypass SHA-256 pre-check if requested.

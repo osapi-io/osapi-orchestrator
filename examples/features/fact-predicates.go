@@ -75,7 +75,7 @@ func main() {
 		)
 	}
 
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 
 	for _, a := range agents {
 		o.NodeLoadGet(a.Hostname).After(health)

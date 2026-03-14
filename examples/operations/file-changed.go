@@ -56,7 +56,7 @@ func main() {
 	o := orchestrator.New(url, token)
 
 	// Level 0: verify the API is reachable.
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 
 	// Level 1: check if the file content has changed.
 	check := o.FileChanged("app-config.yaml", configData).After(health)

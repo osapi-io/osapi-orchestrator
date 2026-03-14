@@ -56,7 +56,7 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 	agents := o.AgentList().After(health)
 
 	// Use a TaskFunc to decode the agent list and display rich facts.

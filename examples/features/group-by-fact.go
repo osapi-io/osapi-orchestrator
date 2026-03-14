@@ -73,7 +73,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	health := o.HealthCheck("_any")
+	health := o.HealthCheck()
 
 	for distro, agents := range groups {
 		cmd := installCmd(distro)
