@@ -57,8 +57,10 @@ func New(
 }
 
 // Run executes the plan and returns a report.
-func (o *Orchestrator) Run() (*Report, error) {
-	sdkReport, err := o.plan.Run(context.Background())
+func (o *Orchestrator) Run(
+	ctx context.Context,
+) (*Report, error) {
+	sdkReport, err := o.plan.Run(ctx)
 	if err != nil {
 		return nil, err
 	}

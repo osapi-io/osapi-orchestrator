@@ -31,6 +31,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -68,7 +69,7 @@ func main() {
 		[]string{"example.com"},
 	).After(getDNS)
 
-	if _, err := o.Run(); err != nil {
+	if _, err := o.Run(context.Background()); err != nil {
 		log.Fatal(err)
 	}
 }

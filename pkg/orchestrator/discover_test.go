@@ -21,10 +21,12 @@
 package orchestrator
 
 import (
+	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -131,53 +133,97 @@ func (s *DiscoverTestSuite) TestFactValue() {
 	}
 }
 
-func (s *DiscoverTestSuite) TestMustDecode() {
+func (s *DiscoverTestSuite) TestFetchAgents() {
 	tests := []struct {
-		name   string
-		report *Report
-		task   string
-		panics bool
+		name       string
+		handler    http.HandlerFunc
+		setup      func()
+		teardown   func()
+		validateFn func([]osapi.Agent, error)
 	}{
 		{
-			name: "Succeeds with valid data",
-			report: &Report{
-				Tasks: []sdk.TaskResult{
-					{
-						Name: "test",
-						Data: map[string]any{
-							"hostname": "web-01",
-						},
-					},
-				},
+			name: "returns agents on success",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(
+					`{"agents":[{"hostname":"web-01","status":"Ready"}],"total":1}`,
+				))
+			}),
+			validateFn: func(
+				agents []osapi.Agent,
+				err error,
+			) {
+				s.NoError(err)
+				s.Len(agents, 1)
+				s.Equal("web-01", agents[0].Hostname)
 			},
-			task: "test",
 		},
 		{
-			name: "Panics on missing task",
-			report: &Report{
-				Tasks: []sdk.TaskResult{},
+			name: "returns error when plan fails",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"server error"}`))
+			}),
+			validateFn: func(
+				agents []osapi.Agent,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(agents)
+				s.Contains(err.Error(), "run agent list")
 			},
-			task:   "test",
-			panics: true,
+		},
+		{
+			name: "returns error when decode fails",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(
+					`{"agents":[{"hostname":"web-01"}],"total":1}`,
+				))
+			}),
+			setup: func() {
+				fetchAgentsDecodeName = "wrong-name"
+			},
+			teardown: func() {
+				fetchAgentsDecodeName = "list-agents"
+			},
+			validateFn: func(
+				agents []osapi.Agent,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(agents)
+				s.Contains(err.Error(), "decode agent list")
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			if tc.panics {
-				var result map[string]any
-				s.Panics(func() {
-					mustDecode(tc.report, tc.task, &result)
-				})
-
-				return
+			if tc.setup != nil {
+				tc.setup()
+			}
+			if tc.teardown != nil {
+				defer tc.teardown()
 			}
 
-			var result osapi.HostnameResult
-			s.NotPanics(func() {
-				mustDecode(tc.report, tc.task, &result)
-			})
-			s.Equal("web-01", result.Hostname)
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			orch := New(server.URL, "test-token")
+			agents, err := orch.fetchAgents(context.Background())
+			tc.validateFn(agents, err)
 		})
 	}
 }

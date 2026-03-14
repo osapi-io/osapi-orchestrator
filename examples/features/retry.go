@@ -80,7 +80,7 @@ func main() {
 	o.TaskFunc("custom-backoff", failNTimes(2)).
 		Retry(5, orchestrator.WithBackoff(500*time.Millisecond, 5*time.Second))
 
-	if _, err := o.Run(); err != nil {
+	if _, err := o.Run(context.Background()); err != nil {
 		log.Fatal(err)
 	}
 }

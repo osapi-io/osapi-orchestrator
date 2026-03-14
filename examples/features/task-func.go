@@ -79,7 +79,7 @@ func main() {
 		},
 	).After(hostname)
 
-	report, err := o.Run()
+	report, err := o.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}

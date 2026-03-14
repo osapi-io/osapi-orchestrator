@@ -21,6 +21,7 @@
 package orchestrator
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -117,7 +118,7 @@ func (s *OrchestratorTestSuite) TestRun() {
 			orch := New(server.URL, "test-token")
 			orch.HealthCheck()
 
-			report, err := orch.Run()
+			report, err := orch.Run(context.Background())
 
 			if tc.expectErr {
 				s.Require().Error(err)

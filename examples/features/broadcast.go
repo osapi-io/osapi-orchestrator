@@ -30,6 +30,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -53,7 +54,7 @@ func main() {
 	// The renderer shows per-host results automatically.
 	o.NodeHostnameGet("_all")
 
-	if _, err := o.Run(); err != nil {
+	if _, err := o.Run(context.Background()); err != nil {
 		log.Fatal(err)
 	}
 }

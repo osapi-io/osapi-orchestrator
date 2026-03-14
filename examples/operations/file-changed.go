@@ -33,6 +33,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -77,7 +78,7 @@ func main() {
 	}).After(upload).
 		OnlyIfChanged()
 
-	report, err := o.Run()
+	report, err := o.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}

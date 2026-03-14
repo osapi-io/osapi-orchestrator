@@ -5,7 +5,7 @@ After `o.Run()` returns a `Report`, decode typed results from any step.
 ## Usage
 
 ```go
-report, err := o.Run()
+report, err := o.Run(ctx)
 if err != nil {
     log.Fatal(err)
 }
