@@ -139,6 +139,11 @@ func (r Results) HostResults(
 
 // Decode retrieves the result of a named step and decodes it into
 // the given typed struct.
+//
+// For collection-based operations (CommandExec, NodeHostnameGet, etc.)
+// that have host results, Decode unwraps the first host's data
+// automatically. For non-collection operations (TaskFunc, FileChanged,
+// etc.), it decodes from the step's top-level data.
 func (r Results) Decode(
 	name string,
 	v any,
@@ -148,7 +153,12 @@ func (r Results) Decode(
 		return fmt.Errorf("no result for %q", name)
 	}
 
-	b, err := json.Marshal(result.Data)
+	data := result.Data
+	if len(result.HostResults) > 0 {
+		data = result.HostResults[0].Data
+	}
+
+	b, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("marshal result data: %w", err)
 	}
@@ -168,17 +178,26 @@ type Report struct {
 
 // Decode retrieves the result of a named task from the report
 // and decodes it into the given typed struct.
+//
+// For collection-based operations that have host results, Decode
+// unwraps the first host's data automatically. For non-collection
+// operations, it decodes from the task's top-level data.
 func (r *Report) Decode(
 	name string,
 	v any,
 ) error {
 	for _, t := range r.Tasks {
 		if t.Name == name {
-			if t.Data == nil {
+			data := t.Data
+			if len(t.HostResults) > 0 {
+				data = t.HostResults[0].Data
+			}
+
+			if data == nil {
 				return fmt.Errorf("no result data for %q", name)
 			}
 
-			b, err := json.Marshal(t.Data)
+			b, err := json.Marshal(data)
 			if err != nil {
 				return fmt.Errorf("marshal result data: %w", err)
 			}

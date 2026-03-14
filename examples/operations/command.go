@@ -18,15 +18,23 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates command execution with both CommandExec
-// (direct) and CommandShell (shell-interpreted) operations, plus
-// typed result decoding from the report.
+// Package main demonstrates command execution and error handling.
 //
-// DAG:
+// Phase 1: exec and shell commands run in parallel — both always
+// report changed=true (commands are non-idempotent by design).
+//
+// Phase 2: a command that fails shows how to inspect
+// CommandResult.Stderr and ExitCode.
+//
+// DAG (phase 1):
 //
 //	health-check
 //	    ├── run-uptime (exec)
-//	    └── shell-uname (shell)
+//	    └── shell-uname -a (shell)
+//
+// DAG (phase 2):
+//
+//	run-ls /nonexistent (exec, error expected)
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run command.go
 package main
@@ -53,6 +61,8 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
+	fmt.Println("=== Phase 1: parallel exec and shell commands ===")
+
 	o := orchestrator.New(url, token)
 
 	health := o.HealthCheck()
@@ -68,13 +78,30 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Decode typed command results from the report.
 	var cmd osapi.CommandResult
 	if err := report.Decode("run-uptime", &cmd); err == nil {
 		fmt.Printf("uptime stdout: %s\n", cmd.Stdout)
 	}
 
-	if err := report.Decode("shell-uname", &cmd); err == nil {
+	if err := report.Decode("shell-uname -a", &cmd); err == nil {
 		fmt.Printf("uname stdout:  %s\n", cmd.Stdout)
+	}
+
+	fmt.Println("=== Phase 2: failing command — inspect error and exit code ===")
+
+	o2 := orchestrator.New(url, token)
+
+	o2.CommandExec("_any", "ls", "/nonexistent").
+		OnError(orchestrator.Continue)
+
+	report2, err := o2.Run(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var failCmd osapi.CommandResult
+	if err := report2.Decode("run-ls", &failCmd); err == nil {
+		fmt.Printf("stderr:    %s", failCmd.Stderr)
+		fmt.Printf("exit code: %d\n", failCmd.ExitCode)
 	}
 }

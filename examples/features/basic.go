@@ -31,8 +31,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
+
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
@@ -56,7 +59,13 @@ func main() {
 	// Level 1: query hostname from any available agent.
 	o.NodeHostnameGet("_any").After(health)
 
-	if _, err := o.Run(context.Background()); err != nil {
+	report, err := o.Run(context.Background())
+	if err != nil {
 		log.Fatal(err)
+	}
+
+	var h osapi.HostnameResult
+	if err := report.Decode("get-hostname", &h); err == nil {
+		fmt.Printf("Hostname: %s\n", h.Hostname)
 	}
 }

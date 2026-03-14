@@ -84,9 +84,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Post-execution: decode typed results from the report.
-	var h osapi.HostnameResult
-	if err := report.Decode("get-hostname", &h); err == nil {
-		fmt.Printf("Report hostname: %s\n", h.Hostname)
+	// Post-execution: decode the TaskFunc result to prove data flow.
+	var summary map[string]any
+	if err := report.Decode("summarize", &summary); err == nil {
+		fmt.Printf("Report summary host: %v\n", summary["host"])
 	}
 }

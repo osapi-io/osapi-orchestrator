@@ -18,22 +18,28 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates the read-then-write pattern: read DNS
-// configuration first, then update it with new servers.
+// Package main demonstrates the read-then-write DNS pattern.
+//
+// Reads current DNS config, then updates with new servers. All steps
+// use OnError(Continue) so the example runs on any platform — on
+// macOS (no eth0) the DNS steps fail gracefully.
 //
 // DAG:
 //
 //	health-check
-//	    └── get-dns
-//	            └── update-dns
+//	    └── get-dns (continue on error)
+//	            └── update-dns (continue on error)
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run dns-update.go
 package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
+
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
@@ -59,7 +65,9 @@ func main() {
 	health := o.HealthCheck()
 
 	// Read current DNS configuration.
-	getDNS := o.NetworkDNSGet("_any", iface).After(health)
+	getDNS := o.NetworkDNSGet("_any", iface).
+		After(health).
+		OnError(orchestrator.Continue)
 
 	// Write new DNS servers after reading the current config.
 	o.NetworkDNSUpdate(
@@ -67,9 +75,18 @@ func main() {
 		iface,
 		[]string{"8.8.8.8", "8.8.4.4"},
 		[]string{"example.com"},
-	).After(getDNS)
+	).After(getDNS).OnError(orchestrator.Continue)
 
-	if _, err := o.Run(context.Background()); err != nil {
+	report, err := o.Run(context.Background())
+	if err != nil {
 		log.Fatal(err)
+	}
+
+	var dns osapi.DNSConfig
+	if err := report.Decode("get-dns", &dns); err == nil {
+		fmt.Printf("DNS servers:     %v\n", dns.Servers)
+		fmt.Printf("Search domains:  %v\n", dns.SearchDomains)
+	} else {
+		fmt.Println("DNS operations require a valid network interface (set OSAPI_INTERFACE)")
 	}
 }

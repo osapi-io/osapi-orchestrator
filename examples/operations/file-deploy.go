@@ -18,18 +18,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates file deployment: upload a file to the
-// Object Store, deploy it to a target agent, then verify its status.
+// Package main demonstrates file deployment with idempotency proof.
 //
-// Set OSAPI_FORCE=1 to bypass the SHA-256 pre-check and always upload
-// even if content hasn't changed.
-//
-// DAG:
-//
-//	health-check
-//	    └── upload-file
-//	            └── deploy-file
-//	                    └── file-status
+// Phase 1: cleanup — remove any previously deployed file.
+// Phase 2: first deploy — upload + deploy + verify (expect changed).
+// Phase 3: idempotency — same upload + deploy + verify (expect unchanged).
+// Phase 4: cleanup — remove the deployed file.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run file-deploy.go
 package main
@@ -45,6 +39,13 @@ import (
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
+func newOrchestrator(
+	url string,
+	token string,
+) *orchestrator.Orchestrator {
+	return orchestrator.New(url, token)
+}
+
 func main() {
 	token := os.Getenv("OSAPI_TOKEN")
 	if token == "" {
@@ -56,46 +57,66 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
-	o := orchestrator.New(url, token)
+	configData := []byte("server:\n  port: 8080\n  debug: false\n")
 
-	// Level 0: verify the API is reachable.
-	health := o.HealthCheck()
-
-	// Level 1: upload the file to the Object Store.
-	// Use WithForce() to bypass SHA-256 pre-check if requested.
-	var uploadOpts []orchestrator.UploadOption
-	if os.Getenv("OSAPI_FORCE") == "1" {
-		uploadOpts = append(uploadOpts, orchestrator.WithForce())
-	}
-
-	upload := o.FileUpload(
-		"app-config.yaml",
-		"raw",
-		[]byte("server:\n  port: 8080\n  debug: false\n"),
-		uploadOpts...,
-	).After(health)
-
-	// Level 2: deploy the uploaded file to the target agent.
-	deploy := o.FileDeploy("_any", osapi.FileDeployOpts{
+	deployOpts := osapi.FileDeployOpts{
 		ObjectName:  "app-config.yaml",
 		Path:        "/tmp/app-config.yaml",
 		ContentType: "raw",
 		Mode:        "0644",
 		Owner:       "root",
 		Group:       "root",
-	}).After(upload)
+	}
 
-	// Level 3: verify the deployed file is in sync.
-	o.FileStatusGet("_any", "/tmp/app-config.yaml").After(deploy)
+	// Phase 1: cleanup — remove any previously deployed file.
+	fmt.Println("=== Phase 1: Cleanup ===")
 
-	report, err := o.Run(context.Background())
+	o1 := newOrchestrator(url, token)
+	o1.CommandShell("_any", "rm -f /tmp/app-config.yaml").OnError(orchestrator.Continue)
+	//nolint:errcheck
+	o1.Run(context.Background()) //nolint:errcheck
+
+	// Phase 2: first deploy — upload + deploy + verify (expect changed).
+	fmt.Println("\n=== Phase 2: First deploy (expect changed) ===")
+
+	o2 := newOrchestrator(url, token)
+	upload2 := o2.FileUpload("app-config.yaml", "raw", configData, orchestrator.WithForce())
+	deploy2 := o2.FileDeploy("_any", deployOpts).After(upload2)
+	o2.FileStatusGet("_any", "/tmp/app-config.yaml").After(deploy2)
+
+	report2, err := o2.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Decode typed results from the report.
-	var status osapi.FileStatusResult
-	if err := report.Decode("file-status", &status); err == nil {
-		fmt.Printf("File %s status: %s\n", status.Path, status.Status)
+	var status2 osapi.FileStatusResult
+	if err := report2.Decode("file-status", &status2); err == nil {
+		fmt.Printf("File %s status: %s\n", status2.Path, status2.Status)
 	}
+
+	// Phase 3: idempotency — same upload + deploy + verify (expect unchanged).
+	fmt.Println("\n=== Phase 3: Idempotency check (expect unchanged) ===")
+
+	o3 := newOrchestrator(url, token)
+	upload3 := o3.FileUpload("app-config.yaml", "raw", configData)
+	deploy3 := o3.FileDeploy("_any", deployOpts).After(upload3)
+	o3.FileStatusGet("_any", "/tmp/app-config.yaml").After(deploy3)
+
+	report3, err := o3.Run(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var status3 osapi.FileStatusResult
+	if err := report3.Decode("file-status", &status3); err == nil {
+		fmt.Printf("File %s status: %s\n", status3.Path, status3.Status)
+	}
+
+	// Phase 4: cleanup — remove the deployed file.
+	fmt.Println("\n=== Phase 4: Cleanup ===")
+
+	o4 := newOrchestrator(url, token)
+	o4.CommandShell("_any", "rm -f /tmp/app-config.yaml").OnError(orchestrator.Continue)
+	//nolint:errcheck
+	o4.Run(context.Background()) //nolint:errcheck
 }

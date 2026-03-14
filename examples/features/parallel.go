@@ -21,9 +21,6 @@
 // Package main demonstrates parallel task execution. Multiple operations
 // at the same DAG level run concurrently.
 //
-// The final level runs cat /proc/version which succeeds on Linux hosts
-// but fails on macOS, demonstrating per-host error rendering.
-//
 // DAG:
 //
 //	health-check
@@ -32,15 +29,17 @@
 //	    ├── get-memory
 //	    ├── get-load
 //	    └── get-uptime
-//	          └── shell-cat /proc/version (continue on error)
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run parallel.go
 package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
+
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
@@ -68,15 +67,20 @@ func main() {
 	o.NodeDiskGet("_all").After(health)
 	o.NodeMemoryGet("_all").After(health)
 	o.NodeLoadGet("_all").After(health)
-	uptime := o.NodeUptimeGet("_all").After(health)
+	o.NodeUptimeGet("_all").After(health)
 
-	// Level 2: read /proc/version — exists on Linux, missing on
-	// macOS. Demonstrates per-host error rendering with Continue.
-	o.CommandShell("_all", "cat /proc/version").
-		After(uptime).
-		OnError(orchestrator.Continue)
-
-	if _, err := o.Run(context.Background()); err != nil {
+	report, err := o.Run(context.Background())
+	if err != nil {
 		log.Fatal(err)
+	}
+
+	var h osapi.HostnameResult
+	if err := report.Decode("get-hostname", &h); err == nil {
+		fmt.Printf("\nHostname: %s\n", h.Hostname)
+	}
+
+	var m osapi.MemoryResult
+	if err := report.Decode("get-memory", &m); err == nil && m.Memory != nil {
+		fmt.Printf("Memory: %.1f GB total\n", float64(m.Memory.Total)/(1024*1024*1024))
 	}
 }

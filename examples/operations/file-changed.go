@@ -18,16 +18,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates conditional file upload using FileChanged.
-// Checks whether local content differs from the Object Store version,
-// then only uploads and deploys if changes are detected.
+// Package main demonstrates drift detection with FileChanged.
 //
-// DAG:
+// Phase 1: upload known content to establish baseline.
+// Phase 2: FileChanged with same content — no drift (changed=false),
 //
-//	health-check
-//	    └── check-file
-//	            └── upload-file (OnlyIfChanged)
-//	                    └── deploy-file (OnlyIfChanged)
+//	OnlyIfChanged steps are skipped.
+//
+// Phase 3: FileChanged with different content — drift detected
+//
+//	(changed=true), OnlyIfChanged steps run.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run file-changed.go
 package main
@@ -54,39 +54,76 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
-	configData := []byte("server:\n  port: 8080\n  debug: false\n")
+	contentA := []byte("server:\n  port: 8080\n  debug: false\n")
+	contentB := []byte("server:\n  port: 9090\n  debug: true\n")
 
-	o := orchestrator.New(url, token)
-
-	// Level 0: verify the API is reachable.
-	health := o.HealthCheck()
-
-	// Level 1: check if the file content has changed.
-	check := o.FileChanged("app-config.yaml", configData).After(health)
-
-	// Level 2: upload only if the content differs from stored version.
-	upload := o.FileUpload("app-config.yaml", "raw", configData).
-		After(check).
-		OnlyIfChanged()
-
-	// Level 3: deploy only if a new version was uploaded.
-	o.FileDeploy("_any", osapi.FileDeployOpts{
+	deployOpts := osapi.FileDeployOpts{
 		ObjectName:  "app-config.yaml",
 		Path:        "/tmp/app-config.yaml",
 		ContentType: "raw",
 		Mode:        "0644",
-	}).After(upload).
+	}
+
+	// Phase 1: upload known content to establish baseline.
+	fmt.Println("=== Phase 1: Upload baseline ===")
+
+	o1 := orchestrator.New(url, token)
+
+	o1.FileUpload("app-config.yaml", "raw", contentA, orchestrator.WithForce())
+
+	if _, err := o1.Run(context.Background()); err != nil {
+		log.Fatal(err)
+	}
+
+	// Phase 2: FileChanged with same content — no drift expected.
+	fmt.Println("\n=== Phase 2: Check with same content (expect no drift) ===")
+
+	o2 := orchestrator.New(url, token)
+
+	check2 := o2.FileChanged("app-config.yaml", contentA)
+
+	upload2 := o2.FileUpload("app-config.yaml", "raw", contentA).
+		After(check2).
 		OnlyIfChanged()
 
-	report, err := o.Run(context.Background())
+	o2.FileDeploy("_any", deployOpts).
+		After(upload2).
+		OnlyIfChanged()
+
+	report2, err := o2.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Decode the change check result.
-	var changed osapi.FileChanged
-	if err := report.Decode("check-file", &changed); err == nil {
+	var changed2 osapi.FileChanged
+	if err := report2.Decode("check-file", &changed2); err == nil {
 		fmt.Printf("File %s changed: %v (sha256: %s)\n",
-			changed.Name, changed.Changed, changed.SHA256[:12])
+			changed2.Name, changed2.Changed, changed2.SHA256[:12])
+	}
+
+	// Phase 3: FileChanged with different content — drift expected.
+	fmt.Println("\n=== Phase 3: Check with different content (expect drift) ===")
+
+	o3 := orchestrator.New(url, token)
+
+	check3 := o3.FileChanged("app-config.yaml", contentB)
+
+	upload3 := o3.FileUpload("app-config.yaml", "raw", contentB, orchestrator.WithForce()).
+		After(check3).
+		OnlyIfChanged()
+
+	o3.FileDeploy("_any", deployOpts).
+		After(upload3).
+		OnlyIfChanged()
+
+	report3, err := o3.Run(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var changed3 osapi.FileChanged
+	if err := report3.Decode("check-file", &changed3); err == nil {
+		fmt.Printf("File %s changed: %v (sha256: %s)\n",
+			changed3.Name, changed3.Changed, changed3.SHA256[:12])
 	}
 }

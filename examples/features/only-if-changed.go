@@ -18,23 +18,26 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates OnlyIfChanged — a step that is skipped
-// unless at least one dependency reported a change.
+// Package main demonstrates OnlyIfChanged with file operations.
 //
-// DAG:
+// Phase 1: cleanup — remove deployed file.
+// Phase 2: deploy file (changed=true) → OnlyIfChanged command runs.
+// Phase 3: deploy same file (changed=false) → OnlyIfChanged command
 //
-//	health-check
-//	    ├── get-hostname
-//	    └── get-disk
-//	            └── run-df (only-if-changed)
+//	is skipped.
+//
+// Phase 4: cleanup.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run only-if-changed.go
 package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
+
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
@@ -50,19 +53,55 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
-	o := orchestrator.New(url, token)
+	content := []byte("only-if-changed test content\n")
 
-	health := o.HealthCheck()
-	o.NodeHostnameGet("_any").After(health)
-	disk := o.NodeDiskGet("_any").After(health)
+	// Phase 1: Cleanup
+	fmt.Println("=== Phase 1: Cleanup ===")
+	o1 := orchestrator.New(url, token)
+	o1.CommandShell("_any", "rm -f /tmp/only-if-changed.txt").
+		OnError(orchestrator.Continue)
+	o1.Run(context.Background()) //nolint:errcheck
 
-	// Only runs if the disk query reported changes.
-	o.CommandExec("_any", "df", "-h").
-		Named("run-df").
-		After(disk).
+	// Phase 2: Deploy (expect changed, post-deploy runs)
+	fmt.Println("\n=== Phase 2: Deploy file (expect changed, post-deploy runs) ===")
+	o2 := orchestrator.New(url, token)
+	upload2 := o2.FileUpload("only-if-changed.txt", "raw", content, orchestrator.WithForce())
+	deploy2 := o2.FileDeploy("_any", osapi.FileDeployOpts{
+		ObjectName:  "only-if-changed.txt",
+		Path:        "/tmp/only-if-changed.txt",
+		ContentType: "raw",
+		Mode:        "0644",
+	}).After(upload2)
+	o2.CommandExec("_any", "echo", "post-deploy-hook").
+		Named("post-deploy").
+		After(deploy2).
 		OnlyIfChanged()
-
-	if _, err := o.Run(context.Background()); err != nil {
+	if _, err := o2.Run(context.Background()); err != nil {
 		log.Fatal(err)
 	}
+
+	// Phase 3: Same deploy (expect unchanged, post-deploy skipped)
+	fmt.Println("\n=== Phase 3: Same deploy (expect unchanged, post-deploy skipped) ===")
+	o3 := orchestrator.New(url, token)
+	upload3 := o3.FileUpload("only-if-changed.txt", "raw", content)
+	deploy3 := o3.FileDeploy("_any", osapi.FileDeployOpts{
+		ObjectName:  "only-if-changed.txt",
+		Path:        "/tmp/only-if-changed.txt",
+		ContentType: "raw",
+		Mode:        "0644",
+	}).After(upload3)
+	o3.CommandExec("_any", "echo", "post-deploy-hook").
+		Named("post-deploy").
+		After(deploy3).
+		OnlyIfChanged()
+	if _, err := o3.Run(context.Background()); err != nil {
+		log.Fatal(err)
+	}
+
+	// Phase 4: Cleanup
+	fmt.Println("\n=== Phase 4: Cleanup ===")
+	o4 := orchestrator.New(url, token)
+	o4.CommandShell("_any", "rm -f /tmp/only-if-changed.txt").
+		OnError(orchestrator.Continue)
+	o4.Run(context.Background()) //nolint:errcheck
 }
