@@ -22,10 +22,12 @@
 // lifecycle management.
 //
 // Run 1: pre-cleanup removes image → pull downloads it (changed=true)
-//        → create → exec + inspect → container remove
+//
+//	→ create → exec + inspect → container remove
 //
 // Run 2: image is cached → pull is a no-op (changed=false)
-//        → create → exec + inspect → container remove + image remove
+//
+//	→ create → exec + inspect → container remove + image remove
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run docker.go
 package main
