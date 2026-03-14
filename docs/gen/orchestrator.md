@@ -41,7 +41,7 @@ retries, and reporting.
   - [func \(o \*Orchestrator\) NodeMemoryGet\(target string\) \*Step](#Orchestrator.NodeMemoryGet)
   - [func \(o \*Orchestrator\) NodeStatusGet\(target string\) \*Step](#Orchestrator.NodeStatusGet)
   - [func \(o \*Orchestrator\) NodeUptimeGet\(target string\) \*Step](#Orchestrator.NodeUptimeGet)
-  - [func \(o \*Orchestrator\) Run\(\) \(\*Report, error\)](#Orchestrator.Run)
+  - [func \(o \*Orchestrator\) Run\(ctx context.Context\) \(\*Report, error\)](#Orchestrator.Run)
   - [func \(o \*Orchestrator\) TaskFunc\(name string, fn func\(ctx context.Context, r Results\) \(\*sdk.Result, error\)\) \*Step](#Orchestrator.TaskFunc)
 - [type Predicate](#Predicate)
   - [func Arch\(architecture string\) Predicate](#Arch)
@@ -117,7 +117,7 @@ const (
 
 <a name="HostResult"></a>
 
-## type [HostResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L95-L100)
+## type [HostResult](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L94-L99)
 
 HostResult represents a single host's response within a broadcast operation.
 
@@ -132,7 +132,7 @@ type HostResult struct {
 
 <a name="HostResult.Decode"></a>
 
-### func \(HostResult\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L103-L105)
+### func \(HostResult\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L102-L104)
 
 ```go
 func (h HostResult) Decode(v any) error
@@ -186,7 +186,7 @@ New creates an Orchestrator connected to the given OSAPI server.
 
 <a name="Orchestrator.AgentGet"></a>
 
-### func \(\*Orchestrator\) [AgentGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L630-L632)
+### func \(\*Orchestrator\) [AgentGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L613-L615)
 
 ```go
 func (o *Orchestrator) AgentGet(hostname string) *Step
@@ -196,7 +196,7 @@ AgentGet creates a step that retrieves detailed info about a specific agent.
 
 <a name="Orchestrator.AgentList"></a>
 
-### func \(\*Orchestrator\) [AgentList](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L605)
+### func \(\*Orchestrator\) [AgentList](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L588)
 
 ```go
 func (o *Orchestrator) AgentList() *Step
@@ -237,7 +237,7 @@ synchronously at plan\-build time. With no predicates, returns all agents.
 
 <a name="Orchestrator.FileChanged"></a>
 
-### func \(\*Orchestrator\) [FileChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L573-L576)
+### func \(\*Orchestrator\) [FileChanged](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L556-L559)
 
 ```go
 func (o *Orchestrator) FileChanged(name string, data []byte) *Step
@@ -250,7 +250,7 @@ is unchanged.
 
 <a name="Orchestrator.FileDeploy"></a>
 
-### func \(\*Orchestrator\) [FileDeploy](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L456-L459)
+### func \(\*Orchestrator\) [FileDeploy](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L439-L442)
 
 ```go
 func (o *Orchestrator) FileDeploy(target string, opts osapi.FileDeployOpts) *Step
@@ -263,7 +263,7 @@ uploaded to the Object Store. ContentType should be "raw" for literal content or
 
 <a name="Orchestrator.FileStatusGet"></a>
 
-### func \(\*Orchestrator\) [FileStatusGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L489-L492)
+### func \(\*Orchestrator\) [FileStatusGet](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L472-L475)
 
 ```go
 func (o *Orchestrator) FileStatusGet(target string, path string) *Step
@@ -275,7 +275,7 @@ to the expected state.
 
 <a name="Orchestrator.FileUpload"></a>
 
-### func \(\*Orchestrator\) [FileUpload](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L524-L529)
+### func \(\*Orchestrator\) [FileUpload](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/ops.go#L507-L512)
 
 ```go
 func (o *Orchestrator) FileUpload(name string, contentType string, data []byte, opts ...UploadOption) *Step
@@ -290,7 +290,7 @@ to always upload regardless of content changes.
 
 <a name="Orchestrator.GroupByFact"></a>
 
-### func \(\*Orchestrator\) [GroupByFact](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/discover.go#L111-L115)
+### func \(\*Orchestrator\) [GroupByFact](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/discover.go#L100-L104)
 
 ```go
 func (o *Orchestrator) GroupByFact(ctx context.Context, key string, predicates ...Predicate) (map[string][]osapi.Agent, error)
@@ -401,17 +401,17 @@ NodeUptimeGet creates a step that retrieves system uptime.
 
 <a name="Orchestrator.Run"></a>
 
-### func \(\*Orchestrator\) [Run](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/orchestrator.go#L60)
+### func \(\*Orchestrator\) [Run](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/orchestrator.go#L60-L62)
 
 ```go
-func (o *Orchestrator) Run() (*Report, error)
+func (o *Orchestrator) Run(ctx context.Context) (*Report, error)
 ```
 
 Run executes the plan and returns a report.
 
 <a name="Orchestrator.TaskFunc"></a>
 
-### func \(\*Orchestrator\) [TaskFunc](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/orchestrator.go#L74-L77)
+### func \(\*Orchestrator\) [TaskFunc](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/orchestrator.go#L76-L79)
 
 ```go
 func (o *Orchestrator) TaskFunc(name string, fn func(ctx context.Context, r Results) (*sdk.Result, error)) *Step
@@ -530,7 +530,7 @@ OS returns a predicate that matches agents running the given distribution
 
 <a name="Report"></a>
 
-## type [Report](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L165-L168)
+## type [Report](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L164-L167)
 
 Report summarizes plan execution.
 
@@ -543,7 +543,7 @@ type Report struct {
 
 <a name="Report.Decode"></a>
 
-### func \(\*Report\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L172-L175)
+### func \(\*Report\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L171-L174)
 
 ```go
 func (r *Report) Decode(name string, v any) error
@@ -554,7 +554,7 @@ the given typed struct.
 
 <a name="Report.Summary"></a>
 
-### func \(\*Report\) [Summary](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L199)
+### func \(\*Report\) [Summary](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L198)
 
 ```go
 func (r *Report) Summary() string
@@ -564,7 +564,7 @@ Summary returns a human\-readable summary of the plan execution.
 
 <a name="Results"></a>
 
-## type [Results](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L33-L35)
+## type [Results](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L32-L34)
 
 Results provides access to completed step results inside When guards.
 
@@ -576,7 +576,7 @@ type Results struct {
 
 <a name="NewResults"></a>
 
-### func [NewResults](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L38-L40)
+### func [NewResults](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L37-L39)
 
 ```go
 func NewResults(sdkResults sdk.Results) Results
@@ -586,7 +586,7 @@ NewResults creates a Results from SDK results. Intended for testing.
 
 <a name="Results.Changed"></a>
 
-### func \(Results\) [Changed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L85-L87)
+### func \(Results\) [Changed](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L84-L86)
 
 ```go
 func (r Results) Changed(name string) bool
@@ -597,7 +597,7 @@ step is not found or did not report changes.
 
 <a name="Results.Decode"></a>
 
-### func \(Results\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L143-L146)
+### func \(Results\) [Decode](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L142-L145)
 
 ```go
 func (r Results) Decode(name string, v any) error
@@ -608,7 +608,7 @@ struct.
 
 <a name="Results.HostResults"></a>
 
-### func \(Results\) [HostResults](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L120-L122)
+### func \(Results\) [HostResults](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L119-L121)
 
 ```go
 func (r Results) HostResults(name string) []HostResult
@@ -619,7 +619,7 @@ unicast operations or unknown step names.
 
 <a name="Results.Status"></a>
 
-### func \(Results\) [Status](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L61-L63)
+### func \(Results\) [Status](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L60-L62)
 
 ```go
 func (r Results) Status(name string) TaskStatus
@@ -811,7 +811,7 @@ true for at least one agent. Requires a prior AgentList step referenced by name.
 
 <a name="TaskStatus"></a>
 
-## type [TaskStatus](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L45)
+## type [TaskStatus](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/result.go#L44)
 
 TaskStatus represents the outcome of a step for guard inspection.
 
