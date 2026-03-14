@@ -46,13 +46,19 @@ func (s *ResultPublicTestSuite) TestDecode() {
 		validateFunc func()
 	}{
 		{
-			name: "Decodes hostname result",
+			name: "Decodes hostname from host results",
 			results: sdk.Results{
 				"get-hostname": &sdk.Result{
 					Changed: false,
-					Data: map[string]any{
-						"hostname": "web-01",
-						"labels":   map[string]any{"env": "prod"},
+					Data:    map[string]any{"results": []any{}},
+					HostResults: []sdk.HostResult{
+						{
+							Hostname: "web-01",
+							Data: map[string]any{
+								"hostname": "web-01",
+								"labels":   map[string]any{"env": "prod"},
+							},
+						},
 					},
 				},
 			},
@@ -61,9 +67,15 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			validateFunc: func() {
 				r := orchestrator.NewResults(sdk.Results{
 					"get-hostname": &sdk.Result{
-						Data: map[string]any{
-							"hostname": "web-01",
-							"labels":   map[string]any{"env": "prod"},
+						Data: map[string]any{"results": []any{}},
+						HostResults: []sdk.HostResult{
+							{
+								Hostname: "web-01",
+								Data: map[string]any{
+									"hostname": "web-01",
+									"labels":   map[string]any{"env": "prod"},
+								},
+							},
 						},
 					},
 				})
@@ -75,14 +87,19 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			},
 		},
 		{
-			name: "Decodes command result",
+			name: "Decodes command from host results",
 			results: sdk.Results{
 				"run-uptime": &sdk.Result{
-					Data: map[string]any{
-						"stdout":      "12:34:56 up 10 days",
-						"stderr":      "",
-						"exit_code":   float64(0),
-						"duration_ms": float64(42),
+					Data: map[string]any{"results": []any{}},
+					HostResults: []sdk.HostResult{
+						{
+							Hostname: "web-01",
+							Data: map[string]any{
+								"stdout":      "12:34:56 up 10 days",
+								"exit_code":   float64(0),
+								"duration_ms": float64(42),
+							},
+						},
 					},
 				},
 			},
@@ -91,10 +108,16 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			validateFunc: func() {
 				r := orchestrator.NewResults(sdk.Results{
 					"run-uptime": &sdk.Result{
-						Data: map[string]any{
-							"stdout":      "12:34:56 up 10 days",
-							"exit_code":   float64(0),
-							"duration_ms": float64(42),
+						Data: map[string]any{"results": []any{}},
+						HostResults: []sdk.HostResult{
+							{
+								Hostname: "web-01",
+								Data: map[string]any{
+									"stdout":      "12:34:56 up 10 days",
+									"exit_code":   float64(0),
+									"duration_ms": float64(42),
+								},
+							},
 						},
 					},
 				})
@@ -104,6 +127,29 @@ func (s *ResultPublicTestSuite) TestDecode() {
 				s.Equal("12:34:56 up 10 days", cmd.Stdout)
 				s.Equal(0, cmd.ExitCode)
 				s.Equal(int64(42), cmd.DurationMs)
+			},
+		},
+		{
+			name: "Falls back to Data when no host results",
+			results: sdk.Results{
+				"summarize": &sdk.Result{
+					Changed: true,
+					Data:    map[string]any{"host": "web-01"},
+				},
+			},
+			lookupName: "summarize",
+			target:     &map[string]any{},
+			validateFunc: func() {
+				r := orchestrator.NewResults(sdk.Results{
+					"summarize": &sdk.Result{
+						Changed: true,
+						Data:    map[string]any{"host": "web-01"},
+					},
+				})
+				var m map[string]any
+				err := r.Decode("summarize", &m)
+				s.Require().NoError(err)
+				s.Equal("web-01", m["host"])
 			},
 		},
 		{
@@ -123,16 +169,23 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			errContains: "no result for",
 		},
 		{
-			name: "Decodes command result with error field",
+			name: "Decodes command error from host results",
 			results: sdk.Results{
 				"run-cmd": &sdk.Result{
 					Changed: true,
-					Data: map[string]any{
-						"stdout":      "partial output",
-						"stderr":      "command not found",
-						"exit_code":   float64(127),
-						"duration_ms": float64(50),
-						"error":       "exec failed",
+					Data:    map[string]any{"results": []any{}},
+					HostResults: []sdk.HostResult{
+						{
+							Hostname: "web-01",
+							Error:    "exec failed",
+							Data: map[string]any{
+								"stdout":      "partial output",
+								"stderr":      "command not found",
+								"exit_code":   float64(127),
+								"duration_ms": float64(50),
+								"error":       "exec failed",
+							},
+						},
 					},
 				},
 			},
@@ -142,12 +195,19 @@ func (s *ResultPublicTestSuite) TestDecode() {
 				r := orchestrator.NewResults(sdk.Results{
 					"run-cmd": &sdk.Result{
 						Changed: true,
-						Data: map[string]any{
-							"stdout":      "partial output",
-							"stderr":      "command not found",
-							"exit_code":   float64(127),
-							"duration_ms": float64(50),
-							"error":       "exec failed",
+						Data:    map[string]any{"results": []any{}},
+						HostResults: []sdk.HostResult{
+							{
+								Hostname: "web-01",
+								Error:    "exec failed",
+								Data: map[string]any{
+									"stdout":      "partial output",
+									"stderr":      "command not found",
+									"exit_code":   float64(127),
+									"duration_ms": float64(50),
+									"error":       "exec failed",
+								},
+							},
 						},
 					},
 				})
@@ -562,6 +622,31 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 			lookupName: "run-cmd",
 			validateFn: func(cmd osapi.CommandResult) {
 				s.Equal("hello", cmd.Stdout)
+				s.Equal(0, cmd.ExitCode)
+			},
+		},
+		{
+			name: "Decodes from host results when present",
+			tasks: []sdk.TaskResult{
+				{
+					Name:    "run-cmd",
+					Status:  sdk.StatusChanged,
+					Changed: true,
+					Data:    map[string]any{"results": []any{}},
+					HostResults: []sdk.HostResult{
+						{
+							Hostname: "web-01",
+							Data: map[string]any{
+								"stdout":    "hello from host",
+								"exit_code": float64(0),
+							},
+						},
+					},
+				},
+			},
+			lookupName: "run-cmd",
+			validateFn: func(cmd osapi.CommandResult) {
+				s.Equal("hello from host", cmd.Stdout)
 				s.Equal(0, cmd.ExitCode)
 			},
 		},

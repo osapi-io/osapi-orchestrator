@@ -41,7 +41,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -50,29 +49,6 @@ import (
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
-
-// decodeFirstHost decodes the first host result of the named step
-// into v. Returns true if successful.
-func decodeFirstHost(
-	report *orchestrator.Report,
-	stepName string,
-	v any,
-) bool {
-	for _, t := range report.Tasks {
-		if t.Name != stepName || len(t.HostResults) == 0 {
-			continue
-		}
-
-		b, err := json.Marshal(t.HostResults[0].Data)
-		if err != nil {
-			return false
-		}
-
-		return json.Unmarshal(b, v) == nil
-	}
-
-	return false
-}
 
 func main() {
 	token := os.Getenv("OSAPI_TOKEN")
@@ -103,11 +79,11 @@ func main() {
 	}
 
 	var cmd osapi.CommandResult
-	if decodeFirstHost(report, "run-uptime", &cmd) {
+	if err := report.Decode("run-uptime", &cmd); err == nil {
 		fmt.Printf("uptime stdout: %s\n", cmd.Stdout)
 	}
 
-	if decodeFirstHost(report, "shell-uname -a", &cmd) {
+	if err := report.Decode("shell-uname -a", &cmd); err == nil {
 		fmt.Printf("uname stdout:  %s\n", cmd.Stdout)
 	}
 
@@ -124,7 +100,7 @@ func main() {
 	}
 
 	var failCmd osapi.CommandResult
-	if decodeFirstHost(report2, "run-ls", &failCmd) {
+	if err := report2.Decode("run-ls", &failCmd); err == nil {
 		fmt.Printf("stderr:    %s", failCmd.Stderr)
 		fmt.Printf("exit code: %d\n", failCmd.ExitCode)
 	}

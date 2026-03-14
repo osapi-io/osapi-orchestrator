@@ -18,23 +18,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates conditional execution with When guards.
+// Package main demonstrates When guards — conditional execution
+// based on prior step results.
 //
-// The whoami command only runs if the hostname was successfully retrieved
-// and is non-empty. The guard uses Results.Decode for typed access to
-// prior step data.
-//
-// DAG:
-//
-//	health-check
-//	    └── get-hostname
-//	            └── whoami (when: hostname != "")
+// Plan 1: guard passes — whoami runs because hostname is non-empty.
+// Plan 2: guard blocks — whoami is skipped because hostname doesn't
+// match "impossible".
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run guards.go
 package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -54,24 +50,43 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
-	o := orchestrator.New(url, token)
-
-	health := o.HealthCheck()
-	hostname := o.NodeHostnameGet("_any").After(health)
-
-	// Guard: decode the hostname result and only proceed if non-empty.
-	o.CommandExec("_any", "whoami").
-		After(hostname).
+	// Plan 1: Guard should PASS
+	fmt.Println("=== Plan 1: Guard should PASS (hostname != \"\") ===")
+	o1 := orchestrator.New(url, token)
+	health1 := o1.HealthCheck()
+	hostname1 := o1.NodeHostnameGet("_any").After(health1)
+	o1.CommandExec("_any", "whoami").
+		After(hostname1).
 		When(func(r orchestrator.Results) bool {
 			var h osapi.HostnameResult
 			if err := r.Decode("get-hostname", &h); err != nil {
 				return false
 			}
-
 			return h.Hostname != ""
 		})
-
-	if _, err := o.Run(context.Background()); err != nil {
+	report1, err := o1.Run(context.Background())
+	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("Result: %s\n", report1.Summary())
+
+	// Plan 2: Guard should BLOCK
+	fmt.Println("\n=== Plan 2: Guard should BLOCK (hostname == \"impossible\") ===")
+	o2 := orchestrator.New(url, token)
+	health2 := o2.HealthCheck()
+	hostname2 := o2.NodeHostnameGet("_any").After(health2)
+	o2.CommandExec("_any", "whoami").
+		After(hostname2).
+		When(func(r orchestrator.Results) bool {
+			var h osapi.HostnameResult
+			if err := r.Decode("get-hostname", &h); err != nil {
+				return false
+			}
+			return h.Hostname == "impossible"
+		})
+	report2, err := o2.Run(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Result: %s\n", report2.Summary())
 }

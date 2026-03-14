@@ -385,7 +385,7 @@ func (o *Orchestrator) CommandExec(
 					return sdk.HostResult{
 						Hostname: r.Hostname,
 						Changed:  r.Changed,
-						Error:    r.Error,
+						Error:    commandError(r),
 					}
 				},
 			)
@@ -421,7 +421,7 @@ func (o *Orchestrator) CommandShell(
 					return sdk.HostResult{
 						Hostname: r.Hostname,
 						Changed:  r.Changed,
-						Error:    r.Error,
+						Error:    commandError(r),
 					}
 				},
 			)
@@ -429,6 +429,24 @@ func (o *Orchestrator) CommandShell(
 	)
 
 	return &Step{task: task}
+}
+
+// commandError returns an error string for a command result. If the
+// server set an explicit error, that takes precedence. Otherwise a
+// non-zero exit code is treated as a failure so that guards like
+// OnlyIfAnyHostFailed work naturally for command steps.
+func commandError(
+	r osapi.CommandResult,
+) string {
+	if r.Error != "" {
+		return r.Error
+	}
+
+	if r.ExitCode != 0 {
+		return fmt.Sprintf("exit code %d", r.ExitCode)
+	}
+
+	return ""
 }
 
 // FileDeploy creates a step that deploys a file from the Object Store

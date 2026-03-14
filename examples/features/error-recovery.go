@@ -18,25 +18,28 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates error recovery with Continue strategy and
-// OnlyIfFailed cleanup steps.
+// Package main demonstrates error recovery at two levels.
 //
-// The deploy step uses Continue so independent tasks keep running even
-// if it fails. The cleanup step only executes when deploy has failed,
-// providing a pattern for failure-triggered recovery.
+// Plan 1: Infrastructure failure — TaskFunc returns an error.
 //
-// DAG:
+//	OnlyIfFailed cleanup runs because the step failed at the
+//	SDK level.
 //
-//	deploy (_all, continue on error)
-//	    └── cleanup (only-if-failed)
+// Plan 2: Command failure — a command exits non-zero.
+//
+//	OnlyIfAnyHostFailed cleanup runs because non-zero exit codes
+//	are treated as host errors by the orchestrator.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run error-recovery.go
 package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
+
+	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
@@ -52,21 +55,36 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
-	o := orchestrator.New(url, token)
+	// Plan 1: Infrastructure failure (TaskFunc returns error)
+	fmt.Println("=== Plan 1: Infrastructure failure (OnlyIfFailed) ===")
+	o1 := orchestrator.New(url, token)
+	deploy1 := o1.TaskFunc(
+		"deploy",
+		func(_ context.Context, _ orchestrator.Results) (*sdk.Result, error) {
+			return nil, fmt.Errorf("simulated deployment failure")
+		},
+	).OnError(orchestrator.Continue)
+	o1.CommandExec("_any", "echo", "running-infra-cleanup").
+		Named("cleanup").
+		After(deploy1).
+		OnlyIfFailed()
+	if _, err := o1.Run(context.Background()); err != nil {
+		log.Fatal(err)
+	}
 
-	// Broadcast deploy to all hosts. Continue allows the plan to
-	// proceed even if some hosts fail.
-	deploy := o.CommandExec("_all", "echo", "deploying").
+	// Plan 2: Command failure (non-zero exit code)
+	// The orchestrator treats non-zero exit codes as host errors,
+	// so OnlyIfAnyHostFailed works naturally for command steps.
+	fmt.Println("\n=== Plan 2: Command failure (OnlyIfAnyHostFailed) ===")
+	o2 := orchestrator.New(url, token)
+	deploy2 := o2.CommandShell("_any", "cat /nonexistent-file").
 		Named("deploy").
 		OnError(orchestrator.Continue)
-
-	// Recovery step — only runs if deploy failed on at least one host.
-	o.CommandExec("_any", "echo", "running-cleanup").
+	o2.CommandExec("_any", "echo", "running-command-cleanup").
 		Named("cleanup").
-		After(deploy).
-		OnlyIfFailed()
-
-	if _, err := o.Run(context.Background()); err != nil {
+		After(deploy2).
+		OnlyIfAnyHostFailed()
+	if _, err := o2.Run(context.Background()); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -18,9 +18,15 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates broadcast-aware guards. A deploy step
-// broadcasts to all hosts with Continue error strategy. Downstream
-// steps use host-level guards to react to per-host outcomes.
+// Package main demonstrates broadcast-aware host-level guards.
+//
+// A deploy step broadcasts a failing command to all hosts with
+// Continue error strategy. The orchestrator treats non-zero exit
+// codes as host errors, so downstream guards react naturally:
+//   - OnlyIfAnyHostFailed: cleanup runs because the command exited
+//     non-zero on at least one host.
+//   - OnlyIfAllHostsChanged: verify runs because commands always
+//     report changed=true (non-idempotent).
 //
 // DAG:
 //
@@ -54,7 +60,7 @@ func main() {
 
 	// Broadcast deploy to all hosts. Continue allows the plan to
 	// proceed even if some hosts fail.
-	deploy := o.CommandExec("_all", "echo", "deploying").
+	deploy := o.CommandShell("_all", "cat /nonexistent-file").
 		Named("deploy").
 		OnError(orchestrator.Continue)
 
