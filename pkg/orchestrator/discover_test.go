@@ -21,6 +21,9 @@
 package orchestrator
 
 import (
+	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
@@ -126,6 +129,83 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		s.Run(tc.name, func() {
 			got := factValue(tc.agent, tc.key)
 			s.Equal(tc.expected, got)
+		})
+	}
+}
+
+func (s *DiscoverTestSuite) TestFetchAgents() {
+	tests := []struct {
+		name       string
+		handler    http.HandlerFunc
+		validateFn func([]osapi.Agent, error)
+	}{
+		{
+			name: "returns agents on success",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(
+					`{"agents":[{"hostname":"web-01","status":"Ready"}],"total":1}`,
+				))
+			}),
+			validateFn: func(
+				agents []osapi.Agent,
+				err error,
+			) {
+				s.NoError(err)
+				s.Len(agents, 1)
+				s.Equal("web-01", agents[0].Hostname)
+			},
+		},
+		{
+			name: "returns error when plan fails",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"server error"}`))
+			}),
+			validateFn: func(
+				agents []osapi.Agent,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(agents)
+				s.Contains(err.Error(), "run agent list")
+			},
+		},
+		{
+			name: "returns error when API returns error",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"internal"}`))
+			}),
+			validateFn: func(
+				agents []osapi.Agent,
+				err error,
+			) {
+				s.Error(err)
+				s.Nil(agents)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			orch := New(server.URL, "test-token")
+			agents, err := orch.fetchAgents(context.Background())
+			tc.validateFn(agents, err)
 		})
 	}
 }
