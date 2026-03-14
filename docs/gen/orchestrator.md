@@ -226,7 +226,7 @@ CommandShell creates a step that executes a shell command string.
 
 <a name="Orchestrator.Discover"></a>
 
-### func \(\*Orchestrator\) [Discover](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/discover.go#L34-L37)
+### func \(\*Orchestrator\) [Discover](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/discover.go#L38-L41)
 
 ```go
 func (o *Orchestrator) Discover(ctx context.Context, predicates ...Predicate) ([]osapi.Agent, error)
@@ -290,7 +290,7 @@ to always upload regardless of content changes.
 
 <a name="Orchestrator.GroupByFact"></a>
 
-### func \(\*Orchestrator\) [GroupByFact](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/discover.go#L100-L104)
+### func \(\*Orchestrator\) [GroupByFact](https://github.com/osapi-io/osapi-orchestrator/blob/main/pkg/orchestrator/discover.go#L104-L108)
 
 ```go
 func (o *Orchestrator) GroupByFact(ctx context.Context, key string, predicates ...Predicate) (map[string][]osapi.Agent, error)
