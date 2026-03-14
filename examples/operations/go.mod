@@ -6,7 +6,7 @@ replace github.com/osapi-io/osapi-orchestrator => ../..
 
 require (
 	github.com/osapi-io/osapi-orchestrator v0.0.0-20260307062306-1d8135903db8
-	github.com/retr0h/osapi v0.0.0-20260314055732-feef75f77d14
+	github.com/retr0h/osapi v0.0.0-20260314180104-9924cc50cba9
 )
 
 require (

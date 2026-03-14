@@ -89,7 +89,7 @@ func (o *Orchestrator) NodeHostnameGet(
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 
@@ -121,7 +121,7 @@ func (o *Orchestrator) NodeStatusGet(
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 
@@ -153,7 +153,7 @@ func (o *Orchestrator) NodeUptimeGet(
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 
@@ -185,7 +185,7 @@ func (o *Orchestrator) NodeDiskGet(
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 
@@ -217,7 +217,7 @@ func (o *Orchestrator) NodeMemoryGet(
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 
@@ -249,7 +249,7 @@ func (o *Orchestrator) NodeLoadGet(
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 
@@ -282,7 +282,7 @@ func (o *Orchestrator) NetworkDNSGet(
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 
@@ -317,7 +317,7 @@ func (o *Orchestrator) NetworkDNSUpdate(
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 
@@ -350,7 +350,7 @@ func (o *Orchestrator) NetworkPingDo(
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 
@@ -388,7 +388,7 @@ func (o *Orchestrator) CommandExec(
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 
@@ -424,7 +424,7 @@ func (o *Orchestrator) CommandShell(
 						Error:    r.Error,
 					}
 				},
-			), nil
+			)
 		},
 	)
 
