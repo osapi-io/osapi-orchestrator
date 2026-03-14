@@ -18,14 +18,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates Docker container lifecycle management
-// with idempotency. The example runs the full lifecycle twice to show
-// that pull returns changed=false on the second run (image already
-// present).
+// Package main demonstrates Docker pull idempotency and container
+// lifecycle management.
 //
-// Phase 1: pre-cleanup (swallow errors)
-// Phase 2: pull → create → exec + inspect → cleanup
-// Phase 3: run again to demonstrate idempotent pull
+// Run 1: pre-cleanup removes image → pull downloads it (changed=true)
+//        → create → exec + inspect → container remove
+//
+// Run 2: image is cached → pull is a no-op (changed=false)
+//        → create → exec + inspect → container remove + image remove
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run docker.go
 package main
@@ -59,24 +59,26 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
-	// Run the lifecycle twice to demonstrate idempotency.
-	// First run: pull downloads the image (changed=true).
-	// Second run: pull finds the image already present (changed=false).
-	for i := range 2 {
-		fmt.Printf("=== Run %d ===\n\n", i+1)
-		runLifecycle(url, token)
-		fmt.Println()
-	}
+	// Run 1: remove image first so pull downloads it (changed=true).
+	fmt.Println("=== Run 1: fresh pull ===\n")
+	runLifecycle(url, token, true, false)
+
+	// Run 2: image is cached so pull is a no-op (changed=false).
+	// Clean up the image at the end.
+	fmt.Println("\n=== Run 2: cached pull ===\n")
+	runLifecycle(url, token, false, true)
 }
 
 func runLifecycle(
 	url string,
 	token string,
+	removeImageFirst bool,
+	removeImageLast bool,
 ) {
 	o := orchestrator.New(url, token)
 
-	// Pre-cleanup: remove any leftover container. Swallow errors
-	// so a missing container does not block the run.
+	// Pre-cleanup: remove leftover container (always) and optionally
+	// remove the image to force a fresh pull. Errors are swallowed.
 	preCleanup := o.TaskFunc(
 		"pre-cleanup",
 		func(
@@ -91,11 +93,20 @@ func runLifecycle(
 				&osapi.DockerRemoveParams{Force: true},
 			)
 
+			if removeImageFirst {
+				_, _ = c.Docker.ImageRemove(
+					ctx,
+					targetHost,
+					imageName,
+					&osapi.DockerImageRemoveParams{Force: true},
+				)
+			}
+
 			return &sdk.Result{Changed: false}, nil
 		},
 	)
 
-	// Pull image.
+	// Pull image — changed=true on first run, changed=false on second.
 	pull := o.DockerPull(targetHost, osapi.DockerPullOpts{
 		Image: imageName,
 	}).After(preCleanup)
@@ -120,12 +131,21 @@ func runLifecycle(
 	// Inspect the running container.
 	inspect := o.DockerInspect(targetHost, containerName).After(create)
 
-	// Cleanup: force remove after exec and inspect finish.
-	o.DockerRemove(
+	// Remove container after exec and inspect finish.
+	containerRemove := o.DockerRemove(
 		targetHost,
 		containerName,
 		&osapi.DockerRemoveParams{Force: true},
 	).After(exec, inspect)
+
+	// Optionally remove the image at the end (cleanup on last run).
+	if removeImageLast {
+		o.DockerImageRemove(
+			targetHost,
+			imageName,
+			&osapi.DockerImageRemoveParams{Force: true},
+		).After(containerRemove)
+	}
 
 	if _, err := o.Run(context.Background()); err != nil {
 		log.Fatal(err)

@@ -920,3 +920,43 @@ func (o *Orchestrator) DockerList(
 
 	return &Step{task: task}
 }
+
+// DockerImageRemove creates a step that removes a container image
+// from the target host.
+func (o *Orchestrator) DockerImageRemove(
+	target string,
+	imageName string,
+	params *osapi.DockerImageRemoveParams,
+) *Step {
+	name := o.nextOpName("docker-image-remove")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Docker.ImageRemove(
+				ctx,
+				target,
+				imageName,
+				params,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("docker image remove: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerActionResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}

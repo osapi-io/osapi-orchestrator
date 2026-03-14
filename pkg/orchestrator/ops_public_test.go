@@ -643,6 +643,31 @@ func (s *OpsPublicTestSuite) TestDockerList() {
 	}
 }
 
+func (s *OpsPublicTestSuite) TestDockerImageRemove() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.DockerImageRemove(
+					"_any",
+					"nginx:latest",
+					&osapi.DockerImageRemoveParams{Force: true},
+				)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
 func TestOpsPublicTestSuite(
 	t *testing.T,
 ) {

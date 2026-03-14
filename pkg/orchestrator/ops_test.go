@@ -2777,6 +2777,112 @@ func (s *OpsTestSuite) TestDockerListNameCounter() {
 	}
 }
 
+func (s *OpsTestSuite) TestDockerImageRemove() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with image remove result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"00000000-0000-0000-0000-000000000001","results":[{"hostname":"h1","id":"nginx:latest","message":"Image removed successfully","changed":true}]}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on server error",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusInternalServerError)
+				_, _ = w.Write([]byte(`{"error":"internal error"}`))
+			}),
+			expectErr:   true,
+			errContains: "docker image remove",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.DockerImageRemove(
+				"_any",
+				"nginx:latest",
+				&osapi.DockerImageRemoveParams{Force: true},
+			)
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.True(result.Changed)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestDockerImageRemoveNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "docker-image-remove",
+			secondName: "docker-image-remove-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.DockerImageRemove("_any", "nginx:latest", nil),
+				orch.DockerImageRemove("_any", "nginx:latest", nil)
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
 func TestOpsTestSuite(
 	t *testing.T,
 ) {
