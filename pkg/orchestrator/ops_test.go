@@ -1280,7 +1280,7 @@ func (s *OpsTestSuite) TestFileChanged() {
 	}
 }
 
-func (s *OpsTestSuite) TestOperationNameCounter() {
+func (s *OpsTestSuite) TestHealthCheckNameCounter() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -1293,161 +1293,593 @@ func (s *OpsTestSuite) TestOperationNameCounter() {
 
 	tests := []struct {
 		name       string
-		callOp     func(orch *Orchestrator) (*Step, *Step)
 		firstName  string
 		secondName string
 	}{
 		{
-			name: "HealthCheck",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.HealthCheck(), orch.HealthCheck()
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "health-check",
 			secondName: "health-check-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.HealthCheck(), orch.HealthCheck()
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNodeHostnameGetNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "NodeHostnameGet",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.NodeHostnameGet("_any"), orch.NodeHostnameGet("_any")
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "get-hostname",
 			secondName: "get-hostname-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.NodeHostnameGet("_any"), orch.NodeHostnameGet("_any")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNodeStatusGetNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "NodeStatusGet",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.NodeStatusGet("_any"), orch.NodeStatusGet("_any")
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "get-status",
 			secondName: "get-status-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.NodeStatusGet("_any"), orch.NodeStatusGet("_any")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNodeUptimeGetNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "NodeUptimeGet",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.NodeUptimeGet("_any"), orch.NodeUptimeGet("_any")
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "get-uptime",
 			secondName: "get-uptime-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.NodeUptimeGet("_any"), orch.NodeUptimeGet("_any")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNodeDiskGetNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "NodeDiskGet",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.NodeDiskGet("_any"), orch.NodeDiskGet("_any")
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "get-disk",
 			secondName: "get-disk-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.NodeDiskGet("_any"), orch.NodeDiskGet("_any")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNodeMemoryGetNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "NodeMemoryGet",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.NodeMemoryGet("_any"), orch.NodeMemoryGet("_any")
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "get-memory",
 			secondName: "get-memory-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.NodeMemoryGet("_any"), orch.NodeMemoryGet("_any")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNodeLoadGetNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "NodeLoadGet",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.NodeLoadGet("_any"), orch.NodeLoadGet("_any")
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "get-load",
 			secondName: "get-load-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.NodeLoadGet("_any"), orch.NodeLoadGet("_any")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNetworkDNSGetNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "NetworkDNSGet",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.NetworkDNSGet("_any", "eth0"), orch.NetworkDNSGet("_any", "eth0")
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "get-dns",
 			secondName: "get-dns-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.NetworkDNSGet("_any", "eth0"), orch.NetworkDNSGet("_any", "eth0")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNetworkDNSUpdateNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "NetworkDNSUpdate",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.NetworkDNSUpdate("_any", "eth0", []string{"8.8.8.8"}, nil),
-					orch.NetworkDNSUpdate("_any", "eth0", []string{"8.8.8.8"}, nil)
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "update-dns",
 			secondName: "update-dns-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.NetworkDNSUpdate("_any", "eth0", []string{"8.8.8.8"}, nil),
+				orch.NetworkDNSUpdate("_any", "eth0", []string{"8.8.8.8"}, nil)
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNetworkPingDoNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "NetworkPingDo",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.NetworkPingDo("_any", "8.8.8.8"), orch.NetworkPingDo("_any", "8.8.8.8")
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "ping",
 			secondName: "ping-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.NetworkPingDo("_any", "8.8.8.8"), orch.NetworkPingDo("_any", "8.8.8.8")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCommandExecNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "CommandExec",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.CommandExec("_any", "uptime"), orch.CommandExec("_any", "uptime")
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "run-uptime",
 			secondName: "run-uptime-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.CommandExec("_any", "uptime"), orch.CommandExec("_any", "uptime")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCommandShellNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "CommandShell",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.CommandShell(
-						"_any",
-						"echo hello",
-					), orch.CommandShell(
-						"_any",
-						"echo hello",
-					)
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "shell-echo hello",
 			secondName: "shell-echo hello-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.CommandShell("_any", "echo hello"),
+				orch.CommandShell("_any", "echo hello")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestFileDeployNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "FileDeploy",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				opts := osapi.FileDeployOpts{ObjectName: "f", Path: "/p", ContentType: "raw"}
-				return orch.FileDeploy("_any", opts), orch.FileDeploy("_any", opts)
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "deploy-file",
 			secondName: "deploy-file-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			opts := osapi.FileDeployOpts{ObjectName: "f", Path: "/p", ContentType: "raw"}
+			first, second := orch.FileDeploy("_any", opts), orch.FileDeploy("_any", opts)
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestFileStatusGetNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "FileStatusGet",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.FileStatusGet("_any", "/p"), orch.FileStatusGet("_any", "/p")
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "file-status",
 			secondName: "file-status-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.FileStatusGet("_any", "/p"), orch.FileStatusGet("_any", "/p")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestAgentListNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "AgentList",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.AgentList(), orch.AgentList()
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "list-agents",
 			secondName: "list-agents-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.AgentList(), orch.AgentList()
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestAgentGetNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "AgentGet",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.AgentGet("web-01"), orch.AgentGet("web-01")
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "get-agent",
 			secondName: "get-agent-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.AgentGet("web-01"), orch.AgentGet("web-01")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestFileUploadNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "FileUpload",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.FileUpload("test.txt", "raw", []byte("content")),
-					orch.FileUpload("test.txt", "raw", []byte("content"))
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "upload-file",
 			secondName: "upload-file-2",
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.FileUpload("test.txt", "raw", []byte("content")),
+				orch.FileUpload("test.txt", "raw", []byte("content"))
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestFileChangedNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
 		{
-			name: "FileChanged",
-			callOp: func(orch *Orchestrator) (*Step, *Step) {
-				return orch.FileChanged("test.txt", []byte("content")),
-					orch.FileChanged("test.txt", []byte("content"))
-			},
+			name:       "Duplicate name gets counter suffix",
 			firstName:  "check-file",
 			secondName: "check-file-2",
 		},
@@ -1456,7 +1888,8 @@ func (s *OpsTestSuite) TestOperationNameCounter() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			orch := New(server.URL, "test-token")
-			first, second := tc.callOp(orch)
+			first, second := orch.FileChanged("test.txt", []byte("content")),
+				orch.FileChanged("test.txt", []byte("content"))
 
 			s.Equal(tc.firstName, first.task.Name())
 			s.Equal(tc.secondName, second.task.Name())

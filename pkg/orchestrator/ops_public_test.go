@@ -55,61 +55,181 @@ func (s *OpsPublicTestSuite) TearDownTest() {
 	s.server.Close()
 }
 
-func (s *OpsPublicTestSuite) TestOperations() {
+func (s *OpsPublicTestSuite) TestHealthCheck() {
 	tests := []struct {
 		name  string
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "HealthCheck",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.HealthCheck()
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestNodeHostnameGet() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "NodeHostnameGet",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.NodeHostnameGet("_any")
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestNodeStatusGet() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "NodeStatusGet",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.NodeStatusGet("_any")
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestNodeUptimeGet() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "NodeUptimeGet",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.NodeUptimeGet("_any")
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestNodeDiskGet() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "NodeDiskGet",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.NodeDiskGet("_any")
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestNodeMemoryGet() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "NodeMemoryGet",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.NodeMemoryGet("_any")
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestNodeLoadGet() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "NodeLoadGet",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.NodeLoadGet("_any")
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestNetworkDNSGet() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "NetworkDNSGet",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.NetworkDNSGet("_any", "eth0")
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestNetworkDNSUpdate() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "NetworkDNSUpdate",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.NetworkDNSUpdate(
 					"_any",
@@ -119,38 +239,128 @@ func (s *OpsPublicTestSuite) TestOperations() {
 				)
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestNetworkPingDo() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "NetworkPingDo",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.NetworkPingDo("_any", "8.8.8.8")
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestCommandExec() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "CommandExec",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.CommandExec("_any", "uptime", "-s")
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestCommandShell() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "CommandShell",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.CommandShell("_any", "echo hello")
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestAgentList() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "AgentList",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.AgentList()
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestAgentGet() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "AgentGet",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.AgentGet("server1")
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestFileDeploy() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "FileDeploy",
+			name: "Returns non-nil step with raw content type",
 			newFn: func() *orchestrator.Step {
 				return s.orch.FileDeploy("_any", osapi.FileDeployOpts{
 					ObjectName:  "config.yaml",
@@ -163,7 +373,7 @@ func (s *OpsPublicTestSuite) TestOperations() {
 			},
 		},
 		{
-			name: "FileDeployWithVars",
+			name: "Returns non-nil step with template content type and vars",
 			newFn: func() *orchestrator.Step {
 				return s.orch.FileDeploy("_any", osapi.FileDeployOpts{
 					ObjectName:  "config.tmpl",
@@ -173,20 +383,65 @@ func (s *OpsPublicTestSuite) TestOperations() {
 				})
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestFileStatusGet() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "FileStatusGet",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.FileStatusGet("_any", "/etc/app/config.yaml")
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestFileUpload() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "FileUpload",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.FileUpload("test.txt", "raw", []byte("hello"))
 			},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestFileChanged() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
 		{
-			name: "FileChanged",
+			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.FileChanged("test.txt", []byte("hello"))
 			},

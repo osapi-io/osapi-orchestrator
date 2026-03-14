@@ -35,7 +35,7 @@ type StepTestSuite struct {
 	suite.Suite
 }
 
-func (s *StepTestSuite) TestWhenGuardCallbackInvoked() {
+func (s *StepTestSuite) TestWhen() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -89,7 +89,7 @@ func (s *StepTestSuite) TestWhenGuardCallbackInvoked() {
 	}
 }
 
-func (s *StepTestSuite) TestNamedSetsTaskName() {
+func (s *StepTestSuite) TestNamed() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -127,7 +127,7 @@ func (s *StepTestSuite) TestNamedSetsTaskName() {
 	}
 }
 
-func (s *StepTestSuite) TestOnlyIfFailedGuard() {
+func (s *StepTestSuite) TestOnlyIfFailed() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -178,7 +178,7 @@ func (s *StepTestSuite) TestOnlyIfFailedGuard() {
 	}
 }
 
-func (s *StepTestSuite) TestOnlyIfAllChangedGuard() {
+func (s *StepTestSuite) TestOnlyIfAllChanged() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -260,7 +260,7 @@ func (s *StepTestSuite) TestOnlyIfAllChangedGuard() {
 	}
 }
 
-func (s *StepTestSuite) TestOnlyIfAnyHostFailedGuard() {
+func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -345,7 +345,7 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailedGuard() {
 	}
 }
 
-func (s *StepTestSuite) TestOnlyIfAllHostsFailedGuard() {
+func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -430,7 +430,7 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailedGuard() {
 	}
 }
 
-func (s *StepTestSuite) TestOnlyIfAnyHostChangedGuard() {
+func (s *StepTestSuite) TestOnlyIfAnyHostChanged() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -515,7 +515,7 @@ func (s *StepTestSuite) TestOnlyIfAnyHostChangedGuard() {
 	}
 }
 
-func (s *StepTestSuite) TestOnlyIfAllHostsChangedGuard() {
+func (s *StepTestSuite) TestOnlyIfAllHostsChanged() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -600,7 +600,7 @@ func (s *StepTestSuite) TestOnlyIfAllHostsChangedGuard() {
 	}
 }
 
-func (s *StepTestSuite) TestWhenFactGuardBehavior() {
+func (s *StepTestSuite) TestWhenFact() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,
@@ -768,7 +768,7 @@ func (s *StepTestSuite) TestWhenFactGuardBehavior() {
 	}
 }
 
-func (s *StepTestSuite) TestRetrySetsErrorStrategy() {
+func (s *StepTestSuite) TestRetry() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
 			w http.ResponseWriter,

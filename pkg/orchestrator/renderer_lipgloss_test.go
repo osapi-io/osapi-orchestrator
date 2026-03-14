@@ -36,7 +36,29 @@ type RendererLipglossTestSuite struct {
 	suite.Suite
 }
 
-func (s *RendererLipglossTestSuite) TestPlanLifecycle() {
+func (s *RendererLipglossTestSuite) TestNewLipglossRenderer() {
+	tests := []struct {
+		name         string
+		validateFunc func(r *lipglossRenderer)
+	}{
+		{
+			name: "Creates valid renderer with non-nil writer",
+			validateFunc: func(r *lipglossRenderer) {
+				s.NotNil(r)
+				s.NotNil(r.w)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			r := newLipglossRenderer()
+			tc.validateFunc(r)
+		})
+	}
+}
+
+func (s *RendererLipglossTestSuite) TestPlanStart() {
 	tests := []struct {
 		name        string
 		setupFunc   func(r *lipglossRenderer)
@@ -44,15 +66,7 @@ func (s *RendererLipglossTestSuite) TestPlanLifecycle() {
 		notContains []string
 	}{
 		{
-			name: "NewLipglossRenderer creates valid renderer",
-			setupFunc: func(_ *lipglossRenderer) {
-				r := newLipglossRenderer()
-				s.NotNil(r)
-				s.NotNil(r.w)
-			},
-		},
-		{
-			name: "PlanStart renders execution plan",
+			name: "Renders execution plan",
 			setupFunc: func(r *lipglossRenderer) {
 				r.PlanStart(sdk.PlanSummary{
 					TotalTasks: 3,
@@ -70,8 +84,35 @@ func (s *RendererLipglossTestSuite) TestPlanLifecycle() {
 			},
 			notContains: []string{"==="},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var buf bytes.Buffer
+			r := newLipglossRendererWithWriter(&buf)
+
+			tc.setupFunc(r)
+
+			output := buf.String()
+			for _, c := range tc.contains {
+				s.Contains(output, c)
+			}
+			for _, c := range tc.notContains {
+				s.NotContains(output, c)
+			}
+		})
+	}
+}
+
+func (s *RendererLipglossTestSuite) TestPlanDone() {
+	tests := []struct {
+		name        string
+		setupFunc   func(r *lipglossRenderer)
+		contains    []string
+		notContains []string
+	}{
 		{
-			name: "PlanDone renders completion summary",
+			name: "Renders completion summary",
 			setupFunc: func(r *lipglossRenderer) {
 				r.PlanDone(&Report{
 					Tasks: []sdk.TaskResult{
@@ -189,28 +230,74 @@ func (s *RendererLipglossTestSuite) TestLevelDone() {
 	}
 }
 
-func (s *RendererLipglossTestSuite) TestTaskEvents() {
+func (s *RendererLipglossTestSuite) TestTaskStart() {
 	tests := []struct {
 		name     string
 		callFunc func(r *lipglossRenderer)
 		contains []string
 	}{
 		{
-			name: "TaskStart renders start tag and details",
+			name: "Renders start tag and details",
 			callFunc: func(r *lipglossRenderer) {
 				r.TaskStart("health-check", "target=_any")
 			},
 			contains: []string{"[start]", "health-check", "target=_any"},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var buf bytes.Buffer
+			r := newLipglossRendererWithWriter(&buf)
+
+			tc.callFunc(r)
+
+			output := buf.String()
+			for _, c := range tc.contains {
+				s.Contains(output, c)
+			}
+		})
+	}
+}
+
+func (s *RendererLipglossTestSuite) TestTaskRetry() {
+	tests := []struct {
+		name     string
+		callFunc func(r *lipglossRenderer)
+		contains []string
+	}{
 		{
-			name: "TaskRetry renders retry tag with attempt",
+			name: "Renders retry tag with attempt",
 			callFunc: func(r *lipglossRenderer) {
 				r.TaskRetry("run-command", 1, errors.New("timeout"))
 			},
 			contains: []string{"[retry]", "run-command", "attempt=1", "timeout"},
 		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var buf bytes.Buffer
+			r := newLipglossRendererWithWriter(&buf)
+
+			tc.callFunc(r)
+
+			output := buf.String()
+			for _, c := range tc.contains {
+				s.Contains(output, c)
+			}
+		})
+	}
+}
+
+func (s *RendererLipglossTestSuite) TestTaskSkip() {
+	tests := []struct {
+		name     string
+		callFunc func(r *lipglossRenderer)
+		contains []string
+	}{
 		{
-			name: "TaskSkip renders skip tag with reason",
+			name: "Renders skip tag with reason",
 			callFunc: func(r *lipglossRenderer) {
 				r.TaskSkip("whoami", "dependency failed")
 			},
