@@ -1613,7 +1613,13 @@ func (s *OpsTestSuite) TestNetworkPingDoNameCounter() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			orch := New(server.URL, "test-token")
-			first, second := orch.NetworkPingDo("_any", "8.8.8.8"), orch.NetworkPingDo("_any", "8.8.8.8")
+			first, second := orch.NetworkPingDo(
+				"_any",
+				"8.8.8.8",
+			), orch.NetworkPingDo(
+				"_any",
+				"8.8.8.8",
+			)
 
 			s.Equal(tc.firstName, first.task.Name())
 			s.Equal(tc.secondName, second.task.Name())
