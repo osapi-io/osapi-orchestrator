@@ -32,6 +32,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -69,7 +70,7 @@ func main() {
 				a.OSInfo.Distribution == "Ubuntu"
 		})
 
-	if _, err := o.Run(); err != nil {
+	if _, err := o.Run(context.Background()); err != nil {
 		log.Fatal(err)
 	}
 }

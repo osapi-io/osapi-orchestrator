@@ -1903,52 +1903,6 @@ func (s *OpsTestSuite) TestFileChangedNameCounter() {
 	}
 }
 
-func (s *OpsTestSuite) TestCommandError() {
-	tests := []struct {
-		name       string
-		result     osapi.CommandResult
-		validateFn func(string)
-	}{
-		{
-			name:   "returns error string when set",
-			result: osapi.CommandResult{Error: "connection refused"},
-			validateFn: func(got string) {
-				s.Equal("connection refused", got)
-			},
-		},
-		{
-			name:   "returns exit code when non-zero",
-			result: osapi.CommandResult{ExitCode: 127},
-			validateFn: func(got string) {
-				s.Equal("exit code 127", got)
-			},
-		},
-		{
-			name:   "returns empty string on success",
-			result: osapi.CommandResult{ExitCode: 0},
-			validateFn: func(got string) {
-				s.Empty(got)
-			},
-		},
-		{
-			name: "error takes precedence over exit code",
-			result: osapi.CommandResult{
-				Error:    "timeout",
-				ExitCode: 1,
-			},
-			validateFn: func(got string) {
-				s.Equal("timeout", got)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			tt.validateFn(commandError(tt.result))
-		})
-	}
-}
-
 func TestOpsTestSuite(
 	t *testing.T,
 ) {

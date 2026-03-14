@@ -23,7 +23,6 @@ package orchestrator
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
@@ -197,43 +196,10 @@ func (r *Report) Decode(
 
 // Summary returns a human-readable summary of the plan execution.
 func (r *Report) Summary() string {
-	var changed, unchanged, skipped, failed int
-
-	for _, t := range r.Tasks {
-		switch t.Status {
-		case sdk.StatusChanged:
-			changed++
-		case sdk.StatusUnchanged:
-			unchanged++
-		case sdk.StatusSkipped:
-			skipped++
-		case sdk.StatusFailed:
-			failed++
-		}
+	sdkReport := sdk.Report{
+		Tasks:    r.Tasks,
+		Duration: r.Duration,
 	}
 
-	parts := []string{
-		fmt.Sprintf("%d tasks", len(r.Tasks)),
-	}
-
-	if changed > 0 {
-		parts = append(parts, fmt.Sprintf("%d changed", changed))
-	}
-
-	if unchanged > 0 {
-		parts = append(
-			parts,
-			fmt.Sprintf("%d unchanged", unchanged),
-		)
-	}
-
-	if skipped > 0 {
-		parts = append(parts, fmt.Sprintf("%d skipped", skipped))
-	}
-
-	if failed > 0 {
-		parts = append(parts, fmt.Sprintf("%d failed", failed))
-	}
-
-	return strings.Join(parts, ", ")
+	return sdkReport.Summary()
 }

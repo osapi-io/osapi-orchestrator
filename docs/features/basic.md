@@ -10,7 +10,7 @@ o := orchestrator.New(url, token)
 health := o.HealthCheck()
 o.NodeHostnameGet("_any").After(health)
 
-report, err := o.Run()
+report, err := o.Run(ctx)
 ```
 
 Steps are connected with `.After()` to form a directed acyclic graph. The

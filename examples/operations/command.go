@@ -33,6 +33,7 @@ package main
 
 import (
 	"fmt"
+	"context"
 	"log"
 	"os"
 
@@ -62,7 +63,7 @@ func main() {
 	// Shell execution: interpreted by /bin/sh, supports pipes.
 	o.CommandShell("_any", "uname -a").After(health)
 
-	report, err := o.Run()
+	report, err := o.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -54,19 +54,6 @@ func (o *Orchestrator) Discover(
 	return matched, nil
 }
 
-// mustDecode decodes a named task result into v, panicking on error.
-// Used when the task is known to exist with valid data (e.g.,
-// immediately after a successful plan run with a known task name).
-func mustDecode(
-	report *Report,
-	name string,
-	v any,
-) {
-	if err := report.Decode(name, v); err != nil {
-		panic(fmt.Sprintf("decode %s: %v", name, err))
-	}
-}
-
 // fetchAgents creates a temporary plan, runs AgentList, and decodes
 // the result.
 func (o *Orchestrator) fetchAgents(
@@ -101,7 +88,9 @@ func (o *Orchestrator) fetchAgents(
 	report := &Report{Tasks: sdkReport.Tasks, Duration: sdkReport.Duration}
 
 	var list osapi.AgentList
-	mustDecode(report, "list-agents", &list)
+	if err := report.Decode("list-agents", &list); err != nil {
+		return nil, fmt.Errorf("decode agent list: %w", err)
+	}
 
 	return list.Agents, nil
 }

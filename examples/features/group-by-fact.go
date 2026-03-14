@@ -84,7 +84,7 @@ func main() {
 		}
 	}
 
-	if _, err := o.Run(); err != nil {
+	if _, err := o.Run(context.Background()); err != nil {
 		log.Fatal(err)
 	}
 }

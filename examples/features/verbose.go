@@ -31,6 +31,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -54,7 +55,7 @@ func main() {
 	health := o.HealthCheck()
 	o.NodeHostnameGet("_any").After(health)
 
-	if _, err := o.Run(); err != nil {
+	if _, err := o.Run(context.Background()); err != nil {
 		log.Fatal(err)
 	}
 }

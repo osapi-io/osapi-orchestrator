@@ -81,7 +81,7 @@ func main() {
 		o.NodeLoadGet(a.Hostname).After(health)
 	}
 
-	if _, err := o.Run(); err != nil {
+	if _, err := o.Run(context.Background()); err != nil {
 		log.Fatal(err)
 	}
 }

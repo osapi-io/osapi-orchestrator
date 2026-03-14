@@ -34,6 +34,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -65,7 +66,7 @@ func main() {
 		After(deploy).
 		OnlyIfFailed()
 
-	if _, err := o.Run(); err != nil {
+	if _, err := o.Run(context.Background()); err != nil {
 		log.Fatal(err)
 	}
 }

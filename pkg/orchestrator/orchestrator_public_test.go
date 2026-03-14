@@ -125,7 +125,7 @@ func (s *OrchestratorPublicTestSuite) TestRun() {
 			o := orchestrator.New(s.server.URL, "test-token")
 			tc.setupFunc(o)
 
-			report, err := o.Run()
+			report, err := o.Run(context.Background())
 			tc.validateFunc(report, err)
 		})
 	}
@@ -172,7 +172,7 @@ func (s *OrchestratorPublicTestSuite) TestTaskFunc() {
 				},
 			)
 
-			_, err := o.Run()
+			_, err := o.Run(context.Background())
 			s.Require().NoError(err)
 
 			tc.validateFunc(step, &called)

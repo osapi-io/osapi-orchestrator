@@ -34,6 +34,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 
@@ -70,7 +71,7 @@ func main() {
 			return h.Hostname != ""
 		})
 
-	if _, err := o.Run(); err != nil {
+	if _, err := o.Run(context.Background()); err != nil {
 		log.Fatal(err)
 	}
 }

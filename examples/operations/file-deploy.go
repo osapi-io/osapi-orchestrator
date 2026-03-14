@@ -36,6 +36,7 @@ package main
 
 import (
 	"fmt"
+	"context"
 	"log"
 	"os"
 
@@ -87,7 +88,7 @@ func main() {
 	// Level 3: verify the deployed file is in sync.
 	o.FileStatusGet("_any", "/tmp/app-config.yaml").After(deploy)
 
-	report, err := o.Run()
+	report, err := o.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
