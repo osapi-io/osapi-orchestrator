@@ -33,5 +33,6 @@ generate:
 # Format, lint, and generate before committing
 ready:
     just generate
+    just go::docs
     just go::fmt
     just go::vet

@@ -71,6 +71,15 @@ go test -run TestName -v ./pkg/orchestrator/...  # Run a single test
   single table — never split into separate `TestFoo`, `TestFooError`,
   `TestFooNilResponse` methods.
 
+## Before committing
+
+Run `just ready` before committing to ensure generated code, package docs,
+formatting, and lint are all up to date:
+
+```bash
+just ready   # generate, go::docs, go::fmt, go::vet
+```
+
 ## Branching
 
 All changes should be developed on feature branches. Create a branch from `main`
