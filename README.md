@@ -83,13 +83,13 @@ Each example is a standalone Go file. Run with:
 | [file-deploy.go](examples/operations/file-deploy.go)            | Upload, deploy, and verify a file end-to-end        |
 | [file-changed.go](examples/operations/file-changed.go)          | Conditional upload with FileChanged + OnlyIfChanged |
 
-## Contributing
+## 🤝 Contributing
 
 See the [Development](docs/development.md) guide for prerequisites, setup,
 and conventions. See the [Contributing](docs/contributing.md) guide before
 submitting a PR.
 
-## License
+## 📄 License
 
 The [MIT][] License.
 
