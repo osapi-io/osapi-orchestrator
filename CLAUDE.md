@@ -92,5 +92,131 @@ When committing via Claude Code, end with:
 - `🤖 Generated with [Claude Code](https://claude.ai/code)`
 - `Co-Authored-By: Claude <noreply@anthropic.com>`
 
+## Adding a New Operation
+
+When adding a new typed constructor (e.g., `NodeRebootDo`), follow these
+steps in order. Every operation must ship with tests, docs, and an example.
+
+### Step 1: Operation Constructor
+
+Add the method to `pkg/orchestrator/ops.go`, following the existing pattern:
+
+```go
+// NodeRebootDo creates a step that reboots the target node.
+func (o *Orchestrator) NodeRebootDo(
+    target string,
+) *Step {
+    name := o.nextOpName("reboot-node")
+
+    task := o.plan.TaskFunc(
+        name,
+        func(
+            ctx context.Context,
+            c *osapi.Client,
+        ) (*sdk.Result, error) {
+            resp, err := c.Node.Reboot(ctx, target)
+            if err != nil {
+                return nil, fmt.Errorf("reboot node: %w", err)
+            }
+
+            return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+                func(r osapi.RebootResult) sdk.HostResult {
+                    return sdk.HostResult{
+                        Hostname: r.Hostname,
+                        Status:   r.Status,
+                        Changed:  r.Changed,
+                        Error:    r.Error,
+                    }
+                },
+            )
+        },
+    )
+
+    return &Step{task: task}
+}
+```
+
+Key rules:
+- Use `o.nextOpName("verb-noun")` for the step name
+- Always include `Status: r.Status` in the `HostResult` mapper
+- Wrap errors with context: `fmt.Errorf("verb noun: %w", err)`
+- Use `sdk.CollectionResult` for node-targeted operations (returns
+  per-host results), `sdk.StructToMap` for non-collection responses
+
+### Step 2: Tests
+
+Two test files must be updated:
+
+**`pkg/orchestrator/ops_test.go`** (internal, httptest pattern) — tests
+the full HTTP round-trip with a mock server:
+- Create an `httptest.Server` that returns canned JSON
+- Exercise the constructor and verify the result via `report.Decode()`
+- Cover success, error, and edge-case scenarios as table rows
+
+**`pkg/orchestrator/ops_public_test.go`** (public, step-creation
+pattern) — tests that the constructor creates valid steps:
+- Verify the step is non-nil and has the expected task name
+- One suite method per operation, all scenarios as rows
+
+Target 100% coverage on both files.
+
+### Step 3: Operation Doc
+
+Create `docs/operations/{verb}-{noun}.md` following the existing template.
+Every doc must include these sections:
+
+- **Description** (h1 heading with the method name)
+- **Usage** — minimal Go snippet showing the constructor call
+- **Parameters** — table of all parameters with types and descriptions
+- **Result Type** — `Decode()` snippet and field table
+- **Idempotency** — one of: Read-only, Idempotent (Yes), Non-idempotent (No)
+- **Permissions** — required OSAPI permission (e.g., `node:write`)
+- **Example** — link to the example file where this operation is used:
+  ```
+  See
+  [`examples/operations/{domain}.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/{domain}.go)
+  for a complete working example.
+  ```
+
+### Step 4: Update Operation Index
+
+Add the operation to the table in `docs/operations/README.md`, maintaining
+alphabetical order within its category.
+
+### Step 5: Example
+
+Add the operation to an existing workflow example in
+`examples/operations/` that covers the same domain. Domain groupings:
+
+| Domain  | Example file           |
+| ------- | ---------------------- |
+| Node    | `node-info.go`         |
+| Node    | `hostname-update.go`   |
+| Network | `dns-update.go`        |
+| Command | `command.go`           |
+| File    | `file-deploy.go`       |
+| File    | `file-changed.go`      |
+| Agent   | `agent-drain.go`       |
+| Docker  | `docker.go`            |
+| Cron    | `cron.go`              |
+| Health  | (used as gate in most) |
+
+If no domain match exists, create a new `{domain}.go` file. Every
+operation must appear in at least one runnable example.
+
+### Step 6: Update README.md
+
+Update the operation count and tables in the root `README.md` if the
+total number of operations changes.
+
+### Step 7: Verify
+
+```bash
+go build ./...                                       # compiles
+go test ./... -count=1                               # tests pass
+cd examples/operations && go build *.go              # examples compile
+cd examples/features && go build *.go                # feature examples compile
+```
+
 [OSAPI]: https://github.com/osapi-io/osapi
 [osapi-sdk]: https://github.com/osapi-io/osapi/tree/main/pkg/sdk
