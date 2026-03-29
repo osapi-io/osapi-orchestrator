@@ -288,6 +288,28 @@ func (s *StepPublicTestSuite) TestOnlyIfAllHostsFailed() {
 	}
 }
 
+func (s *StepPublicTestSuite) TestOnlyIfAnyHostSkipped() {
+	tests := []struct {
+		name    string
+		chainFn func() *orchestrator.Step
+	}{
+		{
+			name: "OnlyIfAnyHostSkipped returns non-nil step",
+			chainFn: func() *orchestrator.Step {
+				return s.orch.NodeHostnameGet("_any").
+					OnlyIfAnyHostSkipped()
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.chainFn()
+			s.NotNil(step)
+		})
+	}
+}
+
 func (s *StepPublicTestSuite) TestOnlyIfAnyHostChanged() {
 	tests := []struct {
 		name    string

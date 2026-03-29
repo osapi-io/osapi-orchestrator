@@ -373,6 +373,105 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 	}
 }
 
+func (s *StepTestSuite) TestOnlyIfAnyHostSkipped() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	orch := New(server.URL, "test-token")
+
+	tests := []struct {
+		name     string
+		results  sdk.Results
+		hasDeps  bool
+		expected bool
+	}{
+		{
+			name:     "Returns false with no dependencies",
+			results:  sdk.Results{},
+			hasDeps:  false,
+			expected: false,
+		},
+		{
+			name: "Returns false when dep has no HostResults (unicast)",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status:  sdk.StatusChanged,
+					Changed: true,
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+		{
+			name: "Returns false when all hosts are ok",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusChanged,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Status: "ok", Changed: true},
+						{Hostname: "web-02", Status: "ok", Changed: true},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+		{
+			name: "Returns true when any host has Status skipped",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusFailed,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Status: "skipped", Error: "unsupported"},
+						{Hostname: "web-02", Status: "ok"},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: true,
+		},
+		{
+			name: "Returns false when hosts are failed but not skipped",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusFailed,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Status: "failed", Error: "timeout"},
+						{Hostname: "web-02", Status: "ok"},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var step *Step
+			if tc.hasDeps {
+				dep := orch.NodeHostnameGet("_all").Named("dep")
+				step = orch.NodeHostnameGet("_any").
+					After(dep).
+					OnlyIfAnyHostSkipped()
+			} else {
+				step = orch.NodeHostnameGet("_any").OnlyIfAnyHostSkipped()
+			}
+
+			guard := step.task.Guard()
+			s.Require().NotNil(guard)
+			s.Equal(tc.expected, guard(tc.results))
+		})
+	}
+}
+
 func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 	server := httptest.NewServer(
 		http.HandlerFunc(func(
