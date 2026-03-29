@@ -280,13 +280,13 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 		expected bool
 	}{
 		{
-			name: "Returns true when one host has Error",
+			name: "Returns true when one host has Status failed",
 			results: sdk.Results{
 				"dep": &sdk.Result{
 					Status: sdk.StatusFailed,
 					HostResults: []sdk.HostResult{
-						{Hostname: "web-01", Error: "timeout"},
-						{Hostname: "web-02"},
+						{Hostname: "web-01", Status: "failed", Error: "timeout"},
+						{Hostname: "web-02", Status: "ok"},
 					},
 				},
 			},
@@ -323,6 +323,34 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 			},
 			hasDeps:  true,
 			expected: false,
+		},
+		{
+			name: "Returns false when host is skipped (not failed)",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusFailed,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Status: "skipped", Error: "unsupported"},
+						{Hostname: "web-02", Status: "ok"},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+		{
+			name: "Returns true when host has Status failed",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusFailed,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Status: "failed", Error: "permission denied"},
+						{Hostname: "web-02", Status: "ok"},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: true,
 		},
 	}
 
@@ -365,13 +393,13 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 		expected bool
 	}{
 		{
-			name: "Returns true when all hosts have Error",
+			name: "Returns true when all hosts have Status failed",
 			results: sdk.Results{
 				"dep": &sdk.Result{
 					Status: sdk.StatusFailed,
 					HostResults: []sdk.HostResult{
-						{Hostname: "web-01", Error: "timeout"},
-						{Hostname: "web-02", Error: "connection refused"},
+						{Hostname: "web-01", Status: "failed", Error: "timeout"},
+						{Hostname: "web-02", Status: "failed", Error: "connection refused"},
 					},
 				},
 			},
@@ -379,13 +407,13 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 			expected: true,
 		},
 		{
-			name: "Returns false when one host has no Error",
+			name: "Returns false when one host succeeded",
 			results: sdk.Results{
 				"dep": &sdk.Result{
 					Status: sdk.StatusFailed,
 					HostResults: []sdk.HostResult{
-						{Hostname: "web-01", Error: "timeout"},
-						{Hostname: "web-02", Changed: true},
+						{Hostname: "web-01", Status: "failed", Error: "timeout"},
+						{Hostname: "web-02", Status: "ok", Changed: true},
 					},
 				},
 			},
@@ -404,6 +432,20 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 				"dep": &sdk.Result{
 					Status:  sdk.StatusFailed,
 					Changed: true,
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+		{
+			name: "Returns false when some hosts are skipped not failed",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusFailed,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Status: "failed", Error: "timeout"},
+						{Hostname: "web-02", Status: "skipped", Error: "unsupported"},
+					},
 				},
 			},
 			hasDeps:  true,

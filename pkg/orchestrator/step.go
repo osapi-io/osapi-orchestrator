@@ -140,7 +140,7 @@ func (s *Step) OnlyIfAnyHostFailed() *Step {
 			}
 
 			for _, hr := range r.HostResults {
-				if hr.Error != "" {
+				if hr.Status == "failed" {
 					return true
 				}
 			}
@@ -168,7 +168,7 @@ func (s *Step) OnlyIfAllHostsFailed() *Step {
 			}
 
 			for _, hr := range r.HostResults {
-				if hr.Error == "" {
+				if hr.Status != "failed" {
 					return false
 				}
 			}
