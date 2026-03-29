@@ -456,6 +456,27 @@ func (s *OpsPublicTestSuite) TestFileStatusGet() {
 	}
 }
 
+func (s *OpsPublicTestSuite) TestFileUndeploy() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.FileUndeploy("_any", "/etc/app/config.yaml")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
 func (s *OpsPublicTestSuite) TestFileUpload() {
 	tests := []struct {
 		name  string

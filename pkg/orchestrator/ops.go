@@ -543,6 +543,44 @@ func (o *Orchestrator) FileStatusGet(
 	return &Step{task: task}
 }
 
+// FileUndeploy creates a step that removes a previously deployed file
+// from the target agent's filesystem.
+func (o *Orchestrator) FileUndeploy(
+	target string,
+	path string,
+) *Step {
+	name := o.nextOpName("undeploy-file")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.FileUndeploy(ctx, osapi.FileUndeployOpts{
+				Target: target,
+				Path:   path,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("undeploy file: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.FileUndeployResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
 // FileUpload creates a step that uploads file content to the Object
 // Store via the OSAPI REST API. Returns the object name that can be
 // used in subsequent FileDeploy steps. This is a convenience wrapper
