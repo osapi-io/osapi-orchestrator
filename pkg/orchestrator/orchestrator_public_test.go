@@ -26,8 +26,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"

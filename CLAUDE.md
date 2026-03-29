@@ -113,15 +113,15 @@ func (o *Orchestrator) NodeRebootDo(
         func(
             ctx context.Context,
             c *osapi.Client,
-        ) (*sdk.Result, error) {
+        ) (*engine.Result, error) {
             resp, err := c.Node.Reboot(ctx, target)
             if err != nil {
                 return nil, fmt.Errorf("reboot node: %w", err)
             }
 
-            return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-                func(r osapi.RebootResult) sdk.HostResult {
-                    return sdk.HostResult{
+            return engine.CollectionResult(resp.Data, resp.RawJSON(),
+                func(r osapi.RebootResult) engine.HostResult {
+                    return engine.HostResult{
                         Hostname: r.Hostname,
                         Status:   r.Status,
                         Changed:  r.Changed,
@@ -138,10 +138,12 @@ func (o *Orchestrator) NodeRebootDo(
 
 Key rules:
 - Use `o.nextOpName("verb-noun")` for the step name
-- Always include `Status: r.Status` in the `HostResult` mapper
+- Always include `Status: r.Status` in the `engine.HostResult` mapper
 - Wrap errors with context: `fmt.Errorf("verb noun: %w", err)`
-- Use `sdk.CollectionResult` for node-targeted operations (returns
-  per-host results), `sdk.StructToMap` for non-collection responses
+- Use `engine.CollectionResult` for node-targeted operations (returns
+  per-host results), `engine.StructToMap` for non-collection responses
+- The `engine` import is `internal/engine` — only used inside
+  `pkg/orchestrator/`, never by external consumers
 
 ### Step 2: Tests
 

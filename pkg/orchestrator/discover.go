@@ -24,8 +24,8 @@ import (
 	"context"
 	"fmt"
 
-	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 // fetchAgentsDecodeName is the task name used when decoding the

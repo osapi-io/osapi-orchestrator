@@ -28,8 +28,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	osapiclient "github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/osapi-io/osapi-orchestrator/internal/engine"
+	osapiclient "github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 type RunnerPublicTestSuite struct {

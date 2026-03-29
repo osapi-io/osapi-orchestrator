@@ -23,8 +23,8 @@ package orchestrator
 import (
 	"fmt"
 
-	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 // Step represents a single operation in the plan. Users chain methods

@@ -27,8 +27,8 @@ package orchestrator
 import (
 	"context"
 
-	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 // New creates an Orchestrator connected to the given OSAPI server.

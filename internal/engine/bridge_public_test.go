@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	client "github.com/retr0h/osapi/pkg/sdk/client"
 	"github.com/osapi-io/osapi-orchestrator/internal/engine"
+	client "github.com/retr0h/osapi/pkg/sdk/client"
 )
 
 type BridgePublicTestSuite struct {
