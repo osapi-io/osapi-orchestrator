@@ -18,25 +18,19 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates an agent drain/undrain maintenance workflow.
+// Package main demonstrates agent drain/undrain for maintenance.
 //
-// Phase 1: lists all registered agents to discover the fleet.
+// Discovers agents, then drains the first one (prevents new jobs),
+// runs a maintenance command, and undrains it. Uses OnError(Continue)
+// so repeated runs don't fail if the agent is already drained/undrained.
 //
-// Phase 2: gets detailed info about the target agent, then drains it
-// (cordon), runs a maintenance command, and undrains it (uncordon).
-//
-// DAG (phase 1):
-//
-//	health-check
-//	    └── list-agents
-//
-// DAG (phase 2):
+// DAG:
 //
 //	health-check
-//	    └── get-agent
-//	        └── drain-agent
-//	            └── run-apt-get (maintenance command)
-//	                └── undrain-agent
+//	    └── undrain-agent (cleanup, continue on error)
+//	            └── drain-agent
+//	                    └── run-maintenance
+//	                            └── undrain-agent
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run agent-drain.go
 package main
@@ -63,17 +57,9 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
-	host := os.Getenv("OSAPI_HOST")
-	if host == "" {
-		host = "web-01"
-	}
-
-	fmt.Println("=== Phase 1: discover registered agents ===")
-
+	// Discover the first available agent.
 	o1 := orchestrator.New(url, token)
-
-	health1 := o1.HealthCheck()
-	o1.AgentList().After(health1)
+	o1.AgentList()
 
 	report1, err := o1.Run(context.Background())
 	if err != nil {
@@ -81,40 +67,33 @@ func main() {
 	}
 
 	var agents osapi.AgentList
-	if err := report1.Decode("list-agents", &agents); err == nil {
-		fmt.Printf("Registered agents: %d\n", agents.Total)
-		for _, a := range agents.Agents {
-			fmt.Printf("  - %s (%s)\n", a.Hostname, a.Status)
-		}
+	if err := report1.Decode("list-agents", &agents); err != nil || len(agents.Agents) == 0 {
+		log.Fatal("no agents registered")
 	}
 
-	fmt.Printf("\n=== Phase 2: inspect %s, drain, run maintenance, undrain ===\n", host)
+	host := os.Getenv("OSAPI_HOST")
+	if host == "" {
+		host = agents.Agents[0].Hostname
+	}
 
+	fmt.Printf("Target: %s\n\n", host)
+
+	// Cleanup: ensure the agent is undrained from any previous run.
+	oc := orchestrator.New(url, token)
+	oc.AgentUndrain(host).OnError(orchestrator.Continue)
+	oc.Run(context.Background()) //nolint:errcheck
+
+	// Drain → maintenance → undrain.
 	o2 := orchestrator.New(url, token)
 
-	health2 := o2.HealthCheck()
+	drain := o2.AgentDrain(host)
 
-	// Get detailed agent info before draining.
-	getAgent := o2.AgentGet(host).After(health2)
+	maint := o2.CommandExec(host, "echo", "maintenance complete").
+		After(drain)
 
-	// Drain the agent — prevents new jobs from being scheduled.
-	drain := o2.AgentDrain(host).After(getAgent)
-
-	// Run a maintenance command while the agent is drained.
-	maint := o2.CommandExec(host, "apt-get", "update", "-y").After(drain)
-
-	// Undrain the agent — allows new jobs again.
 	o2.AgentUndrain(host).After(maint)
 
-	report2, err := o2.Run(context.Background())
-	if err != nil {
+	if _, err := o2.Run(context.Background()); err != nil {
 		log.Fatal(err)
 	}
-
-	var cmd osapi.CommandResult
-	if err := report2.Decode("run-apt-get", &cmd); err == nil {
-		fmt.Printf("maintenance stdout: %s\n", cmd.Stdout)
-	}
-
-	fmt.Printf("\n%s in %s\n", report2.Summary(), report2.Duration)
 }

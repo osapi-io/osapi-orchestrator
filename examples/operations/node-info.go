@@ -94,6 +94,4 @@ func main() {
 	if err := report.Decode("get-memory", &memory); err == nil && memory.Memory != nil {
 		fmt.Printf("Memory:   %d total / %d free\n", memory.Memory.Total, memory.Memory.Free)
 	}
-
-	fmt.Printf("\n%s in %s\n", report.Summary(), report.Duration)
 }

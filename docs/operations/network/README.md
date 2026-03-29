@@ -18,14 +18,10 @@ connectivity checks.
 | Read operations  | `network:read`  |
 | Write operations | `network:write` |
 
-## Example
+## Examples
 
 See
 [`examples/operations/dns-update.go`](../../examples/operations/dns-update.go)
-for a complete workflow example covering all operations.
-
-The example demonstrates:
-
-- Read-then-write pattern with DNS configuration
-- Broadcasting DNS updates across multiple hosts
-- Verifying changes with a follow-up read
+for DNS read-then-write and
+[`examples/operations/ping.go`](../../examples/operations/ping.go) for
+connectivity verification.

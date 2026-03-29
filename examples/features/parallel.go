@@ -18,8 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates parallel task execution. Multiple operations
-// at the same DAG level run concurrently.
+// Package main demonstrates parallel task execution. Steps at the same
+// DAG level run concurrently.
 //
 // DAG:
 //
@@ -55,19 +55,17 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
-	// o := orchestrator.New(url, token)
-	o := orchestrator.New(url, token, orchestrator.WithVerbose())
+	o := orchestrator.New(url, token)
 
-	// Level 0: health gate.
 	health := o.HealthCheck()
 
-	// Level 1: five queries run in parallel — all share the same
-	// dependency so the orchestrator schedules them concurrently.
-	o.NodeHostnameGet("_all").After(health)
-	o.NodeDiskGet("_all").After(health)
-	o.NodeMemoryGet("_all").After(health)
-	o.NodeLoadGet("_all").After(health)
-	o.NodeUptimeGet("_all").After(health)
+	// Five queries share the same dependency so the orchestrator
+	// schedules them concurrently.
+	o.NodeHostnameGet("_any").After(health)
+	o.NodeDiskGet("_any").After(health)
+	o.NodeMemoryGet("_any").After(health)
+	o.NodeLoadGet("_any").After(health)
+	o.NodeUptimeGet("_any").After(health)
 
 	report, err := o.Run(context.Background())
 	if err != nil {
@@ -76,7 +74,7 @@ func main() {
 
 	var h osapi.HostnameResult
 	if err := report.Decode("get-hostname", &h); err == nil {
-		fmt.Printf("\nHostname: %s\n", h.Hostname)
+		fmt.Printf("Hostname: %s\n", h.Hostname)
 	}
 
 	var m osapi.MemoryResult
