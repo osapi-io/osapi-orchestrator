@@ -7,6 +7,7 @@
 [![conventional commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=for-the-badge)](https://conventionalcommits.org)
 [![built with just](https://img.shields.io/badge/Built_with-Just-black?style=for-the-badge&logo=just&logoColor=white)](https://just.systems)
 ![gitHub commit activity](https://img.shields.io/github/commit-activity/m/osapi-io/osapi-orchestrator?style=for-the-badge)
+[![go reference](https://img.shields.io/badge/go-reference-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://pkg.go.dev/github.com/osapi-io/osapi-orchestrator/pkg/orchestrator)
 
 # OSAPI Orchestrator
 
@@ -14,7 +15,7 @@ A Go package for orchestrating operations across [OSAPI][]-managed hosts --
 typed operations, chaining, conditions, and result decoding built on top
 of the [osapi-sdk][] engine.
 
-## Install
+## 📦 Install
 
 ```bash
 go install github.com/osapi-io/osapi-orchestrator@latest
@@ -26,7 +27,7 @@ As a library dependency:
 go get github.com/osapi-io/osapi-orchestrator
 ```
 
-## Targeting
+## 🎯 Targeting
 
 Most operations accept a `target` parameter to control which agents receive
 the request:
@@ -38,7 +39,7 @@ the request:
 | `hostname`  | Send to a specific host                     |
 | `key:value` | Send to agents matching a label             |
 
-## Operations
+## ⚙️ Operations
 
 37 typed constructors across 8 domains:
 
@@ -53,15 +54,17 @@ the request:
 | Agent | [4 operations](docs/operations/agent/) | [agent-drain.go](examples/operations/agent-drain.go) |
 | Health | [1 operation](docs/operations/health/) | [basic.go](examples/features/basic.go) |
 
-## Features
+## ✨ Features
 
 - [Feature Guides](docs/features/README.md) -- Step chaining, guards,
   retry, broadcast, discovery, file workflows, host status awareness,
   and result decoding
-- [API Reference](docs/gen/orchestrator.md) -- Auto-generated Go
-  documentation
 
-## Examples
+## 📖 Documentation
+
+See the [package documentation][] on pkg.go.dev for API details.
+
+## 📋 Examples
 
 Each example is a standalone Go file. Run with:
 
@@ -115,4 +118,5 @@ The [MIT][] License.
 
 [OSAPI]: https://github.com/osapi-io/osapi
 [osapi-sdk]: https://github.com/osapi-io/osapi/tree/main/pkg/sdk
+[package documentation]: https://pkg.go.dev/github.com/osapi-io/osapi-orchestrator/pkg/orchestrator
 [MIT]: LICENSE

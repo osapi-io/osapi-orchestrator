@@ -31,6 +31,8 @@ type testNested struct {
 func (s *BridgePublicTestSuite) TestStructToMap() {
 	tests := []struct {
 		name       string
+		setupFn    func()
+		teardownFn func()
 		input      any
 		validateFn func(m map[string]any)
 	}{
@@ -85,10 +87,33 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 				s.Nil(m)
 			},
 		},
+		{
+			name: "returns nil when unmarshal fails",
+			setupFn: func() {
+				engine.SetJSONUnmarshalFn(func(
+					_ []byte,
+					_ any,
+				) error {
+					return fmt.Errorf("forced unmarshal error")
+				})
+			},
+			teardownFn: engine.ResetJSONUnmarshalFn,
+			input:      testStruct{Name: "test"},
+			validateFn: func(m map[string]any) {
+				s.Nil(m)
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			if tt.setupFn != nil {
+				tt.setupFn()
+			}
+			if tt.teardownFn != nil {
+				defer tt.teardownFn()
+			}
+
 			got := engine.StructToMap(tt.input)
 			tt.validateFn(got)
 		})
@@ -270,58 +295,6 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 			s.NoError(err)
 			s.Require().NotNil(result)
 			tt.validateFn(result)
-		})
-	}
-}
-
-func (s *BridgePublicTestSuite) TestStructToMapUnmarshalError() {
-	type testInput struct {
-		Name string `json:"name"`
-	}
-
-	tests := []struct {
-		name         string
-		setupFn      func()
-		teardownFn   func()
-		input        any
-		validateFunc func(result map[string]any)
-	}{
-		{
-			name: "when unmarshal fails returns nil",
-			setupFn: func() {
-				engine.SetJSONUnmarshalFn(func(
-					_ []byte,
-					_ any,
-				) error {
-					return fmt.Errorf("forced unmarshal error")
-				})
-			},
-			teardownFn: engine.ResetJSONUnmarshalFn,
-			input:      testInput{Name: "test"},
-			validateFunc: func(result map[string]any) {
-				s.Nil(result)
-			},
-		},
-		{
-			name:       "when unmarshal succeeds returns populated map",
-			setupFn:    func() {},
-			teardownFn: func() {},
-			input:      testInput{Name: "test"},
-			validateFunc: func(result map[string]any) {
-				s.NotNil(result)
-				s.Equal("test", result["name"])
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			tt.setupFn()
-			defer tt.teardownFn()
-
-			result := engine.StructToMap(tt.input)
-
-			tt.validateFunc(result)
 		})
 	}
 }
