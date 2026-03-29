@@ -70,16 +70,6 @@ Requires `cron:write` permission.
 
 ## Example
 
-```go
-plan := o.Plan("deploy-cron")
-upload := o.FileUpload(osapi.FileUploadOpts{
-    Name: "backup.sh",
-    Path: "./scripts/backup.sh",
-})
-o.CronCreate("web-01", osapi.CronCreateOpts{
-    Name:     "backup",
-    Object:   "backup.sh",
-    Schedule: "0 2 * * *",
-}).After(upload)
-report := plan.Execute(ctx)
-```
+See
+[`examples/operations/cron.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/cron.go)
+for a complete working example.

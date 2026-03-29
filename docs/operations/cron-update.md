@@ -55,10 +55,6 @@ Requires `cron:write` permission.
 
 ## Example
 
-```go
-plan := o.Plan("update-schedule")
-o.CronUpdate("web-01", "backup", osapi.CronUpdateOpts{
-    Schedule: "0 3 * * *",
-})
-report := plan.Execute(ctx)
-```
+See
+[`examples/operations/cron.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/cron.go)
+for a complete working example.

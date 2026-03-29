@@ -43,8 +43,6 @@ Requires `cron:read` permission.
 
 ## Example
 
-```go
-plan := o.Plan("check-cron")
-o.CronGet("web-01", "backup")
-report := plan.Execute(ctx)
-```
+See
+[`examples/operations/cron.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/cron.go)
+for a complete working example.

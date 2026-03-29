@@ -40,8 +40,6 @@ Requires `node:write` permission.
 
 ## Example
 
-```go
-plan := o.Plan("set-hostname")
-o.NodeHostnameUpdate("web-01", "web-01.prod")
-report := plan.Execute(ctx)
-```
+See
+[`examples/operations/hostname-update.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/hostname-update.go)
+for a complete working example.

@@ -39,8 +39,6 @@ Requires `file:write` permission.
 
 ## Example
 
-```go
-plan := o.Plan("cleanup")
-o.FileUndeploy("web-01", "/etc/myapp/config.yaml")
-report := plan.Execute(ctx)
-```
+See
+[`examples/operations/file-deploy.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/file-deploy.go)
+for a complete working example.

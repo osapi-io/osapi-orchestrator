@@ -36,8 +36,6 @@ Requires `agent:write` permission.
 
 ## Example
 
-```go
-plan := o.Plan("resume")
-o.AgentUndrain("web-01")
-report := plan.Execute(ctx)
-```
+See
+[`examples/operations/agent-drain.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/agent-drain.go)
+for a complete working example.

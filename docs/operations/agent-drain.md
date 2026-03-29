@@ -36,9 +36,6 @@ Requires `agent:write` permission.
 
 ## Example
 
-```go
-plan := o.Plan("maintenance")
-drain := o.AgentDrain("web-01")
-o.CommandExec("web-01", "apt-get upgrade -y").After(drain)
-report := plan.Execute(ctx)
-```
+See
+[`examples/operations/agent-drain.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/agent-drain.go)
+for a complete working example.

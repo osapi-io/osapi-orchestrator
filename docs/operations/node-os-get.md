@@ -45,8 +45,6 @@ Requires `node:read` permission.
 
 ## Example
 
-```go
-plan := o.Plan("check-os")
-o.NodeOSGet("_all")
-report := plan.Execute(ctx)
-```
+See
+[`examples/operations/node-info.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/node-info.go)
+for a complete working example.

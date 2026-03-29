@@ -39,8 +39,6 @@ Requires `cron:write` permission.
 
 ## Example
 
-```go
-plan := o.Plan("remove-cron")
-o.CronDelete("web-01", "backup")
-report := plan.Execute(ctx)
-```
+See
+[`examples/operations/cron.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/cron.go)
+for a complete working example.

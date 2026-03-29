@@ -37,5 +37,5 @@ Requires `node:read` permission.
 ## Example
 
 See
-[`examples/features/basic.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/basic.go)
+[`examples/operations/node-info.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/node-info.go)
 for a complete working example.
