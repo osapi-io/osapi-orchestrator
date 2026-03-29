@@ -31,6 +31,40 @@ marketplace:
 - **superpowers** — provides structured workflows for planning, TDD, debugging,
   code review, and git worktree isolation.
 
+## Project Structure
+
+```
+pkg/orchestrator/          # User-facing DSL
+  ops.go                   # Typed operation constructors
+  step.go                  # Step chaining (guards, retry, ordering)
+  result.go                # Result types (HostResult, Results, Report)
+  host_status.go           # HostStatusOk/Skipped/Failed constants
+  renderer_lipgloss.go     # Terminal output renderer
+  types.go                 # Orchestrator struct
+  options.go               # Option types (verbose, upload, retry)
+docs/
+  operations/              # Operation reference (one doc per operation)
+    README.md              # Master index linking to domains
+    node/                  # Domain subdirectory with landing page
+      README.md            # "Node Management" — ops table, permissions, example
+      hostname-get.md      # Individual operation reference
+      ...
+    network/, command/, docker/, cron/, file/, agent/, health/
+  features/                # Cross-cutting feature guides
+    guards.md, broadcast.md, retry.md, ...
+examples/
+  operations/              # Runnable workflow examples (one per domain)
+    node-info.go, docker.go, cron.go, ...
+  features/                # Runnable feature examples
+    host-status.go, guards.go, broadcast.go, ...
+```
+
+### Adding a new operation
+
+See the [Adding a New Operation](../CLAUDE.md#adding-a-new-operation) guide in
+CLAUDE.md for the full checklist: constructor, tests, operation doc, domain
+landing page update, example coverage, and README update.
+
 ## Setup
 
 Fetch shared justfiles and install all dependencies:
