@@ -1,28 +1,53 @@
-# Features
+# DSL Reference
 
 The orchestrator provides a declarative DSL for composing OSAPI operations into
 DAG-based plans with typed results, guards, retry, and discovery.
 
+## How the DAG Works
+
+Every operation method (`NodeHostnameGet`, `CommandExec`, etc.) returns a
+`*Step`. Steps are connected into a directed acyclic graph (DAG) using
+`After()`. The orchestrator resolves the DAG into levels and executes each
+level:
+
+- Steps with no dependencies run first.
+- Steps at the same level (sharing the same dependencies) run in parallel.
+- Steps with `After()` dependencies wait until those dependencies complete.
+
+```go
+health := o.HealthCheck()
+
+// These three run in parallel — all depend on health.
+hostname := o.NodeHostnameGet("_any").After(health)
+disk := o.NodeDiskGet("_any").After(health)
+load := o.NodeLoadGet("_any").After(health)
+
+// This runs after hostname completes.
+o.CommandExec("_any", "whoami").After(hostname)
+```
+
 ## Step Chaining
 
-Every operation returns a `*Step`. Chain methods to declare ordering,
-conditions, and error handling:
+Chain methods on any `*Step` to declare ordering, conditions, and error
+handling:
 
-| Method                  | What it does                                       |
-| ----------------------- | -------------------------------------------------- |
-| `After`                 | Run after the given steps complete                 |
-| `Retry`                 | Retry on failure with optional exponential backoff |
-| `OnlyIfChanged`         | Skip unless a dependency reported changes          |
-| `OnlyIfFailed`          | Skip unless at least one dependency failed         |
-| `OnlyIfAllChanged`      | Skip unless all dependencies reported changes      |
-| `OnlyIfAnyHostFailed`   | Skip unless any host in a dependency failed        |
-| `OnlyIfAllHostsFailed`  | Skip unless all hosts in dependencies failed       |
-| `OnlyIfAnyHostSkipped`  | Skip unless any host in a dependency was skipped   |
-| `OnlyIfAnyHostChanged`  | Skip unless any host in a dependency changed       |
-| `OnlyIfAllHostsChanged` | Skip unless all hosts in dependencies changed      |
-| `When`                  | Guard -- only run if predicate returns true        |
-| `WhenFact`              | Guard -- only run if agent fact matches            |
-| `OnError`               | Set error strategy (`StopAll` or `Continue`)       |
+| Method                  | What it does                                       | Guide                               |
+| ----------------------- | -------------------------------------------------- | ----------------------------------- |
+| `After`                 | Run after the given steps complete                 | [Basic DAG](basic.md)               |
+| `Retry`                 | Retry on failure with optional exponential backoff | [Retry](retry.md)                   |
+| `OnlyIfChanged`         | Skip unless a dependency reported changes          | [OnlyIfChanged](only-if-changed.md) |
+| `OnlyIfFailed`          | Skip unless at least one dependency failed         | [Error Recovery](error-recovery.md) |
+| `OnlyIfAllChanged`      | Skip unless all dependencies reported changes      |                                     |
+| `OnlyIfAnyHostFailed`   | Skip unless any host in a dependency failed        | [Guards](guards.md)                 |
+| `OnlyIfAllHostsFailed`  | Skip unless all hosts in dependencies failed       |                                     |
+| `OnlyIfAnyHostSkipped`  | Skip unless any host in a dependency was skipped   | [Guards](guards.md)                 |
+| `OnlyIfAnyHostChanged`  | Skip unless any host in a dependency changed       |                                     |
+| `OnlyIfAllHostsChanged` | Skip unless all hosts in dependencies changed      | [Guards](guards.md)                 |
+| `When`                  | Guard -- only run if predicate returns true        | [Guards](guards.md)                 |
+| `WhenFact`              | Guard -- only run if agent fact matches            | [Guards](guards.md)                 |
+| `ContinueOnError`       | Keep running independent tasks on failure          | [Error Recovery](error-recovery.md) |
+| `OnError`               | Set error strategy (`StopAll` or `Continue`)       | [Error Recovery](error-recovery.md) |
+| `Named`                 | Set a custom step name for result decoding         | [Result Decode](result-decode.md)   |
 
 ## Typed Results
 
