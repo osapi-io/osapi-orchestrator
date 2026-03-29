@@ -15,7 +15,7 @@ For setup, prerequisites, and contributing guidelines:
 
 - @docs/development.md - Prerequisites, setup, code style, testing, commits
 - @docs/contributing.md - PR workflow and contribution guidelines
-- @docs/operations/README.md - Per-operation reference (18 typed constructors)
+- @docs/operations/README.md - Per-operation reference (37 typed constructors)
 - @docs/features/README.md - Feature guides (guards, retry, discovery, etc.)
 
 ## Quick Reference

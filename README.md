@@ -40,10 +40,11 @@ the request:
 
 ## Features
 
-- [Operations](docs/operations/README.md) -- 18 typed constructors for every
-  OSAPI operation
+- [Operations](docs/operations/README.md) -- 37 typed constructors for every
+  OSAPI operation (node, network, command, file, docker, cron, agent)
 - [Features](docs/features/README.md) -- Step chaining, guards, retry,
-  broadcast, discovery, file workflows, and result decoding
+  broadcast, discovery, file workflows, host status awareness, and result
+  decoding
 - [API Reference](docs/gen/orchestrator.md) -- Auto-generated Go documentation
 
 ## Examples
@@ -73,6 +74,8 @@ Each example is a standalone Go file. Run with:
 | [fact-predicates.go](examples/features/fact-predicates.go)      | Compose multiple predicates for discovery           |
 | [label-filter.go](examples/features/label-filter.go)            | Filter by labels and arbitrary fact values           |
 | [condition-filter.go](examples/features/condition-filter.go)    | Filter by node conditions (e.g., DiskPressure)      |
+| [host-status.go](examples/features/host-status.go)              | Host status guards (skipped and failed detection)   |
+| [broadcast-guards.go](examples/features/broadcast-guards.go)    | Broadcast guards with per-host error and changed    |
 
 ### Operations
 
@@ -82,6 +85,9 @@ Each example is a standalone Go file. Run with:
 | [dns-update.go](examples/operations/dns-update.go)              | Read-then-write pattern with DNS operations         |
 | [file-deploy.go](examples/operations/file-deploy.go)            | Upload, deploy, and verify a file end-to-end        |
 | [file-changed.go](examples/operations/file-changed.go)          | Conditional upload with FileChanged + OnlyIfChanged |
+| [hostname-update.go](examples/operations/hostname-update.go)    | Read-then-write pattern with hostname broadcast     |
+| [docker.go](examples/operations/docker.go)                      | Full Docker lifecycle with pull, create, exec       |
+| [cron.go](examples/operations/cron.go)                          | Cron create, list, and delete lifecycle             |
 
 ## 🤝 Contributing
 
