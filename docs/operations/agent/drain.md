@@ -1,7 +1,7 @@
 # AgentDrain
 
 Drains an agent, preventing it from accepting new jobs. Existing in-flight jobs
-continue to completion. Use [AgentUndrain](agent-undrain.md) to resume.
+continue to completion. Use [AgentUndrain](undrain.md) to resume.
 
 ## Usage
 

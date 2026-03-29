@@ -1,7 +1,7 @@
 # AgentUndrain
 
 Undrains an agent, allowing it to accept new jobs again. This reverses the
-effect of [AgentDrain](agent-drain.md).
+effect of [AgentDrain](drain.md).
 
 ## Usage
 

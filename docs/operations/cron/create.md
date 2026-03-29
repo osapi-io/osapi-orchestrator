@@ -1,7 +1,7 @@
 # CronCreate
 
 Creates a new cron entry on the target node. The script must be uploaded to the
-NATS Object Store first (see [FileUpload](file-upload.md)).
+NATS Object Store first (see [FileUpload](../file/upload.md)).
 
 ## Usage
 
@@ -62,7 +62,7 @@ err := results.Decode("create-cron-1", &result)
 ## Idempotency
 
 **Non-idempotent.** Creating an entry that already exists returns an error. Use
-[CronUpdate](cron-update.md) to modify existing entries.
+[CronUpdate](update.md) to modify existing entries.
 
 ## Permissions
 

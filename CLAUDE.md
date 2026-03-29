@@ -162,8 +162,8 @@ Target 100% coverage on both files.
 
 ### Step 3: Operation Doc
 
-Create `docs/operations/{verb}-{noun}.md` following the existing template.
-Every doc must include these sections:
+Create `docs/operations/{domain}/{operation}.md` following the existing
+template in that domain directory. Every doc must include these sections:
 
 - **Description** (h1 heading with the method name)
 - **Usage** — minimal Go snippet showing the constructor call
@@ -178,10 +178,11 @@ Every doc must include these sections:
   for a complete working example.
   ```
 
-### Step 4: Update Operation Index
+### Step 4: Update Domain Landing Page and Operation Index
 
-Add the operation to the table in `docs/operations/README.md`, maintaining
-alphabetical order within its category.
+Add the operation to the table in the domain landing page
+`docs/operations/{domain}/README.md`. Update the operation count in
+`docs/operations/README.md` if the total changes.
 
 ### Step 5: Example
 

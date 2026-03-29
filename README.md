@@ -38,14 +38,28 @@ the request:
 | `hostname`  | Send to a specific host                     |
 | `key:value` | Send to agents matching a label             |
 
+## Operations
+
+37 typed constructors across 8 domains:
+
+| Domain | Docs | Example |
+| ------ | ---- | ------- |
+| Node | [8 operations](docs/operations/node/) | [node-info.go](examples/operations/node-info.go) |
+| Network | [3 operations](docs/operations/network/) | [dns-update.go](examples/operations/dns-update.go) |
+| Command | [2 operations](docs/operations/command/) | [command.go](examples/operations/command.go) |
+| Docker | [9 operations](docs/operations/docker/) | [docker.go](examples/operations/docker.go) |
+| Cron | [5 operations](docs/operations/cron/) | [cron.go](examples/operations/cron.go) |
+| File | [5 operations](docs/operations/file/) | [file-deploy.go](examples/operations/file-deploy.go) |
+| Agent | [4 operations](docs/operations/agent/) | [agent-drain.go](examples/operations/agent-drain.go) |
+| Health | [1 operation](docs/operations/health/) | [basic.go](examples/features/basic.go) |
+
 ## Features
 
-- [Operations](docs/operations/README.md) -- 37 typed constructors for every
-  OSAPI operation (node, network, command, file, docker, cron, agent)
-- [Features](docs/features/README.md) -- Step chaining, guards, retry,
-  broadcast, discovery, file workflows, host status awareness, and result
-  decoding
-- [API Reference](docs/gen/orchestrator.md) -- Auto-generated Go documentation
+- [Feature Guides](docs/features/README.md) -- Step chaining, guards,
+  retry, broadcast, discovery, file workflows, host status awareness,
+  and result decoding
+- [API Reference](docs/gen/orchestrator.md) -- Auto-generated Go
+  documentation
 
 ## Examples
 
@@ -54,7 +68,7 @@ Each example is a standalone Go file. Run with:
     cd examples/features
     OSAPI_TOKEN="<jwt>" go run basic.go
 
-### Features
+### Feature Examples
 
 | Example                                                          | What it shows                                       |
 | ---------------------------------------------------------------- | --------------------------------------------------- |
@@ -77,7 +91,7 @@ Each example is a standalone Go file. Run with:
 | [host-status.go](examples/features/host-status.go)              | Host status guards (skipped and failed detection)   |
 | [broadcast-guards.go](examples/features/broadcast-guards.go)    | Broadcast guards with per-host error and changed    |
 
-### Operations
+### Operation Examples
 
 | Example                                                          | What it shows                                       |
 | ---------------------------------------------------------------- | --------------------------------------------------- |

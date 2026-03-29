@@ -1,7 +1,7 @@
 # FileUndeploy
 
 Removes a previously deployed file from the target agent's filesystem. The file
-must have been deployed via [FileDeploy](file-deploy.md).
+must have been deployed via [FileDeploy](deploy.md).
 
 ## Usage
 

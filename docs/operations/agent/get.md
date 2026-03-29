@@ -23,7 +23,7 @@ var result osapi.Agent
 err := results.Decode("get-agent", &result)
 ```
 
-See [AgentList](agent-list.md) for the full `AgentResult` field reference.
+See [AgentList](list.md) for the full `AgentResult` field reference.
 
 ## Idempotency
 
