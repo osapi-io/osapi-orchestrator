@@ -6,7 +6,7 @@ replace github.com/osapi-io/osapi-orchestrator => ../..
 
 require (
 	github.com/osapi-io/osapi-orchestrator v0.0.0-00010101000000-000000000000
-	github.com/retr0h/osapi v0.0.0-20260314215350-cfbccbd3e348
+	github.com/retr0h/osapi v0.0.0-20260329025640-5e5b3c87c150
 )
 
 require (
@@ -25,7 +25,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
-	github.com/oapi-codegen/runtime v1.2.0 // indirect
+	github.com/oapi-codegen/runtime v1.3.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
