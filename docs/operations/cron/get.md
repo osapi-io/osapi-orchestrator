@@ -22,16 +22,16 @@ var result osapi.CronEntryResult
 err := results.Decode("get-cron-1", &result)
 ```
 
-| Field      | Type     | Description                                            |
-| ---------- | -------- | ------------------------------------------------------ |
-| `Hostname` | `string` | The node's hostname.                                   |
-| `Name`     | `string` | Cron entry name.                                       |
-| `Object`   | `string` | Object store name of the deployed script.              |
-| `Schedule` | `string` | Cron expression (empty if interval-based).             |
-| `Interval` | `string` | Periodic interval: hourly, daily, weekly, or monthly.  |
-| `Source`   | `string` | Path to the deployed script on the filesystem.         |
-| `User`     | `string` | User the cron job runs as.                             |
-| `Error`    | `string` | Error message if query failed; empty on success.       |
+| Field      | Type     | Description                                           |
+| ---------- | -------- | ----------------------------------------------------- |
+| `Hostname` | `string` | The node's hostname.                                  |
+| `Name`     | `string` | Cron entry name.                                      |
+| `Object`   | `string` | Object store name of the deployed script.             |
+| `Schedule` | `string` | Cron expression (empty if interval-based).            |
+| `Interval` | `string` | Periodic interval: hourly, daily, weekly, or monthly. |
+| `Source`   | `string` | Path to the deployed script on the filesystem.        |
+| `User`     | `string` | User the cron job runs as.                            |
+| `Error`    | `string` | Error message if query failed; empty on success.      |
 
 ## Idempotency
 

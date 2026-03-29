@@ -76,6 +76,8 @@ just deps
 
 ## Code style
 
+### Go
+
 Go code should be formatted by [`gofumpt`][gofumpt] and linted using
 [`golangci-lint`][golangci-lint]. This style is enforced by CI.
 
@@ -83,6 +85,16 @@ Go code should be formatted by [`gofumpt`][gofumpt] and linted using
 just go::fmt-check   # Check formatting
 just go::fmt         # Auto-fix formatting
 just go::vet         # Run linter
+```
+
+### Documentation
+
+Markdown files are formatted with [Prettier][prettier] via Bun. This style is
+enforced by CI.
+
+```bash
+just docs::fmt-check   # Check formatting
+just docs::fmt         # Auto-fix formatting
 ```
 
 ## Testing
@@ -149,4 +161,5 @@ be reasonable to split it in a few). Git squash and rebase is your friend!
 [Claude Code]: https://claude.ai/code
 [gofumpt]: https://github.com/mvdan/gofumpt
 [golangci-lint]: https://golangci-lint.run
+[prettier]: https://prettier.io
 [Conventional Commits]: https://www.conventionalcommits.org

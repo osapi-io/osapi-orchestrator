@@ -23,10 +23,10 @@ var result osapi.FileUndeployResult
 err := results.Decode("undeploy-file-1", &result)
 ```
 
-| Field     | Type     | Description                                         |
-| --------- | -------- | --------------------------------------------------- |
-| `Changed` | `bool`   | Whether the file was removed or already absent.     |
-| `Error`   | `string` | Error message if removal failed; empty on success.  |
+| Field     | Type     | Description                                        |
+| --------- | -------- | -------------------------------------------------- |
+| `Changed` | `bool`   | Whether the file was removed or already absent.    |
+| `Error`   | `string` | Error message if removal failed; empty on success. |
 
 ## Idempotency
 

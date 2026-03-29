@@ -29,11 +29,11 @@ Broadcast operations return a `HostResult` for each responding agent:
 
 ### Host Status Values
 
-| Value     | Meaning                                  |
-| --------- | ---------------------------------------- |
-| `ok`      | Operation completed successfully         |
-| `skipped` | Operation not supported on this host     |
-| `failed`  | Operation failed with an error           |
+| Value     | Meaning                              |
+| --------- | ------------------------------------ |
+| `ok`      | Operation completed successfully     |
+| `skipped` | Operation not supported on this host |
+| `failed`  | Operation failed with an error       |
 
 The `Status` field distinguishes between hosts that failed (encountered an
 error) and hosts that were skipped (operation unsupported). Guards like
