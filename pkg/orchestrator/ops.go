@@ -787,6 +787,62 @@ func (o *Orchestrator) AgentGet(
 	return &Step{task: task}
 }
 
+// AgentDrain creates a step that drains an agent, preventing it from
+// accepting new jobs.
+func (o *Orchestrator) AgentDrain(
+	hostname string,
+) *Step {
+	name := o.nextOpName("drain-agent")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Agent.Drain(ctx, hostname)
+			if err != nil {
+				return nil, fmt.Errorf("drain agent %s: %w", hostname, err)
+			}
+
+			return &sdk.Result{
+				Changed: false,
+				Data:    sdk.StructToMap(resp.Data),
+			}, nil
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// AgentUndrain creates a step that undrains an agent, allowing it to accept
+// new jobs again.
+func (o *Orchestrator) AgentUndrain(
+	hostname string,
+) *Step {
+	name := o.nextOpName("undrain-agent")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Agent.Undrain(ctx, hostname)
+			if err != nil {
+				return nil, fmt.Errorf("undrain agent %s: %w", hostname, err)
+			}
+
+			return &sdk.Result{
+				Changed: false,
+				Data:    sdk.StructToMap(resp.Data),
+			}, nil
+		},
+	)
+
+	return &Step{task: task}
+}
+
 // DockerPull creates a step that pulls a Docker image on the target host.
 func (o *Orchestrator) DockerPull(
 	target string,

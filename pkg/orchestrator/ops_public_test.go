@@ -396,6 +396,48 @@ func (s *OpsPublicTestSuite) TestAgentGet() {
 	}
 }
 
+func (s *OpsPublicTestSuite) TestAgentDrain() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.AgentDrain("server1")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestAgentUndrain() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.AgentUndrain("server1")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
 func (s *OpsPublicTestSuite) TestFileDeploy() {
 	tests := []struct {
 		name  string
