@@ -87,6 +87,7 @@ func (o *Orchestrator) NodeHostnameGet(
 				func(r osapi.HostnameResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -119,6 +120,7 @@ func (o *Orchestrator) NodeStatusGet(
 				func(r osapi.NodeStatus) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -151,6 +153,7 @@ func (o *Orchestrator) NodeUptimeGet(
 				func(r osapi.UptimeResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -183,6 +186,7 @@ func (o *Orchestrator) NodeDiskGet(
 				func(r osapi.DiskResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -215,6 +219,7 @@ func (o *Orchestrator) NodeMemoryGet(
 				func(r osapi.MemoryResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -247,6 +252,7 @@ func (o *Orchestrator) NodeLoadGet(
 				func(r osapi.LoadResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -280,6 +286,7 @@ func (o *Orchestrator) NetworkDNSGet(
 				func(r osapi.DNSConfig) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -315,6 +322,7 @@ func (o *Orchestrator) NetworkDNSUpdate(
 				func(r osapi.DNSUpdateResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -348,6 +356,7 @@ func (o *Orchestrator) NetworkPingDo(
 				func(r osapi.PingResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -386,6 +395,7 @@ func (o *Orchestrator) CommandExec(
 				func(r osapi.CommandResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    commandError(r),
 					}
@@ -427,6 +437,7 @@ func (o *Orchestrator) CommandShell(
 				func(r osapi.CommandResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    commandError(r),
 					}
@@ -484,6 +495,7 @@ func (o *Orchestrator) FileDeploy(
 				func(r osapi.FileDeployResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -519,6 +531,7 @@ func (o *Orchestrator) FileStatusGet(
 				func(r osapi.FileStatusResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -691,6 +704,7 @@ func (o *Orchestrator) DockerPull(
 				func(r osapi.DockerPullResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -724,6 +738,7 @@ func (o *Orchestrator) DockerCreate(
 				func(r osapi.DockerResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -757,6 +772,7 @@ func (o *Orchestrator) DockerStart(
 				func(r osapi.DockerActionResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -791,6 +807,7 @@ func (o *Orchestrator) DockerStop(
 				func(r osapi.DockerActionResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -825,6 +842,7 @@ func (o *Orchestrator) DockerRemove(
 				func(r osapi.DockerActionResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -859,6 +877,7 @@ func (o *Orchestrator) DockerExec(
 				func(r osapi.DockerExecResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -892,6 +911,7 @@ func (o *Orchestrator) DockerInspect(
 				func(r osapi.DockerDetailResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -925,6 +945,7 @@ func (o *Orchestrator) DockerList(
 				func(r osapi.DockerListResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -965,6 +986,7 @@ func (o *Orchestrator) DockerImageRemove(
 				func(r osapi.DockerActionResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
