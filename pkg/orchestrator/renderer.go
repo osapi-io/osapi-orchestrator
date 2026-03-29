@@ -20,16 +20,16 @@
 
 package orchestrator
 
-import sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+import engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 
 // renderer defines the internal output contract for plan execution.
 type renderer interface {
-	PlanStart(summary sdk.PlanSummary)
+	PlanStart(summary engine.PlanSummary)
 	PlanDone(report *Report)
 	LevelStart(level int, tasks []string, parallel bool)
 	LevelDone(level int, changed int, total int, parallel bool)
 	TaskStart(name string, detail string)
-	TaskDone(result sdk.TaskResult)
+	TaskDone(result engine.TaskResult)
 	TaskRetry(name string, attempt int, err error)
 	TaskSkip(name string, reason string)
 }

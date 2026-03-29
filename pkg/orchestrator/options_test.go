@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -36,22 +36,22 @@ func (s *OptionsTestSuite) TestToSDKStrategy() {
 	tests := []struct {
 		name     string
 		input    ErrorStrategy
-		expected sdk.ErrorStrategy
+		expected engine.ErrorStrategy
 	}{
 		{
 			name:     "StopAll maps to SDK StopAll",
 			input:    StopAll,
-			expected: sdk.StopAll,
+			expected: engine.StopAll,
 		},
 		{
 			name:     "Continue maps to SDK Continue",
 			input:    Continue,
-			expected: sdk.Continue,
+			expected: engine.Continue,
 		},
 		{
 			name:     "Unknown defaults to SDK StopAll",
 			input:    ErrorStrategy(99),
-			expected: sdk.StopAll,
+			expected: engine.StopAll,
 		},
 	}
 

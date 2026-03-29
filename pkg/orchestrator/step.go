@@ -23,14 +23,14 @@ package orchestrator
 import (
 	"fmt"
 
+	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 )
 
 // Step represents a single operation in the plan. Users chain methods
 // to declare ordering, conditions, and error handling.
 type Step struct {
-	task *sdk.Task
+	task *engine.Task
 }
 
 // Named overrides the auto-generated step name.
@@ -46,7 +46,7 @@ func (s *Step) Named(
 func (s *Step) After(
 	deps ...*Step,
 ) *Step {
-	tasks := make([]*sdk.Task, len(deps))
+	tasks := make([]*engine.Task, len(deps))
 	for i, d := range deps {
 		tasks[i] = d.task
 	}
@@ -67,15 +67,15 @@ func (s *Step) Retry(
 		opt(cfg)
 	}
 
-	var sdkOpts []sdk.RetryOption
+	var sdkOpts []engine.RetryOption
 	if cfg.initialInterval > 0 {
 		sdkOpts = append(
 			sdkOpts,
-			sdk.WithRetryBackoff(cfg.initialInterval, cfg.maxInterval),
+			engine.WithRetryBackoff(cfg.initialInterval, cfg.maxInterval),
 		)
 	}
 
-	s.task.OnError(sdk.Retry(n, sdkOpts...))
+	s.task.OnError(engine.Retry(n, sdkOpts...))
 
 	return s
 }
@@ -89,9 +89,9 @@ func (s *Step) OnlyIfChanged() *Step {
 
 // OnlyIfFailed skips this step unless at least one dependency failed.
 func (s *Step) OnlyIfFailed() *Step {
-	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
 		for _, dep := range s.task.Dependencies() {
-			if r := sdkResults.Get(dep.Name()); r != nil && r.Status == sdk.StatusFailed {
+			if r := sdkResults.Get(dep.Name()); r != nil && r.Status == engine.StatusFailed {
 				return true
 			}
 		}
@@ -105,7 +105,7 @@ func (s *Step) OnlyIfFailed() *Step {
 // OnlyIfAllChanged skips this step unless all dependencies reported
 // changes.
 func (s *Step) OnlyIfAllChanged() *Step {
-	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
 		deps := s.task.Dependencies()
 		if len(deps) == 0 {
 			return false
@@ -127,7 +127,7 @@ func (s *Step) OnlyIfAllChanged() *Step {
 // OnlyIfAnyHostFailed skips this step unless any host in any
 // dependency has an error. Only meaningful for broadcast operations.
 func (s *Step) OnlyIfAnyHostFailed() *Step {
-	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
 		deps := s.task.Dependencies()
 		if len(deps) == 0 {
 			return false
@@ -157,7 +157,7 @@ func (s *Step) OnlyIfAnyHostFailed() *Step {
 // for broadcast operations. Skipped hosts are NOT errors — they
 // indicate the operation is not available on that OS family.
 func (s *Step) OnlyIfAnyHostSkipped() *Step {
-	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
 		deps := s.task.Dependencies()
 		if len(deps) == 0 {
 			return false
@@ -185,7 +185,7 @@ func (s *Step) OnlyIfAnyHostSkipped() *Step {
 // OnlyIfAllHostsFailed skips this step unless every host in every
 // dependency has an error. Only meaningful for broadcast operations.
 func (s *Step) OnlyIfAllHostsFailed() *Step {
-	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
 		deps := s.task.Dependencies()
 		if len(deps) == 0 {
 			return false
@@ -213,7 +213,7 @@ func (s *Step) OnlyIfAllHostsFailed() *Step {
 // OnlyIfAnyHostChanged skips this step unless any host in any
 // dependency reported changes. Only meaningful for broadcast operations.
 func (s *Step) OnlyIfAnyHostChanged() *Step {
-	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
 		deps := s.task.Dependencies()
 		if len(deps) == 0 {
 			return false
@@ -241,7 +241,7 @@ func (s *Step) OnlyIfAnyHostChanged() *Step {
 // OnlyIfAllHostsChanged skips this step unless every host in every
 // dependency reported changes. Only meaningful for broadcast operations.
 func (s *Step) OnlyIfAllHostsChanged() *Step {
-	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
 		deps := s.task.Dependencies()
 		if len(deps) == 0 {
 			return false
@@ -271,7 +271,7 @@ func (s *Step) OnlyIfAllHostsChanged() *Step {
 func (s *Step) When(
 	fn func(Results) bool,
 ) *Step {
-	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
 		return fn(Results{results: sdkResults})
 	}, "when: guard returned false")
 
@@ -286,7 +286,7 @@ func (s *Step) WhenFact(
 	agentListStep string,
 	fn Predicate,
 ) *Step {
-	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
 		r := Results{results: sdkResults}
 
 		var list osapi.AgentList

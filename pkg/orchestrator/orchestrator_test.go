@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -139,15 +139,15 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 
 	tests := []struct {
 		name         string
-		setupFunc    func(hooks sdk.Hooks)
+		setupFunc    func(hooks engine.Hooks)
 		validateFunc func(m *mockRenderer)
 	}{
 		{
 			name: "BeforePlan calls PlanStart",
-			setupFunc: func(hooks sdk.Hooks) {
-				hooks.BeforePlan(sdk.PlanSummary{
+			setupFunc: func(hooks engine.Hooks) {
+				hooks.BeforePlan(engine.PlanSummary{
 					TotalTasks: 3,
-					Steps: []sdk.StepSummary{
+					Steps: []engine.StepSummary{
 						{Tasks: []string{"a", "b"}, Parallel: true},
 						{Tasks: []string{"c"}, Parallel: false},
 					},
@@ -161,9 +161,9 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		},
 		{
 			name: "AfterPlan calls PlanDone",
-			setupFunc: func(hooks sdk.Hooks) {
-				hooks.AfterPlan(&sdk.Report{
-					Tasks:    []sdk.TaskResult{{Name: "a", Status: sdk.StatusChanged}},
+			setupFunc: func(hooks engine.Hooks) {
+				hooks.AfterPlan(&engine.Report{
+					Tasks:    []engine.TaskResult{{Name: "a", Status: engine.StatusChanged}},
 					Duration: 5 * time.Second,
 				})
 			},
@@ -176,8 +176,8 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		},
 		{
 			name: "BeforeLevel sequential single task",
-			setupFunc: func(hooks sdk.Hooks) {
-				hooks.BeforeLevel(0, []*sdk.Task{sdk.NewTaskFunc("task-1", nil)}, false)
+			setupFunc: func(hooks engine.Hooks) {
+				hooks.BeforeLevel(0, []*engine.Task{engine.NewTaskFunc("task-1", nil)}, false)
 			},
 			validateFunc: func(m *mockRenderer) {
 				s.True(m.levelStartCalled)
@@ -188,10 +188,10 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		},
 		{
 			name: "BeforeLevel parallel multiple tasks",
-			setupFunc: func(hooks sdk.Hooks) {
-				hooks.BeforeLevel(0, []*sdk.Task{
-					sdk.NewTaskFunc("task-1", nil),
-					sdk.NewTaskFunc("task-2", nil),
+			setupFunc: func(hooks engine.Hooks) {
+				hooks.BeforeLevel(0, []*engine.Task{
+					engine.NewTaskFunc("task-1", nil),
+					engine.NewTaskFunc("task-2", nil),
 				}, true)
 			},
 			validateFunc: func(m *mockRenderer) {
@@ -202,8 +202,8 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		},
 		{
 			name: "AfterLevel no results sequential",
-			setupFunc: func(hooks sdk.Hooks) {
-				hooks.BeforeLevel(1, []*sdk.Task{sdk.NewTaskFunc("t", nil)}, false)
+			setupFunc: func(hooks engine.Hooks) {
+				hooks.BeforeLevel(1, []*engine.Task{engine.NewTaskFunc("t", nil)}, false)
 				hooks.AfterLevel(1, nil)
 			},
 			validateFunc: func(m *mockRenderer) {
@@ -216,11 +216,11 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		},
 		{
 			name: "AfterLevel with changed results parallel",
-			setupFunc: func(hooks sdk.Hooks) {
-				hooks.BeforeLevel(1, []*sdk.Task{sdk.NewTaskFunc("t", nil)}, true)
-				hooks.AfterLevel(1, []sdk.TaskResult{
-					{Name: "a", Status: sdk.StatusChanged, Changed: true},
-					{Name: "b", Status: sdk.StatusUnchanged},
+			setupFunc: func(hooks engine.Hooks) {
+				hooks.BeforeLevel(1, []*engine.Task{engine.NewTaskFunc("t", nil)}, true)
+				hooks.AfterLevel(1, []engine.TaskResult{
+					{Name: "a", Status: engine.StatusChanged, Changed: true},
+					{Name: "b", Status: engine.StatusUnchanged},
 				})
 			},
 			validateFunc: func(m *mockRenderer) {
@@ -232,8 +232,8 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		},
 		{
 			name: "BeforeTask calls TaskStart with name",
-			setupFunc: func(hooks sdk.Hooks) {
-				hooks.BeforeTask(sdk.NewTaskFunc("fn-task", nil))
+			setupFunc: func(hooks engine.Hooks) {
+				hooks.BeforeTask(engine.NewTaskFunc("fn-task", nil))
 			},
 			validateFunc: func(m *mockRenderer) {
 				s.True(m.taskStartCalled)
@@ -243,10 +243,10 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		},
 		{
 			name: "AfterTask calls TaskDone",
-			setupFunc: func(hooks sdk.Hooks) {
-				hooks.AfterTask(nil, sdk.TaskResult{
+			setupFunc: func(hooks engine.Hooks) {
+				hooks.AfterTask(nil, engine.TaskResult{
 					Name:     "task-1",
-					Status:   sdk.StatusChanged,
+					Status:   engine.StatusChanged,
 					Changed:  true,
 					Duration: time.Second,
 				})
@@ -254,13 +254,13 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 			validateFunc: func(m *mockRenderer) {
 				s.True(m.taskDoneCalled)
 				s.Equal("task-1", m.taskDoneResult.Name)
-				s.Equal(sdk.StatusChanged, m.taskDoneResult.Status)
+				s.Equal(engine.StatusChanged, m.taskDoneResult.Status)
 			},
 		},
 		{
 			name: "OnRetry calls TaskRetry",
-			setupFunc: func(hooks sdk.Hooks) {
-				hooks.OnRetry(sdk.NewTaskFunc("retry-task", nil), 2, retryErr)
+			setupFunc: func(hooks engine.Hooks) {
+				hooks.OnRetry(engine.NewTaskFunc("retry-task", nil), 2, retryErr)
 			},
 			validateFunc: func(m *mockRenderer) {
 				s.True(m.taskRetryCalled)
@@ -271,8 +271,8 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		},
 		{
 			name: "OnSkip calls TaskSkip",
-			setupFunc: func(hooks sdk.Hooks) {
-				hooks.OnSkip(sdk.NewTaskFunc("skip-task", nil), "dependency failed")
+			setupFunc: func(hooks engine.Hooks) {
+				hooks.OnSkip(engine.NewTaskFunc("skip-task", nil), "dependency failed")
 			},
 			validateFunc: func(m *mockRenderer) {
 				s.True(m.taskSkipCalled)
@@ -296,7 +296,7 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 // mockRenderer records renderer calls for verification.
 type mockRenderer struct {
 	planStartCalled  bool
-	planStartSummary sdk.PlanSummary
+	planStartSummary engine.PlanSummary
 
 	planDoneCalled bool
 	planDoneReport *Report
@@ -317,7 +317,7 @@ type mockRenderer struct {
 	taskStartDetail string
 
 	taskDoneCalled bool
-	taskDoneResult sdk.TaskResult
+	taskDoneResult engine.TaskResult
 
 	taskRetryCalled  bool
 	taskRetryName    string
@@ -330,7 +330,7 @@ type mockRenderer struct {
 }
 
 func (m *mockRenderer) PlanStart(
-	summary sdk.PlanSummary,
+	summary engine.PlanSummary,
 ) {
 	m.planStartCalled = true
 	m.planStartSummary = summary
@@ -377,7 +377,7 @@ func (m *mockRenderer) TaskStart(
 }
 
 func (m *mockRenderer) TaskDone(
-	result sdk.TaskResult,
+	result engine.TaskResult,
 ) {
 	m.taskDoneCalled = true
 	m.taskDoneResult = result

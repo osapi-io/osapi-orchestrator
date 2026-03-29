@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 // tagWidth is the visible width of the longest status tag ([unchanged]).
@@ -76,7 +76,7 @@ func newLipglossRendererWithWriter(
 }
 
 func (r *lipglossRenderer) PlanStart(
-	summary sdk.PlanSummary,
+	summary engine.PlanSummary,
 ) {
 	r.printf("\n%s\n", r.magenta.Render("Execution Plan"))
 	r.printf("%s\n", r.magenta.Render(
@@ -191,11 +191,11 @@ func (r *lipglossRenderer) TaskStart(
 }
 
 func (r *lipglossRenderer) TaskDone(
-	result sdk.TaskResult,
+	result engine.TaskResult,
 ) {
 	// Suppress the [skipped] line — the [skip] line from OnSkip
 	// already shows the reason and is more useful.
-	if result.Status == sdk.StatusSkipped {
+	if result.Status == engine.StatusSkipped {
 		return
 	}
 
@@ -205,7 +205,7 @@ func (r *lipglossRenderer) TaskDone(
 	label := fmt.Sprintf("[%s]", result.Status)
 
 	var tag string
-	if result.Status == sdk.StatusFailed {
+	if result.Status == engine.StatusFailed {
 		tag = padTag(r.red.Render(label), len(label))
 	} else {
 		tag = padTag(r.green.Render(label), len(label))
@@ -231,7 +231,7 @@ func (r *lipglossRenderer) TaskDone(
 	)
 
 	// Always show error detail on failure.
-	if result.Status == sdk.StatusFailed && result.Error != nil {
+	if result.Status == engine.StatusFailed && result.Error != nil {
 		r.printf(
 			"  %s %s\n",
 			strings.Repeat(" ", tagWidth),
@@ -266,7 +266,7 @@ func (r *lipglossRenderer) TaskDone(
 // Each host gets a bracketed header line with status and optional timing,
 // followed by indented response data in verbose mode.
 func (r *lipglossRenderer) printHostResults(
-	hostResults []sdk.HostResult,
+	hostResults []engine.HostResult,
 ) {
 	indent := strings.Repeat(" ", tagWidth+2)
 	dataIndent := indent + "  "

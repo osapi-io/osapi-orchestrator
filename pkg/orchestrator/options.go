@@ -23,7 +23,7 @@ package orchestrator
 import (
 	"time"
 
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 // Option configures the Orchestrator.
@@ -69,12 +69,12 @@ const (
 // toSDKStrategy maps a porcelain ErrorStrategy to the SDK type.
 func toSDKStrategy(
 	s ErrorStrategy,
-) sdk.ErrorStrategy {
+) engine.ErrorStrategy {
 	switch s {
 	case Continue:
-		return sdk.Continue
+		return engine.Continue
 	default:
-		return sdk.StopAll
+		return engine.StopAll
 	}
 }
 

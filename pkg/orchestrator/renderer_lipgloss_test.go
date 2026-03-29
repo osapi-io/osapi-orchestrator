@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -68,9 +68,9 @@ func (s *RendererLipglossTestSuite) TestPlanStart() {
 		{
 			name: "Renders execution plan",
 			setupFunc: func(r *lipglossRenderer) {
-				r.PlanStart(sdk.PlanSummary{
+				r.PlanStart(engine.PlanSummary{
 					TotalTasks: 3,
-					Steps: []sdk.StepSummary{
+					Steps: []engine.StepSummary{
 						{Tasks: []string{"health-check", "dns-update"}, Parallel: true},
 						{Tasks: []string{"get-hostname"}, Parallel: false},
 					},
@@ -115,9 +115,9 @@ func (s *RendererLipglossTestSuite) TestPlanDone() {
 			name: "Renders completion summary",
 			setupFunc: func(r *lipglossRenderer) {
 				r.PlanDone(&Report{
-					Tasks: []sdk.TaskResult{
-						{Name: "a", Status: sdk.StatusChanged, Changed: true},
-						{Name: "b", Status: sdk.StatusUnchanged},
+					Tasks: []engine.TaskResult{
+						{Name: "a", Status: engine.StatusChanged, Changed: true},
+						{Name: "b", Status: engine.StatusUnchanged},
 					},
 					Duration: 287 * time.Millisecond,
 				})
@@ -324,16 +324,16 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 	tests := []struct {
 		name        string
 		verbose     bool
-		result      sdk.TaskResult
+		result      engine.TaskResult
 		contains    []string
 		notContains []string
 		expectEmpty bool
 	}{
 		{
 			name: "Unchanged task",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:     "health-check",
-				Status:   sdk.StatusUnchanged,
+				Status:   engine.StatusUnchanged,
 				Changed:  false,
 				Duration: 12 * time.Millisecond,
 			},
@@ -345,9 +345,9 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		},
 		{
 			name: "Changed task",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:     "run-command",
-				Status:   sdk.StatusChanged,
+				Status:   engine.StatusChanged,
 				Changed:  true,
 				Duration: 230 * time.Millisecond,
 			},
@@ -359,9 +359,9 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		},
 		{
 			name: "Failed task",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:     "bad-task",
-				Status:   sdk.StatusFailed,
+				Status:   engine.StatusFailed,
 				Changed:  false,
 				Duration: 5 * time.Millisecond,
 			},
@@ -372,18 +372,18 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		},
 		{
 			name: "Skipped task suppressed",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:     "skipped-task",
-				Status:   sdk.StatusSkipped,
+				Status:   engine.StatusSkipped,
 				Duration: 1 * time.Millisecond,
 			},
 			expectEmpty: true,
 		},
 		{
 			name: "Shows error message on failure",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:     "deploy",
-				Status:   sdk.StatusFailed,
+				Status:   engine.StatusFailed,
 				Duration: 45 * time.Millisecond,
 				Error:    fmt.Errorf("command exited with code 1"),
 			},
@@ -395,9 +395,9 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		},
 		{
 			name: "No error line when error is nil",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:     "deploy",
-				Status:   sdk.StatusFailed,
+				Status:   engine.StatusFailed,
 				Duration: 45 * time.Millisecond,
 			},
 			contains: []string{
@@ -408,9 +408,9 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		{
 			name:    "Verbose shows stdout",
 			verbose: true,
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:     "run-cmd",
-				Status:   sdk.StatusChanged,
+				Status:   engine.StatusChanged,
 				Changed:  true,
 				Duration: 100 * time.Millisecond,
 				Data: map[string]any{
@@ -425,9 +425,9 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		},
 		{
 			name: "Normal mode hides stdout",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:     "run-cmd",
-				Status:   sdk.StatusChanged,
+				Status:   engine.StatusChanged,
 				Changed:  true,
 				Duration: 100 * time.Millisecond,
 				Data: map[string]any{
@@ -445,9 +445,9 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		{
 			name:    "Verbose skips empty values",
 			verbose: true,
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:     "run-cmd",
-				Status:   sdk.StatusChanged,
+				Status:   engine.StatusChanged,
 				Changed:  true,
 				Duration: 100 * time.Millisecond,
 				Data: map[string]any{
@@ -464,11 +464,11 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		},
 		{
 			name: "Shows per-host results with bracketed hostnames",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:    "deploy-all",
-				Status:  sdk.StatusChanged,
+				Status:  engine.StatusChanged,
 				Changed: true,
-				HostResults: []sdk.HostResult{
+				HostResults: []engine.HostResult{
 					{Hostname: "web-01", Changed: true},
 					{Hostname: "web-02", Changed: false, Error: "timeout"},
 				},
@@ -481,10 +481,10 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		},
 		{
 			name: "Host with status ok renders as ok",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:   "broadcast-ok",
-				Status: sdk.StatusUnchanged,
-				HostResults: []sdk.HostResult{
+				Status: engine.StatusUnchanged,
+				HostResults: []engine.HostResult{
 					{Hostname: "web-01", Status: "ok"},
 				},
 			},
@@ -500,10 +500,10 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		},
 		{
 			name: "Host with status skipped and error renders with skipped prefix",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:   "broadcast-skipped",
-				Status: sdk.StatusUnchanged,
-				HostResults: []sdk.HostResult{
+				Status: engine.StatusUnchanged,
+				HostResults: []engine.HostResult{
 					{Hostname: "darwin-01", Status: "skipped", Error: "unsupported"},
 				},
 			},
@@ -517,10 +517,10 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		},
 		{
 			name: "Host with status skipped and no error renders as skipped",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:   "broadcast-skipped-no-err",
-				Status: sdk.StatusUnchanged,
-				HostResults: []sdk.HostResult{
+				Status: engine.StatusUnchanged,
+				HostResults: []engine.HostResult{
 					{Hostname: "darwin-02", Status: "skipped"},
 				},
 			},
@@ -534,10 +534,10 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		},
 		{
 			name: "Host with status failed and error renders with failed prefix",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:   "broadcast-failed",
-				Status: sdk.StatusFailed,
-				HostResults: []sdk.HostResult{
+				Status: engine.StatusFailed,
+				HostResults: []engine.HostResult{
 					{Hostname: "db-01", Status: "failed", Error: "permission denied"},
 				},
 			},
@@ -551,10 +551,10 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		},
 		{
 			name: "Host with empty status but error falls back to error prefix",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:   "broadcast-legacy",
-				Status: sdk.StatusFailed,
-				HostResults: []sdk.HostResult{
+				Status: engine.StatusFailed,
+				HostResults: []engine.HostResult{
 					{Hostname: "legacy-01", Error: "connection refused"},
 				},
 			},
@@ -570,14 +570,14 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		{
 			name:    "Verbose shows per-host data and suppresses inline data",
 			verbose: true,
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:     "get-hostname-all",
-				Status:   sdk.StatusUnchanged,
+				Status:   engine.StatusUnchanged,
 				Duration: 1500 * time.Millisecond,
 				Data: map[string]any{
 					"hostname": "nerd",
 				},
-				HostResults: []sdk.HostResult{
+				HostResults: []engine.HostResult{
 					{
 						Hostname:    "nerd",
 						JobDuration: 2 * time.Millisecond,
@@ -599,10 +599,10 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		},
 		{
 			name: "Normal mode hides per-host data",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:   "get-hostname-all",
-				Status: sdk.StatusUnchanged,
-				HostResults: []sdk.HostResult{
+				Status: engine.StatusUnchanged,
+				HostResults: []engine.HostResult{
 					{
 						Hostname: "nerd",
 						Data: map[string]any{
@@ -620,9 +620,9 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		},
 		{
 			name: "No host results for non-broadcast",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:   "get-hostname",
-				Status: sdk.StatusUnchanged,
+				Status: engine.StatusUnchanged,
 			},
 			notContains: []string{
 				"web-",
@@ -631,10 +631,10 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		{
 			name:    "Verbose shows job ID when present",
 			verbose: true,
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				JobID:    "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 				Name:     "set-dns",
-				Status:   sdk.StatusChanged,
+				Status:   engine.StatusChanged,
 				Changed:  true,
 				Duration: 50 * time.Millisecond,
 			},
@@ -644,10 +644,10 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		},
 		{
 			name: "Normal mode hides job ID",
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				JobID:    "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
 				Name:     "set-dns",
-				Status:   sdk.StatusChanged,
+				Status:   engine.StatusChanged,
 				Changed:  true,
 				Duration: 50 * time.Millisecond,
 			},
@@ -658,9 +658,9 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		{
 			name:    "Verbose shows job duration when present",
 			verbose: true,
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:        "set-dns",
-				Status:      sdk.StatusChanged,
+				Status:      engine.StatusChanged,
 				Changed:     true,
 				Duration:    50 * time.Millisecond,
 				JobDuration: 30 * time.Millisecond,
@@ -672,12 +672,12 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		{
 			name:    "Verbose shows host data but skips internal keys",
 			verbose: true,
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:     "broadcast-cmd",
-				Status:   sdk.StatusChanged,
+				Status:   engine.StatusChanged,
 				Changed:  true,
 				Duration: 100 * time.Millisecond,
-				HostResults: []sdk.HostResult{
+				HostResults: []engine.HostResult{
 					{
 						Hostname: "web-01",
 						Changed:  true,
@@ -699,9 +699,9 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		{
 			name:    "Verbose hides job ID when empty",
 			verbose: true,
-			result: sdk.TaskResult{
+			result: engine.TaskResult{
 				Name:     "health-check",
-				Status:   sdk.StatusUnchanged,
+				Status:   engine.StatusUnchanged,
 				Duration: 10 * time.Millisecond,
 			},
 			notContains: []string{

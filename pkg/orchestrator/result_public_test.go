@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
+	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
@@ -38,7 +38,7 @@ type ResultPublicTestSuite struct {
 func (s *ResultPublicTestSuite) TestDecode() {
 	tests := []struct {
 		name         string
-		results      sdk.Results
+		results      engine.Results
 		lookupName   string
 		target       any
 		expectErr    bool
@@ -47,11 +47,11 @@ func (s *ResultPublicTestSuite) TestDecode() {
 	}{
 		{
 			name: "Decodes hostname from host results",
-			results: sdk.Results{
-				"get-hostname": &sdk.Result{
+			results: engine.Results{
+				"get-hostname": &engine.Result{
 					Changed: false,
 					Data:    map[string]any{"results": []any{}},
-					HostResults: []sdk.HostResult{
+					HostResults: []engine.HostResult{
 						{
 							Hostname: "web-01",
 							Data: map[string]any{
@@ -65,10 +65,10 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			lookupName: "get-hostname",
 			target:     &osapi.HostnameResult{},
 			validateFunc: func() {
-				r := orchestrator.NewResults(sdk.Results{
-					"get-hostname": &sdk.Result{
+				r := orchestrator.NewResults(engine.Results{
+					"get-hostname": &engine.Result{
 						Data: map[string]any{"results": []any{}},
-						HostResults: []sdk.HostResult{
+						HostResults: []engine.HostResult{
 							{
 								Hostname: "web-01",
 								Data: map[string]any{
@@ -88,10 +88,10 @@ func (s *ResultPublicTestSuite) TestDecode() {
 		},
 		{
 			name: "Decodes command from host results",
-			results: sdk.Results{
-				"run-uptime": &sdk.Result{
+			results: engine.Results{
+				"run-uptime": &engine.Result{
 					Data: map[string]any{"results": []any{}},
-					HostResults: []sdk.HostResult{
+					HostResults: []engine.HostResult{
 						{
 							Hostname: "web-01",
 							Data: map[string]any{
@@ -106,10 +106,10 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			lookupName: "run-uptime",
 			target:     &osapi.CommandResult{},
 			validateFunc: func() {
-				r := orchestrator.NewResults(sdk.Results{
-					"run-uptime": &sdk.Result{
+				r := orchestrator.NewResults(engine.Results{
+					"run-uptime": &engine.Result{
 						Data: map[string]any{"results": []any{}},
-						HostResults: []sdk.HostResult{
+						HostResults: []engine.HostResult{
 							{
 								Hostname: "web-01",
 								Data: map[string]any{
@@ -131,8 +131,8 @@ func (s *ResultPublicTestSuite) TestDecode() {
 		},
 		{
 			name: "Falls back to Data when no host results",
-			results: sdk.Results{
-				"summarize": &sdk.Result{
+			results: engine.Results{
+				"summarize": &engine.Result{
 					Changed: true,
 					Data:    map[string]any{"host": "web-01"},
 				},
@@ -140,8 +140,8 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			lookupName: "summarize",
 			target:     &map[string]any{},
 			validateFunc: func() {
-				r := orchestrator.NewResults(sdk.Results{
-					"summarize": &sdk.Result{
+				r := orchestrator.NewResults(engine.Results{
+					"summarize": &engine.Result{
 						Changed: true,
 						Data:    map[string]any{"host": "web-01"},
 					},
@@ -154,15 +154,15 @@ func (s *ResultPublicTestSuite) TestDecode() {
 		},
 		{
 			name: "Decodes nil data without error",
-			results: sdk.Results{
-				"empty-task": &sdk.Result{Data: nil},
+			results: engine.Results{
+				"empty-task": &engine.Result{Data: nil},
 			},
 			lookupName: "empty-task",
 			target:     &osapi.HostnameResult{},
 		},
 		{
 			name:        "Returns error for missing result",
-			results:     sdk.Results{},
+			results:     engine.Results{},
 			lookupName:  "nonexistent",
 			target:      &osapi.HostnameResult{},
 			expectErr:   true,
@@ -170,11 +170,11 @@ func (s *ResultPublicTestSuite) TestDecode() {
 		},
 		{
 			name: "Decodes command error from host results",
-			results: sdk.Results{
-				"run-cmd": &sdk.Result{
+			results: engine.Results{
+				"run-cmd": &engine.Result{
 					Changed: true,
 					Data:    map[string]any{"results": []any{}},
-					HostResults: []sdk.HostResult{
+					HostResults: []engine.HostResult{
 						{
 							Hostname: "web-01",
 							Error:    "exec failed",
@@ -192,11 +192,11 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			lookupName: "run-cmd",
 			target:     &osapi.CommandResult{},
 			validateFunc: func() {
-				r := orchestrator.NewResults(sdk.Results{
-					"run-cmd": &sdk.Result{
+				r := orchestrator.NewResults(engine.Results{
+					"run-cmd": &engine.Result{
 						Changed: true,
 						Data:    map[string]any{"results": []any{}},
-						HostResults: []sdk.HostResult{
+						HostResults: []engine.HostResult{
 							{
 								Hostname: "web-01",
 								Error:    "exec failed",
@@ -221,8 +221,8 @@ func (s *ResultPublicTestSuite) TestDecode() {
 		},
 		{
 			name: "Returns error when unmarshal fails",
-			results: sdk.Results{
-				"bad-task": &sdk.Result{
+			results: engine.Results{
+				"bad-task": &engine.Result{
 					Data: map[string]any{"hostname": 12345},
 				},
 			},
@@ -233,8 +233,8 @@ func (s *ResultPublicTestSuite) TestDecode() {
 		},
 		{
 			name: "Returns error when marshal fails",
-			results: sdk.Results{
-				"bad-marshal": &sdk.Result{
+			results: engine.Results{
+				"bad-marshal": &engine.Result{
 					Data: map[string]any{"fn": func() {}},
 				},
 			},
@@ -269,7 +269,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 func (s *ResultPublicTestSuite) TestReportSummary() {
 	tests := []struct {
 		name     string
-		tasks    []sdk.TaskResult
+		tasks    []engine.TaskResult
 		expected string
 	}{
 		{
@@ -279,40 +279,40 @@ func (s *ResultPublicTestSuite) TestReportSummary() {
 		},
 		{
 			name: "All changed",
-			tasks: []sdk.TaskResult{
-				{Name: "a", Status: sdk.StatusChanged},
-				{Name: "b", Status: sdk.StatusChanged},
+			tasks: []engine.TaskResult{
+				{Name: "a", Status: engine.StatusChanged},
+				{Name: "b", Status: engine.StatusChanged},
 			},
 			expected: "2 tasks, 2 changed",
 		},
 		{
 			name: "All unchanged",
-			tasks: []sdk.TaskResult{
-				{Name: "a", Status: sdk.StatusUnchanged},
+			tasks: []engine.TaskResult{
+				{Name: "a", Status: engine.StatusUnchanged},
 			},
 			expected: "1 tasks, 1 unchanged",
 		},
 		{
 			name: "Mixed statuses",
-			tasks: []sdk.TaskResult{
-				{Name: "a", Status: sdk.StatusChanged},
-				{Name: "b", Status: sdk.StatusUnchanged},
-				{Name: "c", Status: sdk.StatusSkipped},
-				{Name: "d", Status: sdk.StatusFailed},
+			tasks: []engine.TaskResult{
+				{Name: "a", Status: engine.StatusChanged},
+				{Name: "b", Status: engine.StatusUnchanged},
+				{Name: "c", Status: engine.StatusSkipped},
+				{Name: "d", Status: engine.StatusFailed},
 			},
 			expected: "4 tasks, 1 changed, 1 unchanged, 1 skipped, 1 failed",
 		},
 		{
 			name: "Skipped only",
-			tasks: []sdk.TaskResult{
-				{Name: "a", Status: sdk.StatusSkipped},
+			tasks: []engine.TaskResult{
+				{Name: "a", Status: engine.StatusSkipped},
 			},
 			expected: "1 tasks, 1 skipped",
 		},
 		{
 			name: "Failed only",
-			tasks: []sdk.TaskResult{
-				{Name: "a", Status: sdk.StatusFailed},
+			tasks: []engine.TaskResult{
+				{Name: "a", Status: engine.StatusFailed},
 			},
 			expected: "1 tasks, 1 failed",
 		},
@@ -333,16 +333,16 @@ func (s *ResultPublicTestSuite) TestReportSummary() {
 func (s *ResultPublicTestSuite) TestStatus() {
 	tests := []struct {
 		name       string
-		results    sdk.Results
+		results    engine.Results
 		lookupName string
 		wantStatus orchestrator.TaskStatus
 	}{
 		{
 			name: "Returns TaskStatusChanged for changed result",
-			results: sdk.Results{
-				"step-a": &sdk.Result{
+			results: engine.Results{
+				"step-a": &engine.Result{
 					Changed: true,
-					Status:  sdk.StatusChanged,
+					Status:  engine.StatusChanged,
 				},
 			},
 			lookupName: "step-a",
@@ -350,10 +350,10 @@ func (s *ResultPublicTestSuite) TestStatus() {
 		},
 		{
 			name: "Returns TaskStatusUnchanged for unchanged result",
-			results: sdk.Results{
-				"step-a": &sdk.Result{
+			results: engine.Results{
+				"step-a": &engine.Result{
 					Changed: false,
-					Status:  sdk.StatusUnchanged,
+					Status:  engine.StatusUnchanged,
 				},
 			},
 			lookupName: "step-a",
@@ -361,9 +361,9 @@ func (s *ResultPublicTestSuite) TestStatus() {
 		},
 		{
 			name: "Returns TaskStatusSkipped for skipped result",
-			results: sdk.Results{
-				"step-a": &sdk.Result{
-					Status: sdk.StatusSkipped,
+			results: engine.Results{
+				"step-a": &engine.Result{
+					Status: engine.StatusSkipped,
 				},
 			},
 			lookupName: "step-a",
@@ -371,9 +371,9 @@ func (s *ResultPublicTestSuite) TestStatus() {
 		},
 		{
 			name: "Returns TaskStatusFailed for failed result",
-			results: sdk.Results{
-				"step-a": &sdk.Result{
-					Status: sdk.StatusFailed,
+			results: engine.Results{
+				"step-a": &engine.Result{
+					Status: engine.StatusFailed,
 				},
 			},
 			lookupName: "step-a",
@@ -381,15 +381,15 @@ func (s *ResultPublicTestSuite) TestStatus() {
 		},
 		{
 			name:       "Returns TaskStatusUnknown for missing result",
-			results:    sdk.Results{},
+			results:    engine.Results{},
 			lookupName: "nonexistent",
 			wantStatus: orchestrator.TaskStatusUnknown,
 		},
 		{
 			name: "Returns TaskStatusUnknown for unrecognized SDK status",
-			results: sdk.Results{
-				"step-a": &sdk.Result{
-					Status: sdk.Status("unknown-status"),
+			results: engine.Results{
+				"step-a": &engine.Result{
+					Status: engine.Status("unknown-status"),
 				},
 			},
 			lookupName: "step-a",
@@ -408,29 +408,29 @@ func (s *ResultPublicTestSuite) TestStatus() {
 func (s *ResultPublicTestSuite) TestChanged() {
 	tests := []struct {
 		name       string
-		results    sdk.Results
+		results    engine.Results
 		lookupName string
 		want       bool
 	}{
 		{
 			name: "Returns true when step reported changes",
-			results: sdk.Results{
-				"deploy": &sdk.Result{Changed: true, Status: sdk.StatusChanged},
+			results: engine.Results{
+				"deploy": &engine.Result{Changed: true, Status: engine.StatusChanged},
 			},
 			lookupName: "deploy",
 			want:       true,
 		},
 		{
 			name: "Returns false when step did not report changes",
-			results: sdk.Results{
-				"deploy": &sdk.Result{Changed: false, Status: sdk.StatusUnchanged},
+			results: engine.Results{
+				"deploy": &engine.Result{Changed: false, Status: engine.StatusUnchanged},
 			},
 			lookupName: "deploy",
 			want:       false,
 		},
 		{
 			name:       "Returns false when step not found",
-			results:    sdk.Results{},
+			results:    engine.Results{},
 			lookupName: "nonexistent",
 			want:       false,
 		},
@@ -447,7 +447,7 @@ func (s *ResultPublicTestSuite) TestChanged() {
 func (s *ResultPublicTestSuite) TestHostResults() {
 	tests := []struct {
 		name       string
-		results    sdk.Results
+		results    engine.Results
 		lookupName string
 		wantNil    bool
 		wantLen    int
@@ -455,11 +455,11 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 	}{
 		{
 			name: "Returns per-host results",
-			results: sdk.Results{
-				"deploy": &sdk.Result{
+			results: engine.Results{
+				"deploy": &engine.Result{
 					Changed: true,
-					Status:  sdk.StatusChanged,
-					HostResults: []sdk.HostResult{
+					Status:  engine.StatusChanged,
+					HostResults: []engine.HostResult{
 						{
 							Hostname: "web-01",
 							Changed:  true,
@@ -487,16 +487,16 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 		},
 		{
 			name:       "Returns nil for missing step",
-			results:    sdk.Results{},
+			results:    engine.Results{},
 			lookupName: "nonexistent",
 			wantNil:    true,
 		},
 		{
 			name: "Returns nil for unicast result",
-			results: sdk.Results{
-				"get-host": &sdk.Result{
+			results: engine.Results{
+				"get-host": &engine.Result{
 					Changed: false,
-					Status:  sdk.StatusUnchanged,
+					Status:  engine.StatusUnchanged,
 				},
 			},
 			lookupName: "get-host",
@@ -504,9 +504,9 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 		},
 		{
 			name: "with status fields",
-			results: sdk.Results{
-				"deploy": &sdk.Result{
-					HostResults: []sdk.HostResult{
+			results: engine.Results{
+				"deploy": &engine.Result{
+					HostResults: []engine.HostResult{
 						{Hostname: "web-01", Status: "ok", Changed: true},
 						{Hostname: "web-02", Status: "skipped", Error: "unsupported"},
 						{Hostname: "web-03", Status: "failed", Error: "permission denied"},
@@ -622,7 +622,7 @@ func (s *ResultPublicTestSuite) TestHostResultDecode() {
 func (s *ResultPublicTestSuite) TestReportDecode() {
 	tests := []struct {
 		name        string
-		tasks       []sdk.TaskResult
+		tasks       []engine.TaskResult
 		lookupName  string
 		target      any
 		expectErr   bool
@@ -631,10 +631,10 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 	}{
 		{
 			name: "Decodes task result from report",
-			tasks: []sdk.TaskResult{
+			tasks: []engine.TaskResult{
 				{
 					Name:    "run-cmd",
-					Status:  sdk.StatusChanged,
+					Status:  engine.StatusChanged,
 					Changed: true,
 					Data: map[string]any{
 						"stdout":    "hello",
@@ -650,13 +650,13 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 		},
 		{
 			name: "Decodes from host results when present",
-			tasks: []sdk.TaskResult{
+			tasks: []engine.TaskResult{
 				{
 					Name:    "run-cmd",
-					Status:  sdk.StatusChanged,
+					Status:  engine.StatusChanged,
 					Changed: true,
 					Data:    map[string]any{"results": []any{}},
-					HostResults: []sdk.HostResult{
+					HostResults: []engine.HostResult{
 						{
 							Hostname: "web-01",
 							Data: map[string]any{
@@ -675,17 +675,17 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 		},
 		{
 			name:        "Returns error for missing task",
-			tasks:       []sdk.TaskResult{},
+			tasks:       []engine.TaskResult{},
 			lookupName:  "nonexistent",
 			expectErr:   true,
 			errContains: "no result for",
 		},
 		{
 			name: "Returns error for nil data",
-			tasks: []sdk.TaskResult{
+			tasks: []engine.TaskResult{
 				{
 					Name:   "no-data",
-					Status: sdk.StatusSkipped,
+					Status: engine.StatusSkipped,
 				},
 			},
 			lookupName:  "no-data",
@@ -694,10 +694,10 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 		},
 		{
 			name: "Returns error when marshal fails",
-			tasks: []sdk.TaskResult{
+			tasks: []engine.TaskResult{
 				{
 					Name:   "bad-marshal",
-					Status: sdk.StatusChanged,
+					Status: engine.StatusChanged,
 					Data:   map[string]any{"fn": func() {}},
 				},
 			},
@@ -707,10 +707,10 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 		},
 		{
 			name: "Returns error when decode target is invalid",
-			tasks: []sdk.TaskResult{
+			tasks: []engine.TaskResult{
 				{
 					Name:   "bad-decode",
-					Status: sdk.StatusChanged,
+					Status: engine.StatusChanged,
 					Data:   map[string]any{"stdout": "hello"},
 				},
 			},
