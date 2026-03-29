@@ -630,6 +630,73 @@ func (o *Orchestrator) FileChanged(
 	return &Step{task: task}
 }
 
+// NodeHostnameUpdate creates a step that sets the system hostname.
+func (o *Orchestrator) NodeHostnameUpdate(
+	target string,
+	hostname string,
+) *Step {
+	name := o.nextOpName("update-hostname")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.UpdateHostname(ctx, target, hostname)
+			if err != nil {
+				return nil, fmt.Errorf("update hostname: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.HostnameUpdateResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// NodeOSGet creates a step that retrieves OS information.
+func (o *Orchestrator) NodeOSGet(
+	target string,
+) *Step {
+	name := o.nextOpName("get-os")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.OS(ctx, target)
+			if err != nil {
+				return nil, fmt.Errorf("get os: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.OSInfoResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
 // AgentList creates a step that lists all active agents with their facts.
 func (o *Orchestrator) AgentList() *Step {
 	name := o.nextOpName("list-agents")

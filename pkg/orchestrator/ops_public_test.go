@@ -76,6 +76,48 @@ func (s *OpsPublicTestSuite) TestHealthCheck() {
 	}
 }
 
+func (s *OpsPublicTestSuite) TestNodeHostnameUpdate() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.NodeHostnameUpdate("_any", "new-hostname")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestNodeOSGet() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.NodeOSGet("_any")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
 func (s *OpsPublicTestSuite) TestNodeHostnameGet() {
 	tests := []struct {
 		name  string
