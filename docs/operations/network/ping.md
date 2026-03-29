@@ -41,5 +41,5 @@ Requires `network:read` permission.
 ## Example
 
 See
-[`examples/operations/dns-update.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/dns-update.go)
+[`examples/operations/ping.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/ping.go)
 for a complete working example.

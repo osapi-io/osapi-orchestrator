@@ -18,35 +18,36 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates Docker pull idempotency and the complete
-// container lifecycle.
+// Package main demonstrates the Docker container lifecycle:
+// pull → create → start → list + exec + inspect → stop → remove → image remove.
 //
-// Run 1: pre-cleanup removes image → pull downloads it (changed=true)
+// Pre-cleanup removes any leftover container and image so the example
+// is repeatable. Requires Docker on the target host.
 //
-//	→ create → start → list → exec + inspect → stop → container remove
+// DAG:
 //
-// Run 2: image is cached → pull is a no-op (changed=false)
-//
-//	→ create → start → list → exec + inspect → stop → container remove + image remove
+//	pre-cleanup
+//	    └── docker-pull
+//	            └── docker-create
+//	                    └── docker-start
+//	                            ├── docker-list
+//	                            ├── docker-exec
+//	                            └── docker-inspect
+//	                                    └── docker-stop
+//	                                            └── docker-remove
+//	                                                    └── docker-image-remove
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run docker.go
 package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
-)
-
-const (
-	containerName = "osapi-example-nginx"
-	imageName     = "nginx:alpine"
-	targetHost    = "_any"
 )
 
 func main() {
@@ -60,26 +61,15 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
-	// Run 1: remove image first so pull downloads it (changed=true).
-	fmt.Println("=== Run 1: fresh pull ===\n")
-	runLifecycle(url, token, true, false)
+	const (
+		image  = "nginx:alpine"
+		name   = "osapi-example-nginx"
+		target = "_any"
+	)
 
-	// Run 2: image is cached so pull is a no-op (changed=false).
-	// Clean up the image at the end.
-	fmt.Println("\n=== Run 2: cached pull ===\n")
-	runLifecycle(url, token, false, true)
-}
-
-func runLifecycle(
-	url string,
-	token string,
-	removeImageFirst bool,
-	removeImageLast bool,
-) {
 	o := orchestrator.New(url, token)
 
-	// Pre-cleanup: remove leftover container (always) and optionally
-	// remove the image to force a fresh pull. Errors are swallowed.
+	// Pre-cleanup: remove leftover container and image.
 	preCleanup := o.TaskFunc(
 		"pre-cleanup",
 		func(
@@ -87,77 +77,45 @@ func runLifecycle(
 			c *osapi.Client,
 			_ orchestrator.Results,
 		) (*orchestrator.Result, error) {
-			_, _ = c.Docker.Remove(
+			_, _ = c.Docker.Remove(ctx, target, name, &osapi.DockerRemoveParams{Force: true})
+			_, _ = c.Docker.ImageRemove(
 				ctx,
-				targetHost,
-				containerName,
-				&osapi.DockerRemoveParams{Force: true},
+				target,
+				image,
+				&osapi.DockerImageRemoveParams{Force: true},
 			)
-
-			if removeImageFirst {
-				_, _ = c.Docker.ImageRemove(
-					ctx,
-					targetHost,
-					imageName,
-					&osapi.DockerImageRemoveParams{Force: true},
-				)
-			}
 
 			return &orchestrator.Result{Changed: false}, nil
 		},
 	)
 
-	// Pull image — changed=true on first run, changed=false on second.
-	pull := o.DockerPull(targetHost, osapi.DockerPullOpts{
-		Image: imageName,
-	}).After(preCleanup)
+	pull := o.DockerPull(target, osapi.DockerPullOpts{Image: image}).
+		After(preCleanup)
 
-	// Create container (without auto-start).
-	create := o.DockerCreate(targetHost, osapi.DockerCreateOpts{
-		Image: imageName,
-		Name:  containerName,
+	create := o.DockerCreate(target, osapi.DockerCreateOpts{
+		Image: image,
+		Name:  name,
 	}).After(pull)
 
-	// Start the container explicitly.
-	start := o.DockerStart(targetHost, containerName).After(create)
+	start := o.DockerStart(target, name).After(create)
 
-	// List running containers to show the new one.
-	o.DockerList(targetHost, nil).After(start)
+	// List, exec, and inspect run in parallel after start.
+	o.DockerList(target, nil).After(start)
 
-	// Exec: show nginx version.
-	exec := o.DockerExec(
-		targetHost,
-		containerName,
-		osapi.DockerExecOpts{
-			Command: []string{"nginx", "-v"},
-		},
-	).After(start)
+	exec := o.DockerExec(target, name, osapi.DockerExecOpts{
+		Command: []string{"nginx", "-v"},
+	}).After(start)
 
-	// Inspect the running container.
-	inspect := o.DockerInspect(targetHost, containerName).After(start)
+	inspect := o.DockerInspect(target, name).After(start)
 
-	// Stop the container after exec and inspect finish.
-	stop := o.DockerStop(
-		targetHost,
-		containerName,
-		osapi.DockerStopOpts{},
-	).After(exec, inspect)
+	stop := o.DockerStop(target, name, osapi.DockerStopOpts{}).
+		After(exec, inspect)
 
-	// Remove container after stopping.
-	containerRemove := o.DockerRemove(
-		targetHost,
-		containerName,
-		&osapi.DockerRemoveParams{Force: true},
-	).After(stop)
+	remove := o.DockerRemove(target, name, &osapi.DockerRemoveParams{Force: true}).
+		After(stop)
 
-	// Optionally remove the image at the end (cleanup on last run).
-	if removeImageLast {
-		o.DockerImageRemove(
-			targetHost,
-			imageName,
-			&osapi.DockerImageRemoveParams{Force: true},
-		).After(containerRemove)
-	}
+	o.DockerImageRemove(target, image, &osapi.DockerImageRemoveParams{Force: true}).
+		After(remove)
 
 	if _, err := o.Run(context.Background()); err != nil {
 		log.Fatal(err)

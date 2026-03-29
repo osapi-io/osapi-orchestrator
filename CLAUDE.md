@@ -196,6 +196,7 @@ Add the operation to an existing workflow example in
 | Node    | `node-info.go`         |
 | Node    | `hostname-update.go`   |
 | Network | `dns-update.go`        |
+| Network | `ping.go`              |
 | Command | `command.go`           |
 | File    | `file-deploy.go`       |
 | File    | `file-changed.go`      |

@@ -18,29 +18,27 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates host-level status guards for broadcast
-// operations.
+// Package main demonstrates network connectivity verification with ping.
 //
-// A hostname update broadcasts to all hosts. Hosts that don't support
-// the operation report "skipped" status. The orchestrator distinguishes
-// skipped from failed:
-//
-//   - OnlyIfAnyHostSkipped: runs when a host was skipped (unsupported).
-//   - OnlyIfAnyHostFailed: runs when a host reported an error.
+// Pings a well-known host and decodes the result to show packet
+// statistics. Uses OnError(Continue) because ping requires ICMP
+// permissions that may not be available in all environments.
 //
 // DAG:
 //
-//	update-hostname (_all, continue on error)
-//	    ├── notify-skipped (only-if-any-host-skipped)
-//	    └── recover-failed (only-if-any-host-failed)
+//	health-check
+//	    └── ping
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run host-status.go
+// Run with: OSAPI_TOKEN="<jwt>" go run ping.go
 package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
+
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
@@ -58,24 +56,22 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	// Hostname update is unsupported on macOS/containers, so those
-	// hosts report "skipped" while supported hosts succeed or fail.
-	update := o.NodeHostnameUpdate("_all", "test-hostname").
+	health := o.HealthCheck()
+
+	o.NetworkPingDo("_any", "8.8.8.8").
+		After(health).
 		OnError(orchestrator.Continue)
 
-	// Runs only if at least one host was skipped (unsupported platform).
-	o.CommandExec("_any", "echo", "some-hosts-were-skipped").
-		Named("notify-skipped").
-		After(update).
-		OnlyIfAnyHostSkipped()
-
-	// Runs only if at least one host reported an error.
-	o.CommandExec("_any", "echo", "running-recovery").
-		Named("recover-failed").
-		After(update).
-		OnlyIfAnyHostFailed()
-
-	if _, err := o.Run(context.Background()); err != nil {
+	report, err := o.Run(context.Background())
+	if err != nil {
 		log.Fatal(err)
+	}
+
+	var ping osapi.PingResult
+	if err := report.Decode("ping", &ping); err == nil {
+		fmt.Printf("Ping 8.8.8.8: %d/%d packets, %.0f%% loss\n",
+			ping.PacketsReceived, ping.PacketsSent, ping.PacketLoss)
+	} else {
+		fmt.Println("Ping requires ICMP permissions (may not work in containers)")
 	}
 }

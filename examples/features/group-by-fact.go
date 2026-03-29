@@ -80,7 +80,9 @@ func main() {
 		fmt.Printf("Group %s (%d hosts): %s\n", distro, len(agents), cmd)
 
 		for _, a := range agents {
-			o.CommandShell(a.Hostname, cmd).After(health)
+			o.CommandShell(a.Hostname, cmd).
+				After(health).
+				OnError(orchestrator.Continue)
 		}
 	}
 
