@@ -10,6 +10,8 @@ error handling.
 | --------------------------------------------- | ----------------------- | ---------- | -------- |
 | [`HealthCheck`](health-check.md)              | Liveness probe          | Read-only  | Health   |
 | [`NodeHostnameGet`](node-hostname-get.md)     | `node.hostname.get`     | Read-only  | Node     |
+| [`NodeHostnameUpdate`](node-hostname-update.md) | `node.hostname.update` | Yes        | Node     |
+| [`NodeOSGet`](node-os-get.md)                | `node.os.get`           | Read-only  | Node     |
 | [`NodeStatusGet`](node-status-get.md)         | `node.status.get`       | Read-only  | Node     |
 | [`NodeUptimeGet`](node-uptime-get.md)         | `node.uptime.get`       | Read-only  | Node     |
 | [`NodeDiskGet`](node-disk-get.md)             | `node.disk.get`         | Read-only  | Node     |
@@ -21,11 +23,14 @@ error handling.
 | [`CommandExec`](command-exec.md)              | `command.exec.execute`  | No         | Command  |
 | [`CommandShell`](command-shell.md)            | `command.shell.execute` | No         | Command  |
 | [`FileDeploy`](file-deploy.md)                | `file.deploy.execute`   | Yes        | File     |
+| [`FileUndeploy`](file-undeploy.md)            | `file.undeploy`         | Yes        | File     |
 | [`FileStatusGet`](file-status-get.md)         | `file.status.get`       | Read-only  | File     |
 | [`FileUpload`](file-upload.md)                | Upload to Object Store  | No         | File     |
 | [`FileChanged`](file-changed.md)              | Check file drift        | Read-only  | File     |
 | [`AgentList`](agent-list.md)                  | List active agents      | Read-only  | Agent    |
 | [`AgentGet`](agent-get.md)                    | Get agent details       | Read-only  | Agent    |
+| [`AgentDrain`](agent-drain.md)                | Drain agent             | Yes        | Agent    |
+| [`AgentUndrain`](agent-undrain.md)            | Undrain agent           | Yes        | Agent    |
 | [`DockerPull`](docker-pull.md)                | `docker.pull`           | No         | Docker   |
 | [`DockerCreate`](docker-create.md)            | `docker.create`         | No         | Docker   |
 | [`DockerStart`](docker-start.md)              | `docker.start`          | Yes        | Docker   |
@@ -35,6 +40,11 @@ error handling.
 | [`DockerInspect`](docker-inspect.md)          | `docker.inspect`        | Read-only  | Docker   |
 | [`DockerList`](docker-list.md)                | `docker.list`           | Read-only  | Docker   |
 | [`DockerImageRemove`](docker-image-remove.md) | `docker.image.remove`   | Yes        | Docker   |
+| [`CronList`](cron-list.md)                    | `cron.list`             | Read-only  | Cron     |
+| [`CronGet`](cron-get.md)                      | `cron.get`              | Read-only  | Cron     |
+| [`CronCreate`](cron-create.md)                | `cron.create`           | No         | Cron     |
+| [`CronUpdate`](cron-update.md)                | `cron.update`           | Yes        | Cron     |
+| [`CronDelete`](cron-delete.md)                | `cron.delete`           | Yes        | Cron     |
 
 ## Idempotency
 

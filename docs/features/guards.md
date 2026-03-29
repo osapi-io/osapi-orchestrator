@@ -68,16 +68,27 @@ For broadcast operations (`_all`, label selectors), individual hosts can
 independently succeed, fail, or report changes. The four host-level guards
 inspect `HostResults` from dependencies:
 
-| Method                  | Semantics                                            |
-| ----------------------- | ---------------------------------------------------- |
-| `OnlyIfAnyHostFailed`   | Any host in any dependency has `Error != ""`         |
-| `OnlyIfAllHostsFailed`  | Every host in every dependency has `Error != ""`     |
-| `OnlyIfAnyHostChanged`  | Any host in any dependency has `Changed == true`     |
-| `OnlyIfAllHostsChanged` | Every host in every dependency has `Changed == true` |
+| Method                  | Semantics                                              |
+| ----------------------- | ------------------------------------------------------ |
+| `OnlyIfAnyHostFailed`   | Any host in any dependency has `Status == "failed"`    |
+| `OnlyIfAllHostsFailed`  | Every host in every dependency has `Status == "failed"`|
+| `OnlyIfAnyHostSkipped`  | Any host in any dependency has `Status == "skipped"`   |
+| `OnlyIfAnyHostChanged`  | Any host in any dependency has `Changed == true`       |
+| `OnlyIfAllHostsChanged` | Every host in every dependency has `Changed == true`   |
+
+### Skipped vs Failed
+
+- **Skipped** (`Status == "skipped"`) means the operation is not supported on
+  this host (e.g., `ErrUnsupported` on Darwin). This is NOT an error — it
+  indicates the host cannot perform the operation.
+- **Failed** (`Status == "failed"`) means the operation was attempted but
+  encountered an error. This IS an error.
+- `OnlyIfAnyHostFailed` checks `Status`, not `Error`. It does **not** trigger
+  for skipped hosts, only for hosts where the operation actually failed.
 
 Edge cases:
 
-- No dependencies: all four return false
+- No dependencies: all guards return false
 - Dependency has no `HostResults` (unicast): `OnlyIfAny*` skips the dependency,
   `OnlyIfAll*` returns false
 
@@ -115,12 +126,13 @@ o.CommandExec("_all", "verify.sh").
 
 ### Host-Level Guards (Broadcast)
 
-| Method                  | Inspects             | Trigger condition    |
-| ----------------------- | -------------------- | -------------------- |
-| `OnlyIfAnyHostFailed`   | `HostResult.Error`   | Any host has error   |
-| `OnlyIfAllHostsFailed`  | `HostResult.Error`   | All hosts have error |
-| `OnlyIfAnyHostChanged`  | `HostResult.Changed` | Any host changed     |
-| `OnlyIfAllHostsChanged` | `HostResult.Changed` | All hosts changed    |
+| Method                  | Inspects             | Trigger condition     |
+| ----------------------- | -------------------- | --------------------- |
+| `OnlyIfAnyHostFailed`   | `HostResult.Status`  | Any host failed       |
+| `OnlyIfAllHostsFailed`  | `HostResult.Status`  | All hosts failed      |
+| `OnlyIfAnyHostSkipped`  | `HostResult.Status`  | Any host was skipped  |
+| `OnlyIfAnyHostChanged`  | `HostResult.Changed` | Any host changed      |
+| `OnlyIfAllHostsChanged` | `HostResult.Changed` | All hosts changed     |
 
 ## Example
 

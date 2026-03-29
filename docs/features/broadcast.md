@@ -22,9 +22,23 @@ Broadcast operations return a `HostResult` for each responding agent:
 | Field      | Type             | Description                        |
 | ---------- | ---------------- | ---------------------------------- |
 | `Hostname` | `string`         | Agent hostname                     |
+| `Status`   | `string`         | Host status (see below)            |
 | `Changed`  | `bool`           | Whether this host reported changes |
 | `Error`    | `string`         | Error message (empty on success)   |
 | `Data`     | `map[string]any` | Host-specific response data        |
+
+### Host Status Values
+
+| Value     | Meaning                                  |
+| --------- | ---------------------------------------- |
+| `ok`      | Operation completed successfully         |
+| `skipped` | Operation not supported on this host     |
+| `failed`  | Operation failed with an error           |
+
+The `Status` field distinguishes between hosts that failed (encountered an
+error) and hosts that were skipped (operation unsupported). Guards like
+`OnlyIfAnyHostFailed` inspect `Status`, not `Error`, so skipped hosts do not
+trigger failure guards.
 
 Access per-host results in a `When` guard or after execution:
 

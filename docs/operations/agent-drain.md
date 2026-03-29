@@ -1,0 +1,44 @@
+# AgentDrain
+
+Drains an agent, preventing it from accepting new jobs. Existing in-flight jobs
+continue to completion. Use [AgentUndrain](agent-undrain.md) to resume.
+
+## Usage
+
+```go
+step := o.AgentDrain("web-01")
+```
+
+## Parameters
+
+| Parameter  | Type     | Description                        |
+| ---------- | -------- | ---------------------------------- |
+| `hostname` | `string` | Hostname of the agent to drain.    |
+
+## Result Type
+
+```go
+var result osapi.MessageResponse
+err := results.Decode("drain-agent-1", &result)
+```
+
+| Field     | Type     | Description                                    |
+| --------- | -------- | ---------------------------------------------- |
+| `Message` | `string` | Human-readable message describing the outcome. |
+
+## Idempotency
+
+**Idempotent.** Draining an already-drained agent is a no-op.
+
+## Permissions
+
+Requires `agent:write` permission.
+
+## Example
+
+```go
+plan := o.Plan("maintenance")
+drain := o.AgentDrain("web-01")
+o.CommandExec("web-01", "apt-get upgrade -y").After(drain)
+report := plan.Execute(ctx)
+```
