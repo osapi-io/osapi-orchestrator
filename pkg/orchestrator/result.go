@@ -93,6 +93,7 @@ func (r Results) Changed(
 // operation.
 type HostResult struct {
 	Hostname string
+	Status   string
 	Changed  bool
 	Error    string
 	Data     map[string]any
@@ -128,6 +129,7 @@ func (r Results) HostResults(
 	for i, hr := range result.HostResults {
 		hrs[i] = HostResult{
 			Hostname: hr.Hostname,
+			Status:   hr.Status,
 			Changed:  hr.Changed,
 			Error:    hr.Error,
 			Data:     hr.Data,

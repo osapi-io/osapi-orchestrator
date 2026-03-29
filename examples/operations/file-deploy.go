@@ -18,12 +18,13 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates file deployment with idempotency proof.
+// Package main demonstrates file deployment with idempotency proof
+// and proper undeploy lifecycle.
 //
 // Phase 1: cleanup — remove any previously deployed file.
 // Phase 2: first deploy — upload + deploy + verify (expect changed).
 // Phase 3: idempotency — same upload + deploy + verify (expect unchanged).
-// Phase 4: cleanup — remove the deployed file.
+// Phase 4: undeploy — remove the deployed file using FileUndeploy.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run file-deploy.go
 package main
@@ -112,11 +113,19 @@ func main() {
 		fmt.Printf("File %s status: %s\n", status3.Path, status3.Status)
 	}
 
-	// Phase 4: cleanup — remove the deployed file.
-	fmt.Println("\n=== Phase 4: Cleanup ===")
+	// Phase 4: undeploy — remove the deployed file using FileUndeploy.
+	fmt.Println("\n=== Phase 4: Undeploy ===")
 
 	o4 := newOrchestrator(url, token)
-	o4.CommandShell("_any", "rm -f /tmp/app-config.yaml").OnError(orchestrator.Continue)
-	//nolint:errcheck
-	o4.Run(context.Background()) //nolint:errcheck
+	o4.FileUndeploy("_any", "/tmp/app-config.yaml")
+
+	report4, err := o4.Run(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var undeploy osapi.FileUndeployResult
+	if err := report4.Decode("undeploy-file", &undeploy); err == nil {
+		fmt.Printf("File undeployed, changed: %v\n", undeploy.Changed)
+	}
 }

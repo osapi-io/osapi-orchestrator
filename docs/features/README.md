@@ -15,8 +15,9 @@ conditions, and error handling:
 | `OnlyIfChanged`         | Skip unless a dependency reported changes          |
 | `OnlyIfFailed`          | Skip unless at least one dependency failed         |
 | `OnlyIfAllChanged`      | Skip unless all dependencies reported changes      |
-| `OnlyIfAnyHostFailed`   | Skip unless any host in a dependency has an error  |
-| `OnlyIfAllHostsFailed`  | Skip unless all hosts in dependencies have errors  |
+| `OnlyIfAnyHostFailed`   | Skip unless any host in a dependency failed        |
+| `OnlyIfAllHostsFailed`  | Skip unless all hosts in dependencies failed       |
+| `OnlyIfAnyHostSkipped`  | Skip unless any host in a dependency was skipped   |
 | `OnlyIfAnyHostChanged`  | Skip unless any host in a dependency changed       |
 | `OnlyIfAllHostsChanged` | Skip unless all hosts in dependencies changed      |
 | `When`                  | Guard -- only run if predicate returns true        |

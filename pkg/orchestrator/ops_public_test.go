@@ -76,6 +76,48 @@ func (s *OpsPublicTestSuite) TestHealthCheck() {
 	}
 }
 
+func (s *OpsPublicTestSuite) TestNodeHostnameUpdate() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.NodeHostnameUpdate("_any", "new-hostname")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestNodeOSGet() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.NodeOSGet("_any")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
 func (s *OpsPublicTestSuite) TestNodeHostnameGet() {
 	tests := []struct {
 		name  string
@@ -354,6 +396,48 @@ func (s *OpsPublicTestSuite) TestAgentGet() {
 	}
 }
 
+func (s *OpsPublicTestSuite) TestAgentDrain() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.AgentDrain("server1")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestAgentUndrain() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.AgentUndrain("server1")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
 func (s *OpsPublicTestSuite) TestFileDeploy() {
 	tests := []struct {
 		name  string
@@ -402,6 +486,27 @@ func (s *OpsPublicTestSuite) TestFileStatusGet() {
 			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
 				return s.orch.FileStatusGet("_any", "/etc/app/config.yaml")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestFileUndeploy() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.FileUndeploy("_any", "/etc/app/config.yaml")
 			},
 		},
 	}
@@ -656,6 +761,117 @@ func (s *OpsPublicTestSuite) TestDockerImageRemove() {
 					"nginx:latest",
 					&osapi.DockerImageRemoveParams{Force: true},
 				)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestCronList() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.CronList("_any")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestCronGet() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.CronGet("_any", "backup")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestCronCreate() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.CronCreate("_any", osapi.CronCreateOpts{
+					Name:     "backup",
+					Object:   "backup.sh",
+					Schedule: "0 2 * * *",
+				})
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestCronUpdate() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.CronUpdate("_any", "backup", osapi.CronUpdateOpts{
+					Schedule: "0 3 * * *",
+				})
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestCronDelete() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.CronDelete("_any", "backup")
 			},
 		},
 	}

@@ -280,13 +280,13 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 		expected bool
 	}{
 		{
-			name: "Returns true when one host has Error",
+			name: "Returns true when one host has Status failed",
 			results: sdk.Results{
 				"dep": &sdk.Result{
 					Status: sdk.StatusFailed,
 					HostResults: []sdk.HostResult{
-						{Hostname: "web-01", Error: "timeout"},
-						{Hostname: "web-02"},
+						{Hostname: "web-01", Status: "failed", Error: "timeout"},
+						{Hostname: "web-02", Status: "ok"},
 					},
 				},
 			},
@@ -324,6 +324,34 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 			hasDeps:  true,
 			expected: false,
 		},
+		{
+			name: "Returns false when host is skipped (not failed)",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusFailed,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Status: "skipped", Error: "unsupported"},
+						{Hostname: "web-02", Status: "ok"},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+		{
+			name: "Returns true when host has Status failed",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusFailed,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Status: "failed", Error: "permission denied"},
+						{Hostname: "web-02", Status: "ok"},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: true,
+		},
 	}
 
 	for _, tc := range tests {
@@ -336,6 +364,105 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 					OnlyIfAnyHostFailed()
 			} else {
 				step = orch.NodeHostnameGet("_any").OnlyIfAnyHostFailed()
+			}
+
+			guard := step.task.Guard()
+			s.Require().NotNil(guard)
+			s.Equal(tc.expected, guard(tc.results))
+		})
+	}
+}
+
+func (s *StepTestSuite) TestOnlyIfAnyHostSkipped() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	orch := New(server.URL, "test-token")
+
+	tests := []struct {
+		name     string
+		results  sdk.Results
+		hasDeps  bool
+		expected bool
+	}{
+		{
+			name:     "Returns false with no dependencies",
+			results:  sdk.Results{},
+			hasDeps:  false,
+			expected: false,
+		},
+		{
+			name: "Returns false when dep has no HostResults (unicast)",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status:  sdk.StatusChanged,
+					Changed: true,
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+		{
+			name: "Returns false when all hosts are ok",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusChanged,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Status: "ok", Changed: true},
+						{Hostname: "web-02", Status: "ok", Changed: true},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+		{
+			name: "Returns true when any host has Status skipped",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusFailed,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Status: "skipped", Error: "unsupported"},
+						{Hostname: "web-02", Status: "ok"},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: true,
+		},
+		{
+			name: "Returns false when hosts are failed but not skipped",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusFailed,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Status: "failed", Error: "timeout"},
+						{Hostname: "web-02", Status: "ok"},
+					},
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			var step *Step
+			if tc.hasDeps {
+				dep := orch.NodeHostnameGet("_all").Named("dep")
+				step = orch.NodeHostnameGet("_any").
+					After(dep).
+					OnlyIfAnyHostSkipped()
+			} else {
+				step = orch.NodeHostnameGet("_any").OnlyIfAnyHostSkipped()
 			}
 
 			guard := step.task.Guard()
@@ -365,13 +492,13 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 		expected bool
 	}{
 		{
-			name: "Returns true when all hosts have Error",
+			name: "Returns true when all hosts have Status failed",
 			results: sdk.Results{
 				"dep": &sdk.Result{
 					Status: sdk.StatusFailed,
 					HostResults: []sdk.HostResult{
-						{Hostname: "web-01", Error: "timeout"},
-						{Hostname: "web-02", Error: "connection refused"},
+						{Hostname: "web-01", Status: "failed", Error: "timeout"},
+						{Hostname: "web-02", Status: "failed", Error: "connection refused"},
 					},
 				},
 			},
@@ -379,13 +506,13 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 			expected: true,
 		},
 		{
-			name: "Returns false when one host has no Error",
+			name: "Returns false when one host succeeded",
 			results: sdk.Results{
 				"dep": &sdk.Result{
 					Status: sdk.StatusFailed,
 					HostResults: []sdk.HostResult{
-						{Hostname: "web-01", Error: "timeout"},
-						{Hostname: "web-02", Changed: true},
+						{Hostname: "web-01", Status: "failed", Error: "timeout"},
+						{Hostname: "web-02", Status: "ok", Changed: true},
 					},
 				},
 			},
@@ -404,6 +531,20 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 				"dep": &sdk.Result{
 					Status:  sdk.StatusFailed,
 					Changed: true,
+				},
+			},
+			hasDeps:  true,
+			expected: false,
+		},
+		{
+			name: "Returns false when some hosts are skipped not failed",
+			results: sdk.Results{
+				"dep": &sdk.Result{
+					Status: sdk.StatusFailed,
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Status: "failed", Error: "timeout"},
+						{Hostname: "web-02", Status: "skipped", Error: "unsupported"},
+					},
 				},
 			},
 			hasDeps:  true,
@@ -751,6 +892,23 @@ func (s *StepTestSuite) TestWhenFact() {
 			target:   "_all",
 			predicate: func(a osapi.Agent) bool {
 				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
+			},
+			wantResult: false,
+		},
+		{
+			name: "Returns false when agent list is empty",
+			results: sdk.Results{
+				"list-agents": &sdk.Result{
+					Data: map[string]any{
+						"agents": []any{},
+						"total":  float64(0),
+					},
+				},
+			},
+			stepName: "list-agents",
+			target:   "_all",
+			predicate: func(_ osapi.Agent) bool {
+				return true
 			},
 			wantResult: false,
 		},

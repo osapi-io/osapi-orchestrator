@@ -140,7 +140,7 @@ func (s *Step) OnlyIfAnyHostFailed() *Step {
 			}
 
 			for _, hr := range r.HostResults {
-				if hr.Error != "" {
+				if hr.Status == "failed" {
 					return true
 				}
 			}
@@ -148,6 +148,36 @@ func (s *Step) OnlyIfAnyHostFailed() *Step {
 
 		return false
 	}, "only-if-any-host-failed: no host failed")
+
+	return s
+}
+
+// OnlyIfAnyHostSkipped skips this step unless any host in any
+// dependency was skipped (unsupported operation). Only meaningful
+// for broadcast operations. Skipped hosts are NOT errors — they
+// indicate the operation is not available on that OS family.
+func (s *Step) OnlyIfAnyHostSkipped() *Step {
+	s.task.WhenWithReason(func(sdkResults sdk.Results) bool {
+		deps := s.task.Dependencies()
+		if len(deps) == 0 {
+			return false
+		}
+
+		for _, dep := range deps {
+			r := sdkResults.Get(dep.Name())
+			if r == nil || len(r.HostResults) == 0 {
+				continue
+			}
+
+			for _, hr := range r.HostResults {
+				if hr.Status == "skipped" {
+					return true
+				}
+			}
+		}
+
+		return false
+	}, "only-if-any-host-skipped: no host skipped")
 
 	return s
 }
@@ -168,7 +198,7 @@ func (s *Step) OnlyIfAllHostsFailed() *Step {
 			}
 
 			for _, hr := range r.HostResults {
-				if hr.Error == "" {
+				if hr.Status != "failed" {
 					return false
 				}
 			}

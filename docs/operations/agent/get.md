@@ -23,7 +23,7 @@ var result osapi.Agent
 err := results.Decode("get-agent", &result)
 ```
 
-See [AgentList](agent-list.md) for the full `AgentResult` field reference.
+See [AgentList](list.md) for the full `AgentResult` field reference.
 
 ## Idempotency
 
@@ -36,5 +36,5 @@ Requires `agent:read` permission.
 ## Example
 
 See
-[`examples/features/agent-facts.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/agent-facts.go)
+[`examples/operations/agent-drain.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/agent-drain.go)
 for a complete working example.

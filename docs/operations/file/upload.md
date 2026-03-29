@@ -2,7 +2,7 @@
 
 Uploads file content to the NATS Object Store via the OSAPI REST API. Returns
 the object name that can be referenced in subsequent
-[FileDeploy](file-deploy.md) steps. This is a convenience wrapper that uses
+[FileDeploy](deploy.md) steps. This is a convenience wrapper that uses
 `TaskFunc` to call the file upload API directly.
 
 ## Usage
@@ -56,7 +56,7 @@ err := results.Decode("upload-file", &result)
 the stored hash, skipping the upload when content is unchanged. Use
 `WithForce()` to bypass this pre-check and always upload.
 
-You can also use [FileChanged](file-changed.md) with `OnlyIfChanged` for
+You can also use [FileChanged](changed.md) with `OnlyIfChanged` for
 explicit pre-check control:
 
 ```go

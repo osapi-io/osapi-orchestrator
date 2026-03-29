@@ -87,6 +87,7 @@ func (o *Orchestrator) NodeHostnameGet(
 				func(r osapi.HostnameResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -119,6 +120,7 @@ func (o *Orchestrator) NodeStatusGet(
 				func(r osapi.NodeStatus) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -151,6 +153,7 @@ func (o *Orchestrator) NodeUptimeGet(
 				func(r osapi.UptimeResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -183,6 +186,7 @@ func (o *Orchestrator) NodeDiskGet(
 				func(r osapi.DiskResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -215,6 +219,7 @@ func (o *Orchestrator) NodeMemoryGet(
 				func(r osapi.MemoryResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -247,6 +252,7 @@ func (o *Orchestrator) NodeLoadGet(
 				func(r osapi.LoadResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -280,6 +286,7 @@ func (o *Orchestrator) NetworkDNSGet(
 				func(r osapi.DNSConfig) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -315,6 +322,7 @@ func (o *Orchestrator) NetworkDNSUpdate(
 				func(r osapi.DNSUpdateResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -348,6 +356,7 @@ func (o *Orchestrator) NetworkPingDo(
 				func(r osapi.PingResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -386,6 +395,7 @@ func (o *Orchestrator) CommandExec(
 				func(r osapi.CommandResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    commandError(r),
 					}
@@ -427,6 +437,7 @@ func (o *Orchestrator) CommandShell(
 				func(r osapi.CommandResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    commandError(r),
 					}
@@ -480,11 +491,16 @@ func (o *Orchestrator) FileDeploy(
 				return nil, fmt.Errorf("deploy file: %w", err)
 			}
 
-			return &sdk.Result{
-				JobID:   resp.Data.JobID,
-				Changed: resp.Data.Changed,
-				Data:    sdk.StructToMap(resp.Data),
-			}, nil
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.FileDeployResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
 		},
 	)
 
@@ -511,11 +527,54 @@ func (o *Orchestrator) FileStatusGet(
 				return nil, fmt.Errorf("file status: %w", err)
 			}
 
-			return &sdk.Result{
-				JobID:   resp.Data.JobID,
-				Changed: resp.Data.Changed,
-				Data:    sdk.StructToMap(resp.Data),
-			}, nil
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.FileStatusResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// FileUndeploy creates a step that removes a previously deployed file
+// from the target agent's filesystem.
+func (o *Orchestrator) FileUndeploy(
+	target string,
+	path string,
+) *Step {
+	name := o.nextOpName("undeploy-file")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.FileUndeploy(ctx, osapi.FileUndeployOpts{
+				Target: target,
+				Path:   path,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("undeploy file: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.FileUndeployResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
 		},
 	)
 
@@ -609,6 +668,73 @@ func (o *Orchestrator) FileChanged(
 	return &Step{task: task}
 }
 
+// NodeHostnameUpdate creates a step that sets the system hostname.
+func (o *Orchestrator) NodeHostnameUpdate(
+	target string,
+	hostname string,
+) *Step {
+	name := o.nextOpName("update-hostname")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.UpdateHostname(ctx, target, hostname)
+			if err != nil {
+				return nil, fmt.Errorf("update hostname: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.HostnameUpdateResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// NodeOSGet creates a step that retrieves OS information.
+func (o *Orchestrator) NodeOSGet(
+	target string,
+) *Step {
+	name := o.nextOpName("get-os")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Node.OS(ctx, target)
+			if err != nil {
+				return nil, fmt.Errorf("get os: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.OSInfoResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
 // AgentList creates a step that lists all active agents with their facts.
 func (o *Orchestrator) AgentList() *Step {
 	name := o.nextOpName("list-agents")
@@ -661,6 +787,62 @@ func (o *Orchestrator) AgentGet(
 	return &Step{task: task}
 }
 
+// AgentDrain creates a step that drains an agent, preventing it from
+// accepting new jobs.
+func (o *Orchestrator) AgentDrain(
+	hostname string,
+) *Step {
+	name := o.nextOpName("drain-agent")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Agent.Drain(ctx, hostname)
+			if err != nil {
+				return nil, fmt.Errorf("drain agent %s: %w", hostname, err)
+			}
+
+			return &sdk.Result{
+				Changed: false,
+				Data:    sdk.StructToMap(resp.Data),
+			}, nil
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// AgentUndrain creates a step that undrains an agent, allowing it to accept
+// new jobs again.
+func (o *Orchestrator) AgentUndrain(
+	hostname string,
+) *Step {
+	name := o.nextOpName("undrain-agent")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Agent.Undrain(ctx, hostname)
+			if err != nil {
+				return nil, fmt.Errorf("undrain agent %s: %w", hostname, err)
+			}
+
+			return &sdk.Result{
+				Changed: false,
+				Data:    sdk.StructToMap(resp.Data),
+			}, nil
+		},
+	)
+
+	return &Step{task: task}
+}
+
 // DockerPull creates a step that pulls a Docker image on the target host.
 func (o *Orchestrator) DockerPull(
 	target string,
@@ -683,6 +865,7 @@ func (o *Orchestrator) DockerPull(
 				func(r osapi.DockerPullResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -716,6 +899,7 @@ func (o *Orchestrator) DockerCreate(
 				func(r osapi.DockerResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -749,6 +933,7 @@ func (o *Orchestrator) DockerStart(
 				func(r osapi.DockerActionResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -783,6 +968,7 @@ func (o *Orchestrator) DockerStop(
 				func(r osapi.DockerActionResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -817,6 +1003,7 @@ func (o *Orchestrator) DockerRemove(
 				func(r osapi.DockerActionResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -851,6 +1038,7 @@ func (o *Orchestrator) DockerExec(
 				func(r osapi.DockerExecResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -884,6 +1072,7 @@ func (o *Orchestrator) DockerInspect(
 				func(r osapi.DockerDetailResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -917,6 +1106,177 @@ func (o *Orchestrator) DockerList(
 				func(r osapi.DockerListResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// CronList creates a step that lists cron entries on the target host.
+func (o *Orchestrator) CronList(
+	target string,
+) *Step {
+	name := o.nextOpName("list-cron")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Schedule.CronList(ctx, target)
+			if err != nil {
+				return nil, fmt.Errorf("list cron: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CronEntryResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  false,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// CronGet creates a step that retrieves a specific cron entry on the target host.
+func (o *Orchestrator) CronGet(
+	target string,
+	entryName string,
+) *Step {
+	name := o.nextOpName("get-cron")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Schedule.CronGet(ctx, target, entryName)
+			if err != nil {
+				return nil, fmt.Errorf("get cron: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CronEntryResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  false,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// CronCreate creates a step that creates a new cron entry on the target host.
+func (o *Orchestrator) CronCreate(
+	target string,
+	opts osapi.CronCreateOpts,
+) *Step {
+	name := o.nextOpName("create-cron")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Schedule.CronCreate(ctx, target, opts)
+			if err != nil {
+				return nil, fmt.Errorf("create cron: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CronMutationResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// CronUpdate creates a step that updates an existing cron entry on the target host.
+func (o *Orchestrator) CronUpdate(
+	target string,
+	entryName string,
+	opts osapi.CronUpdateOpts,
+) *Step {
+	name := o.nextOpName("update-cron")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Schedule.CronUpdate(ctx, target, entryName, opts)
+			if err != nil {
+				return nil, fmt.Errorf("update cron: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CronMutationResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// CronDelete creates a step that deletes a cron entry on the target host.
+func (o *Orchestrator) CronDelete(
+	target string,
+	entryName string,
+) *Step {
+	name := o.nextOpName("delete-cron")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Schedule.CronDelete(ctx, target, entryName)
+			if err != nil {
+				return nil, fmt.Errorf("delete cron: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CronMutationResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
@@ -957,6 +1317,7 @@ func (o *Orchestrator) DockerImageRemove(
 				func(r osapi.DockerActionResult) sdk.HostResult {
 					return sdk.HostResult{
 						Hostname: r.Hostname,
+						Status:   r.Status,
 						Changed:  r.Changed,
 						Error:    r.Error,
 					}
