@@ -731,6 +731,117 @@ func (s *OpsPublicTestSuite) TestDockerImageRemove() {
 	}
 }
 
+func (s *OpsPublicTestSuite) TestCronList() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.CronList("_any")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestCronGet() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.CronGet("_any", "backup")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestCronCreate() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.CronCreate("_any", osapi.CronCreateOpts{
+					Name:     "backup",
+					Object:   "backup.sh",
+					Schedule: "0 2 * * *",
+				})
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestCronUpdate() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.CronUpdate("_any", "backup", osapi.CronUpdateOpts{
+					Schedule: "0 3 * * *",
+				})
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
+func (s *OpsPublicTestSuite) TestCronDelete() {
+	tests := []struct {
+		name  string
+		newFn func() *orchestrator.Step
+	}{
+		{
+			name: "Returns non-nil step",
+			newFn: func() *orchestrator.Step {
+				return s.orch.CronDelete("_any", "backup")
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			step := tc.newFn()
+			s.NotNil(step)
+		})
+	}
+}
+
 func TestOpsPublicTestSuite(
 	t *testing.T,
 ) {

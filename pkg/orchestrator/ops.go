@@ -1062,6 +1062,176 @@ func (o *Orchestrator) DockerList(
 	return &Step{task: task}
 }
 
+// CronList creates a step that lists cron entries on the target host.
+func (o *Orchestrator) CronList(
+	target string,
+) *Step {
+	name := o.nextOpName("list-cron")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Schedule.CronList(ctx, target)
+			if err != nil {
+				return nil, fmt.Errorf("list cron: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CronEntryResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  false,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// CronGet creates a step that retrieves a specific cron entry on the target host.
+func (o *Orchestrator) CronGet(
+	target string,
+	entryName string,
+) *Step {
+	name := o.nextOpName("get-cron")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Schedule.CronGet(ctx, target, entryName)
+			if err != nil {
+				return nil, fmt.Errorf("get cron: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CronEntryResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  false,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// CronCreate creates a step that creates a new cron entry on the target host.
+func (o *Orchestrator) CronCreate(
+	target string,
+	opts osapi.CronCreateOpts,
+) *Step {
+	name := o.nextOpName("create-cron")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Schedule.CronCreate(ctx, target, opts)
+			if err != nil {
+				return nil, fmt.Errorf("create cron: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CronMutationResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// CronUpdate creates a step that updates an existing cron entry on the target host.
+func (o *Orchestrator) CronUpdate(
+	target string,
+	entryName string,
+	opts osapi.CronUpdateOpts,
+) *Step {
+	name := o.nextOpName("update-cron")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Schedule.CronUpdate(ctx, target, entryName, opts)
+			if err != nil {
+				return nil, fmt.Errorf("update cron: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CronMutationResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
+// CronDelete creates a step that deletes a cron entry on the target host.
+func (o *Orchestrator) CronDelete(
+	target string,
+	entryName string,
+) *Step {
+	name := o.nextOpName("delete-cron")
+
+	task := o.plan.TaskFunc(
+		name,
+		func(
+			ctx context.Context,
+			c *osapi.Client,
+		) (*sdk.Result, error) {
+			resp, err := c.Schedule.CronDelete(ctx, target, entryName)
+			if err != nil {
+				return nil, fmt.Errorf("delete cron: %w", err)
+			}
+
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CronMutationResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
+		},
+	)
+
+	return &Step{task: task}
+}
+
 // DockerImageRemove creates a step that removes a container image
 // from the target host.
 func (o *Orchestrator) DockerImageRemove(
