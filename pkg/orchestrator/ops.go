@@ -480,11 +480,15 @@ func (o *Orchestrator) FileDeploy(
 				return nil, fmt.Errorf("deploy file: %w", err)
 			}
 
-			return &sdk.Result{
-				JobID:   resp.Data.JobID,
-				Changed: resp.Data.Changed,
-				Data:    sdk.StructToMap(resp.Data),
-			}, nil
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.FileDeployResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
 		},
 	)
 
@@ -511,11 +515,15 @@ func (o *Orchestrator) FileStatusGet(
 				return nil, fmt.Errorf("file status: %w", err)
 			}
 
-			return &sdk.Result{
-				JobID:   resp.Data.JobID,
-				Changed: resp.Data.Changed,
-				Data:    sdk.StructToMap(resp.Data),
-			}, nil
+			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.FileStatusResult) sdk.HostResult {
+					return sdk.HostResult{
+						Hostname: r.Hostname,
+						Changed:  r.Changed,
+						Error:    r.Error,
+					}
+				},
+			)
 		},
 	)
 

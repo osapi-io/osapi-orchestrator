@@ -866,7 +866,7 @@ func (s *OpsTestSuite) TestFileDeploy() {
 				w.WriteHeader(http.StatusAccepted)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","hostname":"web-01","changed":true}`,
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"web-01","changed":true}]}`,
 					),
 				)
 			}),
@@ -938,7 +938,7 @@ func (s *OpsTestSuite) TestFileStatusGet() {
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write(
 					[]byte(
-						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","hostname":"web-01","path":"/etc/app/config.yaml","status":"in-sync","changed":false}`,
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"web-01","path":"/etc/app/config.yaml","status":"in-sync","changed":false}]}`,
 					),
 				)
 			}),
