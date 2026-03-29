@@ -2883,6 +2883,1013 @@ func (s *OpsTestSuite) TestDockerImageRemoveNameCounter() {
 	}
 }
 
+func (s *OpsTestSuite) TestFileUndeploy() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with undeploy result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"web-01","changed":true}]}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "undeploy file",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.FileUndeploy("_any", "/etc/app/config.yaml")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.True(result.Changed)
+			s.NotNil(result.Data)
+			s.Equal("550e8400-e29b-41d4-a716-446655440000", result.JobID)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNodeHostnameUpdate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with hostname update result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusAccepted)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"web-01","changed":true}]}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "update hostname",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.NodeHostnameUpdate("_any", "new-hostname")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.True(result.Changed)
+			s.NotNil(result.Data)
+			s.Equal("550e8400-e29b-41d4-a716-446655440000", result.JobID)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNodeOSGet() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with OS info data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false,"name":"Ubuntu","version":"22.04"}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "get os",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.NodeOSGet("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestAgentDrain() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with drain result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(`{"message":"agent drained"}`))
+			}),
+		},
+		{
+			name: "Returns error on not found",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusNotFound)
+				_, _ = w.Write([]byte(`{"error":"agent not found"}`))
+			}),
+			expectErr:   true,
+			errContains: "drain agent",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.AgentDrain("web-01")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.False(result.Changed)
+			s.NotNil(result.Data)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestAgentUndrain() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with undrain result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte(`{"message":"agent undrained"}`))
+			}),
+		},
+		{
+			name: "Returns error on not found",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusNotFound)
+				_, _ = w.Write([]byte(`{"error":"agent not found"}`))
+			}),
+			expectErr:   true,
+			errContains: "undrain agent",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.AgentUndrain("web-01")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.False(result.Changed)
+			s.NotNil(result.Data)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCronList() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with cron list",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "list cron",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.CronList("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCronGet() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with cron entry",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "get cron",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.CronGet("_any", "backup")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCronCreate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with cron create result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"web-01","changed":true}]}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "create cron",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.CronCreate("_any", osapi.CronCreateOpts{
+				Name:     "backup",
+				Object:   "backup.sh",
+				Schedule: "0 2 * * *",
+			})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.True(result.Changed)
+			s.NotNil(result.Data)
+			s.Equal("550e8400-e29b-41d4-a716-446655440000", result.JobID)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCronUpdate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with cron update result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"web-01","changed":true}]}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "update cron",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.CronUpdate("_any", "backup", osapi.CronUpdateOpts{
+				Schedule: "0 3 * * *",
+			})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.True(result.Changed)
+			s.NotNil(result.Data)
+			s.Equal("550e8400-e29b-41d4-a716-446655440000", result.JobID)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCronDelete() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with cron delete result",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"job_id":"550e8400-e29b-41d4-a716-446655440000","results":[{"hostname":"web-01","changed":true}]}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "delete cron",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.CronDelete("_any", "backup")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.True(result.Changed)
+			s.NotNil(result.Data)
+			s.Equal("550e8400-e29b-41d4-a716-446655440000", result.JobID)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestFileUndeployNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "undeploy-file",
+			secondName: "undeploy-file-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.FileUndeploy("_any", "/etc/app/config.yaml"),
+				orch.FileUndeploy("_any", "/etc/app/other.yaml")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNodeHostnameUpdateNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "update-hostname",
+			secondName: "update-hostname-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.NodeHostnameUpdate("_any", "host-a"),
+				orch.NodeHostnameUpdate("_any", "host-b")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNodeOSGetNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "get-os",
+			secondName: "get-os-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.NodeOSGet("_any"), orch.NodeOSGet("_any")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestAgentDrainNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "drain-agent",
+			secondName: "drain-agent-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.AgentDrain("web-01"), orch.AgentDrain("web-02")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestAgentUndrainNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "undrain-agent",
+			secondName: "undrain-agent-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.AgentUndrain("web-01"), orch.AgentUndrain("web-02")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCronListNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "list-cron",
+			secondName: "list-cron-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.CronList("_any"), orch.CronList("_any")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCronGetNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "get-cron",
+			secondName: "get-cron-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.CronGet("_any", "backup"), orch.CronGet("_any", "cleanup")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCronCreateNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "create-cron",
+			secondName: "create-cron-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.CronCreate("_any", osapi.CronCreateOpts{Name: "backup"}),
+				orch.CronCreate("_any", osapi.CronCreateOpts{Name: "cleanup"})
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCronUpdateNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "update-cron",
+			secondName: "update-cron-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.CronUpdate("_any", "backup", osapi.CronUpdateOpts{}),
+				orch.CronUpdate("_any", "cleanup", osapi.CronUpdateOpts{})
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCronDeleteNameCounter() {
+	server := httptest.NewServer(
+		http.HandlerFunc(func(
+			w http.ResponseWriter,
+			_ *http.Request,
+		) {
+			w.WriteHeader(http.StatusOK)
+		}),
+	)
+	defer server.Close()
+
+	tests := []struct {
+		name       string
+		firstName  string
+		secondName string
+	}{
+		{
+			name:       "Duplicate name gets counter suffix",
+			firstName:  "delete-cron",
+			secondName: "delete-cron-2",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			orch := New(server.URL, "test-token")
+			first, second := orch.CronDelete("_any", "backup"), orch.CronDelete("_any", "cleanup")
+
+			s.Equal(tc.firstName, first.task.Name())
+			s.Equal(tc.secondName, second.task.Name())
+		})
+	}
+}
+
 func TestOpsTestSuite(
 	t *testing.T,
 ) {

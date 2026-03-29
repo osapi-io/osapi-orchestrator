@@ -895,6 +895,23 @@ func (s *StepTestSuite) TestWhenFact() {
 			},
 			wantResult: false,
 		},
+		{
+			name: "Returns false when agent list is empty",
+			results: sdk.Results{
+				"list-agents": &sdk.Result{
+					Data: map[string]any{
+						"agents": []any{},
+						"total":  float64(0),
+					},
+				},
+			},
+			stepName: "list-agents",
+			target:   "_all",
+			predicate: func(_ osapi.Agent) bool {
+				return true
+			},
+			wantResult: false,
+		},
 	}
 
 	for _, tc := range tests {
