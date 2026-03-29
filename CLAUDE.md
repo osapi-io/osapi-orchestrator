@@ -18,19 +18,6 @@ For setup, prerequisites, and contributing guidelines:
 - @docs/operations/README.md - Per-operation reference (37 typed constructors)
 - @docs/features/README.md - Feature guides (guards, retry, discovery, etc.)
 
-## Quick Reference
-
-```bash
-just fetch / just deps / just test / just go::unit / just go::vet / just go::fmt / just docs::fmt
-```
-
-## Package Structure
-
-- **`pkg/orchestrator/`** — User-facing DSL
-  - Typed operation constructors (NodeHostnameGet, CommandExec, etc.)
-  - Uses SDK types directly (`osapi.HostnameResult`, `osapi.Agent`, etc.)
-  - Porcelain over osapi-sdk's orchestrator engine
-
 ## Code Standards (MANDATORY)
 
 ### Function Signatures
@@ -53,7 +40,11 @@ func FunctionName(
 - Suite naming: `*_public_test.go` → `{Name}PublicTestSuite`,
   `*_test.go` → `{Name}TestSuite`
 - Use `testify/suite` with table-driven patterns
-- One suite method per function under test — all scenarios (success, errors, edge cases) as rows in one table
+- Table-driven structure with `validateFunc` callbacks
+- One suite method per function under test — all scenarios (success,
+  errors, edge cases) as rows in one table
+- Avoid generic file names like `helpers.go` or `utils.go` — name
+  files after what they contain
 
 ### Go Patterns
 
@@ -76,11 +67,6 @@ When committing changes via `/commit`, create a feature branch first if
 currently on `main`. Branch names use the pattern `type/short-description`
 (e.g., `feat/add-dns-retry`, `fix/memory-leak`, `docs/update-readme`).
 
-### Task Tracking
-
-Implementation planning and execution uses the superpowers plugin workflows
-(`writing-plans` and `executing-plans`). Plans live in `docs/plans/`.
-
 ### Commit Messages
 
 See @docs/development.md#commit-messages for full conventions.
@@ -91,6 +77,11 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/) with the
 When committing via Claude Code, end with:
 - `🤖 Generated with [Claude Code](https://claude.ai/code)`
 - `Co-Authored-By: Claude <noreply@anthropic.com>`
+
+## Task Tracking
+
+Implementation planning and execution uses the superpowers plugin workflows
+(`writing-plans` and `executing-plans`). Plans live in `docs/plans/`.
 
 ## Adding a New Operation
 
@@ -189,18 +180,18 @@ Add the operation to the table in the domain landing page
 Add the operation to an existing workflow example in
 `examples/operations/` that covers the same domain. Domain groupings:
 
-| Domain  | Example file           |
-| ------- | ---------------------- |
-| Node    | `node-info.go`         |
-| Node    | `hostname-update.go`   |
-| Network | `dns-update.go`        |
-| Command | `command.go`           |
-| File    | `file-deploy.go`       |
-| File    | `file-changed.go`      |
-| Agent   | `agent-drain.go`       |
-| Docker  | `docker.go`            |
-| Cron    | `cron.go`              |
-| Health  | (used as gate in most) |
+| Domain  | Example file         |
+| ------- | -------------------- |
+| Node    | `node-info.go`       |
+| Node    | `hostname-update.go` |
+| Network | `dns-update.go`      |
+| Command | `command.go`         |
+| File    | `file-deploy.go`     |
+| File    | `file-changed.go`    |
+| Agent   | `agent-drain.go`     |
+| Docker  | `docker.go`          |
+| Cron    | `cron.go`            |
+| Health  | (used as gate)       |
 
 If no domain match exists, create a new `{domain}.go` file. Every
 operation must appear in at least one runnable example.
