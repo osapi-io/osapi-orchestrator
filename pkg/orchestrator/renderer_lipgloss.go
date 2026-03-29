@@ -273,8 +273,24 @@ func (r *lipglossRenderer) printHostResults(
 
 	for _, hr := range hostResults {
 		status := r.green.Render("ok")
-		if hr.Error != "" {
-			status = r.red.Render("error: " + hr.Error)
+
+		switch hr.Status {
+		case "skipped":
+			msg := "skipped"
+			if hr.Error != "" {
+				msg = "skipped: " + hr.Error
+			}
+			status = r.yellow.Render(msg)
+		case "failed":
+			msg := "failed"
+			if hr.Error != "" {
+				msg = "failed: " + hr.Error
+			}
+			status = r.red.Render(msg)
+		default:
+			if hr.Error != "" {
+				status = r.red.Render("error: " + hr.Error)
+			}
 		}
 
 		changed := ""

@@ -480,6 +480,94 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 			},
 		},
 		{
+			name: "Host with status ok renders as ok",
+			result: sdk.TaskResult{
+				Name:   "broadcast-ok",
+				Status: sdk.StatusUnchanged,
+				HostResults: []sdk.HostResult{
+					{Hostname: "web-01", Status: "ok"},
+				},
+			},
+			contains: []string{
+				"[web-01]",
+				"ok",
+			},
+			notContains: []string{
+				"skipped",
+				"failed",
+				"error:",
+			},
+		},
+		{
+			name: "Host with status skipped and error renders with skipped prefix",
+			result: sdk.TaskResult{
+				Name:   "broadcast-skipped",
+				Status: sdk.StatusUnchanged,
+				HostResults: []sdk.HostResult{
+					{Hostname: "darwin-01", Status: "skipped", Error: "unsupported"},
+				},
+			},
+			contains: []string{
+				"[darwin-01]",
+				"skipped: unsupported",
+			},
+			notContains: []string{
+				"error: unsupported",
+			},
+		},
+		{
+			name: "Host with status skipped and no error renders as skipped",
+			result: sdk.TaskResult{
+				Name:   "broadcast-skipped-no-err",
+				Status: sdk.StatusUnchanged,
+				HostResults: []sdk.HostResult{
+					{Hostname: "darwin-02", Status: "skipped"},
+				},
+			},
+			contains: []string{
+				"[darwin-02]",
+				"skipped",
+			},
+			notContains: []string{
+				"error:",
+			},
+		},
+		{
+			name: "Host with status failed and error renders with failed prefix",
+			result: sdk.TaskResult{
+				Name:   "broadcast-failed",
+				Status: sdk.StatusFailed,
+				HostResults: []sdk.HostResult{
+					{Hostname: "db-01", Status: "failed", Error: "permission denied"},
+				},
+			},
+			contains: []string{
+				"[db-01]",
+				"failed: permission denied",
+			},
+			notContains: []string{
+				"error: permission denied",
+			},
+		},
+		{
+			name: "Host with empty status but error falls back to error prefix",
+			result: sdk.TaskResult{
+				Name:   "broadcast-legacy",
+				Status: sdk.StatusFailed,
+				HostResults: []sdk.HostResult{
+					{Hostname: "legacy-01", Error: "connection refused"},
+				},
+			},
+			contains: []string{
+				"[legacy-01]",
+				"error: connection refused",
+			},
+			notContains: []string{
+				"skipped",
+				"failed:",
+			},
+		},
+		{
 			name:    "Verbose shows per-host data and suppresses inline data",
 			verbose: true,
 			result: sdk.TaskResult{
