@@ -1,10 +1,19 @@
 # Host Status Awareness + Missing Operations
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use
+> superpowers:subagent-driven-development (recommended) or
+> superpowers:executing-plans to implement this plan task-by-task. Steps use
+> checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add per-host status awareness (ok/skipped/failed) to the orchestrator DSL, fix guards to distinguish skipped from failed, and add all missing SDK operations.
+**Goal:** Add per-host status awareness (ok/skipped/failed) to the orchestrator
+DSL, fix guards to distinguish skipped from failed, and add all missing SDK
+operations.
 
-**Architecture:** The SDK's `HostResult` now has a `Status string` field. The orchestrator wraps SDK types with its own `HostResult` for added behavior (Decode). We add `Status` to the local type, define constants, update guards to use status instead of error-string heuristics, fix the renderer, and add typed constructors for all missing SDK operations.
+**Architecture:** The SDK's `HostResult` now has a `Status string` field. The
+orchestrator wraps SDK types with its own `HostResult` for added behavior
+(Decode). We add `Status` to the local type, define constants, update guards to
+use status instead of error-string heuristics, fix the renderer, and add typed
+constructors for all missing SDK operations.
 
 **Tech Stack:** Go 1.25, osapi SDK, testify/suite, lipgloss
 
@@ -13,22 +22,29 @@
 ## File Structure
 
 **Modified files:**
+
 - `go.mod` — bump SDK dependency
-- `pkg/orchestrator/result.go` — add Status to HostResult, add host status constants, update HostResults()
-- `pkg/orchestrator/result_public_test.go` — test Status field, host status constants
-- `pkg/orchestrator/step.go` — fix OnlyIfAnyHostFailed/OnlyIfAllHostsFailed, add OnlyIfAnyHostSkipped
+- `pkg/orchestrator/result.go` — add Status to HostResult, add host status
+  constants, update HostResults()
+- `pkg/orchestrator/result_public_test.go` — test Status field, host status
+  constants
+- `pkg/orchestrator/step.go` — fix OnlyIfAnyHostFailed/OnlyIfAllHostsFailed, add
+  OnlyIfAnyHostSkipped
 - `pkg/orchestrator/step_public_test.go` — test new/fixed guards
-- `pkg/orchestrator/ops.go` — add Status to all mappers, add new operation constructors
+- `pkg/orchestrator/ops.go` — add Status to all mappers, add new operation
+  constructors
 - `pkg/orchestrator/ops_public_test.go` — tests for new operations
 - `pkg/orchestrator/renderer_lipgloss.go` — use Status for display
 - `pkg/orchestrator/renderer_lipgloss_test.go` — test skipped rendering
 - `docs/operations/README.md` — add new operations to index
-- `docs/features/guards.md` — document OnlyIfAnyHostSkipped, clarify skipped semantics
+- `docs/features/guards.md` — document OnlyIfAnyHostSkipped, clarify skipped
+  semantics
 - `docs/features/broadcast.md` — add Status field to HostResult docs
 - `docs/features/README.md` — update step chaining table
 - `README.md` — update operation counts and feature lists
 
 **New files:**
+
 - `pkg/orchestrator/host_status.go` — host status constants
 - `pkg/orchestrator/host_status_public_test.go` — tests
 - `docs/operations/node-hostname-update.md`
@@ -50,6 +66,7 @@
 ### Task 1: Update SDK dependency
 
 **Files:**
+
 - Modify: `go.mod`
 
 - [ ] **Step 1: Create feature branch**
@@ -95,6 +112,7 @@ git commit -m "chore: bump osapi SDK to pick up HostResult.Status"
 ### Task 2: Add host status constants and Status field to HostResult
 
 **Files:**
+
 - Create: `pkg/orchestrator/host_status.go`
 - Create: `pkg/orchestrator/host_status_public_test.go`
 - Modify: `pkg/orchestrator/result.go`
@@ -192,7 +210,8 @@ Expected: PASS
 
 - [ ] **Step 5: Add Status field to local HostResult and update HostResults()**
 
-In `pkg/orchestrator/result.go`, add `Status string` to the `HostResult` struct (between Hostname and Changed):
+In `pkg/orchestrator/result.go`, add `Status string` to the `HostResult` struct
+(between Hostname and Changed):
 
 ```go
 type HostResult struct {
@@ -232,7 +251,9 @@ func (r Results) HostResults(
 
 - [ ] **Step 6: Add test for Status in HostResults**
 
-In `pkg/orchestrator/result_public_test.go`, add a new test case to `TestHostResults` that verifies Status is copied through. Add a "with status fields" test case:
+In `pkg/orchestrator/result_public_test.go`, add a new test case to
+`TestHostResults` that verifies Status is copied through. Add a "with status
+fields" test case:
 
 ```go
 {
@@ -279,8 +300,10 @@ git commit -m "feat: add host status constants and Status field to HostResult"
 ### Task 3: Fix guards to use Status instead of Error
 
 **Files:**
+
 - Modify: `pkg/orchestrator/step.go`
-- Modify: `pkg/orchestrator/step_public_test.go` (or the file containing guard tests)
+- Modify: `pkg/orchestrator/step_public_test.go` (or the file containing guard
+  tests)
 
 - [ ] **Step 1: Find the guard test file and read it**
 
@@ -293,9 +316,13 @@ Read the test file to understand the existing test patterns.
 - [ ] **Step 2: Write tests for the fixed guards**
 
 Add test cases to the existing guard test method that verify:
-- A host with `Status: "skipped", Error: "unsupported"` does NOT trigger OnlyIfAnyHostFailed
-- A host with `Status: "failed", Error: "permission denied"` DOES trigger OnlyIfAnyHostFailed
-- OnlyIfAllHostsFailed returns false when some hosts are skipped (not all failed)
+
+- A host with `Status: "skipped", Error: "unsupported"` does NOT trigger
+  OnlyIfAnyHostFailed
+- A host with `Status: "failed", Error: "permission denied"` DOES trigger
+  OnlyIfAnyHostFailed
+- OnlyIfAllHostsFailed returns false when some hosts are skipped (not all
+  failed)
 
 The test should set up SDK results with HostResults that have Status fields:
 
@@ -332,7 +359,8 @@ The test should set up SDK results with HostResults that have Status fields:
 go test -run "TestOnlyIfAnyHostFailed" -v ./pkg/orchestrator/...
 ```
 
-Expected: FAIL — the skipped test case fires the guard because it checks `hr.Error != ""`
+Expected: FAIL — the skipped test case fires the guard because it checks
+`hr.Error != ""`
 
 - [ ] **Step 4: Fix OnlyIfAnyHostFailed in step.go**
 
@@ -418,12 +446,14 @@ git commit -m "fix: guards check Status instead of Error to exclude skipped host
 ### Task 4: Add OnlyIfAnyHostSkipped guard
 
 **Files:**
+
 - Modify: `pkg/orchestrator/step.go`
 - Modify: `pkg/orchestrator/step_public_test.go`
 
 - [ ] **Step 1: Write tests for OnlyIfAnyHostSkipped**
 
 Add test cases:
+
 - Returns false when no dependencies
 - Returns false when no host results
 - Returns false when all hosts are ok
@@ -494,12 +524,15 @@ git commit -m "feat: add OnlyIfAnyHostSkipped guard for broadcast operations"
 ### Task 5: Fix renderer to use Status
 
 **Files:**
+
 - Modify: `pkg/orchestrator/renderer_lipgloss.go`
 - Modify: `pkg/orchestrator/renderer_lipgloss_test.go`
 
 - [ ] **Step 1: Write test for skipped host rendering**
 
-Add a test case that verifies a host with `Status: "skipped"` renders with yellow "skipped:" prefix instead of red "error:". Read the existing test file first to match the pattern.
+Add a test case that verifies a host with `Status: "skipped"` renders with
+yellow "skipped:" prefix instead of red "error:". Read the existing test file
+first to match the pattern.
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -507,7 +540,8 @@ Expected: FAIL — skipped hosts render as "error: unsupported"
 
 - [ ] **Step 3: Fix printHostResults**
 
-In `pkg/orchestrator/renderer_lipgloss.go`, update the `printHostResults` method to check `hr.Status`:
+In `pkg/orchestrator/renderer_lipgloss.go`, update the `printHostResults` method
+to check `hr.Status`:
 
 ```go
 for _, hr := range hostResults {
@@ -533,7 +567,8 @@ for _, hr := range hostResults {
 	}
 ```
 
-Note: check if `r.yellow` exists on the lipglossRenderer. If not, add a `yellow` style field and initialize it in the constructor.
+Note: check if `r.yellow` exists on the lipglossRenderer. If not, add a `yellow`
+style field and initialize it in the constructor.
 
 - [ ] **Step 4: Run tests**
 
@@ -555,12 +590,14 @@ git commit -m "fix: renderer shows skipped status in yellow, distinct from faile
 ### Task 6: Add Status to all existing mappers in ops.go
 
 **Files:**
+
 - Modify: `pkg/orchestrator/ops.go`
 - Modify: `pkg/orchestrator/ops_public_test.go`
 
 - [ ] **Step 1: Add `Status: r.Status` to every `sdk.HostResult{}` in ops.go**
 
-There are 18 mappers that create `sdk.HostResult{}` in ops.go. Each needs `Status: r.Status` added between Hostname and Changed. The operations are:
+There are 18 mappers that create `sdk.HostResult{}` in ops.go. Each needs
+`Status: r.Status` added between Hostname and Changed. The operations are:
 
 1. NodeHostnameGet
 2. NodeStatusGet
@@ -584,6 +621,7 @@ There are 18 mappers that create `sdk.HostResult{}` in ops.go. Each needs `Statu
 20. DockerImageRemove
 
 For each, change from:
+
 ```go
 return sdk.HostResult{
 	Hostname: r.Hostname,
@@ -593,6 +631,7 @@ return sdk.HostResult{
 ```
 
 To:
+
 ```go
 return sdk.HostResult{
 	Hostname: r.Hostname,
@@ -602,7 +641,9 @@ return sdk.HostResult{
 }
 ```
 
-For CommandExec and CommandShell, the Error field uses `commandError(r)` — keep that, but add Status:
+For CommandExec and CommandShell, the Error field uses `commandError(r)` — keep
+that, but add Status:
+
 ```go
 return sdk.HostResult{
 	Hostname: r.Hostname,
@@ -632,12 +673,14 @@ git commit -m "feat: pass Status through all existing operation mappers"
 ### Task 7: Add missing operations — NodeHostnameUpdate and NodeOSGet
 
 **Files:**
+
 - Modify: `pkg/orchestrator/ops.go`
 - Modify: `pkg/orchestrator/ops_public_test.go`
 
 - [ ] **Step 1: Write tests for NodeHostnameUpdate and NodeOSGet**
 
-Follow the existing test pattern in `ops_public_test.go`. Each test should mock the SDK client call and verify the CollectionResult mapping.
+Follow the existing test pattern in `ops_public_test.go`. Each test should mock
+the SDK client call and verify the CollectionResult mapping.
 
 - [ ] **Step 2: Run tests to verify they fail**
 
@@ -726,7 +769,9 @@ func (o *Orchestrator) NodeOSGet(
 }
 ```
 
-Note: Check the exact SDK type name — it may be `osapi.OSInfoResult` or `osapi.OSResult`. Read `pkg/sdk/client/node_types.go` in the osapi repo to confirm.
+Note: Check the exact SDK type name — it may be `osapi.OSInfoResult` or
+`osapi.OSResult`. Read `pkg/sdk/client/node_types.go` in the osapi repo to
+confirm.
 
 - [ ] **Step 5: Run tests**
 
@@ -748,6 +793,7 @@ git commit -m "feat: add NodeHostnameUpdate and NodeOSGet operations"
 ### Task 8: Add missing operations — FileUndeploy
 
 **Files:**
+
 - Modify: `pkg/orchestrator/ops.go`
 - Modify: `pkg/orchestrator/ops_public_test.go`
 
@@ -755,7 +801,9 @@ git commit -m "feat: add NodeHostnameUpdate and NodeOSGet operations"
 
 - [ ] **Step 2: Implement FileUndeploy**
 
-Check `pkg/sdk/client/node.go` for the `FileUndeploy` signature and `pkg/sdk/client/file_types.go` for the result type. Follow the FileDeploy pattern:
+Check `pkg/sdk/client/node.go` for the `FileUndeploy` signature and
+`pkg/sdk/client/file_types.go` for the result type. Follow the FileDeploy
+pattern:
 
 ```go
 // FileUndeploy creates a step that removes a previously deployed file
@@ -789,7 +837,8 @@ func (o *Orchestrator) FileUndeploy(
 }
 ```
 
-Note: Verify the SDK method signature — it may take different params. Read `c.Node.FileUndeploy` in `pkg/sdk/client/node.go`.
+Note: Verify the SDK method signature — it may take different params. Read
+`c.Node.FileUndeploy` in `pkg/sdk/client/node.go`.
 
 - [ ] **Step 3: Run tests**
 
@@ -809,12 +858,14 @@ git commit -m "feat: add FileUndeploy operation"
 ### Task 9: Add missing operations — all 5 Cron operations
 
 **Files:**
+
 - Modify: `pkg/orchestrator/ops.go`
 - Modify: `pkg/orchestrator/ops_public_test.go`
 
 - [ ] **Step 1: Read SDK cron method signatures**
 
-Read `pkg/sdk/client/schedule.go` and `pkg/sdk/client/schedule_types.go` in the osapi repo to get exact method signatures and type names.
+Read `pkg/sdk/client/schedule.go` and `pkg/sdk/client/schedule_types.go` in the
+osapi repo to get exact method signatures and type names.
 
 - [ ] **Step 2: Write tests for all 5 cron operations**
 
@@ -868,7 +919,8 @@ func (o *Orchestrator) CronGet(
 
 - [ ] **Step 5: Implement CronCreate**
 
-Takes `target string` and `opts osapi.CronCreateOpts`. Returns Collection[CronMutationResult].
+Takes `target string` and `opts osapi.CronCreateOpts`. Returns
+Collection[CronMutationResult].
 
 - [ ] **Step 6: Implement CronUpdate**
 
@@ -896,6 +948,7 @@ git commit -m "feat: add CronList, CronGet, CronCreate, CronUpdate, CronDelete o
 ### Task 10: Add missing operations — AgentDrain and AgentUndrain
 
 **Files:**
+
 - Modify: `pkg/orchestrator/ops.go`
 - Modify: `pkg/orchestrator/ops_public_test.go`
 
@@ -905,7 +958,9 @@ Read `pkg/sdk/client/agent.go` in the osapi repo.
 
 - [ ] **Step 2: Write tests and implement AgentDrain and AgentUndrain**
 
-These are non-collection operations (they target a single agent by hostname, not broadcast). Follow the AgentGet pattern — return `&sdk.Result{Changed: true/false, Data: ...}`.
+These are non-collection operations (they target a single agent by hostname, not
+broadcast). Follow the AgentGet pattern — return
+`&sdk.Result{Changed: true/false, Data: ...}`.
 
 - [ ] **Step 3: Run tests**
 
@@ -951,6 +1006,7 @@ just go::fmt
 ### Task 12: Update documentation
 
 **Files:**
+
 - Create: `docs/operations/node-hostname-update.md`
 - Create: `docs/operations/node-os-get.md`
 - Create: `docs/operations/file-undeploy.md`
@@ -968,32 +1024,36 @@ just go::fmt
 
 - [ ] **Step 1: Create operation docs**
 
-Follow the exact pattern of `docs/operations/node-hostname-get.md` for each new operation. Include: description, usage, parameters, result type, idempotency, permissions, example reference.
+Follow the exact pattern of `docs/operations/node-hostname-get.md` for each new
+operation. Include: description, usage, parameters, result type, idempotency,
+permissions, example reference.
 
 - [ ] **Step 2: Update operations README index**
 
 Add new operations to the table in `docs/operations/README.md`:
 
-| Method | Operation | Idempotent | Category |
-|--------|-----------|------------|----------|
-| `NodeHostnameUpdate(target, hostname)` | Set system hostname | Idempotent | Node |
-| `NodeOSGet(target)` | Get OS info | Read-only | Node |
-| `FileUndeploy(target, path)` | Remove deployed file | Idempotent | File |
-| `CronList(target)` | List cron entries | Read-only | Schedule |
-| `CronGet(target, name)` | Get cron entry | Read-only | Schedule |
-| `CronCreate(target, opts)` | Create cron entry | Non-idempotent | Schedule |
-| `CronUpdate(target, name, opts)` | Update cron entry | Idempotent | Schedule |
-| `CronDelete(target, name)` | Delete cron entry | Idempotent | Schedule |
-| `AgentDrain(hostname)` | Drain agent | Idempotent | Agent |
-| `AgentUndrain(hostname)` | Undrain agent | Idempotent | Agent |
+| Method                                 | Operation            | Idempotent     | Category |
+| -------------------------------------- | -------------------- | -------------- | -------- |
+| `NodeHostnameUpdate(target, hostname)` | Set system hostname  | Idempotent     | Node     |
+| `NodeOSGet(target)`                    | Get OS info          | Read-only      | Node     |
+| `FileUndeploy(target, path)`           | Remove deployed file | Idempotent     | File     |
+| `CronList(target)`                     | List cron entries    | Read-only      | Schedule |
+| `CronGet(target, name)`                | Get cron entry       | Read-only      | Schedule |
+| `CronCreate(target, opts)`             | Create cron entry    | Non-idempotent | Schedule |
+| `CronUpdate(target, name, opts)`       | Update cron entry    | Idempotent     | Schedule |
+| `CronDelete(target, name)`             | Delete cron entry    | Idempotent     | Schedule |
+| `AgentDrain(hostname)`                 | Drain agent          | Idempotent     | Agent    |
+| `AgentUndrain(hostname)`               | Undrain agent        | Idempotent     | Agent    |
 
 - [ ] **Step 3: Update guards.md**
 
-Add `OnlyIfAnyHostSkipped` to the Broadcast Guards table and add a section explaining skipped vs failed semantics.
+Add `OnlyIfAnyHostSkipped` to the Broadcast Guards table and add a section
+explaining skipped vs failed semantics.
 
 - [ ] **Step 4: Update broadcast.md**
 
-Add `Status` field to the Per-Host Results fields table. Add a section on status values (ok, skipped, failed).
+Add `Status` field to the Per-Host Results fields table. Add a section on status
+values (ok, skipped, failed).
 
 - [ ] **Step 5: Update features README**
 
@@ -1011,13 +1071,15 @@ git commit -m "docs: add operation docs, host status semantics, and OnlyIfAnyHos
 ### Task 13: Add examples
 
 **Files:**
+
 - Create: `examples/operations/hostname-update.go`
 - Create: `examples/operations/cron.go`
 - Create: `examples/features/host-status.go`
 
 - [ ] **Step 1: Create hostname-update example**
 
-Follow the `examples/operations/command.go` pattern. Show NodeHostnameUpdate targeting `_all` with a health check dependency.
+Follow the `examples/operations/command.go` pattern. Show NodeHostnameUpdate
+targeting `_all` with a health check dependency.
 
 - [ ] **Step 2: Create cron example**
 
@@ -1025,7 +1087,9 @@ Show CronCreate + CronList + CronDelete workflow with FileUpload dependency.
 
 - [ ] **Step 3: Create host-status example**
 
-Show a broadcast operation where some hosts are skipped, with OnlyIfAnyHostSkipped guard triggering a notification step and OnlyIfAnyHostFailed guard triggering a recovery step.
+Show a broadcast operation where some hosts are skipped, with
+OnlyIfAnyHostSkipped guard triggering a notification step and
+OnlyIfAnyHostFailed guard triggering a recovery step.
 
 - [ ] **Step 4: Verify examples compile**
 
@@ -1045,11 +1109,14 @@ git commit -m "feat: add hostname-update, cron, and host-status examples"
 ### Task 14: Update README
 
 **Files:**
+
 - Modify: `README.md`
 
 - [ ] **Step 1: Update operation counts and tables**
 
-Update the README to reflect the new operation count (from 27 to 37 operations). Add new operations to the relevant sections. Add OnlyIfAnyHostSkipped to features list.
+Update the README to reflect the new operation count (from 27 to 37 operations).
+Add new operations to the relevant sections. Add OnlyIfAnyHostSkipped to
+features list.
 
 - [ ] **Step 2: Commit**
 
