@@ -502,6 +502,29 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 			lookupName: "get-host",
 			wantNil:    true,
 		},
+		{
+			name: "with status fields",
+			results: sdk.Results{
+				"deploy": &sdk.Result{
+					HostResults: []sdk.HostResult{
+						{Hostname: "web-01", Status: "ok", Changed: true},
+						{Hostname: "web-02", Status: "skipped", Error: "unsupported"},
+						{Hostname: "web-03", Status: "failed", Error: "permission denied"},
+					},
+				},
+			},
+			lookupName: "deploy",
+			wantLen:    3,
+			validateFn: func(hrs []orchestrator.HostResult) {
+				s.Require().Len(hrs, 3)
+				s.Equal("ok", hrs[0].Status)
+				s.True(hrs[0].Changed)
+				s.Equal("skipped", hrs[1].Status)
+				s.Equal("unsupported", hrs[1].Error)
+				s.Equal("failed", hrs[2].Status)
+				s.Equal("permission denied", hrs[2].Error)
+			},
+		},
 	}
 
 	for _, tc := range tests {
