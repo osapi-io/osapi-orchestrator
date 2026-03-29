@@ -28,7 +28,7 @@ import (
 	"context"
 
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 // New creates an Orchestrator connected to the given OSAPI server.
@@ -45,7 +45,7 @@ func New(
 	client := osapi.New(url, token)
 	r := newLipglossRenderer()
 	r.verbose = cfg.verbose
-	plan := sdk.NewPlan(client, sdk.WithHooks(rendererHooks(r)))
+	plan := engine.NewPlan(client, engine.WithHooks(rendererHooks(r)))
 
 	return &Orchestrator{
 		url:       url,
@@ -77,15 +77,15 @@ func (o *Orchestrator) Run(
 // to the SDK for calling any API endpoint.
 func (o *Orchestrator) TaskFunc(
 	name string,
-	fn func(ctx context.Context, c *osapi.Client, r Results) (*sdk.Result, error),
+	fn func(ctx context.Context, c *osapi.Client, r Results) (*engine.Result, error),
 ) *Step {
 	task := o.plan.TaskFuncWithResults(
 		name,
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-			results sdk.Results,
-		) (*sdk.Result, error) {
+			results engine.Results,
+		) (*engine.Result, error) {
 			return fn(ctx, c, Results{results: results})
 		},
 	)
@@ -96,17 +96,17 @@ func (o *Orchestrator) TaskFunc(
 // rendererHooks translates SDK hook callbacks into renderer calls.
 func rendererHooks(
 	r renderer,
-) sdk.Hooks {
+) engine.Hooks {
 	levelParallel := make(map[int]bool)
 
-	return sdk.Hooks{
+	return engine.Hooks{
 		BeforePlan: func(
-			summary sdk.PlanSummary,
+			summary engine.PlanSummary,
 		) {
 			r.PlanStart(summary)
 		},
 		AfterPlan: func(
-			report *sdk.Report,
+			report *engine.Report,
 		) {
 			r.PlanDone(&Report{
 				Tasks:    report.Tasks,
@@ -115,7 +115,7 @@ func rendererHooks(
 		},
 		BeforeLevel: func(
 			level int,
-			tasks []*sdk.Task,
+			tasks []*engine.Task,
 			parallel bool,
 		) {
 			levelParallel[level] = parallel
@@ -129,7 +129,7 @@ func rendererHooks(
 		},
 		AfterLevel: func(
 			level int,
-			results []sdk.TaskResult,
+			results []engine.TaskResult,
 		) {
 			changed := 0
 			for _, res := range results {
@@ -141,25 +141,25 @@ func rendererHooks(
 			r.LevelDone(level, changed, len(results), levelParallel[level])
 		},
 		BeforeTask: func(
-			task *sdk.Task,
+			task *engine.Task,
 		) {
 			r.TaskStart(task.Name(), "")
 		},
 		AfterTask: func(
-			_ *sdk.Task,
-			result sdk.TaskResult,
+			_ *engine.Task,
+			result engine.TaskResult,
 		) {
 			r.TaskDone(result)
 		},
 		OnRetry: func(
-			task *sdk.Task,
+			task *engine.Task,
 			attempt int,
 			err error,
 		) {
 			r.TaskRetry(task.Name(), attempt, err)
 		},
 		OnSkip: func(
-			task *sdk.Task,
+			task *engine.Task,
 			reason string,
 		) {
 			r.TaskSkip(task.Name(), reason)

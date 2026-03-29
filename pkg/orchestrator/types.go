@@ -20,14 +20,22 @@
 
 package orchestrator
 
-import sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+import engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+
+// Result is the outcome of a single task execution. Users return
+// this from TaskFunc callbacks.
+type Result = engine.Result
+
+// TaskResult records the full execution details of a task. Exposed
+// via Report.Tasks.
+type TaskResult = engine.TaskResult
 
 // Orchestrator is the top-level entry point for building and running
 // infrastructure plans.
 type Orchestrator struct {
 	url       string
 	token     string
-	plan      *sdk.Plan
+	plan      *engine.Plan
 	nameCount map[string]int
 	renderer  renderer
 }

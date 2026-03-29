@@ -28,7 +28,7 @@ import (
 	"strings"
 
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 // nextOpName generates a human-readable task name from a prefix.
@@ -53,13 +53,13 @@ func (o *Orchestrator) HealthCheck() *Step {
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			_, err := c.Health.Liveness(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("health check: %w", err)
 			}
 
-			return &sdk.Result{Changed: false}, nil
+			return &engine.Result{Changed: false}, nil
 		},
 	)
 
@@ -77,15 +77,15 @@ func (o *Orchestrator) NodeHostnameGet(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Node.Hostname(ctx, target)
 			if err != nil {
 				return nil, fmt.Errorf("get hostname: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.HostnameResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.HostnameResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -110,15 +110,15 @@ func (o *Orchestrator) NodeStatusGet(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Node.Status(ctx, target)
 			if err != nil {
 				return nil, fmt.Errorf("get status: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.NodeStatus) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.NodeStatus) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -143,15 +143,15 @@ func (o *Orchestrator) NodeUptimeGet(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Node.Uptime(ctx, target)
 			if err != nil {
 				return nil, fmt.Errorf("get uptime: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.UptimeResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.UptimeResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -176,15 +176,15 @@ func (o *Orchestrator) NodeDiskGet(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Node.Disk(ctx, target)
 			if err != nil {
 				return nil, fmt.Errorf("get disk: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.DiskResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DiskResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -209,15 +209,15 @@ func (o *Orchestrator) NodeMemoryGet(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Node.Memory(ctx, target)
 			if err != nil {
 				return nil, fmt.Errorf("get memory: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.MemoryResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.MemoryResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -242,15 +242,15 @@ func (o *Orchestrator) NodeLoadGet(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Node.Load(ctx, target)
 			if err != nil {
 				return nil, fmt.Errorf("get load: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.LoadResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.LoadResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -276,15 +276,15 @@ func (o *Orchestrator) NetworkDNSGet(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Node.GetDNS(ctx, target, interfaceName)
 			if err != nil {
 				return nil, fmt.Errorf("get dns: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.DNSConfig) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DNSConfig) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -312,15 +312,15 @@ func (o *Orchestrator) NetworkDNSUpdate(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Node.UpdateDNS(ctx, target, interfaceName, servers, searchDomains)
 			if err != nil {
 				return nil, fmt.Errorf("update dns: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.DNSUpdateResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DNSUpdateResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -346,15 +346,15 @@ func (o *Orchestrator) NetworkPingDo(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Node.Ping(ctx, target, address)
 			if err != nil {
 				return nil, fmt.Errorf("ping: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.PingResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.PingResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -381,7 +381,7 @@ func (o *Orchestrator) CommandExec(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Node.Exec(ctx, osapi.ExecRequest{
 				Command: command,
 				Args:    args,
@@ -391,9 +391,9 @@ func (o *Orchestrator) CommandExec(
 				return nil, fmt.Errorf("exec command: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.CommandResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CommandResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -424,7 +424,7 @@ func (o *Orchestrator) CommandShell(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Node.Shell(ctx, osapi.ShellRequest{
 				Command: command,
 				Target:  target,
@@ -433,9 +433,9 @@ func (o *Orchestrator) CommandShell(
 				return nil, fmt.Errorf("shell command: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.CommandResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CommandResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -483,7 +483,7 @@ func (o *Orchestrator) FileDeploy(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			opts.Target = target
 
 			resp, err := c.Node.FileDeploy(ctx, opts)
@@ -491,9 +491,9 @@ func (o *Orchestrator) FileDeploy(
 				return nil, fmt.Errorf("deploy file: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.FileDeployResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.FileDeployResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -521,15 +521,15 @@ func (o *Orchestrator) FileStatusGet(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Node.FileStatus(ctx, target, path)
 			if err != nil {
 				return nil, fmt.Errorf("file status: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.FileStatusResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.FileStatusResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -556,7 +556,7 @@ func (o *Orchestrator) FileUndeploy(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Node.FileUndeploy(ctx, osapi.FileUndeployOpts{
 				Target: target,
 				Path:   path,
@@ -565,9 +565,9 @@ func (o *Orchestrator) FileUndeploy(
 				return nil, fmt.Errorf("undeploy file: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.FileUndeployResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.FileUndeployResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -606,7 +606,7 @@ func (o *Orchestrator) FileUpload(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			var uploadOpts []osapi.UploadOption
 			if cfg.force {
 				uploadOpts = append(uploadOpts, osapi.WithForce())
@@ -623,9 +623,9 @@ func (o *Orchestrator) FileUpload(
 				return nil, fmt.Errorf("upload file %s: %w", name, err)
 			}
 
-			return &sdk.Result{
+			return &engine.Result{
 				Changed: resp.Data.Changed,
-				Data:    sdk.StructToMap(resp.Data),
+				Data:    engine.StructToMap(resp.Data),
 			}, nil
 		},
 	)
@@ -648,7 +648,7 @@ func (o *Orchestrator) FileChanged(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.File.Changed(
 				ctx,
 				name,
@@ -658,9 +658,9 @@ func (o *Orchestrator) FileChanged(
 				return nil, fmt.Errorf("check file %s: %w", name, err)
 			}
 
-			return &sdk.Result{
+			return &engine.Result{
 				Changed: resp.Data.Changed,
-				Data:    sdk.StructToMap(resp.Data),
+				Data:    engine.StructToMap(resp.Data),
 			}, nil
 		},
 	)
@@ -680,15 +680,15 @@ func (o *Orchestrator) NodeHostnameUpdate(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Node.UpdateHostname(ctx, target, hostname)
 			if err != nil {
 				return nil, fmt.Errorf("update hostname: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.HostnameUpdateResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.HostnameUpdateResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -713,15 +713,15 @@ func (o *Orchestrator) NodeOSGet(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Node.OS(ctx, target)
 			if err != nil {
 				return nil, fmt.Errorf("get os: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.OSInfoResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.OSInfoResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -744,15 +744,15 @@ func (o *Orchestrator) AgentList() *Step {
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Agent.List(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("list agents: %w", err)
 			}
 
-			return &sdk.Result{
+			return &engine.Result{
 				Changed: false,
-				Data:    sdk.StructToMap(resp.Data),
+				Data:    engine.StructToMap(resp.Data),
 			}, nil
 		},
 	)
@@ -771,15 +771,15 @@ func (o *Orchestrator) AgentGet(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Agent.Get(ctx, hostname)
 			if err != nil {
 				return nil, fmt.Errorf("get agent %s: %w", hostname, err)
 			}
 
-			return &sdk.Result{
+			return &engine.Result{
 				Changed: false,
-				Data:    sdk.StructToMap(resp.Data),
+				Data:    engine.StructToMap(resp.Data),
 			}, nil
 		},
 	)
@@ -799,15 +799,15 @@ func (o *Orchestrator) AgentDrain(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Agent.Drain(ctx, hostname)
 			if err != nil {
 				return nil, fmt.Errorf("drain agent %s: %w", hostname, err)
 			}
 
-			return &sdk.Result{
+			return &engine.Result{
 				Changed: false,
-				Data:    sdk.StructToMap(resp.Data),
+				Data:    engine.StructToMap(resp.Data),
 			}, nil
 		},
 	)
@@ -827,15 +827,15 @@ func (o *Orchestrator) AgentUndrain(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Agent.Undrain(ctx, hostname)
 			if err != nil {
 				return nil, fmt.Errorf("undrain agent %s: %w", hostname, err)
 			}
 
-			return &sdk.Result{
+			return &engine.Result{
 				Changed: false,
-				Data:    sdk.StructToMap(resp.Data),
+				Data:    engine.StructToMap(resp.Data),
 			}, nil
 		},
 	)
@@ -855,15 +855,15 @@ func (o *Orchestrator) DockerPull(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Docker.Pull(ctx, target, opts)
 			if err != nil {
 				return nil, fmt.Errorf("docker pull: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.DockerPullResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerPullResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -889,15 +889,15 @@ func (o *Orchestrator) DockerCreate(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Docker.Create(ctx, target, opts)
 			if err != nil {
 				return nil, fmt.Errorf("docker create: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.DockerResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -923,15 +923,15 @@ func (o *Orchestrator) DockerStart(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Docker.Start(ctx, target, id)
 			if err != nil {
 				return nil, fmt.Errorf("docker start: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.DockerActionResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerActionResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -958,15 +958,15 @@ func (o *Orchestrator) DockerStop(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Docker.Stop(ctx, target, id, opts)
 			if err != nil {
 				return nil, fmt.Errorf("docker stop: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.DockerActionResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerActionResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -993,15 +993,15 @@ func (o *Orchestrator) DockerRemove(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Docker.Remove(ctx, target, id, params)
 			if err != nil {
 				return nil, fmt.Errorf("docker remove: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.DockerActionResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerActionResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -1028,15 +1028,15 @@ func (o *Orchestrator) DockerExec(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Docker.Exec(ctx, target, id, opts)
 			if err != nil {
 				return nil, fmt.Errorf("docker exec: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.DockerExecResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerExecResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -1062,15 +1062,15 @@ func (o *Orchestrator) DockerInspect(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Docker.Inspect(ctx, target, id)
 			if err != nil {
 				return nil, fmt.Errorf("docker inspect: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.DockerDetailResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerDetailResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -1096,15 +1096,15 @@ func (o *Orchestrator) DockerList(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Docker.List(ctx, target, params)
 			if err != nil {
 				return nil, fmt.Errorf("docker list: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.DockerListResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerListResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -1129,15 +1129,15 @@ func (o *Orchestrator) CronList(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Schedule.CronList(ctx, target)
 			if err != nil {
 				return nil, fmt.Errorf("list cron: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.CronEntryResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CronEntryResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  false,
@@ -1163,15 +1163,15 @@ func (o *Orchestrator) CronGet(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Schedule.CronGet(ctx, target, entryName)
 			if err != nil {
 				return nil, fmt.Errorf("get cron: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.CronEntryResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CronEntryResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  false,
@@ -1197,15 +1197,15 @@ func (o *Orchestrator) CronCreate(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Schedule.CronCreate(ctx, target, opts)
 			if err != nil {
 				return nil, fmt.Errorf("create cron: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.CronMutationResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CronMutationResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -1232,15 +1232,15 @@ func (o *Orchestrator) CronUpdate(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Schedule.CronUpdate(ctx, target, entryName, opts)
 			if err != nil {
 				return nil, fmt.Errorf("update cron: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.CronMutationResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CronMutationResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -1266,15 +1266,15 @@ func (o *Orchestrator) CronDelete(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Schedule.CronDelete(ctx, target, entryName)
 			if err != nil {
 				return nil, fmt.Errorf("delete cron: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.CronMutationResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.CronMutationResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,
@@ -1302,7 +1302,7 @@ func (o *Orchestrator) DockerImageRemove(
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Docker.ImageRemove(
 				ctx,
 				target,
@@ -1313,9 +1313,9 @@ func (o *Orchestrator) DockerImageRemove(
 				return nil, fmt.Errorf("docker image remove: %w", err)
 			}
 
-			return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-				func(r osapi.DockerActionResult) sdk.HostResult {
-					return sdk.HostResult{
+			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+				func(r osapi.DockerActionResult) engine.HostResult {
+					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
 						Changed:  r.Changed,

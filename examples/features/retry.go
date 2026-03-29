@@ -42,7 +42,6 @@ import (
 	"time"
 
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
@@ -51,16 +50,16 @@ import (
 // transient error, then succeeds.
 func failNTimes(
 	n int32,
-) func(context.Context, *osapi.Client, orchestrator.Results) (*sdk.Result, error) {
+) func(context.Context, *osapi.Client, orchestrator.Results) (*orchestrator.Result, error) {
 	var calls atomic.Int32
 
-	return func(_ context.Context, _ *osapi.Client, _ orchestrator.Results) (*sdk.Result, error) {
+	return func(_ context.Context, _ *osapi.Client, _ orchestrator.Results) (*orchestrator.Result, error) {
 		attempt := calls.Add(1)
 		if attempt <= n {
 			return nil, fmt.Errorf("transient failure (attempt %d/%d)", attempt, n)
 		}
 
-		return &sdk.Result{Changed: false}, nil
+		return &orchestrator.Result{Changed: false}, nil
 	}
 }
 

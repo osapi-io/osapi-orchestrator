@@ -27,7 +27,7 @@ import (
 	"testing"
 
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
@@ -102,8 +102,8 @@ func (s *OrchestratorPublicTestSuite) TestRun() {
 						_ context.Context,
 						_ *osapi.Client,
 						_ orchestrator.Results,
-					) (*sdk.Result, error) {
-						return &sdk.Result{
+					) (*engine.Result, error) {
+						return &engine.Result{
 							Changed: true,
 							Data:    map[string]any{"key": "val"},
 						}, nil
@@ -169,9 +169,9 @@ func (s *OrchestratorPublicTestSuite) TestTaskFunc() {
 					_ context.Context,
 					_ *osapi.Client,
 					_ orchestrator.Results,
-				) (*sdk.Result, error) {
+				) (*engine.Result, error) {
 					called = true
-					return &sdk.Result{Changed: true}, nil
+					return &engine.Result{Changed: true}, nil
 				},
 			)
 

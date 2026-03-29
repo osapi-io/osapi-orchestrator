@@ -27,7 +27,7 @@ import (
 	"time"
 
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -83,7 +83,7 @@ func (s *StepTestSuite) TestWhen() {
 			guard := step.task.Guard()
 			s.Require().NotNil(guard)
 
-			got := guard(sdk.Results{})
+			got := guard(engine.Results{})
 			s.Equal(tc.expected, got)
 		})
 	}
@@ -142,26 +142,26 @@ func (s *StepTestSuite) TestOnlyIfFailed() {
 
 	tests := []struct {
 		name     string
-		results  sdk.Results
+		results  engine.Results
 		expected bool
 	}{
 		{
 			name: "Returns true when dependency failed",
-			results: sdk.Results{
-				"dep": &sdk.Result{Status: sdk.StatusFailed},
+			results: engine.Results{
+				"dep": &engine.Result{Status: engine.StatusFailed},
 			},
 			expected: true,
 		},
 		{
 			name: "Returns false when dependency succeeded",
-			results: sdk.Results{
-				"dep": &sdk.Result{Status: sdk.StatusChanged},
+			results: engine.Results{
+				"dep": &engine.Result{Status: engine.StatusChanged},
 			},
 			expected: false,
 		},
 		{
 			name:     "Returns false when no results",
-			results:  sdk.Results{},
+			results:  engine.Results{},
 			expected: false,
 		},
 	}
@@ -193,48 +193,48 @@ func (s *StepTestSuite) TestOnlyIfAllChanged() {
 
 	tests := []struct {
 		name     string
-		results  sdk.Results
+		results  engine.Results
 		hasDeps  bool
 		expected bool
 	}{
 		{
 			name: "Returns true when all deps changed",
-			results: sdk.Results{
-				"dep-a": &sdk.Result{Status: sdk.StatusChanged, Changed: true},
-				"dep-b": &sdk.Result{Status: sdk.StatusChanged, Changed: true},
+			results: engine.Results{
+				"dep-a": &engine.Result{Status: engine.StatusChanged, Changed: true},
+				"dep-b": &engine.Result{Status: engine.StatusChanged, Changed: true},
 			},
 			hasDeps:  true,
 			expected: true,
 		},
 		{
 			name: "Returns false when one dep unchanged",
-			results: sdk.Results{
-				"dep-a": &sdk.Result{Status: sdk.StatusChanged, Changed: true},
-				"dep-b": &sdk.Result{Status: sdk.StatusUnchanged},
+			results: engine.Results{
+				"dep-a": &engine.Result{Status: engine.StatusChanged, Changed: true},
+				"dep-b": &engine.Result{Status: engine.StatusUnchanged},
 			},
 			hasDeps:  true,
 			expected: false,
 		},
 		{
 			name: "Returns true when dep failed but Changed=true (broadcast partial failure)",
-			results: sdk.Results{
-				"dep-a": &sdk.Result{Status: sdk.StatusFailed, Changed: true},
-				"dep-b": &sdk.Result{Status: sdk.StatusChanged, Changed: true},
+			results: engine.Results{
+				"dep-a": &engine.Result{Status: engine.StatusFailed, Changed: true},
+				"dep-b": &engine.Result{Status: engine.StatusChanged, Changed: true},
 			},
 			hasDeps:  true,
 			expected: true,
 		},
 		{
 			name: "Returns false when dep missing from results",
-			results: sdk.Results{
-				"dep-a": &sdk.Result{Status: sdk.StatusChanged},
+			results: engine.Results{
+				"dep-a": &engine.Result{Status: engine.StatusChanged},
 			},
 			hasDeps:  true,
 			expected: false,
 		},
 		{
 			name:     "Returns false with no dependencies",
-			results:  sdk.Results{},
+			results:  engine.Results{},
 			hasDeps:  false,
 			expected: false,
 		},
@@ -275,16 +275,16 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 
 	tests := []struct {
 		name     string
-		results  sdk.Results
+		results  engine.Results
 		hasDeps  bool
 		expected bool
 	}{
 		{
 			name: "Returns true when one host has Status failed",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status: sdk.StatusFailed,
-					HostResults: []sdk.HostResult{
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status: engine.StatusFailed,
+					HostResults: []engine.HostResult{
 						{Hostname: "web-01", Status: "failed", Error: "timeout"},
 						{Hostname: "web-02", Status: "ok"},
 					},
@@ -295,10 +295,10 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 		},
 		{
 			name: "Returns false when no hosts have Error",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status: sdk.StatusChanged,
-					HostResults: []sdk.HostResult{
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status: engine.StatusChanged,
+					HostResults: []engine.HostResult{
 						{Hostname: "web-01", Changed: true},
 						{Hostname: "web-02", Changed: true},
 					},
@@ -309,15 +309,15 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 		},
 		{
 			name:     "Returns false with no dependencies",
-			results:  sdk.Results{},
+			results:  engine.Results{},
 			hasDeps:  false,
 			expected: false,
 		},
 		{
 			name: "Returns false when dep has no HostResults (unicast)",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status:  sdk.StatusChanged,
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status:  engine.StatusChanged,
 					Changed: true,
 				},
 			},
@@ -326,10 +326,10 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 		},
 		{
 			name: "Returns false when host is skipped (not failed)",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status: sdk.StatusFailed,
-					HostResults: []sdk.HostResult{
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status: engine.StatusFailed,
+					HostResults: []engine.HostResult{
 						{Hostname: "web-01", Status: "skipped", Error: "unsupported"},
 						{Hostname: "web-02", Status: "ok"},
 					},
@@ -340,10 +340,10 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 		},
 		{
 			name: "Returns true when host has Status failed",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status: sdk.StatusFailed,
-					HostResults: []sdk.HostResult{
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status: engine.StatusFailed,
+					HostResults: []engine.HostResult{
 						{Hostname: "web-01", Status: "failed", Error: "permission denied"},
 						{Hostname: "web-02", Status: "ok"},
 					},
@@ -388,21 +388,21 @@ func (s *StepTestSuite) TestOnlyIfAnyHostSkipped() {
 
 	tests := []struct {
 		name     string
-		results  sdk.Results
+		results  engine.Results
 		hasDeps  bool
 		expected bool
 	}{
 		{
 			name:     "Returns false with no dependencies",
-			results:  sdk.Results{},
+			results:  engine.Results{},
 			hasDeps:  false,
 			expected: false,
 		},
 		{
 			name: "Returns false when dep has no HostResults (unicast)",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status:  sdk.StatusChanged,
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status:  engine.StatusChanged,
 					Changed: true,
 				},
 			},
@@ -411,10 +411,10 @@ func (s *StepTestSuite) TestOnlyIfAnyHostSkipped() {
 		},
 		{
 			name: "Returns false when all hosts are ok",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status: sdk.StatusChanged,
-					HostResults: []sdk.HostResult{
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status: engine.StatusChanged,
+					HostResults: []engine.HostResult{
 						{Hostname: "web-01", Status: "ok", Changed: true},
 						{Hostname: "web-02", Status: "ok", Changed: true},
 					},
@@ -425,10 +425,10 @@ func (s *StepTestSuite) TestOnlyIfAnyHostSkipped() {
 		},
 		{
 			name: "Returns true when any host has Status skipped",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status: sdk.StatusFailed,
-					HostResults: []sdk.HostResult{
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status: engine.StatusFailed,
+					HostResults: []engine.HostResult{
 						{Hostname: "web-01", Status: "skipped", Error: "unsupported"},
 						{Hostname: "web-02", Status: "ok"},
 					},
@@ -439,10 +439,10 @@ func (s *StepTestSuite) TestOnlyIfAnyHostSkipped() {
 		},
 		{
 			name: "Returns false when hosts are failed but not skipped",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status: sdk.StatusFailed,
-					HostResults: []sdk.HostResult{
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status: engine.StatusFailed,
+					HostResults: []engine.HostResult{
 						{Hostname: "web-01", Status: "failed", Error: "timeout"},
 						{Hostname: "web-02", Status: "ok"},
 					},
@@ -487,16 +487,16 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 
 	tests := []struct {
 		name     string
-		results  sdk.Results
+		results  engine.Results
 		hasDeps  bool
 		expected bool
 	}{
 		{
 			name: "Returns true when all hosts have Status failed",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status: sdk.StatusFailed,
-					HostResults: []sdk.HostResult{
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status: engine.StatusFailed,
+					HostResults: []engine.HostResult{
 						{Hostname: "web-01", Status: "failed", Error: "timeout"},
 						{Hostname: "web-02", Status: "failed", Error: "connection refused"},
 					},
@@ -507,10 +507,10 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 		},
 		{
 			name: "Returns false when one host succeeded",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status: sdk.StatusFailed,
-					HostResults: []sdk.HostResult{
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status: engine.StatusFailed,
+					HostResults: []engine.HostResult{
 						{Hostname: "web-01", Status: "failed", Error: "timeout"},
 						{Hostname: "web-02", Status: "ok", Changed: true},
 					},
@@ -521,15 +521,15 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 		},
 		{
 			name:     "Returns false with no dependencies",
-			results:  sdk.Results{},
+			results:  engine.Results{},
 			hasDeps:  false,
 			expected: false,
 		},
 		{
 			name: "Returns false when dep has no HostResults (unicast)",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status:  sdk.StatusFailed,
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status:  engine.StatusFailed,
 					Changed: true,
 				},
 			},
@@ -538,10 +538,10 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 		},
 		{
 			name: "Returns false when some hosts are skipped not failed",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status: sdk.StatusFailed,
-					HostResults: []sdk.HostResult{
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status: engine.StatusFailed,
+					HostResults: []engine.HostResult{
 						{Hostname: "web-01", Status: "failed", Error: "timeout"},
 						{Hostname: "web-02", Status: "skipped", Error: "unsupported"},
 					},
@@ -586,16 +586,16 @@ func (s *StepTestSuite) TestOnlyIfAnyHostChanged() {
 
 	tests := []struct {
 		name     string
-		results  sdk.Results
+		results  engine.Results
 		hasDeps  bool
 		expected bool
 	}{
 		{
 			name: "Returns true when one host Changed=true",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status: sdk.StatusChanged,
-					HostResults: []sdk.HostResult{
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status: engine.StatusChanged,
+					HostResults: []engine.HostResult{
 						{Hostname: "web-01", Changed: true},
 						{Hostname: "web-02", Changed: false},
 					},
@@ -606,10 +606,10 @@ func (s *StepTestSuite) TestOnlyIfAnyHostChanged() {
 		},
 		{
 			name: "Returns false when no hosts Changed",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status: sdk.StatusUnchanged,
-					HostResults: []sdk.HostResult{
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status: engine.StatusUnchanged,
+					HostResults: []engine.HostResult{
 						{Hostname: "web-01", Changed: false},
 						{Hostname: "web-02", Changed: false},
 					},
@@ -620,15 +620,15 @@ func (s *StepTestSuite) TestOnlyIfAnyHostChanged() {
 		},
 		{
 			name:     "Returns false with no dependencies",
-			results:  sdk.Results{},
+			results:  engine.Results{},
 			hasDeps:  false,
 			expected: false,
 		},
 		{
 			name: "Returns false when dep has no HostResults (unicast)",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status:  sdk.StatusChanged,
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status:  engine.StatusChanged,
 					Changed: true,
 				},
 			},
@@ -671,16 +671,16 @@ func (s *StepTestSuite) TestOnlyIfAllHostsChanged() {
 
 	tests := []struct {
 		name     string
-		results  sdk.Results
+		results  engine.Results
 		hasDeps  bool
 		expected bool
 	}{
 		{
 			name: "Returns true when all hosts Changed=true",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status: sdk.StatusChanged,
-					HostResults: []sdk.HostResult{
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status: engine.StatusChanged,
+					HostResults: []engine.HostResult{
 						{Hostname: "web-01", Changed: true},
 						{Hostname: "web-02", Changed: true},
 					},
@@ -691,10 +691,10 @@ func (s *StepTestSuite) TestOnlyIfAllHostsChanged() {
 		},
 		{
 			name: "Returns false when one host Changed=false",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status: sdk.StatusChanged,
-					HostResults: []sdk.HostResult{
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status: engine.StatusChanged,
+					HostResults: []engine.HostResult{
 						{Hostname: "web-01", Changed: true},
 						{Hostname: "web-02", Changed: false},
 					},
@@ -705,15 +705,15 @@ func (s *StepTestSuite) TestOnlyIfAllHostsChanged() {
 		},
 		{
 			name:     "Returns false with no dependencies",
-			results:  sdk.Results{},
+			results:  engine.Results{},
 			hasDeps:  false,
 			expected: false,
 		},
 		{
 			name: "Returns false when dep has no HostResults (unicast)",
-			results: sdk.Results{
-				"dep": &sdk.Result{
-					Status:  sdk.StatusChanged,
+			results: engine.Results{
+				"dep": &engine.Result{
+					Status:  engine.StatusChanged,
 					Changed: true,
 				},
 			},
@@ -756,7 +756,7 @@ func (s *StepTestSuite) TestWhenFact() {
 
 	tests := []struct {
 		name       string
-		results    sdk.Results
+		results    engine.Results
 		stepName   string
 		target     string
 		predicate  Predicate
@@ -764,7 +764,7 @@ func (s *StepTestSuite) TestWhenFact() {
 	}{
 		{
 			name:     "Returns false when agent list step not found",
-			results:  sdk.Results{},
+			results:  engine.Results{},
 			stepName: "list-agents",
 			target:   "web-01",
 			predicate: func(_ osapi.Agent) bool {
@@ -774,8 +774,8 @@ func (s *StepTestSuite) TestWhenFact() {
 		},
 		{
 			name: "Returns true when target hostname matches and predicate passes",
-			results: sdk.Results{
-				"list-agents": &sdk.Result{
+			results: engine.Results{
+				"list-agents": &engine.Result{
 					Data: map[string]any{
 						"agents": []any{
 							map[string]any{
@@ -798,8 +798,8 @@ func (s *StepTestSuite) TestWhenFact() {
 		},
 		{
 			name: "Returns false when target hostname matches but predicate fails",
-			results: sdk.Results{
-				"list-agents": &sdk.Result{
+			results: engine.Results{
+				"list-agents": &engine.Result{
 					Data: map[string]any{
 						"agents": []any{
 							map[string]any{
@@ -822,8 +822,8 @@ func (s *StepTestSuite) TestWhenFact() {
 		},
 		{
 			name: "Returns true when predicate matches any agent regardless of target",
-			results: sdk.Results{
-				"list-agents": &sdk.Result{
+			results: engine.Results{
+				"list-agents": &engine.Result{
 					Data: map[string]any{
 						"agents": []any{
 							map[string]any{
@@ -843,8 +843,8 @@ func (s *StepTestSuite) TestWhenFact() {
 		},
 		{
 			name: "Returns true for _all target when any agent matches predicate",
-			results: sdk.Results{
-				"list-agents": &sdk.Result{
+			results: engine.Results{
+				"list-agents": &engine.Result{
 					Data: map[string]any{
 						"agents": []any{
 							map[string]any{
@@ -873,8 +873,8 @@ func (s *StepTestSuite) TestWhenFact() {
 		},
 		{
 			name: "Returns false for _all target when no agent matches predicate",
-			results: sdk.Results{
-				"list-agents": &sdk.Result{
+			results: engine.Results{
+				"list-agents": &engine.Result{
 					Data: map[string]any{
 						"agents": []any{
 							map[string]any{
@@ -897,8 +897,8 @@ func (s *StepTestSuite) TestWhenFact() {
 		},
 		{
 			name: "Returns false when agent list is empty",
-			results: sdk.Results{
-				"list-agents": &sdk.Result{
+			results: engine.Results{
+				"list-agents": &engine.Result{
 					Data: map[string]any{
 						"agents": []any{},
 						"total":  float64(0),

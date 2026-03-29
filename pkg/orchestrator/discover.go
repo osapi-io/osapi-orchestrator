@@ -25,7 +25,7 @@ import (
 	"fmt"
 
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 // fetchAgentsDecodeName is the task name used when decoding the
@@ -64,22 +64,22 @@ func (o *Orchestrator) fetchAgents(
 	ctx context.Context,
 ) ([]osapi.Agent, error) {
 	client := osapi.New(o.url, o.token)
-	plan := sdk.NewPlan(client)
+	plan := engine.NewPlan(client)
 
 	plan.TaskFunc(
 		"list-agents",
 		func(
 			ctx context.Context,
 			c *osapi.Client,
-		) (*sdk.Result, error) {
+		) (*engine.Result, error) {
 			resp, err := c.Agent.List(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("list agents: %w", err)
 			}
 
-			return &sdk.Result{
+			return &engine.Result{
 				Changed: false,
-				Data:    sdk.StructToMap(resp.Data),
+				Data:    engine.StructToMap(resp.Data),
 			}, nil
 		},
 	)
