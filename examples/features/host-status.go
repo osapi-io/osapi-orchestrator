@@ -61,7 +61,7 @@ func main() {
 	// Hostname update is unsupported on macOS/containers, so those
 	// hosts report "skipped" while supported hosts succeed or fail.
 	update := o.NodeHostnameUpdate("_all", "test-hostname").
-		OnError(orchestrator.Continue)
+		ContinueOnError()
 
 	// Runs only if at least one host was skipped (unsupported platform).
 	o.CommandExec("_any", "echo", "some-hosts-were-skipped").

@@ -63,7 +63,7 @@ func main() {
 		func(_ context.Context, _ *osapi.Client, _ orchestrator.Results) (*orchestrator.Result, error) {
 			return nil, fmt.Errorf("simulated deployment failure")
 		},
-	).OnError(orchestrator.Continue)
+	).ContinueOnError()
 	o1.CommandExec("_any", "echo", "running-infra-cleanup").
 		Named("cleanup").
 		After(deploy1).
@@ -79,7 +79,7 @@ func main() {
 	o2 := orchestrator.New(url, token)
 	deploy2 := o2.CommandShell("_any", "cat /nonexistent-file").
 		Named("deploy").
-		OnError(orchestrator.Continue)
+		ContinueOnError()
 	o2.CommandExec("_any", "echo", "running-command-cleanup").
 		Named("cleanup").
 		After(deploy2).

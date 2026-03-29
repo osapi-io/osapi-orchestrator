@@ -192,6 +192,13 @@ func (s *StepPublicTestSuite) TestOnError() {
 					OnError(orchestrator.StopAll)
 			},
 		},
+		{
+			name: "ContinueOnError returns same step",
+			chainFn: func() *orchestrator.Step {
+				return s.orch.NodeHostnameGet("_any").
+					ContinueOnError()
+			},
+		},
 	}
 
 	for _, tc := range tests {

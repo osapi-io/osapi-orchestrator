@@ -59,7 +59,7 @@ func main() {
 	fmt.Println("=== Phase 1: Cleanup ===")
 	o1 := orchestrator.New(url, token)
 	o1.CommandShell("_any", "rm -f /tmp/only-if-changed.txt").
-		OnError(orchestrator.Continue)
+		ContinueOnError()
 	o1.Run(context.Background()) //nolint:errcheck
 
 	// Phase 2: Deploy (expect changed, post-deploy runs)
@@ -102,6 +102,6 @@ func main() {
 	fmt.Println("\n=== Phase 4: Cleanup ===")
 	o4 := orchestrator.New(url, token)
 	o4.CommandShell("_any", "rm -f /tmp/only-if-changed.txt").
-		OnError(orchestrator.Continue)
+		ContinueOnError()
 	o4.Run(context.Background()) //nolint:errcheck
 }

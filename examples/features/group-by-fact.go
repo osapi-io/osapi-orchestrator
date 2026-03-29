@@ -82,7 +82,7 @@ func main() {
 		for _, a := range agents {
 			o.CommandShell(a.Hostname, cmd).
 				After(health).
-				OnError(orchestrator.Continue)
+				ContinueOnError()
 		}
 	}
 

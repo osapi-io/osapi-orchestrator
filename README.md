@@ -56,9 +56,24 @@ the request:
 
 ## ✨ Features
 
-- [Feature Guides](docs/features/README.md) -- Step chaining, guards,
-  retry, broadcast, discovery, file workflows, host status awareness,
-  and result decoding
+The orchestrator provides a declarative DSL for composing operations into
+DAG-based plans with typed results, guards, retry, and discovery.
+
+| Feature                                            | Description                                    |
+| -------------------------------------------------- | ---------------------------------------------- |
+| [Step Chaining](docs/features/basic.md)            | Sequential and parallel DAG execution          |
+| [Guards](docs/features/guards.md)                  | Conditional execution (When, OnlyIfChanged...) |
+| [Error Recovery](docs/features/error-recovery.md)  | Continue strategy with OnlyIfFailed cleanup    |
+| [Broadcast](docs/features/broadcast.md)            | Per-host results from `_all`/label targets     |
+| [Host Status](docs/features/guards.md)             | Skipped and failed detection per host          |
+| [Retry](docs/features/retry.md)                    | Automatic retry with exponential backoff       |
+| [Discovery](docs/features/discovery.md)            | Find agents by OS, arch, labels, conditions    |
+| [File Workflow](docs/features/file-workflow.md)    | Upload, deploy, drift detection, undeploy      |
+| [Result Decode](docs/features/result-decode.md)    | Typed struct decoding from step results        |
+| [TaskFunc](docs/features/task-func.md)             | Custom logic with access to prior results      |
+
+See the [DSL reference](docs/features/README.md) for guards, predicates, error
+strategies, and typed result tables.
 
 ## 📖 Documentation
 
@@ -66,45 +81,11 @@ See the [package documentation][] on pkg.go.dev for API details.
 
 ## 📋 Examples
 
-Each example is a standalone Go file. Run with:
+Runnable examples in [examples/operations/](examples/operations/) (per-domain
+workflows) and [examples/features/](examples/features/) (DSL features). Run
+with:
 
-    cd examples/features
-    OSAPI_TOKEN="<jwt>" go run basic.go
-
-### Feature Examples
-
-| Example                                                          | What it shows                                       |
-| ---------------------------------------------------------------- | --------------------------------------------------- |
-| [basic.go](examples/features/basic.go)                          | Simple DAG with health check and hostname query     |
-| [parallel.go](examples/features/parallel.go)                    | Five parallel queries depending on health check     |
-| [retry.go](examples/features/retry.go)                          | Retry on failure with configurable attempts         |
-| [verbose.go](examples/features/verbose.go)                      | Verbose output with stdout/stderr/response data     |
-| [guards.go](examples/features/guards.go)                        | When predicate for conditional execution            |
-| [only-if-changed.go](examples/features/only-if-changed.go)      | Skip step unless dependency reported changes        |
-| [error-recovery.go](examples/features/error-recovery.go)        | Continue strategy with OnlyIfFailed cleanup         |
-| [broadcast.go](examples/features/broadcast.go)                  | Per-host results from broadcast operations          |
-| [task-func.go](examples/features/task-func.go)                  | Custom steps with typed result decoding             |
-| [agent-facts.go](examples/features/agent-facts.go)              | List agents with OS, load, memory, and interfaces   |
-| [discover.go](examples/features/discover.go)                    | Find agents by OS and architecture predicates       |
-| [group-by-fact.go](examples/features/group-by-fact.go)          | Group agents by distro, run per-group commands      |
-| [when-fact.go](examples/features/when-fact.go)                  | Fact-based guard on a step                          |
-| [fact-predicates.go](examples/features/fact-predicates.go)      | Compose multiple predicates for discovery           |
-| [label-filter.go](examples/features/label-filter.go)            | Filter by labels and arbitrary fact values           |
-| [condition-filter.go](examples/features/condition-filter.go)    | Filter by node conditions (e.g., DiskPressure)      |
-| [host-status.go](examples/features/host-status.go)              | Host status guards (skipped and failed detection)   |
-| [broadcast-guards.go](examples/features/broadcast-guards.go)    | Broadcast guards with per-host error and changed    |
-
-### Operation Examples
-
-| Example                                                          | What it shows                                       |
-| ---------------------------------------------------------------- | --------------------------------------------------- |
-| [command.go](examples/operations/command.go)                    | Command exec and shell with result decoding         |
-| [dns-update.go](examples/operations/dns-update.go)              | Read-then-write pattern with DNS operations         |
-| [file-deploy.go](examples/operations/file-deploy.go)            | Upload, deploy, and verify a file end-to-end        |
-| [file-changed.go](examples/operations/file-changed.go)          | Conditional upload with FileChanged + OnlyIfChanged |
-| [hostname-update.go](examples/operations/hostname-update.go)    | Read-then-write pattern with hostname broadcast     |
-| [docker.go](examples/operations/docker.go)                      | Full Docker lifecycle with pull, create, exec       |
-| [cron.go](examples/operations/cron.go)                          | Cron create, list, and delete lifecycle             |
+    OSAPI_TOKEN="<jwt>" go run examples/features/basic.go
 
 ## 🤝 Contributing
 

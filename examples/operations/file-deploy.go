@@ -73,7 +73,7 @@ func main() {
 	fmt.Println("=== Phase 1: Cleanup ===")
 
 	o1 := newOrchestrator(url, token)
-	o1.CommandShell("_any", "rm -f /tmp/app-config.yaml").OnError(orchestrator.Continue)
+	o1.CommandShell("_any", "rm -f /tmp/app-config.yaml").ContinueOnError()
 	//nolint:errcheck
 	o1.Run(context.Background()) //nolint:errcheck
 

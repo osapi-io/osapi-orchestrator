@@ -80,7 +80,7 @@ func main() {
 
 	// Cleanup: ensure the agent is undrained from any previous run.
 	oc := orchestrator.New(url, token)
-	oc.AgentUndrain(host).OnError(orchestrator.Continue)
+	oc.AgentUndrain(host).ContinueOnError()
 	oc.Run(context.Background()) //nolint:errcheck
 
 	// Drain → maintenance → undrain.

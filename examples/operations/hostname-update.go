@@ -86,7 +86,7 @@ func main() {
 	// plan to proceed even if some hosts are unsupported (skipped).
 	o2.NodeHostnameUpdate("_all", "new-hostname").
 		After(health2).
-		OnError(orchestrator.Continue)
+		ContinueOnError()
 
 	report2, err := o2.Run(context.Background())
 	if err != nil {
