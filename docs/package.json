@@ -1,5 +1,4 @@
 {
-  "name": "osapi-sdk",
   "private": true,
   "devDependencies": {
     "prettier": "3.3.3"

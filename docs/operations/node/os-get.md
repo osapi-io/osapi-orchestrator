@@ -22,18 +22,18 @@ var result osapi.OSInfoResult
 err := results.Decode("get-os-1", &result)
 ```
 
-| Field      | Type      | Description                                    |
-| ---------- | --------- | ---------------------------------------------- |
-| `Hostname` | `string`  | The node's hostname.                           |
-| `OSInfo`   | `*OSInfo` | OS distribution and version (see below).       |
+| Field      | Type      | Description                                      |
+| ---------- | --------- | ------------------------------------------------ |
+| `Hostname` | `string`  | The node's hostname.                             |
+| `OSInfo`   | `*OSInfo` | OS distribution and version (see below).         |
 | `Error`    | `string`  | Error message if query failed; empty on success. |
 
 ### OSInfo
 
-| Field          | Type     | Description                           |
-| -------------- | -------- | ------------------------------------- |
-| `Distribution` | `string` | OS distribution (e.g., `Ubuntu`).     |
-| `Version`      | `string` | OS version (e.g., `24.04`).           |
+| Field          | Type     | Description                       |
+| -------------- | -------- | --------------------------------- |
+| `Distribution` | `string` | OS distribution (e.g., `Ubuntu`). |
+| `Version`      | `string` | OS version (e.g., `24.04`).       |
 
 ## Idempotency
 

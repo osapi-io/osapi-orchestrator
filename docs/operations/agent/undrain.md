@@ -11,9 +11,9 @@ step := o.AgentUndrain("web-01")
 
 ## Parameters
 
-| Parameter  | Type     | Description                          |
-| ---------- | -------- | ------------------------------------ |
-| `hostname` | `string` | Hostname of the agent to undrain.    |
+| Parameter  | Type     | Description                       |
+| ---------- | -------- | --------------------------------- |
+| `hostname` | `string` | Hostname of the agent to undrain. |
 
 ## Result Type
 

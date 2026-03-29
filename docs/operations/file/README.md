@@ -5,19 +5,19 @@ detection, template rendering, and idempotent state tracking.
 
 ## Operations
 
-| Method | Description | Idempotent |
-| ------ | ----------- | ---------- |
-| [`FileUpload(name, contentType, data)`](upload.md) | Upload content to the Object Store | Idempotent |
-| [`FileDeploy(target, opts)`](deploy.md) | Deploy a file from Object Store to host | Idempotent |
-| [`FileStatusGet(target, path)`](status-get.md) | Get deployed file status and SHA | Read-only |
-| [`FileUndeploy(target, path)`](undeploy.md) | Remove a deployed file | Idempotent |
-| [`FileChanged(name, data)`](changed.md) | Check if Object Store content differs | Read-only |
+| Method                                             | Description                             | Idempotent |
+| -------------------------------------------------- | --------------------------------------- | ---------- |
+| [`FileUpload(name, contentType, data)`](upload.md) | Upload content to the Object Store      | Idempotent |
+| [`FileDeploy(target, opts)`](deploy.md)            | Deploy a file from Object Store to host | Idempotent |
+| [`FileStatusGet(target, path)`](status-get.md)     | Get deployed file status and SHA        | Read-only  |
+| [`FileUndeploy(target, path)`](undeploy.md)        | Remove a deployed file                  | Idempotent |
+| [`FileChanged(name, data)`](changed.md)            | Check if Object Store content differs   | Read-only  |
 
 ## Permissions
 
-| Operation | Permission |
-| --------- | ---------- |
-| Read operations | `file:read` |
+| Operation        | Permission   |
+| ---------------- | ------------ |
+| Read operations  | `file:read`  |
 | Write operations | `file:write` |
 
 ## Examples

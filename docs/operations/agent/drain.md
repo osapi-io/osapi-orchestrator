@@ -11,9 +11,9 @@ step := o.AgentDrain("web-01")
 
 ## Parameters
 
-| Parameter  | Type     | Description                        |
-| ---------- | -------- | ---------------------------------- |
-| `hostname` | `string` | Hostname of the agent to drain.    |
+| Parameter  | Type     | Description                     |
+| ---------- | -------- | ------------------------------- |
+| `hostname` | `string` | Hostname of the agent to drain. |
 
 ## Result Type
 

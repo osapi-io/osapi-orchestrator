@@ -20,15 +20,15 @@ this document before submitting a PR.
 
 - **Code style** — Follow the conventions described in the
   [Development](development.md#code-style) guide.
-- **Documentation** — Ensure that you add/update any relevant documentation.
-  For new operations this means: an operation doc in
-  `docs/operations/{domain}/`, an update to the domain landing page, example
-  coverage in `examples/operations/`, and a README update. See
+- **Documentation** — Ensure that you add/update any relevant documentation. For
+  new operations this means: an operation doc in `docs/operations/{domain}/`, an
+  update to the domain landing page, example coverage in `examples/operations/`,
+  and a README update. See
   [Adding a New Operation](../CLAUDE.md#adding-a-new-operation) for the full
   checklist.
 - **Tests** — Ensure that you add/update any relevant tests and that all tests
-  are passing before submitting the PR. Operations must reach 100% coverage.
-  See [Development](development.md#testing) for how to run tests.
+  are passing before submitting the PR. Operations must reach 100% coverage. See
+  [Development](development.md#testing) for how to run tests.
 
 ## Submitting a PR
 

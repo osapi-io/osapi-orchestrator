@@ -21,7 +21,7 @@ For setup, prerequisites, and contributing guidelines:
 ## Quick Reference
 
 ```bash
-just fetch / just deps / just test / just go::unit / just go::vet / just go::fmt
+just fetch / just deps / just test / just go::unit / just go::vet / just go::fmt / just docs::fmt
 ```
 
 ## Package Structure
