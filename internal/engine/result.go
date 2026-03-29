@@ -1,4 +1,4 @@
-// Package orchestrator provides DAG-based task orchestration primitives.
+// Package engine provides DAG-based task orchestration primitives.
 package engine
 
 import (
