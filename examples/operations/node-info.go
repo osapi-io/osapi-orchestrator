@@ -18,22 +18,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates the read-then-write DNS pattern with
-// connectivity verification.
+// Package main demonstrates a fleet inventory workflow that queries
+// all node information in parallel.
 //
-// Reads current DNS config, updates with new servers, then pings a
-// host to verify connectivity. All steps use OnError(Continue) so
-// the example runs on any platform — on macOS (no eth0) the DNS
-// steps fail gracefully.
+// After a health check gate, seven node-info queries run concurrently:
+// status, disk, memory, load, uptime, OS, and hostname.
 //
 // DAG:
 //
 //	health-check
-//	    └── get-dns (continue on error)
-//	            └── update-dns (continue on error)
-//	                    └── ping (continue on error)
+//	    ├── get-status
+//	    ├── get-disk
+//	    ├── get-memory
+//	    ├── get-load
+//	    ├── get-uptime
+//	    ├── get-os
+//	    └── get-hostname
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run dns-update.go
+// Run with: OSAPI_TOKEN="<jwt>" go run node-info.go
 package main
 
 import (
@@ -58,49 +60,40 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
-	iface := os.Getenv("OSAPI_INTERFACE")
-	if iface == "" {
-		iface = "eth0"
-	}
-
 	o := orchestrator.New(url, token)
 
 	health := o.HealthCheck()
 
-	// Read current DNS configuration.
-	getDNS := o.NetworkDNSGet("_any", iface).
-		After(health).
-		OnError(orchestrator.Continue)
-
-	// Write new DNS servers after reading the current config.
-	updateDNS := o.NetworkDNSUpdate(
-		"_any",
-		iface,
-		[]string{"8.8.8.8", "8.8.4.4"},
-		[]string{"example.com"},
-	).After(getDNS).OnError(orchestrator.Continue)
-
-	// Ping a well-known host to verify connectivity after the update.
-	o.NetworkPingDo("_any", "8.8.8.8").
-		After(updateDNS).
-		OnError(orchestrator.Continue)
+	// All node queries run in parallel after the health check.
+	o.NodeStatusGet("_any").After(health)
+	o.NodeDiskGet("_any").After(health)
+	o.NodeMemoryGet("_any").After(health)
+	o.NodeLoadGet("_any").After(health)
+	o.NodeUptimeGet("_any").After(health)
+	o.NodeOSGet("_any").After(health)
+	o.NodeHostnameGet("_any").After(health)
 
 	report, err := o.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var dns osapi.DNSConfig
-	if err := report.Decode("get-dns", &dns); err == nil {
-		fmt.Printf("DNS servers:     %v\n", dns.Servers)
-		fmt.Printf("Search domains:  %v\n", dns.SearchDomains)
-	} else {
-		fmt.Println("DNS operations require a valid network interface (set OSAPI_INTERFACE)")
+	// Decode and display each result.
+	var hostname osapi.HostnameResult
+	if err := report.Decode("get-hostname", &hostname); err == nil {
+		fmt.Printf("Hostname: %s\n", hostname.Hostname)
 	}
 
-	var ping osapi.PingResult
-	if err := report.Decode("ping", &ping); err == nil {
-		fmt.Printf("Ping 8.8.8.8:    %d/%d packets, %.0f%% loss\n",
-			ping.PacketsReceived, ping.PacketsSent, ping.PacketLoss)
+	var load osapi.LoadResult
+	if err := report.Decode("get-load", &load); err == nil && load.LoadAverage != nil {
+		fmt.Printf("Load:     %.2f / %.2f / %.2f\n",
+			load.LoadAverage.OneMin, load.LoadAverage.FiveMin, load.LoadAverage.FifteenMin)
 	}
+
+	var memory osapi.MemoryResult
+	if err := report.Decode("get-memory", &memory); err == nil && memory.Memory != nil {
+		fmt.Printf("Memory:   %d total / %d free\n", memory.Memory.Total, memory.Memory.Free)
+	}
+
+	fmt.Printf("\n%s in %s\n", report.Summary(), report.Duration)
 }

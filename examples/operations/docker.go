@@ -18,16 +18,16 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates Docker pull idempotency and container
-// lifecycle management.
+// Package main demonstrates Docker pull idempotency and the complete
+// container lifecycle.
 //
 // Run 1: pre-cleanup removes image → pull downloads it (changed=true)
 //
-//	→ create → exec + inspect → container remove
+//	→ create → start → list → exec + inspect → stop → container remove
 //
 // Run 2: image is cached → pull is a no-op (changed=false)
 //
-//	→ create → exec + inspect → container remove + image remove
+//	→ create → start → list → exec + inspect → stop → container remove + image remove
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run docker.go
 package main
@@ -113,13 +113,17 @@ func runLifecycle(
 		Image: imageName,
 	}).After(preCleanup)
 
-	// Create container with auto-start.
-	autoStart := true
+	// Create container (without auto-start).
 	create := o.DockerCreate(targetHost, osapi.DockerCreateOpts{
-		Image:     imageName,
-		Name:      containerName,
-		AutoStart: &autoStart,
+		Image: imageName,
+		Name:  containerName,
 	}).After(pull)
+
+	// Start the container explicitly.
+	start := o.DockerStart(targetHost, containerName).After(create)
+
+	// List running containers to show the new one.
+	o.DockerList(targetHost, nil).After(start)
 
 	// Exec: show nginx version.
 	exec := o.DockerExec(
@@ -128,17 +132,24 @@ func runLifecycle(
 		osapi.DockerExecOpts{
 			Command: []string{"nginx", "-v"},
 		},
-	).After(create)
+	).After(start)
 
 	// Inspect the running container.
-	inspect := o.DockerInspect(targetHost, containerName).After(create)
+	inspect := o.DockerInspect(targetHost, containerName).After(start)
 
-	// Remove container after exec and inspect finish.
+	// Stop the container after exec and inspect finish.
+	stop := o.DockerStop(
+		targetHost,
+		containerName,
+		osapi.DockerStopOpts{},
+	).After(exec, inspect)
+
+	// Remove container after stopping.
 	containerRemove := o.DockerRemove(
 		targetHost,
 		containerName,
 		&osapi.DockerRemoveParams{Force: true},
-	).After(exec, inspect)
+	).After(stop)
 
 	// Optionally remove the image at the end (cleanup on last run).
 	if removeImageLast {

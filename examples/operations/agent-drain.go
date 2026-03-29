@@ -22,8 +22,8 @@
 //
 // Phase 1: lists all registered agents to discover the fleet.
 //
-// Phase 2: drains a specific host (cordon), runs a maintenance
-// command, then undrains the host (uncordon).
+// Phase 2: gets detailed info about the target agent, then drains it
+// (cordon), runs a maintenance command, and undrains it (uncordon).
 //
 // DAG (phase 1):
 //
@@ -33,9 +33,10 @@
 // DAG (phase 2):
 //
 //	health-check
-//	    └── drain-agent
-//	        └── run-apt-get (maintenance command)
-//	            └── undrain-agent
+//	    └── get-agent
+//	        └── drain-agent
+//	            └── run-apt-get (maintenance command)
+//	                └── undrain-agent
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run agent-drain.go
 package main
@@ -87,14 +88,17 @@ func main() {
 		}
 	}
 
-	fmt.Printf("\n=== Phase 2: drain %s, run maintenance, undrain ===\n", host)
+	fmt.Printf("\n=== Phase 2: inspect %s, drain, run maintenance, undrain ===\n", host)
 
 	o2 := orchestrator.New(url, token)
 
 	health2 := o2.HealthCheck()
 
+	// Get detailed agent info before draining.
+	getAgent := o2.AgentGet(host).After(health2)
+
 	// Drain the agent — prevents new jobs from being scheduled.
-	drain := o2.AgentDrain(host).After(health2)
+	drain := o2.AgentDrain(host).After(getAgent)
 
 	// Run a maintenance command while the agent is drained.
 	maint := o2.CommandExec(host, "apt-get", "update", "-y").After(drain)
