@@ -18,6 +18,19 @@ For setup, prerequisites, and contributing guidelines:
 - @docs/operations/README.md - Per-operation reference (37 typed constructors)
 - @docs/features/README.md - Feature guides (guards, retry, discovery, etc.)
 
+## Quick Reference
+
+```bash
+just fetch / just deps / just test / just go::unit / just go::vet / just go::fmt
+```
+
+## Package Structure
+
+- **`pkg/orchestrator/`** — User-facing DSL
+  - Typed operation constructors (NodeHostnameGet, CommandExec, etc.)
+  - Uses SDK types directly (`osapi.HostnameResult`, `osapi.Agent`, etc.)
+  - Porcelain over osapi-sdk's orchestrator engine
+
 ## Code Standards (MANDATORY)
 
 ### Function Signatures
@@ -40,11 +53,7 @@ func FunctionName(
 - Suite naming: `*_public_test.go` → `{Name}PublicTestSuite`,
   `*_test.go` → `{Name}TestSuite`
 - Use `testify/suite` with table-driven patterns
-- Table-driven structure with `validateFunc` callbacks
-- One suite method per function under test — all scenarios (success,
-  errors, edge cases) as rows in one table
-- Avoid generic file names like `helpers.go` or `utils.go` — name
-  files after what they contain
+- One suite method per function under test — all scenarios (success, errors, edge cases) as rows in one table
 
 ### Go Patterns
 
@@ -67,6 +76,11 @@ When committing changes via `/commit`, create a feature branch first if
 currently on `main`. Branch names use the pattern `type/short-description`
 (e.g., `feat/add-dns-retry`, `fix/memory-leak`, `docs/update-readme`).
 
+### Task Tracking
+
+Implementation planning and execution uses the superpowers plugin workflows
+(`writing-plans` and `executing-plans`). Plans live in `docs/plans/`.
+
 ### Commit Messages
 
 See @docs/development.md#commit-messages for full conventions.
@@ -77,11 +91,6 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/) with the
 When committing via Claude Code, end with:
 - `🤖 Generated with [Claude Code](https://claude.ai/code)`
 - `Co-Authored-By: Claude <noreply@anthropic.com>`
-
-## Task Tracking
-
-Implementation planning and execution uses the superpowers plugin workflows
-(`writing-plans` and `executing-plans`). Plans live in `docs/plans/`.
 
 ## Adding a New Operation
 
@@ -104,15 +113,15 @@ func (o *Orchestrator) NodeRebootDo(
         func(
             ctx context.Context,
             c *osapi.Client,
-        ) (*sdk.Result, error) {
+        ) (*engine.Result, error) {
             resp, err := c.Node.Reboot(ctx, target)
             if err != nil {
                 return nil, fmt.Errorf("reboot node: %w", err)
             }
 
-            return sdk.CollectionResult(resp.Data, resp.RawJSON(),
-                func(r osapi.RebootResult) sdk.HostResult {
-                    return sdk.HostResult{
+            return engine.CollectionResult(resp.Data, resp.RawJSON(),
+                func(r osapi.RebootResult) engine.HostResult {
+                    return engine.HostResult{
                         Hostname: r.Hostname,
                         Status:   r.Status,
                         Changed:  r.Changed,
@@ -129,10 +138,12 @@ func (o *Orchestrator) NodeRebootDo(
 
 Key rules:
 - Use `o.nextOpName("verb-noun")` for the step name
-- Always include `Status: r.Status` in the `HostResult` mapper
+- Always include `Status: r.Status` in the `engine.HostResult` mapper
 - Wrap errors with context: `fmt.Errorf("verb noun: %w", err)`
-- Use `sdk.CollectionResult` for node-targeted operations (returns
-  per-host results), `sdk.StructToMap` for non-collection responses
+- Use `engine.CollectionResult` for node-targeted operations (returns
+  per-host results), `engine.StructToMap` for non-collection responses
+- The `engine` import is `internal/engine` — only used inside
+  `pkg/orchestrator/`, never by external consumers
 
 ### Step 2: Tests
 
@@ -180,18 +191,18 @@ Add the operation to the table in the domain landing page
 Add the operation to an existing workflow example in
 `examples/operations/` that covers the same domain. Domain groupings:
 
-| Domain  | Example file         |
-| ------- | -------------------- |
-| Node    | `node-info.go`       |
-| Node    | `hostname-update.go` |
-| Network | `dns-update.go`      |
-| Command | `command.go`         |
-| File    | `file-deploy.go`     |
-| File    | `file-changed.go`    |
-| Agent   | `agent-drain.go`     |
-| Docker  | `docker.go`          |
-| Cron    | `cron.go`            |
-| Health  | (used as gate)       |
+| Domain  | Example file           |
+| ------- | ---------------------- |
+| Node    | `node-info.go`         |
+| Node    | `hostname-update.go`   |
+| Network | `dns-update.go`        |
+| Command | `command.go`           |
+| File    | `file-deploy.go`       |
+| File    | `file-changed.go`      |
+| Agent   | `agent-drain.go`       |
+| Docker  | `docker.go`            |
+| Cron    | `cron.go`              |
+| Health  | (used as gate in most) |
 
 If no domain match exists, create a new `{domain}.go` file. Every
 operation must appear in at least one runnable example.

@@ -25,17 +25,17 @@ import (
 	"fmt"
 	"time"
 
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 // Results provides access to completed step results inside When guards.
 type Results struct {
-	results sdk.Results
+	results engine.Results
 }
 
 // NewResults creates a Results from SDK results. Intended for testing.
 func NewResults(
-	sdkResults sdk.Results,
+	sdkResults engine.Results,
 ) Results {
 	return Results{results: sdkResults}
 }
@@ -66,13 +66,13 @@ func (r Results) Status(
 	}
 
 	switch result.Status {
-	case sdk.StatusChanged:
+	case engine.StatusChanged:
 		return TaskStatusChanged
-	case sdk.StatusUnchanged:
+	case engine.StatusUnchanged:
 		return TaskStatusUnchanged
-	case sdk.StatusSkipped:
+	case engine.StatusSkipped:
 		return TaskStatusSkipped
-	case sdk.StatusFailed:
+	case engine.StatusFailed:
 		return TaskStatusFailed
 	default:
 		return TaskStatusUnknown
@@ -174,7 +174,7 @@ func (r Results) Decode(
 
 // Report summarizes plan execution.
 type Report struct {
-	Tasks    []sdk.TaskResult
+	Tasks    []engine.TaskResult
 	Duration time.Duration
 }
 
@@ -217,7 +217,7 @@ func (r *Report) Decode(
 
 // Summary returns a human-readable summary of the plan execution.
 func (r *Report) Summary() string {
-	sdkReport := sdk.Report{
+	sdkReport := engine.Report{
 		Tasks:    r.Tasks,
 		Duration: r.Duration,
 	}

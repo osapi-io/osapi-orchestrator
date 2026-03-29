@@ -39,7 +39,6 @@ import (
 	"os"
 
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
@@ -87,7 +86,7 @@ func runLifecycle(
 			ctx context.Context,
 			c *osapi.Client,
 			_ orchestrator.Results,
-		) (*sdk.Result, error) {
+		) (*orchestrator.Result, error) {
 			_, _ = c.Docker.Remove(
 				ctx,
 				targetHost,
@@ -104,7 +103,7 @@ func runLifecycle(
 				)
 			}
 
-			return &sdk.Result{Changed: false}, nil
+			return &orchestrator.Result{Changed: false}, nil
 		},
 	)
 

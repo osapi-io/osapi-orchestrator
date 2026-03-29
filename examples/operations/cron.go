@@ -105,8 +105,12 @@ func main() {
 
 	var entry osapi.CronEntryResult
 	if err := report2.Decode("get-cron", &entry); err == nil {
-		fmt.Printf("Cron entry %q: interval=%s, user=%s\n",
-			entry.Name, entry.Interval, entry.User)
+		schedule := entry.Interval
+		if schedule == "" {
+			schedule = entry.Schedule
+		}
+		fmt.Printf("Cron entry %q: schedule=%s, user=%s\n",
+			entry.Name, schedule, entry.User)
 	}
 
 	// Phase 3: update the cron entry to use a cron expression instead.

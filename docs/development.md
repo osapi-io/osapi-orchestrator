@@ -76,8 +76,6 @@ just deps
 
 ## Code style
 
-### Go
-
 Go code should be formatted by [`gofumpt`][gofumpt] and linted using
 [`golangci-lint`][golangci-lint]. This style is enforced by CI.
 
@@ -123,7 +121,7 @@ Run `just ready` before committing to ensure generated code, package docs,
 formatting, and lint are all up to date:
 
 ```bash
-just ready
+just ready   # generate, go::docs, go::fmt, go::vet
 ```
 
 ## Branching
@@ -161,5 +159,4 @@ be reasonable to split it in a few). Git squash and rebase is your friend!
 [Claude Code]: https://claude.ai/code
 [gofumpt]: https://github.com/mvdan/gofumpt
 [golangci-lint]: https://golangci-lint.run
-[prettier]: https://prettier.io
 [Conventional Commits]: https://www.conventionalcommits.org

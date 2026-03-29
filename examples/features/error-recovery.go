@@ -39,7 +39,7 @@ import (
 	"log"
 	"os"
 
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
+	osapi "github.com/retr0h/osapi/pkg/sdk/client"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
@@ -60,7 +60,7 @@ func main() {
 	o1 := orchestrator.New(url, token)
 	deploy1 := o1.TaskFunc(
 		"deploy",
-		func(_ context.Context, _ orchestrator.Results) (*sdk.Result, error) {
+		func(_ context.Context, _ *osapi.Client, _ orchestrator.Results) (*orchestrator.Result, error) {
 			return nil, fmt.Errorf("simulated deployment failure")
 		},
 	).OnError(orchestrator.Continue)

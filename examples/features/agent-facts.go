@@ -39,7 +39,6 @@ import (
 	"os"
 
 	osapi "github.com/retr0h/osapi/pkg/sdk/client"
-	sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
@@ -63,10 +62,10 @@ func main() {
 	// Use a TaskFunc to decode the agent list and display rich facts.
 	o.TaskFunc(
 		"print-agent-facts",
-		func(_ context.Context, _ *osapi.Client, r orchestrator.Results) (*sdk.Result, error) {
+		func(_ context.Context, _ *osapi.Client, r orchestrator.Results) (*orchestrator.Result, error) {
 			var list osapi.AgentList
 			if err := r.Decode("list-agents", &list); err != nil {
-				return &sdk.Result{Changed: false}, nil
+				return &orchestrator.Result{Changed: false}, nil
 			}
 
 			fmt.Printf("  Agents: %d total\n\n", list.Total)
@@ -121,7 +120,7 @@ func main() {
 				fmt.Println()
 			}
 
-			return &sdk.Result{Changed: false}, nil
+			return &orchestrator.Result{Changed: false}, nil
 		},
 	).After(agents)
 
