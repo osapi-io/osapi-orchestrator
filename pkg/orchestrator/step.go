@@ -328,3 +328,10 @@ func (s *Step) OnError(
 
 	return s
 }
+
+// ContinueOnError is a convenience for OnError(Continue). Independent
+// tasks keep running when this step fails; only direct dependents are
+// skipped.
+func (s *Step) ContinueOnError() *Step {
+	return s.OnError(Continue)
+}

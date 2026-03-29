@@ -62,7 +62,7 @@ func main() {
 	// proceed even if some hosts fail.
 	deploy := o.CommandShell("_all", "cat /nonexistent-file").
 		Named("deploy").
-		OnError(orchestrator.Continue)
+		ContinueOnError()
 
 	// Cleanup runs only if at least one host reported an error.
 	o.CommandExec("_any", "echo", "running-cleanup").

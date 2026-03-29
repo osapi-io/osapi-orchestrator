@@ -60,7 +60,7 @@ func main() {
 
 	// Cleanup any leftover entry from a previous run.
 	oc := orchestrator.New(url, token)
-	oc.CronDelete("_any", "daily-cleanup").OnError(orchestrator.Continue)
+	oc.CronDelete("_any", "daily-cleanup").ContinueOnError()
 	oc.Run(context.Background()) //nolint:errcheck
 
 	// Create → inspect → delete in one plan.

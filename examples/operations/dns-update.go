@@ -67,7 +67,7 @@ func main() {
 	// Read current DNS configuration.
 	getDNS := o.NetworkDNSGet("_any", iface).
 		After(health).
-		OnError(orchestrator.Continue)
+		ContinueOnError()
 
 	// Write new DNS servers after reading the current config.
 	o.NetworkDNSUpdate(
@@ -75,7 +75,7 @@ func main() {
 		iface,
 		[]string{"8.8.8.8", "8.8.4.4"},
 		[]string{"example.com"},
-	).After(getDNS).OnError(orchestrator.Continue)
+	).After(getDNS).ContinueOnError()
 
 	report, err := o.Run(context.Background())
 	if err != nil {

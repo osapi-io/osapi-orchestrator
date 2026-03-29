@@ -92,7 +92,7 @@ func main() {
 	o2 := orchestrator.New(url, token)
 
 	o2.CommandExec("_any", "ls", "/nonexistent").
-		OnError(orchestrator.Continue)
+		ContinueOnError()
 
 	report2, err := o2.Run(context.Background())
 	if err != nil {

@@ -60,7 +60,7 @@ func main() {
 
 	o.NetworkPingDo("_any", "8.8.8.8").
 		After(health).
-		OnError(orchestrator.Continue)
+		ContinueOnError()
 
 	report, err := o.Run(context.Background())
 	if err != nil {
