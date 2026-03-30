@@ -191,22 +191,40 @@ Add the operation to the table in the domain landing page
 Add the operation to an existing workflow example in
 `examples/operations/` that covers the same domain. Domain groupings:
 
-| Domain  | Example file           |
-| ------- | ---------------------- |
-| Node    | `node-info.go`         |
-| Node    | `hostname-update.go`   |
-| Network | `dns-update.go`        |
-| Network | `ping.go`              |
-| Command | `command.go`           |
-| File    | `file-deploy.go`       |
-| File    | `file-changed.go`      |
-| Agent   | `agent-drain.go`       |
-| Docker  | `docker.go`            |
-| Cron    | `cron.go`              |
-| Health  | (used as gate in most) |
+| Domain  | Example file         |
+| ------- | -------------------- |
+| Node    | `node-info.go`       |
+| Node    | `hostname-update.go` |
+| Network | `dns-update.go`      |
+| Network | `ping.go`            |
+| Command | `command.go`         |
+| File    | `file-deploy.go`     |
+| File    | `file-changed.go`    |
+| Agent   | `agent-drain.go`     |
+| Docker  | `docker.go`          |
+| Cron    | `cron.go`            |
+| Health  | (used as gate)       |
 
 If no domain match exists, create a new `{domain}.go` file. Every
 operation must appear in at least one runnable example.
+
+#### Example conventions
+
+- **Self-contained**: cleanup at the start (separate plan with
+  `ContinueOnError()`), execute, verify. Must be repeatable.
+- **One purpose per file**: demonstrate one domain's operations.
+  Don't mix in other features (parallel, verbose, broadcast).
+- **Cleanup plan pattern**: use a separate `orchestrator.New()` for
+  cleanup with `ContinueOnError()`, then a main plan for the workflow.
+- **Platform safety**: operations that may not work everywhere use
+  `ContinueOnError()` so the example doesn't crash.
+- **Decode and print**: decode at least one result so the example
+  isn't silent. Use `report.Decode("step-name", &typedStruct)`.
+- **Keep it short**: under ~100 lines of code (excluding license).
+  If longer, you're demonstrating too much — split it.
+- **Operation docs link to examples**: every operation doc in
+  `docs/operations/{domain}/` must link to the example file where
+  that operation is demonstrated.
 
 ### Step 6: Update README.md
 
