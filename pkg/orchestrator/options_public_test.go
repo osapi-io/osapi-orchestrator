@@ -25,8 +25,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
 type OptionsPublicTestSuite struct {

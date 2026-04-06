@@ -9,6 +9,7 @@ connectivity checks.
 | -------------------------------------------------------- | -------------------------------------- | ---------- |
 | [`NetworkDNSGet(target, iface)`](dns-get.md)             | Get DNS configuration for an interface | Read-only  |
 | [`NetworkDNSUpdate(target, iface, opts)`](dns-update.md) | Update DNS servers for an interface    | Idempotent |
+| [`NetworkDNSDelete(target, iface)`](dns-delete.md)       | Delete DNS configuration               | Idempotent |
 | [`NetworkPingDo(target, address)`](ping.md)              | Ping a host from the target node       | Read-only  |
 
 ## Permissions

@@ -77,7 +77,13 @@ func main() {
 
 	get := o.CronGet("_any", "daily-cleanup").After(create)
 
-	o.CronDelete("_any", "daily-cleanup").After(get)
+	list := o.CronList("_any").After(get)
+
+	update := o.CronUpdate("_any", "daily-cleanup", osapi.CronUpdateOpts{
+		Schedule: "0 3 * * 0",
+	}).After(list)
+
+	o.CronDelete("_any", "daily-cleanup").After(update)
 
 	report, err := o.Run(context.Background())
 	if err != nil {

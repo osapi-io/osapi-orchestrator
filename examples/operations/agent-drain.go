@@ -86,7 +86,9 @@ func main() {
 	// Drain → maintenance → undrain.
 	o2 := orchestrator.New(url, token)
 
-	drain := o2.AgentDrain(host)
+	inspect := o2.AgentGet(host)
+
+	drain := o2.AgentDrain(host).After(inspect)
 
 	maint := o2.CommandExec(host, "echo", "maintenance complete").
 		After(drain)

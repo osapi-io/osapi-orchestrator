@@ -18,13 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates file deployment with idempotency proof
-// and proper undeploy lifecycle.
-//
-// Phase 1: cleanup — remove any previously deployed file.
-// Phase 2: first deploy — upload + deploy + verify (expect changed).
-// Phase 3: idempotency — same upload + deploy + verify (expect unchanged).
-// Phase 4: undeploy — remove the deployed file using FileUndeploy.
+// Package main demonstrates file deploy, idempotency check, and undeploy.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run file-deploy.go
 package main
