@@ -5,12 +5,12 @@ create, update, and delete certificates backed by the file provider.
 
 ## Operations
 
-| Method                                                        | Description               | Idempotent     |
-| ------------------------------------------------------------- | ------------------------- | -------------- |
-| [`CertificateList(target)`](list.md)                         | List CA certificates      | Read-only      |
-| [`CertificateCreate(target, opts)`](create.md)               | Create a CA certificate   | Non-idempotent |
-| [`CertificateUpdate(target, name, opts)`](update.md)         | Update a CA certificate   | Idempotent     |
-| [`CertificateDelete(target, name)`](delete.md)               | Delete a CA certificate   | Idempotent     |
+| Method                                               | Description             | Idempotent     |
+| ---------------------------------------------------- | ----------------------- | -------------- |
+| [`CertificateList(target)`](list.md)                 | List CA certificates    | Read-only      |
+| [`CertificateCreate(target, opts)`](create.md)       | Create a CA certificate | Non-idempotent |
+| [`CertificateUpdate(target, name, opts)`](update.md) | Update a CA certificate | Idempotent     |
+| [`CertificateDelete(target, name)`](delete.md)       | Delete a CA certificate | Idempotent     |
 
 ## Permissions
 

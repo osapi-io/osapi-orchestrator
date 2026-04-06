@@ -29,11 +29,11 @@ err := results.Decode("list-certificate-1", &result)
 
 ### CertificateCA
 
-| Field    | Type     | Description                             |
-| -------- | -------- | --------------------------------------- |
-| `Name`   | `string` | Certificate name.                       |
+| Field    | Type     | Description                                |
+| -------- | -------- | ------------------------------------------ |
+| `Name`   | `string` | Certificate name.                          |
 | `Source` | `string` | Path to the certificate on the filesystem. |
-| `Object` | `string` | Object Store reference.                 |
+| `Object` | `string` | Object Store reference.                    |
 
 ## Idempotency
 

@@ -21,10 +21,10 @@ var result osapi.PackageMutationResult
 err := results.Decode("update-package-1", &result)
 ```
 
-| Field     | Type     | Description                                        |
-| --------- | -------- | -------------------------------------------------- |
-| `Changed` | `bool`   | Whether any packages were updated.                 |
-| `Error`   | `string` | Error message if update failed; empty on success.  |
+| Field     | Type     | Description                                       |
+| --------- | -------- | ------------------------------------------------- |
+| `Changed` | `bool`   | Whether any packages were updated.                |
+| `Error`   | `string` | Error message if update failed; empty on success. |
 
 ## Idempotency
 

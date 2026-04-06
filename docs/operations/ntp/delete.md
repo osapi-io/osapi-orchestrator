@@ -21,10 +21,10 @@ var result osapi.NtpMutationResult
 err := results.Decode("delete-ntp-1", &result)
 ```
 
-| Field     | Type     | Description                                           |
-| --------- | -------- | ----------------------------------------------------- |
+| Field     | Type     | Description                                              |
+| --------- | -------- | -------------------------------------------------------- |
 | `Changed` | `bool`   | Whether the configuration was removed or already absent. |
-| `Error`   | `string` | Error message if deletion failed; empty on success.   |
+| `Error`   | `string` | Error message if deletion failed; empty on success.      |
 
 ## Idempotency
 

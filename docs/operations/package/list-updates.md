@@ -29,10 +29,10 @@ err := results.Decode("list-package-updates-1", &result)
 
 ### UpdateInfo
 
-| Field            | Type     | Description                    |
-| ---------------- | -------- | ------------------------------ |
-| `Name`           | `string` | Package name.                  |
-| `CurrentVersion` | `string` | Currently installed version.   |
+| Field            | Type     | Description                  |
+| ---------------- | -------- | ---------------------------- |
+| `Name`           | `string` | Package name.                |
+| `CurrentVersion` | `string` | Currently installed version. |
 
 ## Idempotency
 

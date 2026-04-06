@@ -20,9 +20,9 @@ step := o.GroupUpdate("web-01", "developers", osapi.GroupUpdateOpts{
 
 ### GroupUpdateOpts
 
-| Field     | Type       | Required | Description                                    |
-| --------- | ---------- | -------- | ---------------------------------------------- |
-| `Members` | `[]string` | No       | Group member usernames (replaces existing).    |
+| Field     | Type       | Required | Description                                 |
+| --------- | ---------- | -------- | ------------------------------------------- |
+| `Members` | `[]string` | No       | Group member usernames (replaces existing). |
 
 ## Result Type
 

@@ -22,11 +22,11 @@ var result osapi.SysctlMutationResult
 err := results.Decode("delete-sysctl-1", &result)
 ```
 
-| Field     | Type     | Description                                         |
-| --------- | -------- | --------------------------------------------------- |
-| `Key`     | `string` | Sysctl parameter key.                               |
+| Field     | Type     | Description                                          |
+| --------- | -------- | ---------------------------------------------------- |
+| `Key`     | `string` | Sysctl parameter key.                                |
 | `Changed` | `bool`   | Whether the parameter was removed or already absent. |
-| `Error`   | `string` | Error message if deletion failed; empty on success. |
+| `Error`   | `string` | Error message if deletion failed; empty on success.  |
 
 ## Idempotency
 

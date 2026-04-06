@@ -19,11 +19,11 @@ step := o.GroupCreate("web-01", osapi.GroupCreateOpts{
 
 ### GroupCreateOpts
 
-| Field    | Type     | Required | Description                                  |
-| -------- | -------- | -------- | -------------------------------------------- |
-| `Name`   | `string` | Yes      | Group name.                                  |
-| `GID`    | `int`    | No       | Numeric group ID (system assigns if zero).   |
-| `System` | `bool`   | No       | Create a system group.                       |
+| Field    | Type     | Required | Description                                |
+| -------- | -------- | -------- | ------------------------------------------ |
+| `Name`   | `string` | Yes      | Group name.                                |
+| `GID`    | `int`    | No       | Numeric group ID (system assigns if zero). |
+| `System` | `bool`   | No       | Create a system group.                     |
 
 ## Result Type
 

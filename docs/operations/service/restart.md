@@ -22,11 +22,11 @@ var result osapi.ServiceMutationResult
 err := results.Decode("restart-service-1", &result)
 ```
 
-| Field     | Type     | Description                                         |
-| --------- | -------- | --------------------------------------------------- |
-| `Name`    | `string` | Name of the restarted service.                      |
-| `Changed` | `bool`   | Whether the service was restarted.                  |
-| `Error`   | `string` | Error message if restart failed; empty on success.  |
+| Field     | Type     | Description                                        |
+| --------- | -------- | -------------------------------------------------- |
+| `Name`    | `string` | Name of the restarted service.                     |
+| `Changed` | `bool`   | Whether the service was restarted.                 |
+| `Error`   | `string` | Error message if restart failed; empty on success. |
 
 ## Idempotency
 

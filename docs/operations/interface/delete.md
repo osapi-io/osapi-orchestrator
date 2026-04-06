@@ -22,11 +22,11 @@ var result osapi.InterfaceMutationResult
 err := results.Decode("delete-interface-1", &result)
 ```
 
-| Field     | Type     | Description                                                |
-| --------- | -------- | ---------------------------------------------------------- |
-| `Name`    | `string` | Interface name.                                            |
-| `Changed` | `bool`   | Whether the configuration was removed or already absent.   |
-| `Error`   | `string` | Error message if deletion failed; empty on success.        |
+| Field     | Type     | Description                                              |
+| --------- | -------- | -------------------------------------------------------- |
+| `Name`    | `string` | Interface name.                                          |
+| `Changed` | `bool`   | Whether the configuration was removed or already absent. |
+| `Error`   | `string` | Error message if deletion failed; empty on success.      |
 
 ## Idempotency
 

@@ -29,14 +29,14 @@ err := results.Decode("list-user-1", &result)
 
 ### UserInfo
 
-| Field    | Type       | Description                |
-| -------- | ---------- | -------------------------- |
-| `Name`   | `string`   | Username.                  |
-| `UID`    | `int`      | Numeric user ID.           |
-| `GID`    | `int`      | Primary group ID.          |
-| `Home`   | `string`   | Home directory path.       |
-| `Shell`  | `string`   | Login shell path.          |
-| `Groups` | `[]string` | Supplementary group names. |
+| Field    | Type       | Description                    |
+| -------- | ---------- | ------------------------------ |
+| `Name`   | `string`   | Username.                      |
+| `UID`    | `int`      | Numeric user ID.               |
+| `GID`    | `int`      | Primary group ID.              |
+| `Home`   | `string`   | Home directory path.           |
+| `Shell`  | `string`   | Login shell path.              |
+| `Groups` | `[]string` | Supplementary group names.     |
 | `Locked` | `bool`     | Whether the account is locked. |
 
 ## Idempotency

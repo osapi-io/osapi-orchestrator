@@ -22,11 +22,11 @@ var result osapi.PackageMutationResult
 err := results.Decode("install-package-1", &result)
 ```
 
-| Field     | Type     | Description                                          |
-| --------- | -------- | ---------------------------------------------------- |
-| `Name`    | `string` | Name of the package.                                 |
-| `Changed` | `bool`   | Whether the package was installed.                   |
-| `Error`   | `string` | Error message if install failed; empty on success.   |
+| Field     | Type     | Description                                        |
+| --------- | -------- | -------------------------------------------------- |
+| `Name`    | `string` | Name of the package.                               |
+| `Changed` | `bool`   | Whether the package was installed.                 |
+| `Error`   | `string` | Error message if install failed; empty on success. |
 
 ## Idempotency
 

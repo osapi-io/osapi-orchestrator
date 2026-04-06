@@ -20,9 +20,9 @@ step := o.NTPCreate("web-01", osapi.NtpCreateOpts{
 
 ### NtpCreateOpts
 
-| Field     | Type       | Required | Description                         |
-| --------- | ---------- | -------- | ----------------------------------- |
-| `Servers` | `[]string` | Yes      | NTP server addresses to configure.  |
+| Field     | Type       | Required | Description                        |
+| --------- | ---------- | -------- | ---------------------------------- |
+| `Servers` | `[]string` | Yes      | NTP server addresses to configure. |
 
 ## Result Type
 
@@ -38,8 +38,8 @@ err := results.Decode("create-ntp-1", &result)
 
 ## Idempotency
 
-**Non-idempotent.** Creating configuration that already exists returns an
-error. Use [NTPUpdate](update.md) to modify existing configuration.
+**Non-idempotent.** Creating configuration that already exists returns an error.
+Use [NTPUpdate](update.md) to modify existing configuration.
 
 ## Permissions
 

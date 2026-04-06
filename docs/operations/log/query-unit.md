@@ -17,7 +17,7 @@ step := o.LogQueryUnit("web-01", "nginx", osapi.LogQueryOpts{
 | --------- | -------------- | --------------------------------------------------------- |
 | `target`  | `string`       | Target host: `_any`, `_all`, hostname, or label selector. |
 | `unit`    | `string`       | Systemd unit name to query logs for.                      |
-| `opts`    | `LogQueryOpts` | Query options (see [LogQuery](query.md)).                  |
+| `opts`    | `LogQueryOpts` | Query options (see [LogQuery](query.md)).                 |
 
 ## Result Type
 

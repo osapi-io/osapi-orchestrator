@@ -22,16 +22,16 @@ step := o.RouteCreate("web-01", "eth0", osapi.RouteConfigOpts{
 
 ### RouteConfigOpts
 
-| Field    | Type          | Required | Description           |
-| -------- | ------------- | -------- | --------------------- |
+| Field    | Type          | Required | Description            |
+| -------- | ------------- | -------- | ---------------------- |
 | `Routes` | `[]RouteItem` | Yes      | List of route entries. |
 
 ### RouteItem
 
-| Field | Type     | Required | Description                         |
-| ----- | -------- | -------- | ----------------------------------- |
-| `To`  | `string` | Yes      | Destination in CIDR notation.       |
-| `Via` | `string` | Yes      | Gateway IP address.                 |
+| Field | Type     | Required | Description                   |
+| ----- | -------- | -------- | ----------------------------- |
+| `To`  | `string` | Yes      | Destination in CIDR notation. |
+| `Via` | `string` | Yes      | Gateway IP address.           |
 
 ## Result Type
 

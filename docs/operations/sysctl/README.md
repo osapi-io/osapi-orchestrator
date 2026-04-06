@@ -22,6 +22,5 @@ update, list, get, and delete parameters backed by the file provider.
 
 ## Example
 
-See
-[`examples/operations/sysctl.go`](../../examples/operations/sysctl.go) for a
+See [`examples/operations/sysctl.go`](../../examples/operations/sysctl.go) for a
 complete workflow example covering all operations.

@@ -3890,6 +3890,4230 @@ func (s *OpsTestSuite) TestCronDeleteNameCounter() {
 	}
 }
 
+func (s *OpsTestSuite) TestNetworkDNSDelete() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with dns delete data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "delete dns",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.NetworkDNSDelete("_any", "eth0")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestInterfaceList() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with interface list data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "list interfaces",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.InterfaceList("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestInterfaceGet() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with interface data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "get interface",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.InterfaceGet("_any", "eth0")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestInterfaceCreate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with interface create data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "create interface",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.InterfaceCreate("_any", "eth0", osapi.InterfaceConfigOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestInterfaceUpdate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with interface update data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "update interface",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.InterfaceUpdate("_any", "eth0", osapi.InterfaceConfigOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestInterfaceDelete() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with interface delete data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "delete interface",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.InterfaceDelete("_any", "eth0")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestRouteList() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with route list data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "list routes",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.RouteList("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestRouteGet() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with route data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "get route",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.RouteGet("_any", "eth0")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestRouteCreate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with route create data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "create route",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.RouteCreate("_any", "eth0", osapi.RouteConfigOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestRouteUpdate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with route update data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "update route",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.RouteUpdate("_any", "eth0", osapi.RouteConfigOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestRouteDelete() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with route delete data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "delete route",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.RouteDelete("_any", "eth0")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestSysctlList() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with sysctl list data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "list sysctl",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.SysctlList("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestSysctlGet() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with sysctl data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "get sysctl",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.SysctlGet("_any", "net.ipv4.ip_forward")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestSysctlCreate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with sysctl create data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "create sysctl",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.SysctlCreate("_any", osapi.SysctlCreateOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestSysctlUpdate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with sysctl update data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "update sysctl",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.SysctlUpdate("_any", "net.ipv4.ip_forward", osapi.SysctlUpdateOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestSysctlDelete() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with sysctl delete data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "delete sysctl",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.SysctlDelete("_any", "net.ipv4.ip_forward")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNTPGet() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with ntp data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "get ntp",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.NTPGet("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNTPCreate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with ntp create data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "create ntp",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.NTPCreate("_any", osapi.NtpCreateOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNTPUpdate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with ntp update data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "update ntp",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.NTPUpdate("_any", osapi.NtpUpdateOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestNTPDelete() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with ntp delete data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "delete ntp",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.NTPDelete("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestTimezoneGet() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with timezone data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "get timezone",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.TimezoneGet("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestTimezoneUpdate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with timezone update data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "update timezone",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.TimezoneUpdate("_any", osapi.TimezoneUpdateOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestServiceList() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with service list data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "list services",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.ServiceList("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestServiceGet() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with service data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "get service",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.ServiceGet("_any", "nginx")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestServiceCreate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with service create data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "create service",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.ServiceCreate("_any", osapi.ServiceCreateOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestServiceUpdate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with service update data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "update service",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.ServiceUpdate("_any", "nginx", osapi.ServiceUpdateOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestServiceDelete() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with service delete data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "delete service",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.ServiceDelete("_any", "nginx")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestServiceStart() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with service start data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "start service",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.ServiceStart("_any", "nginx")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestServiceStop() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with service stop data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "stop service",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.ServiceStop("_any", "nginx")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestServiceRestart() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with service restart data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "restart service",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.ServiceRestart("_any", "nginx")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestServiceEnable() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with service enable data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "enable service",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.ServiceEnable("_any", "nginx")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestServiceDisable() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with service disable data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "disable service",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.ServiceDisable("_any", "nginx")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestPackageList() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with package list data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "list packages",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.PackageList("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestPackageGet() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with package data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "get package",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.PackageGet("_any", "nginx")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestPackageInstall() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with package install data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "install package",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.PackageInstall("_any", "nginx")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestPackageRemove() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with package remove data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "remove package",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.PackageRemove("_any", "nginx")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestPackageUpdate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with package update data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "update packages",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.PackageUpdate("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestPackageListUpdates() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with package updates data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "list package updates",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.PackageListUpdates("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestUserList() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with user list data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "list users",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.UserList("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestUserGet() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with user data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "get user",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.UserGet("_any", "admin")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestUserCreate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with user create data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "create user",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.UserCreate("_any", osapi.UserCreateOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestUserUpdate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with user update data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "update user",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.UserUpdate("_any", "admin", osapi.UserUpdateOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestUserDelete() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with user delete data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "delete user",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.UserDelete("_any", "admin")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestUserListKeys() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with ssh keys data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "list ssh keys",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.UserListKeys("_any", "admin")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestUserAddKey() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with add key data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "add ssh key",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.UserAddKey("_any", "admin", osapi.SSHKeyAddOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestUserRemoveKey() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with remove key data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "remove ssh key",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.UserRemoveKey("_any", "admin", "SHA256:abc123")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestUserChangePassword() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with change password data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "change password",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.UserChangePassword("_any", "admin", "newpass")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestGroupList() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with group list data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "list groups",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.GroupList("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestGroupGet() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with group data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "get group",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.GroupGet("_any", "admins")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestGroupCreate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with group create data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "create group",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.GroupCreate("_any", osapi.GroupCreateOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestGroupUpdate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with group update data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "update group",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.GroupUpdate("_any", "admins", osapi.GroupUpdateOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestGroupDelete() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with group delete data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "delete group",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.GroupDelete("_any", "admins")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCertificateList() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with certificate list data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "list certificates",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.CertificateList("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCertificateCreate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with certificate create data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "create certificate",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.CertificateCreate("_any", osapi.CertificateCreateOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCertificateUpdate() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with certificate update data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "update certificate",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.CertificateUpdate("_any", "my-ca", osapi.CertificateUpdateOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestCertificateDelete() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with certificate delete data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "delete certificate",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.CertificateDelete("_any", "my-ca")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestProcessList() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with process list data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "list processes",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.ProcessList("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestProcessGet() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with process data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "get process",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.ProcessGet("_any", 1234)
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestProcessSignal() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with process signal data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "signal process",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.ProcessSignal("_any", 1234, osapi.ProcessSignalOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestPowerReboot() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with reboot data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "reboot",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.PowerReboot("_any", osapi.PowerOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestPowerShutdown() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with shutdown data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":true}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "shutdown",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.PowerShutdown("_any", osapi.PowerOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestLogQuery() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with log query data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "query log",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.LogQuery("_any", osapi.LogQueryOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestLogSources() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with log sources data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "list log sources",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.LogSources("_any")
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
+func (s *OpsTestSuite) TestLogQueryUnit() {
+	tests := []struct {
+		name        string
+		handler     http.HandlerFunc
+		expectErr   bool
+		errContains string
+	}{
+		{
+			name: "Returns success with log query unit data",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write(
+					[]byte(
+						`{"results":[{"hostname":"web-01","changed":false}],"job_id":"550e8400-e29b-41d4-a716-446655440000"}`,
+					),
+				)
+			}),
+		},
+		{
+			name: "Returns error on auth failure",
+			handler: http.HandlerFunc(func(
+				w http.ResponseWriter,
+				_ *http.Request,
+			) {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
+			}),
+			expectErr:   true,
+			errContains: "query log unit",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			server := httptest.NewServer(tc.handler)
+			defer server.Close()
+
+			client := osapi.New(server.URL, "test-token")
+
+			orch := New(server.URL, "test-token")
+			step := orch.LogQueryUnit("_any", "nginx.service", osapi.LogQueryOpts{})
+			fn := step.task.Fn()
+			s.Require().NotNil(fn)
+
+			result, fnErr := fn(context.Background(), client)
+
+			if tc.expectErr {
+				s.Require().Error(fnErr)
+				s.Contains(fnErr.Error(), tc.errContains)
+				s.Nil(result)
+
+				return
+			}
+
+			s.Require().NoError(fnErr)
+			s.NotNil(result.Data)
+			s.Len(result.HostResults, 1)
+		})
+	}
+}
+
 func TestOpsTestSuite(
 	t *testing.T,
 ) {

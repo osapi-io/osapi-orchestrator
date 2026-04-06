@@ -22,11 +22,11 @@ var result osapi.ServiceMutationResult
 err := results.Decode("disable-service-1", &result)
 ```
 
-| Field     | Type     | Description                                         |
-| --------- | -------- | --------------------------------------------------- |
-| `Name`    | `string` | Name of the disabled service.                       |
-| `Changed` | `bool`   | Whether the service was disabled.                   |
-| `Error`   | `string` | Error message if disable failed; empty on success.  |
+| Field     | Type     | Description                                        |
+| --------- | -------- | -------------------------------------------------- |
+| `Name`    | `string` | Name of the disabled service.                      |
+| `Changed` | `bool`   | Whether the service was disabled.                  |
+| `Error`   | `string` | Error message if disable failed; empty on success. |
 
 ## Idempotency
 

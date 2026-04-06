@@ -5,13 +5,13 @@ create, update, and delete routes.
 
 ## Operations
 
-| Method                                                       | Description                 | Idempotent     |
-| ------------------------------------------------------------ | --------------------------- | -------------- |
-| [`RouteList(target)`](list.md)                               | List network routes         | Read-only      |
-| [`RouteGet(target, iface)`](get.md)                          | Get routes for an interface | Read-only      |
-| [`RouteCreate(target, iface, opts)`](create.md)              | Create route configuration  | Non-idempotent |
-| [`RouteUpdate(target, iface, opts)`](update.md)              | Update route configuration  | Idempotent     |
-| [`RouteDelete(target, iface)`](delete.md)                    | Delete route configuration  | Idempotent     |
+| Method                                          | Description                 | Idempotent     |
+| ----------------------------------------------- | --------------------------- | -------------- |
+| [`RouteList(target)`](list.md)                  | List network routes         | Read-only      |
+| [`RouteGet(target, iface)`](get.md)             | Get routes for an interface | Read-only      |
+| [`RouteCreate(target, iface, opts)`](create.md) | Create route configuration  | Non-idempotent |
+| [`RouteUpdate(target, iface, opts)`](update.md) | Update route configuration  | Idempotent     |
+| [`RouteDelete(target, iface)`](delete.md)       | Delete route configuration  | Idempotent     |
 
 ## Permissions
 

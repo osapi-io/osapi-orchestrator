@@ -20,9 +20,9 @@ step := o.ServiceUpdate("web-01", "myapp", osapi.ServiceUpdateOpts{
 
 ### ServiceUpdateOpts
 
-| Field    | Type     | Required | Description                                    |
-| -------- | -------- | -------- | ---------------------------------------------- |
-| `Object` | `string` | Yes      | New Object Store reference for the unit file.  |
+| Field    | Type     | Required | Description                                   |
+| -------- | -------- | -------- | --------------------------------------------- |
+| `Object` | `string` | Yes      | New Object Store reference for the unit file. |
 
 ## Result Type
 

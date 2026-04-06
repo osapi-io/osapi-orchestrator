@@ -29,13 +29,13 @@ err := results.Decode("list-service-1", &result)
 
 ### ServiceInfo
 
-| Field         | Type     | Description                          |
-| ------------- | -------- | ------------------------------------ |
-| `Name`        | `string` | Service unit name.                   |
-| `Status`      | `string` | Active status of the service.        |
-| `Enabled`     | `bool`   | Whether the service starts on boot.  |
-| `Description` | `string` | Service description from unit file.  |
-| `PID`         | `int`    | Main process ID of the service.      |
+| Field         | Type     | Description                         |
+| ------------- | -------- | ----------------------------------- |
+| `Name`        | `string` | Service unit name.                  |
+| `Status`      | `string` | Active status of the service.       |
+| `Enabled`     | `bool`   | Whether the service starts on boot. |
+| `Description` | `string` | Service description from unit file. |
+| `PID`         | `int`    | Main process ID of the service.     |
 
 ## Idempotency
 

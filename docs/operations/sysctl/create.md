@@ -20,10 +20,10 @@ step := o.SysctlCreate("web-01", osapi.SysctlCreateOpts{
 
 ### SysctlCreateOpts
 
-| Field   | Type     | Required | Description                                       |
-| ------- | -------- | -------- | ------------------------------------------------- |
+| Field   | Type     | Required | Description                                         |
+| ------- | -------- | -------- | --------------------------------------------------- |
 | `Key`   | `string` | Yes      | Sysctl parameter key (e.g., `net.ipv4.ip_forward`). |
-| `Value` | `string` | Yes      | Value to set for the parameter.                   |
+| `Value` | `string` | Yes      | Value to set for the parameter.                     |
 
 ## Result Type
 

@@ -20,9 +20,9 @@ step := o.ProcessSignal("web-01", 1234, osapi.ProcessSignalOpts{
 
 ### ProcessSignalOpts
 
-| Field    | Type     | Required | Description                                      |
-| -------- | -------- | -------- | ------------------------------------------------ |
-| `Signal` | `string` | Yes      | Signal name (e.g., `TERM`, `KILL`, `HUP`).       |
+| Field    | Type     | Required | Description                                |
+| -------- | -------- | -------- | ------------------------------------------ |
+| `Signal` | `string` | Yes      | Signal name (e.g., `TERM`, `KILL`, `HUP`). |
 
 ## Result Type
 
@@ -31,12 +31,12 @@ var result osapi.ProcessSignalResult
 err := results.Decode("signal-process-1", &result)
 ```
 
-| Field     | Type     | Description                                        |
-| --------- | -------- | -------------------------------------------------- |
-| `PID`     | `int`    | Process ID that was signaled.                      |
-| `Signal`  | `string` | Signal that was sent.                              |
-| `Changed` | `bool`   | Whether the signal was delivered.                  |
-| `Error`   | `string` | Error message if signal failed; empty on success.  |
+| Field     | Type     | Description                                       |
+| --------- | -------- | ------------------------------------------------- |
+| `PID`     | `int`    | Process ID that was signaled.                     |
+| `Signal`  | `string` | Signal that was sent.                             |
+| `Changed` | `bool`   | Whether the signal was delivered.                 |
+| `Error`   | `string` | Error message if signal failed; empty on success. |
 
 ## Idempotency
 

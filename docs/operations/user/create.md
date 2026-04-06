@@ -21,13 +21,13 @@ step := o.UserCreate("web-01", osapi.UserCreateOpts{
 
 ### UserCreateOpts
 
-| Field   | Type     | Required | Description                                         |
-| ------- | -------- | -------- | --------------------------------------------------- |
-| `Name`  | `string` | Yes      | Username.                                           |
-| `UID`   | `int`    | No       | Numeric user ID (system assigns if zero).           |
-| `GID`   | `int`    | No       | Primary group ID (creates matching group if zero).  |
-| `Home`  | `string` | No       | Home directory path.                                |
-| `Shell` | `string` | No       | Login shell path.                                   |
+| Field   | Type     | Required | Description                                        |
+| ------- | -------- | -------- | -------------------------------------------------- |
+| `Name`  | `string` | Yes      | Username.                                          |
+| `UID`   | `int`    | No       | Numeric user ID (system assigns if zero).          |
+| `GID`   | `int`    | No       | Primary group ID (creates matching group if zero). |
+| `Home`  | `string` | No       | Home directory path.                               |
+| `Shell` | `string` | No       | Login shell path.                                  |
 
 ## Result Type
 

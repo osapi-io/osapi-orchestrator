@@ -19,9 +19,9 @@ step := o.NTPUpdate("web-01", osapi.NtpUpdateOpts{
 
 ### NtpUpdateOpts
 
-| Field     | Type       | Required | Description                         |
-| --------- | ---------- | -------- | ----------------------------------- |
-| `Servers` | `[]string` | Yes      | NTP server addresses to configure.  |
+| Field     | Type       | Required | Description                        |
+| --------- | ---------- | -------- | ---------------------------------- |
+| `Servers` | `[]string` | Yes      | NTP server addresses to configure. |
 
 ## Result Type
 

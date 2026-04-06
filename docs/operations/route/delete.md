@@ -22,11 +22,11 @@ var result osapi.RouteMutationResult
 err := results.Decode("delete-route-1", &result)
 ```
 
-| Field       | Type     | Description                                            |
-| ----------- | -------- | ------------------------------------------------------ |
-| `Interface` | `string` | Interface name.                                        |
-| `Changed`   | `bool`   | Whether the routes were removed or already absent.     |
-| `Error`     | `string` | Error message if deletion failed; empty on success.    |
+| Field       | Type     | Description                                         |
+| ----------- | -------- | --------------------------------------------------- |
+| `Interface` | `string` | Interface name.                                     |
+| `Changed`   | `bool`   | Whether the routes were removed or already absent.  |
+| `Error`     | `string` | Error message if deletion failed; empty on success. |
 
 ## Idempotency
 

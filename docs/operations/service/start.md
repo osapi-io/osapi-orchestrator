@@ -22,11 +22,11 @@ var result osapi.ServiceMutationResult
 err := results.Decode("start-service-1", &result)
 ```
 
-| Field     | Type     | Description                                       |
-| --------- | -------- | ------------------------------------------------- |
-| `Name`    | `string` | Name of the started service.                      |
-| `Changed` | `bool`   | Whether the service was started.                  |
-| `Error`   | `string` | Error message if start failed; empty on success.  |
+| Field     | Type     | Description                                      |
+| --------- | -------- | ------------------------------------------------ |
+| `Name`    | `string` | Name of the started service.                     |
+| `Changed` | `bool`   | Whether the service was started.                 |
+| `Error`   | `string` | Error message if start failed; empty on success. |
 
 ## Idempotency
 

@@ -21,14 +21,14 @@ step := o.InterfaceCreate("web-01", "eth1", osapi.InterfaceConfigOpts{
 
 ### InterfaceConfigOpts
 
-| Field       | Type       | Required | Description                              |
-| ----------- | ---------- | -------- | ---------------------------------------- |
-| `DHCP4`     | `*bool`    | No       | Enable or disable DHCPv4.                |
-| `DHCP6`     | `*bool`    | No       | Enable or disable DHCPv6.                |
-| `Addresses` | `[]string` | No       | IP addresses in CIDR notation.           |
-| `Gateway4`  | `string`   | No       | IPv4 gateway address.                    |
-| `Gateway6`  | `string`   | No       | IPv6 gateway address.                    |
-| `MTU`       | `*int`     | No       | Maximum transmission unit.               |
+| Field       | Type       | Required | Description                    |
+| ----------- | ---------- | -------- | ------------------------------ |
+| `DHCP4`     | `*bool`    | No       | Enable or disable DHCPv4.      |
+| `DHCP6`     | `*bool`    | No       | Enable or disable DHCPv6.      |
+| `Addresses` | `[]string` | No       | IP addresses in CIDR notation. |
+| `Gateway4`  | `string`   | No       | IPv4 gateway address.          |
+| `Gateway6`  | `string`   | No       | IPv6 gateway address.          |
+| `MTU`       | `*int`     | No       | Maximum transmission unit.     |
 
 ## Result Type
 

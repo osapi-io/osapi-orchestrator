@@ -30,11 +30,11 @@ err := results.Decode("list-ssh-key-1", &result)
 
 ### SSHKeyInfo
 
-| Field         | Type     | Description            |
-| ------------- | -------- | ---------------------- |
+| Field         | Type     | Description                     |
+| ------------- | -------- | ------------------------------- |
 | `Type`        | `string` | Key type (e.g., `ssh-ed25519`). |
-| `Fingerprint` | `string` | Key fingerprint.       |
-| `Comment`     | `string` | Key comment.           |
+| `Fingerprint` | `string` | Key fingerprint.                |
+| `Comment`     | `string` | Key comment.                    |
 
 ## Idempotency
 

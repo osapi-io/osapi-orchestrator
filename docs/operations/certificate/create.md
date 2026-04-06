@@ -21,10 +21,10 @@ step := o.CertificateCreate("web-01", osapi.CertificateCreateOpts{
 
 ### CertificateCreateOpts
 
-| Field    | Type     | Required | Description                                    |
-| -------- | -------- | -------- | ---------------------------------------------- |
-| `Name`   | `string` | Yes      | Certificate name.                              |
-| `Object` | `string` | Yes      | Object Store reference for the PEM file.       |
+| Field    | Type     | Required | Description                              |
+| -------- | -------- | -------- | ---------------------------------------- |
+| `Name`   | `string` | Yes      | Certificate name.                        |
+| `Object` | `string` | Yes      | Object Store reference for the PEM file. |
 
 ## Result Type
 
@@ -41,8 +41,8 @@ err := results.Decode("create-certificate-1", &result)
 
 ## Idempotency
 
-**Non-idempotent.** Creating a certificate that already exists returns an
-error. Use [CertificateUpdate](update.md) to replace existing certificates.
+**Non-idempotent.** Creating a certificate that already exists returns an error.
+Use [CertificateUpdate](update.md) to replace existing certificates.
 
 ## Permissions
 

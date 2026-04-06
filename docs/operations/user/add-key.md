@@ -20,9 +20,9 @@ step := o.UserAddKey("web-01", "deploy", osapi.SSHKeyAddOpts{
 
 ### SSHKeyAddOpts
 
-| Field | Type     | Required | Description                                  |
-| ----- | -------- | -------- | -------------------------------------------- |
-| `Key` | `string` | Yes      | Full SSH public key line.                    |
+| Field | Type     | Required | Description               |
+| ----- | -------- | -------- | ------------------------- |
+| `Key` | `string` | Yes      | Full SSH public key line. |
 
 ## Result Type
 
@@ -31,10 +31,10 @@ var result osapi.SSHKeyMutationResult
 err := results.Decode("add-ssh-key-1", &result)
 ```
 
-| Field     | Type     | Description                                       |
-| --------- | -------- | ------------------------------------------------- |
-| `Changed` | `bool`   | Whether the key was added.                        |
-| `Error`   | `string` | Error message if add failed; empty on success.    |
+| Field     | Type     | Description                                    |
+| --------- | -------- | ---------------------------------------------- |
+| `Changed` | `bool`   | Whether the key was added.                     |
+| `Error`   | `string` | Error message if add failed; empty on success. |
 
 ## Idempotency
 

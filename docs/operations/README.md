@@ -6,29 +6,29 @@ error handling.
 
 ## Domains
 
-| Domain                        | Operations | Description                                       |
-| ----------------------------- | ---------- | ------------------------------------------------- |
-| [Node](node/)                 | 8          | Hostname, disk, memory, load, uptime, OS, status  |
-| [Network](network/)           | 4          | DNS configuration, ping                           |
-| [Interface](interface/)       | 5          | Network interface configuration via Netplan       |
-| [Route](route/)               | 5          | Network route configuration via Netplan           |
-| [Command](command/)           | 2          | Direct exec, shell commands                       |
-| [Docker](docker/)             | 9          | Container lifecycle, exec, images                 |
-| [Cron](cron/)                 | 5          | Cron drop-in file management                      |
-| [Sysctl](sysctl/)             | 5          | Kernel parameter management                       |
-| [NTP](ntp/)                   | 4          | NTP server configuration                          |
-| [Timezone](timezone/)         | 2          | System timezone management                        |
-| [Service](service/)           | 10         | Systemd service lifecycle and unit files          |
-| [Package](package/)           | 6          | System package management                         |
-| [User](user/)                 | 9          | User accounts, SSH keys, passwords                |
-| [Group](group/)               | 5          | Local group management                            |
-| [Certificate](certificate/)   | 4          | CA certificate trust store management             |
-| [Process](process/)           | 3          | Process listing, inspection, signals              |
-| [Power](power/)               | 2          | Reboot and shutdown                               |
-| [Log](log/)                   | 3          | Systemd journal queries                           |
-| [File](file/)                 | 5          | Upload, deploy, status, undeploy, drift detection |
-| [Agent](agent/)               | 4          | Discovery, inspection, drain/undrain              |
-| [Health](health/)             | 1          | Liveness check                                    |
+| Domain                      | Operations | Description                                       |
+| --------------------------- | ---------- | ------------------------------------------------- |
+| [Node](node/)               | 8          | Hostname, disk, memory, load, uptime, OS, status  |
+| [Network](network/)         | 4          | DNS configuration, ping                           |
+| [Interface](interface/)     | 5          | Network interface configuration via Netplan       |
+| [Route](route/)             | 5          | Network route configuration via Netplan           |
+| [Command](command/)         | 2          | Direct exec, shell commands                       |
+| [Docker](docker/)           | 9          | Container lifecycle, exec, images                 |
+| [Cron](cron/)               | 5          | Cron drop-in file management                      |
+| [Sysctl](sysctl/)           | 5          | Kernel parameter management                       |
+| [NTP](ntp/)                 | 4          | NTP server configuration                          |
+| [Timezone](timezone/)       | 2          | System timezone management                        |
+| [Service](service/)         | 10         | Systemd service lifecycle and unit files          |
+| [Package](package/)         | 6          | System package management                         |
+| [User](user/)               | 9          | User accounts, SSH keys, passwords                |
+| [Group](group/)             | 5          | Local group management                            |
+| [Certificate](certificate/) | 4          | CA certificate trust store management             |
+| [Process](process/)         | 3          | Process listing, inspection, signals              |
+| [Power](power/)             | 2          | Reboot and shutdown                               |
+| [Log](log/)                 | 3          | Systemd journal queries                           |
+| [File](file/)               | 5          | Upload, deploy, status, undeploy, drift detection |
+| [Agent](agent/)             | 4          | Discovery, inspection, drain/undrain              |
+| [Health](health/)           | 1          | Liveness check                                    |
 
 ## Idempotency
 

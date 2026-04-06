@@ -19,8 +19,8 @@ step := o.TimezoneUpdate("web-01", osapi.TimezoneUpdateOpts{
 
 ### TimezoneUpdateOpts
 
-| Field      | Type     | Required | Description                                        |
-| ---------- | -------- | -------- | -------------------------------------------------- |
+| Field      | Type     | Required | Description                                           |
+| ---------- | -------- | -------- | ----------------------------------------------------- |
 | `Timezone` | `string` | Yes      | IANA timezone name (e.g., `America/New_York`, `UTC`). |
 
 ## Result Type
@@ -38,8 +38,8 @@ err := results.Decode("update-timezone-1", &result)
 
 ## Idempotency
 
-**Idempotent.** Compares the current timezone against the desired value.
-Returns `Changed: true` only if the timezone was actually modified.
+**Idempotent.** Compares the current timezone against the desired value. Returns
+`Changed: true` only if the timezone was actually modified.
 
 ## Permissions
 

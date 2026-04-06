@@ -20,10 +20,10 @@ step := o.PowerReboot("web-01", osapi.PowerOpts{
 
 ### PowerOpts
 
-| Field     | Type     | Required | Description                                       |
-| --------- | -------- | -------- | ------------------------------------------------- |
-| `Delay`   | `int`    | No       | Seconds to wait before rebooting.                 |
-| `Message` | `string` | No       | Message to broadcast before the reboot.           |
+| Field     | Type     | Required | Description                             |
+| --------- | -------- | -------- | --------------------------------------- |
+| `Delay`   | `int`    | No       | Seconds to wait before rebooting.       |
+| `Message` | `string` | No       | Message to broadcast before the reboot. |
 
 ## Result Type
 
@@ -32,12 +32,12 @@ var result osapi.PowerResult
 err := results.Decode("reboot-1", &result)
 ```
 
-| Field     | Type     | Description                                        |
-| --------- | -------- | -------------------------------------------------- |
-| `Action`  | `string` | Action taken (e.g., `reboot`).                     |
-| `Delay`   | `int`    | Delay in seconds before execution.                 |
-| `Changed` | `bool`   | Whether the reboot was initiated.                  |
-| `Error`   | `string` | Error message if reboot failed; empty on success.  |
+| Field     | Type     | Description                                       |
+| --------- | -------- | ------------------------------------------------- |
+| `Action`  | `string` | Action taken (e.g., `reboot`).                    |
+| `Delay`   | `int`    | Delay in seconds before execution.                |
+| `Changed` | `bool`   | Whether the reboot was initiated.                 |
+| `Error`   | `string` | Error message if reboot failed; empty on success. |
 
 ## Idempotency
 

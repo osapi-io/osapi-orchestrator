@@ -5,13 +5,13 @@ groups.
 
 ## Operations
 
-| Method                                                    | Description            | Idempotent     |
-| --------------------------------------------------------- | ---------------------- | -------------- |
-| [`GroupList(target)`](list.md)                            | List groups            | Read-only      |
-| [`GroupGet(target, name)`](get.md)                        | Get a specific group   | Read-only      |
-| [`GroupCreate(target, opts)`](create.md)                  | Create a group         | Non-idempotent |
-| [`GroupUpdate(target, name, opts)`](update.md)            | Update a group         | Idempotent     |
-| [`GroupDelete(target, name)`](delete.md)                  | Delete a group         | Idempotent     |
+| Method                                         | Description          | Idempotent     |
+| ---------------------------------------------- | -------------------- | -------------- |
+| [`GroupList(target)`](list.md)                 | List groups          | Read-only      |
+| [`GroupGet(target, name)`](get.md)             | Get a specific group | Read-only      |
+| [`GroupCreate(target, opts)`](create.md)       | Create a group       | Non-idempotent |
+| [`GroupUpdate(target, name, opts)`](update.md) | Update a group       | Idempotent     |
+| [`GroupDelete(target, name)`](delete.md)       | Delete a group       | Idempotent     |
 
 ## Permissions
 

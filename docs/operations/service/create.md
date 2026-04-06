@@ -21,10 +21,10 @@ step := o.ServiceCreate("web-01", osapi.ServiceCreateOpts{
 
 ### ServiceCreateOpts
 
-| Field    | Type     | Required | Description                                    |
-| -------- | -------- | -------- | ---------------------------------------------- |
-| `Name`   | `string` | Yes      | Service unit name.                             |
-| `Object` | `string` | Yes      | Object Store reference for the unit file.      |
+| Field    | Type     | Required | Description                               |
+| -------- | -------- | -------- | ----------------------------------------- |
+| `Name`   | `string` | Yes      | Service unit name.                        |
+| `Object` | `string` | Yes      | Object Store reference for the unit file. |
 
 ## Result Type
 
@@ -41,8 +41,8 @@ err := results.Decode("create-service-1", &result)
 
 ## Idempotency
 
-**Non-idempotent.** Creating a service that already exists returns an error.
-Use [ServiceUpdate](update.md) to modify existing unit files.
+**Non-idempotent.** Creating a service that already exists returns an error. Use
+[ServiceUpdate](update.md) to modify existing unit files.
 
 ## Permissions
 

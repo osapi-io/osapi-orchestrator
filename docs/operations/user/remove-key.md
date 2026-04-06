@@ -23,10 +23,10 @@ var result osapi.SSHKeyMutationResult
 err := results.Decode("remove-ssh-key-1", &result)
 ```
 
-| Field     | Type     | Description                                          |
-| --------- | -------- | ---------------------------------------------------- |
-| `Changed` | `bool`   | Whether the key was removed or already absent.       |
-| `Error`   | `string` | Error message if removal failed; empty on success.   |
+| Field     | Type     | Description                                        |
+| --------- | -------- | -------------------------------------------------- |
+| `Changed` | `bool`   | Whether the key was removed or already absent.     |
+| `Error`   | `string` | Error message if removal failed; empty on success. |
 
 ## Idempotency
 

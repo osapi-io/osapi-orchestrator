@@ -22,11 +22,11 @@ var result osapi.GroupMutationResult
 err := results.Decode("delete-group-1", &result)
 ```
 
-| Field     | Type     | Description                                          |
-| --------- | -------- | ---------------------------------------------------- |
-| `Name`    | `string` | Group name.                                          |
-| `Changed` | `bool`   | Whether the group was removed or already absent.     |
-| `Error`   | `string` | Error message if deletion failed; empty on success.  |
+| Field     | Type     | Description                                         |
+| --------- | -------- | --------------------------------------------------- |
+| `Name`    | `string` | Group name.                                         |
+| `Changed` | `bool`   | Whether the group was removed or already absent.    |
+| `Error`   | `string` | Error message if deletion failed; empty on success. |
 
 ## Idempotency
 

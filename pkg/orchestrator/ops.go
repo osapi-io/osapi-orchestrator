@@ -772,10 +772,10 @@ func (o *Orchestrator) RouteCreate(
 			return engine.CollectionResult(resp.Data, resp.RawJSON(),
 				func(r osapi.RouteMutationResult) engine.HostResult {
 					return engine.HostResult{
-						Hostname:  r.Hostname,
-						Status:    r.Status,
-						Changed:   r.Changed,
-						Error:     r.Error,
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
 					}
 				},
 			)
@@ -807,10 +807,10 @@ func (o *Orchestrator) RouteUpdate(
 			return engine.CollectionResult(resp.Data, resp.RawJSON(),
 				func(r osapi.RouteMutationResult) engine.HostResult {
 					return engine.HostResult{
-						Hostname:  r.Hostname,
-						Status:    r.Status,
-						Changed:   r.Changed,
-						Error:     r.Error,
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
 					}
 				},
 			)
@@ -841,10 +841,10 @@ func (o *Orchestrator) RouteDelete(
 			return engine.CollectionResult(resp.Data, resp.RawJSON(),
 				func(r osapi.RouteMutationResult) engine.HostResult {
 					return engine.HostResult{
-						Hostname:  r.Hostname,
-						Status:    r.Status,
-						Changed:   r.Changed,
-						Error:     r.Error,
+						Hostname: r.Hostname,
+						Status:   r.Status,
+						Changed:  r.Changed,
+						Error:    r.Error,
 					}
 				},
 			)

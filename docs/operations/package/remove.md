@@ -22,11 +22,11 @@ var result osapi.PackageMutationResult
 err := results.Decode("remove-package-1", &result)
 ```
 
-| Field     | Type     | Description                                         |
-| --------- | -------- | --------------------------------------------------- |
-| `Name`    | `string` | Name of the package.                                |
-| `Changed` | `bool`   | Whether the package was removed or already absent.  |
-| `Error`   | `string` | Error message if removal failed; empty on success.  |
+| Field     | Type     | Description                                        |
+| --------- | -------- | -------------------------------------------------- |
+| `Name`    | `string` | Name of the package.                               |
+| `Changed` | `bool`   | Whether the package was removed or already absent. |
+| `Error`   | `string` | Error message if removal failed; empty on success. |
 
 ## Idempotency
 

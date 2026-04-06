@@ -22,11 +22,11 @@ var result osapi.ServiceMutationResult
 err := results.Decode("stop-service-1", &result)
 ```
 
-| Field     | Type     | Description                                      |
-| --------- | -------- | ------------------------------------------------ |
-| `Name`    | `string` | Name of the stopped service.                     |
-| `Changed` | `bool`   | Whether the service was stopped.                 |
-| `Error`   | `string` | Error message if stop failed; empty on success.  |
+| Field     | Type     | Description                                     |
+| --------- | -------- | ----------------------------------------------- |
+| `Name`    | `string` | Name of the stopped service.                    |
+| `Changed` | `bool`   | Whether the service was stopped.                |
+| `Error`   | `string` | Error message if stop failed; empty on success. |
 
 ## Idempotency
 

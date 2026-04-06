@@ -22,11 +22,11 @@ var result osapi.ServiceMutationResult
 err := results.Decode("enable-service-1", &result)
 ```
 
-| Field     | Type     | Description                                        |
-| --------- | -------- | -------------------------------------------------- |
-| `Name`    | `string` | Name of the enabled service.                       |
-| `Changed` | `bool`   | Whether the service was enabled.                   |
-| `Error`   | `string` | Error message if enable failed; empty on success.  |
+| Field     | Type     | Description                                       |
+| --------- | -------- | ------------------------------------------------- |
+| `Name`    | `string` | Name of the enabled service.                      |
+| `Changed` | `bool`   | Whether the service was enabled.                  |
+| `Error`   | `string` | Error message if enable failed; empty on success. |
 
 ## Idempotency
 

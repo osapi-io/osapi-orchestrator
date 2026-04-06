@@ -5,12 +5,12 @@ and delete NTP configuration.
 
 ## Operations
 
-| Method                                    | Description              | Idempotent     |
-| ----------------------------------------- | ------------------------ | -------------- |
-| [`NTPGet(target)`](get.md)                | Get NTP status           | Read-only      |
-| [`NTPCreate(target, opts)`](create.md)    | Create NTP configuration | Non-idempotent |
-| [`NTPUpdate(target, opts)`](update.md)    | Update NTP configuration | Idempotent     |
-| [`NTPDelete(target)`](delete.md)          | Delete NTP configuration | Idempotent     |
+| Method                                 | Description              | Idempotent     |
+| -------------------------------------- | ------------------------ | -------------- |
+| [`NTPGet(target)`](get.md)             | Get NTP status           | Read-only      |
+| [`NTPCreate(target, opts)`](create.md) | Create NTP configuration | Non-idempotent |
+| [`NTPUpdate(target, opts)`](update.md) | Update NTP configuration | Idempotent     |
+| [`NTPDelete(target)`](delete.md)       | Delete NTP configuration | Idempotent     |
 
 ## Permissions
 

@@ -5,10 +5,10 @@ update it.
 
 ## Operations
 
-| Method                                          | Description              | Idempotent |
-| ----------------------------------------------- | ------------------------ | ---------- |
-| [`TimezoneGet(target)`](get.md)                 | Get the system timezone  | Read-only  |
-| [`TimezoneUpdate(target, opts)`](update.md)     | Set the system timezone  | Idempotent |
+| Method                                      | Description             | Idempotent |
+| ------------------------------------------- | ----------------------- | ---------- |
+| [`TimezoneGet(target)`](get.md)             | Get the system timezone | Read-only  |
+| [`TimezoneUpdate(target, opts)`](update.md) | Set the system timezone | Idempotent |
 
 ## Permissions
 
@@ -19,6 +19,5 @@ update it.
 
 ## Example
 
-See
-[`examples/operations/timezone.go`](../../examples/operations/timezone.go) for
-a complete workflow example.
+See [`examples/operations/timezone.go`](../../examples/operations/timezone.go)
+for a complete workflow example.

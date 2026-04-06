@@ -20,10 +20,10 @@ step := o.PowerShutdown("web-01", osapi.PowerOpts{
 
 ### PowerOpts
 
-| Field     | Type     | Required | Description                                       |
-| --------- | -------- | -------- | ------------------------------------------------- |
-| `Delay`   | `int`    | No       | Seconds to wait before shutting down.             |
-| `Message` | `string` | No       | Message to broadcast before the shutdown.         |
+| Field     | Type     | Required | Description                               |
+| --------- | -------- | -------- | ----------------------------------------- |
+| `Delay`   | `int`    | No       | Seconds to wait before shutting down.     |
+| `Message` | `string` | No       | Message to broadcast before the shutdown. |
 
 ## Result Type
 
@@ -32,12 +32,12 @@ var result osapi.PowerResult
 err := results.Decode("shutdown-1", &result)
 ```
 
-| Field     | Type     | Description                                          |
-| --------- | -------- | ---------------------------------------------------- |
-| `Action`  | `string` | Action taken (e.g., `shutdown`).                     |
-| `Delay`   | `int`    | Delay in seconds before execution.                   |
-| `Changed` | `bool`   | Whether the shutdown was initiated.                  |
-| `Error`   | `string` | Error message if shutdown failed; empty on success.  |
+| Field     | Type     | Description                                         |
+| --------- | -------- | --------------------------------------------------- |
+| `Action`  | `string` | Action taken (e.g., `shutdown`).                    |
+| `Delay`   | `int`    | Delay in seconds before execution.                  |
+| `Changed` | `bool`   | Whether the shutdown was initiated.                 |
+| `Error`   | `string` | Error message if shutdown failed; empty on success. |
 
 ## Idempotency
 

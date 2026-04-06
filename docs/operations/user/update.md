@@ -21,12 +21,12 @@ step := o.UserUpdate("web-01", "deploy", osapi.UserUpdateOpts{
 
 ### UserUpdateOpts
 
-| Field    | Type       | Required | Description                                       |
-| -------- | ---------- | -------- | ------------------------------------------------- |
-| `Shell`  | `string`   | No       | New login shell path.                             |
-| `Home`   | `string`   | No       | New home directory path.                          |
-| `Groups` | `[]string` | No       | Supplementary group names (replaces existing).    |
-| `Lock`   | `*bool`    | No       | Lock or unlock the account.                       |
+| Field    | Type       | Required | Description                                    |
+| -------- | ---------- | -------- | ---------------------------------------------- |
+| `Shell`  | `string`   | No       | New login shell path.                          |
+| `Home`   | `string`   | No       | New home directory path.                       |
+| `Groups` | `[]string` | No       | Supplementary group names (replaces existing). |
+| `Lock`   | `*bool`    | No       | Lock or unlock the account.                    |
 
 ## Result Type
 

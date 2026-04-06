@@ -22,11 +22,11 @@ var result osapi.CertificateCAMutationResult
 err := results.Decode("delete-certificate-1", &result)
 ```
 
-| Field     | Type     | Description                                              |
-| --------- | -------- | -------------------------------------------------------- |
-| `Name`    | `string` | Certificate name.                                        |
-| `Changed` | `bool`   | Whether the certificate was removed or already absent.   |
-| `Error`   | `string` | Error message if deletion failed; empty on success.      |
+| Field     | Type     | Description                                            |
+| --------- | -------- | ------------------------------------------------------ |
+| `Name`    | `string` | Certificate name.                                      |
+| `Changed` | `bool`   | Whether the certificate was removed or already absent. |
+| `Error`   | `string` | Error message if deletion failed; empty on success.    |
 
 ## Idempotency
 
