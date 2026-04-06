@@ -84,7 +84,11 @@ WantedBy=multi-user.target
 
 	get := o.ServiceGet("_any", svcName).After(enable)
 
-	list := o.ServiceList("_any").After(get)
+	update := o.ServiceUpdate("_any", svcName, osapi.ServiceUpdateOpts{
+		Object: "osapi-example.service",
+	}).After(get)
+
+	list := o.ServiceList("_any").After(update)
 
 	restart := o.ServiceRestart("_any", svcName).After(list)
 
