@@ -55,7 +55,12 @@ func main() {
 
 	list := o.ProcessList("_any")
 
-	o.ProcessGet("_any", 1).After(list)
+	get := o.ProcessGet("_any", 1).After(list)
+
+	// Send SIGCONT to PID 1 (harmless no-op for init).
+	o.ProcessSignal("_any", 1, osapi.ProcessSignalOpts{
+		Signal: "SIGCONT",
+	}).After(get).ContinueOnError()
 
 	report, err := o.Run(context.Background())
 	if err != nil {

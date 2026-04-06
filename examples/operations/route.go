@@ -63,7 +63,16 @@ func main() {
 
 	list := o.RouteList("_any").ContinueOnError()
 
-	o.RouteGet("_any", iface).After(list).ContinueOnError()
+	get := o.RouteGet("_any", iface).After(list).ContinueOnError()
+
+	// Create → update → delete a test route.
+	create := o.RouteCreate("_any", iface, osapi.RouteConfigOpts{}).
+		After(get).ContinueOnError()
+
+	update := o.RouteUpdate("_any", iface, osapi.RouteConfigOpts{}).
+		After(create).ContinueOnError()
+
+	o.RouteDelete("_any", iface).After(update).ContinueOnError()
 
 	report, err := o.Run(context.Background())
 	if err != nil {

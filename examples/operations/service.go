@@ -18,22 +18,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates systemd service lifecycle management:
-// upload a unit file, create the service, start, enable, then
-// cleanup: disable, stop, delete.
-//
-// Cleanup at the start ensures repeatability.
-//
-// DAG:
-//
-//	upload-file
-//	    └── create-service
-//	            └── start-service
-//	                    └── enable-service
-//	                            └── get-service
-//	                                    └── disable-service
-//	                                            └── stop-service
-//	                                                    └── delete-service
+// Package main demonstrates systemd service lifecycle:
+// create → start → enable → get → list → restart → disable → stop → delete.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run service.go
 package main
@@ -98,7 +84,11 @@ WantedBy=multi-user.target
 
 	get := o.ServiceGet("_any", svcName).After(enable)
 
-	disable := o.ServiceDisable("_any", svcName).After(get)
+	list := o.ServiceList("_any").After(get)
+
+	restart := o.ServiceRestart("_any", svcName).After(list)
+
+	disable := o.ServiceDisable("_any", svcName).After(restart)
 
 	stop := o.ServiceStop("_any", svcName).After(disable)
 

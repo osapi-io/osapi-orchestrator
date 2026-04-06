@@ -19,23 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Package main demonstrates the Docker container lifecycle:
-// pull → create → start → list + exec + inspect → stop → remove → image remove.
-//
-// Pre-cleanup removes any leftover container and image so the example
-// is repeatable. Requires Docker on the target host.
-//
-// DAG:
-//
-//	pre-cleanup
-//	    └── docker-pull
-//	            └── docker-create
-//	                    └── docker-start
-//	                            ├── docker-list
-//	                            ├── docker-exec
-//	                            └── docker-inspect
-//	                                    └── docker-stop
-//	                                            └── docker-remove
-//	                                                    └── docker-image-remove
+// pull → create → start → exec + inspect → stop → remove → image remove.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run docker.go
 package main
@@ -67,30 +51,18 @@ func main() {
 		target = "_any"
 	)
 
+	// Cleanup: remove leftover container and image.
+	cleanup := orchestrator.New(url, token)
+	cleanup.DockerRemove(target, name, &osapi.DockerRemoveParams{Force: true}).
+		ContinueOnError()
+	cleanup.DockerImageRemove(target, image, &osapi.DockerImageRemoveParams{Force: true}).
+		ContinueOnError()
+	_, _ = cleanup.Run(context.Background())
+
+	// Main workflow.
 	o := orchestrator.New(url, token)
 
-	// Pre-cleanup: remove leftover container and image.
-	preCleanup := o.TaskFunc(
-		"pre-cleanup",
-		func(
-			ctx context.Context,
-			c *osapi.Client,
-			_ orchestrator.Results,
-		) (*orchestrator.Result, error) {
-			_, _ = c.Docker.Remove(ctx, target, name, &osapi.DockerRemoveParams{Force: true})
-			_, _ = c.Docker.ImageRemove(
-				ctx,
-				target,
-				image,
-				&osapi.DockerImageRemoveParams{Force: true},
-			)
-
-			return &orchestrator.Result{Changed: false}, nil
-		},
-	)
-
-	pull := o.DockerPull(target, osapi.DockerPullOpts{Image: image}).
-		After(preCleanup)
+	pull := o.DockerPull(target, osapi.DockerPullOpts{Image: image})
 
 	create := o.DockerCreate(target, osapi.DockerCreateOpts{
 		Image: image,
@@ -99,14 +71,12 @@ func main() {
 
 	start := o.DockerStart(target, name).After(create)
 
-	// List, exec, and inspect run in parallel after start.
-	o.DockerList(target, nil).After(start)
-
 	exec := o.DockerExec(target, name, osapi.DockerExecOpts{
 		Command: []string{"nginx", "-v"},
 	}).After(start)
 
 	inspect := o.DockerInspect(target, name).After(start)
+	o.DockerList(target, nil).After(start)
 
 	stop := o.DockerStop(target, name, osapi.DockerStopOpts{}).
 		After(exec, inspect)

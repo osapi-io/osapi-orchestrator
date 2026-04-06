@@ -62,13 +62,15 @@ func main() {
 	oc.SysctlDelete("_any", key).ContinueOnError()
 	oc.Run(context.Background()) //nolint:errcheck
 
-	// Create → get → update → delete.
+	// List → create → get → update → delete.
 	o := orchestrator.New(url, token)
+
+	syslist := o.SysctlList("_any")
 
 	create := o.SysctlCreate("_any", osapi.SysctlCreateOpts{
 		Key:   key,
 		Value: "0",
-	})
+	}).After(syslist)
 
 	get := o.SysctlGet("_any", key).After(create)
 

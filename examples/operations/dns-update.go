@@ -70,12 +70,15 @@ func main() {
 		ContinueOnError()
 
 	// Write new DNS servers after reading the current config.
-	o.NetworkDNSUpdate(
+	updateDNS := o.NetworkDNSUpdate(
 		"_any",
 		iface,
 		[]string{"8.8.8.8", "8.8.4.4"},
 		[]string{"example.com"},
 	).After(getDNS).ContinueOnError()
+
+	// Delete DNS configuration (cleanup).
+	o.NetworkDNSDelete("_any", iface).After(updateDNS).ContinueOnError()
 
 	report, err := o.Run(context.Background())
 	if err != nil {

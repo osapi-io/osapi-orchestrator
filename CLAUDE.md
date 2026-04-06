@@ -191,19 +191,32 @@ Add the operation to the table in the domain landing page
 Add the operation to an existing workflow example in
 `examples/operations/` that covers the same domain. Domain groupings:
 
-| Domain  | Example file         |
-| ------- | -------------------- |
-| Node    | `node-info.go`       |
-| Node    | `hostname-update.go` |
-| Network | `dns-update.go`      |
-| Network | `ping.go`            |
-| Command | `command.go`         |
-| File    | `file-deploy.go`     |
-| File    | `file-changed.go`    |
-| Agent   | `agent-drain.go`     |
-| Docker  | `docker.go`          |
-| Cron    | `cron.go`            |
-| Health  | (used as gate)       |
+| Domain      | Example file         |
+| ----------- | -------------------- |
+| Node        | `node-info.go`       |
+| Node        | `hostname-update.go` |
+| Network     | `dns-update.go`      |
+| Network     | `ping.go`            |
+| Interface   | `interface.go`       |
+| Route       | `route.go`           |
+| Command     | `command.go`         |
+| File        | `file-deploy.go`     |
+| File        | `file-changed.go`    |
+| Agent       | `agent-drain.go`     |
+| Docker      | `docker.go`          |
+| Cron        | `cron.go`            |
+| Sysctl      | `sysctl.go`          |
+| NTP         | `ntp.go`             |
+| Timezone    | `timezone.go`        |
+| Service     | `service.go`         |
+| Package     | `package.go`         |
+| User        | `user.go`            |
+| Group       | `group.go`           |
+| Certificate | `certificate.go`     |
+| Process     | `process.go`         |
+| Power       | `power.go`           |
+| Log         | `log.go`             |
+| Health      | (used as gate)       |
 
 If no domain match exists, create a new `{domain}.go` file. Every
 operation must appear in at least one runnable example.

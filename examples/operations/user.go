@@ -19,18 +19,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 // Package main demonstrates user account management:
-// create a user, add an SSH key, list keys, remove the key, then
-// delete the user.
-//
-// Cleanup at the start ensures repeatability.
-//
-// DAG:
-//
-//	create-user
-//	    └── add-ssh-key
-//	            └── list-ssh-key
-//	                    └── remove-ssh-key
-//	                            └── delete-user
+// list → create → get → update → keys → change password → delete.
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run user.go
 package main
@@ -67,17 +56,26 @@ func main() {
 	oc.UserDelete("_any", username).ContinueOnError()
 	oc.Run(context.Background()) //nolint:errcheck
 
-	// Create user → add key → list keys → remove key → delete user.
+	// List → create → get → update → add key → list keys → remove key →
+	// change password → delete.
 	o := orchestrator.New(url, token)
+
+	userList := o.UserList("_any")
 
 	create := o.UserCreate("_any", osapi.UserCreateOpts{
 		Name:  username,
 		Shell: "/bin/bash",
-	})
+	}).After(userList)
+
+	get := o.UserGet("_any", username).After(create)
+
+	update := o.UserUpdate("_any", username, osapi.UserUpdateOpts{
+		Shell: "/bin/sh",
+	}).After(get).ContinueOnError()
 
 	addKey := o.UserAddKey("_any", username, osapi.SSHKeyAddOpts{
 		Key: sshKey,
-	}).After(create)
+	}).After(update)
 
 	listKeys := o.UserListKeys("_any", username).After(addKey)
 
@@ -86,7 +84,10 @@ func main() {
 	removeKey := o.UserRemoveKey("_any", username, "SHA256:example").
 		After(listKeys).ContinueOnError()
 
-	o.UserDelete("_any", username).After(removeKey)
+	chpass := o.UserChangePassword("_any", username, "temp-pass-123").
+		After(removeKey).ContinueOnError()
+
+	o.UserDelete("_any", username).After(chpass)
 
 	report, err := o.Run(context.Background())
 	if err != nil {

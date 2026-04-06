@@ -18,21 +18,10 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates agent drain/undrain for maintenance.
+// Package main demonstrates local group management:
+// list → create → get → update → delete.
 //
-// Discovers agents, then drains the first one (prevents new jobs),
-// runs a maintenance command, and undrains it. Uses OnError(Continue)
-// so repeated runs don't fail if the agent is already drained/undrained.
-//
-// DAG:
-//
-//	health-check
-//	    └── undrain-agent (cleanup, continue on error)
-//	            └── drain-agent
-//	                    └── run-maintenance
-//	                            └── undrain-agent
-//
-// Run with: OSAPI_TOKEN="<jwt>" go run agent-drain.go
+// Run with: OSAPI_TOKEN="<jwt>" go run group.go
 package main
 
 import (
@@ -57,45 +46,37 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
-	// Discover the first available agent.
-	o1 := orchestrator.New(url, token)
-	o1.AgentList()
+	const groupName = "osapi-example-group"
 
-	report1, err := o1.Run(context.Background())
+	// Cleanup any leftover group from a previous run.
+	oc := orchestrator.New(url, token)
+	oc.GroupDelete("_any", groupName).ContinueOnError()
+	oc.Run(context.Background()) //nolint:errcheck
+
+	// List → create → get → update → delete.
+	o := orchestrator.New(url, token)
+
+	list := o.GroupList("_any")
+
+	create := o.GroupCreate("_any", osapi.GroupCreateOpts{
+		Name: groupName,
+	}).After(list)
+
+	get := o.GroupGet("_any", groupName).After(create)
+
+	update := o.GroupUpdate("_any", groupName, osapi.GroupUpdateOpts{}).
+		After(get).ContinueOnError()
+
+	o.GroupDelete("_any", groupName).After(update)
+
+	report, err := o.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var agents osapi.AgentList
-	if err := report1.Decode("list-agents", &agents); err != nil || len(agents.Agents) == 0 {
-		log.Fatal("no agents registered")
-	}
-
-	host := os.Getenv("OSAPI_HOST")
-	if host == "" {
-		host = agents.Agents[0].Hostname
-	}
-
-	fmt.Printf("Target: %s\n\n", host)
-
-	// Cleanup: ensure the agent is undrained from any previous run.
-	oc := orchestrator.New(url, token)
-	oc.AgentUndrain(host).ContinueOnError()
-	oc.Run(context.Background()) //nolint:errcheck
-
-	// Drain → maintenance → undrain.
-	o2 := orchestrator.New(url, token)
-
-	inspect := o2.AgentGet(host)
-
-	drain := o2.AgentDrain(host).After(inspect)
-
-	maint := o2.CommandExec(host, "echo", "maintenance complete").
-		After(drain)
-
-	o2.AgentUndrain(host).After(maint)
-
-	if _, err := o2.Run(context.Background()); err != nil {
-		log.Fatal(err)
+	var info osapi.GroupInfoResult
+	if err := report.Decode("get-group", &info); err == nil && len(info.Groups) > 0 {
+		g := info.Groups[0]
+		fmt.Printf("Group %q: gid=%d\n", g.Name, g.GID)
 	}
 }

@@ -63,7 +63,16 @@ func main() {
 
 	list := o.InterfaceList("_any").ContinueOnError()
 
-	o.InterfaceGet("_any", iface).After(list).ContinueOnError()
+	get := o.InterfaceGet("_any", iface).After(list).ContinueOnError()
+
+	// Create → update → delete a test interface.
+	create := o.InterfaceCreate("_any", "osapi-test0", osapi.InterfaceConfigOpts{}).
+		After(get).ContinueOnError()
+
+	update := o.InterfaceUpdate("_any", "osapi-test0", osapi.InterfaceConfigOpts{}).
+		After(create).ContinueOnError()
+
+	o.InterfaceDelete("_any", "osapi-test0").After(update).ContinueOnError()
 
 	report, err := o.Run(context.Background())
 	if err != nil {

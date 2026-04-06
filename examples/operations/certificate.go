@@ -78,7 +78,11 @@ func main() {
 
 	list := o.CertificateList("_any").After(create)
 
-	o.CertificateDelete("_any", certName).After(list)
+	update := o.CertificateUpdate("_any", certName, osapi.CertificateUpdateOpts{
+		Object: "osapi-example-ca.pem",
+	}).After(list)
+
+	o.CertificateDelete("_any", certName).After(update)
 
 	report, err := o.Run(context.Background())
 	if err != nil {

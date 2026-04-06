@@ -63,16 +63,20 @@ func main() {
 	oc.PackageRemove("_any", pkg).ContinueOnError()
 	oc.Run(context.Background()) //nolint:errcheck
 
-	// Install → get → list updates → remove.
+	// List → install → get → list updates → update → remove.
 	o := orchestrator.New(url, token)
 
-	install := o.PackageInstall("_any", pkg).ContinueOnError()
+	list := o.PackageList("_any").ContinueOnError()
+
+	install := o.PackageInstall("_any", pkg).After(list).ContinueOnError()
 
 	get := o.PackageGet("_any", pkg).After(install).ContinueOnError()
 
 	updates := o.PackageListUpdates("_any").After(get).ContinueOnError()
 
-	o.PackageRemove("_any", pkg).After(updates).ContinueOnError()
+	update := o.PackageUpdate("_any").After(updates).ContinueOnError()
+
+	o.PackageRemove("_any", pkg).After(update).ContinueOnError()
 
 	report, err := o.Run(context.Background())
 	if err != nil {
