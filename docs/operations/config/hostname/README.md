@@ -4,10 +4,10 @@ Query and update the system hostname.
 
 ## Operations
 
-| Method                                                       | Description                    | Idempotent |
-| ------------------------------------------------------------ | ------------------------------ | ---------- |
-| [`NodeHostnameGet(target)`](get.md)                          | Get system hostname and labels | Read-only  |
-| [`NodeHostnameUpdate(target, hostname)`](update.md)          | Set system hostname            | Idempotent |
+| Method                                              | Description                    | Idempotent |
+| --------------------------------------------------- | ------------------------------ | ---------- |
+| [`NodeHostnameGet(target)`](get.md)                 | Get system hostname and labels | Read-only  |
+| [`NodeHostnameUpdate(target, hostname)`](update.md) | Set system hostname            | Idempotent |
 
 ## Permissions
 
