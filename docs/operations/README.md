@@ -23,17 +23,19 @@ error handling.
 
 | Domain                            | Operations | Description                     |
 | --------------------------------- | ---------- | ------------------------------- |
+| [Hostname](config/hostname/)      | 2          | Hostname query and update       |
 | [Sysctl](config/sysctl/)          | 5          | Kernel parameter management     |
 | [NTP](config/ntp/)                | 4          | NTP server configuration        |
 | [Timezone](config/timezone/)      | 2          | System timezone management      |
 
-### [System](system/)
+### [Node](node/)
 
-| Domain                            | Operations | Description                     |
-| --------------------------------- | ---------- | ------------------------------- |
-| [Power](system/power/)            | 2          | Reboot and shutdown             |
-| [Process](system/process/)        | 3          | Process listing, inspection, signals |
-| [Log](system/log/)                | 3          | Systemd journal queries         |
+| Domain                            | Operations | Description                              |
+| --------------------------------- | ---------- | ---------------------------------------- |
+| [Power](node/power/)              | 2          | Reboot and shutdown                      |
+| [Process](node/process/)          | 3          | Process listing, inspection, signals     |
+| [Log](node/log/)                  | 3          | Systemd journal queries                  |
+| Node                              | 5          | Status, load, uptime, OS                 |
 
 ### [Networking](networking/)
 
@@ -69,18 +71,23 @@ error handling.
 | --------------------------------- | ---------- | ------------------------------- |
 | [Command](cmd/command/)           | 2          | Direct exec, shell commands     |
 
-### [Management](management/)
+### [Hardware](hardware/)
 
 | Domain                            | Operations | Description                     |
 | --------------------------------- | ---------- | ------------------------------- |
-| [Agent](management/agent/)        | 4          | Discovery, inspection, drain    |
-| [Health](management/health/)      | 1          | Liveness check                  |
+| Hardware                          | 2          | Disk and memory queries         |
 
-### [Node Info](node-info/)
+### [Agent](agent/)
 
-| Domain                            | Operations | Description                              |
-| --------------------------------- | ---------- | ---------------------------------------- |
-| [Node](node-info/node/)           | 8          | Hostname, disk, memory, load, uptime, OS |
+| Domain                            | Operations | Description                     |
+| --------------------------------- | ---------- | ------------------------------- |
+| [Agent](agent/)                   | 4          | Discovery, inspection, drain    |
+
+### [Health](health/)
+
+| Domain                            | Operations | Description                     |
+| --------------------------------- | ---------- | ------------------------------- |
+| [Health](health/)                 | 1          | Liveness check                  |
 
 ## Idempotency
 
