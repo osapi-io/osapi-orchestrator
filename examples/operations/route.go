@@ -83,8 +83,8 @@ func main() {
 	if err := report.Decode("list-route", &routes); err == nil {
 		fmt.Printf("Routes on %s (%d):\n", iface, len(routes.Routes))
 		for _, r := range routes.Routes {
-			fmt.Printf("  %s via %s (metric: %d, managed: %v)\n",
-				r.Destination, r.Gateway, r.Metric, r.Managed)
+			fmt.Printf("  %s via %s (metric: %d)\n",
+				r.Destination, r.Gateway, r.Metric)
 		}
 	} else {
 		fmt.Println("Route management requires Netplan (Debian-family only)")
