@@ -83,8 +83,8 @@ func main() {
 	if err := report.Decode("list-interface", &ifaces); err == nil {
 		fmt.Printf("Network interfaces (%d):\n", len(ifaces.Interfaces))
 		for _, i := range ifaces.Interfaces {
-			fmt.Printf("  %s: ipv4=%s, state=%s, managed=%v\n",
-				i.Name, i.IPv4, i.State, i.Managed)
+			fmt.Printf("  %s: ipv4=%s, state=%s\n",
+				i.Name, i.IPv4, i.State)
 		}
 	} else {
 		fmt.Println("Interface management requires Netplan (Debian-family only)")
