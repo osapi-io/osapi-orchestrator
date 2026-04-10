@@ -75,7 +75,7 @@ func (s *DiscoverPublicTestSuite) SetupTest() {
 	s.ctx = context.Background()
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/agent", func(
+	mux.HandleFunc("/api/agent", func(
 		w http.ResponseWriter,
 		_ *http.Request,
 	) {
