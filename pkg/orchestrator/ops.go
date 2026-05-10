@@ -109,7 +109,8 @@ func (o *Orchestrator) NodeHostnameGet(
 				return nil, fmt.Errorf("get hostname: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.HostnameResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -143,7 +144,8 @@ func (o *Orchestrator) NodeHostnameUpdate(
 				return nil, fmt.Errorf("update hostname: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.HostnameUpdateResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -180,7 +182,8 @@ func (o *Orchestrator) NodeStatusGet(
 				return nil, fmt.Errorf("get status: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.NodeStatus) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -213,7 +216,8 @@ func (o *Orchestrator) NodeUptimeGet(
 				return nil, fmt.Errorf("get uptime: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.UptimeResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -246,7 +250,8 @@ func (o *Orchestrator) NodeDiskGet(
 				return nil, fmt.Errorf("get disk: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.DiskResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -279,7 +284,8 @@ func (o *Orchestrator) NodeMemoryGet(
 				return nil, fmt.Errorf("get memory: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.MemoryResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -312,7 +318,8 @@ func (o *Orchestrator) NodeLoadGet(
 				return nil, fmt.Errorf("get load: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.LoadResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -345,7 +352,8 @@ func (o *Orchestrator) NodeOSGet(
 				return nil, fmt.Errorf("get os: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.OSInfoResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -383,7 +391,8 @@ func (o *Orchestrator) NetworkDNSGet(
 				return nil, fmt.Errorf("get dns: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.DNSConfig) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -421,7 +430,8 @@ func (o *Orchestrator) NetworkDNSUpdate(
 				return nil, fmt.Errorf("update dns: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.DNSUpdateResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -455,7 +465,8 @@ func (o *Orchestrator) NetworkDNSDelete(
 				return nil, fmt.Errorf("delete dns: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.DNSDeleteResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -489,7 +500,8 @@ func (o *Orchestrator) NetworkPingDo(
 				return nil, fmt.Errorf("ping: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.PingResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -526,7 +538,8 @@ func (o *Orchestrator) InterfaceList(
 				return nil, fmt.Errorf("list interfaces: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.InterfaceListResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -559,7 +572,8 @@ func (o *Orchestrator) InterfaceGet(
 				return nil, fmt.Errorf("get interface: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.InterfaceGetResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -594,7 +608,8 @@ func (o *Orchestrator) InterfaceCreate(
 				return nil, fmt.Errorf("create interface: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.InterfaceMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -630,7 +645,8 @@ func (o *Orchestrator) InterfaceUpdate(
 				return nil, fmt.Errorf("update interface: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.InterfaceMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -665,7 +681,8 @@ func (o *Orchestrator) InterfaceDelete(
 				return nil, fmt.Errorf("delete interface: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.InterfaceMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -702,7 +719,8 @@ func (o *Orchestrator) RouteList(
 				return nil, fmt.Errorf("list routes: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.RouteListResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -735,7 +753,8 @@ func (o *Orchestrator) RouteGet(
 				return nil, fmt.Errorf("get route: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.RouteGetResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -769,7 +788,8 @@ func (o *Orchestrator) RouteCreate(
 				return nil, fmt.Errorf("create route: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.RouteMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -804,7 +824,8 @@ func (o *Orchestrator) RouteUpdate(
 				return nil, fmt.Errorf("update route: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.RouteMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -838,7 +859,8 @@ func (o *Orchestrator) RouteDelete(
 				return nil, fmt.Errorf("delete route: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.RouteMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -881,7 +903,8 @@ func (o *Orchestrator) CommandExec(
 				return nil, fmt.Errorf("exec command: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.CommandResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -923,7 +946,8 @@ func (o *Orchestrator) CommandShell(
 				return nil, fmt.Errorf("shell command: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.CommandResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -967,7 +991,8 @@ func (o *Orchestrator) FileDeploy(
 				return nil, fmt.Errorf("deploy file: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.FileDeployResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1003,7 +1028,8 @@ func (o *Orchestrator) FileStatusGet(
 				return nil, fmt.Errorf("file status: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.FileStatusResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1041,7 +1067,8 @@ func (o *Orchestrator) FileUndeploy(
 				return nil, fmt.Errorf("undeploy file: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.FileUndeployResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1166,7 +1193,8 @@ func (o *Orchestrator) DockerPull(
 				return nil, fmt.Errorf("docker pull: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.DockerPullResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1200,7 +1228,8 @@ func (o *Orchestrator) DockerCreate(
 				return nil, fmt.Errorf("docker create: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.DockerResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1234,7 +1263,8 @@ func (o *Orchestrator) DockerStart(
 				return nil, fmt.Errorf("docker start: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.DockerActionResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1269,7 +1299,8 @@ func (o *Orchestrator) DockerStop(
 				return nil, fmt.Errorf("docker stop: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.DockerActionResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1304,7 +1335,8 @@ func (o *Orchestrator) DockerRemove(
 				return nil, fmt.Errorf("docker remove: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.DockerActionResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1339,7 +1371,8 @@ func (o *Orchestrator) DockerExec(
 				return nil, fmt.Errorf("docker exec: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.DockerExecResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1373,7 +1406,8 @@ func (o *Orchestrator) DockerInspect(
 				return nil, fmt.Errorf("docker inspect: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.DockerDetailResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1407,7 +1441,8 @@ func (o *Orchestrator) DockerList(
 				return nil, fmt.Errorf("docker list: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.DockerListResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1448,7 +1483,8 @@ func (o *Orchestrator) DockerImageRemove(
 				return nil, fmt.Errorf("docker image remove: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.DockerActionResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1485,7 +1521,8 @@ func (o *Orchestrator) CronList(
 				return nil, fmt.Errorf("list cron: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.CronEntryResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1519,7 +1556,8 @@ func (o *Orchestrator) CronGet(
 				return nil, fmt.Errorf("get cron: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.CronEntryResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1553,7 +1591,8 @@ func (o *Orchestrator) CronCreate(
 				return nil, fmt.Errorf("create cron: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.CronMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1588,7 +1627,8 @@ func (o *Orchestrator) CronUpdate(
 				return nil, fmt.Errorf("update cron: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.CronMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1622,7 +1662,8 @@ func (o *Orchestrator) CronDelete(
 				return nil, fmt.Errorf("delete cron: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.CronMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1771,7 +1812,8 @@ func (o *Orchestrator) SysctlList(
 				return nil, fmt.Errorf("list sysctl: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.SysctlEntryResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1804,7 +1846,8 @@ func (o *Orchestrator) SysctlGet(
 				return nil, fmt.Errorf("get sysctl: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.SysctlEntryResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1837,7 +1880,8 @@ func (o *Orchestrator) SysctlCreate(
 				return nil, fmt.Errorf("create sysctl: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.SysctlMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1872,7 +1916,8 @@ func (o *Orchestrator) SysctlUpdate(
 				return nil, fmt.Errorf("update sysctl: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.SysctlMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1906,7 +1951,8 @@ func (o *Orchestrator) SysctlDelete(
 				return nil, fmt.Errorf("delete sysctl: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.SysctlMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1943,7 +1989,8 @@ func (o *Orchestrator) NTPGet(
 				return nil, fmt.Errorf("get ntp: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.NtpStatusResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -1976,7 +2023,8 @@ func (o *Orchestrator) NTPCreate(
 				return nil, fmt.Errorf("create ntp: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.NtpMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2010,7 +2058,8 @@ func (o *Orchestrator) NTPUpdate(
 				return nil, fmt.Errorf("update ntp: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.NtpMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2043,7 +2092,8 @@ func (o *Orchestrator) NTPDelete(
 				return nil, fmt.Errorf("delete ntp: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.NtpMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2080,7 +2130,8 @@ func (o *Orchestrator) TimezoneGet(
 				return nil, fmt.Errorf("get timezone: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.TimezoneResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2113,7 +2164,8 @@ func (o *Orchestrator) TimezoneUpdate(
 				return nil, fmt.Errorf("update timezone: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.TimezoneMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2150,7 +2202,8 @@ func (o *Orchestrator) ServiceList(
 				return nil, fmt.Errorf("list services: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.ServiceInfoResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2183,7 +2236,8 @@ func (o *Orchestrator) ServiceGet(
 				return nil, fmt.Errorf("get service: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.ServiceGetResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2216,7 +2270,8 @@ func (o *Orchestrator) ServiceCreate(
 				return nil, fmt.Errorf("create service: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.ServiceMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2251,7 +2306,8 @@ func (o *Orchestrator) ServiceUpdate(
 				return nil, fmt.Errorf("update service: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.ServiceMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2285,7 +2341,8 @@ func (o *Orchestrator) ServiceDelete(
 				return nil, fmt.Errorf("delete service: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.ServiceMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2319,7 +2376,8 @@ func (o *Orchestrator) ServiceStart(
 				return nil, fmt.Errorf("start service: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.ServiceMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2353,7 +2411,8 @@ func (o *Orchestrator) ServiceStop(
 				return nil, fmt.Errorf("stop service: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.ServiceMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2387,7 +2446,8 @@ func (o *Orchestrator) ServiceRestart(
 				return nil, fmt.Errorf("restart service: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.ServiceMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2421,7 +2481,8 @@ func (o *Orchestrator) ServiceEnable(
 				return nil, fmt.Errorf("enable service: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.ServiceMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2455,7 +2516,8 @@ func (o *Orchestrator) ServiceDisable(
 				return nil, fmt.Errorf("disable service: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.ServiceMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2492,7 +2554,8 @@ func (o *Orchestrator) PackageList(
 				return nil, fmt.Errorf("list packages: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.PackageInfoResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2525,7 +2588,8 @@ func (o *Orchestrator) PackageGet(
 				return nil, fmt.Errorf("get package: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.PackageInfoResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2558,7 +2622,8 @@ func (o *Orchestrator) PackageInstall(
 				return nil, fmt.Errorf("install package: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.PackageMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2592,7 +2657,8 @@ func (o *Orchestrator) PackageRemove(
 				return nil, fmt.Errorf("remove package: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.PackageMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2625,7 +2691,8 @@ func (o *Orchestrator) PackageUpdate(
 				return nil, fmt.Errorf("update packages: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.PackageMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2658,7 +2725,8 @@ func (o *Orchestrator) PackageListUpdates(
 				return nil, fmt.Errorf("list package updates: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.PackageUpdateResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2694,7 +2762,8 @@ func (o *Orchestrator) UserList(
 				return nil, fmt.Errorf("list users: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.UserInfoResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2727,7 +2796,8 @@ func (o *Orchestrator) UserGet(
 				return nil, fmt.Errorf("get user: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.UserInfoResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2760,7 +2830,8 @@ func (o *Orchestrator) UserCreate(
 				return nil, fmt.Errorf("create user: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.UserMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2795,7 +2866,8 @@ func (o *Orchestrator) UserUpdate(
 				return nil, fmt.Errorf("update user: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.UserMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2829,7 +2901,8 @@ func (o *Orchestrator) UserDelete(
 				return nil, fmt.Errorf("delete user: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.UserMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2863,7 +2936,8 @@ func (o *Orchestrator) UserListKeys(
 				return nil, fmt.Errorf("list ssh keys: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.SSHKeyInfoResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2897,7 +2971,8 @@ func (o *Orchestrator) UserAddKey(
 				return nil, fmt.Errorf("add ssh key: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.SSHKeyMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2932,7 +3007,8 @@ func (o *Orchestrator) UserRemoveKey(
 				return nil, fmt.Errorf("remove ssh key: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.SSHKeyMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -2967,7 +3043,8 @@ func (o *Orchestrator) UserChangePassword(
 				return nil, fmt.Errorf("change password: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.UserMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3004,7 +3081,8 @@ func (o *Orchestrator) GroupList(
 				return nil, fmt.Errorf("list groups: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.GroupInfoResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3037,7 +3115,8 @@ func (o *Orchestrator) GroupGet(
 				return nil, fmt.Errorf("get group: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.GroupInfoResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3070,7 +3149,8 @@ func (o *Orchestrator) GroupCreate(
 				return nil, fmt.Errorf("create group: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.GroupMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3105,7 +3185,8 @@ func (o *Orchestrator) GroupUpdate(
 				return nil, fmt.Errorf("update group: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.GroupMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3139,7 +3220,8 @@ func (o *Orchestrator) GroupDelete(
 				return nil, fmt.Errorf("delete group: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.GroupMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3176,7 +3258,8 @@ func (o *Orchestrator) CertificateList(
 				return nil, fmt.Errorf("list certificates: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.CertificateCAResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3209,7 +3292,8 @@ func (o *Orchestrator) CertificateCreate(
 				return nil, fmt.Errorf("create certificate: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.CertificateCAMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3244,7 +3328,8 @@ func (o *Orchestrator) CertificateUpdate(
 				return nil, fmt.Errorf("update certificate: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.CertificateCAMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3278,7 +3363,8 @@ func (o *Orchestrator) CertificateDelete(
 				return nil, fmt.Errorf("delete certificate: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.CertificateCAMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3315,7 +3401,8 @@ func (o *Orchestrator) ProcessList(
 				return nil, fmt.Errorf("list processes: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.ProcessInfoResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3348,7 +3435,8 @@ func (o *Orchestrator) ProcessGet(
 				return nil, fmt.Errorf("get process: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.ProcessInfoResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3382,7 +3470,8 @@ func (o *Orchestrator) ProcessSignal(
 				return nil, fmt.Errorf("signal process: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.ProcessSignalResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3420,7 +3509,8 @@ func (o *Orchestrator) PowerReboot(
 				return nil, fmt.Errorf("reboot: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.PowerResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3454,7 +3544,8 @@ func (o *Orchestrator) PowerShutdown(
 				return nil, fmt.Errorf("shutdown: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.PowerResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3492,7 +3583,8 @@ func (o *Orchestrator) LogQuery(
 				return nil, fmt.Errorf("query log: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.LogEntryResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3524,7 +3616,8 @@ func (o *Orchestrator) LogSources(
 				return nil, fmt.Errorf("list log sources: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.LogSourceResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
@@ -3558,7 +3651,8 @@ func (o *Orchestrator) LogQueryUnit(
 				return nil, fmt.Errorf("query log unit: %w", err)
 			}
 
-			return engine.CollectionResult(resp.Data, resp.RawJSON(),
+			return engine.CollectionResult(
+				resp.Data, resp.RawJSON(),
 				func(r osapi.LogEntryResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
