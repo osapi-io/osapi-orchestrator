@@ -67,7 +67,8 @@ func main() {
 	fmt.Printf("Found %d agents matching all predicates\n", len(agents))
 
 	for _, a := range agents {
-		fmt.Printf("  %s (%s %s, %d CPUs)\n",
+		fmt.Printf(
+			"  %s (%s %s, %d CPUs)\n",
 			a.Hostname,
 			a.OSInfo.Distribution,
 			a.Architecture,
