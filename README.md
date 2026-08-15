@@ -28,7 +28,40 @@ As a library dependency:
 go get github.com/osapi-io/osapi-orchestrator
 ```
 
-## 🎯 Targeting
+## ✨ Features
+
+The orchestrator provides a declarative DSL for composing operations into
+DAG-based plans with typed results, guards, retry, and discovery.
+
+| Feature                                            | Description                                    |
+| -------------------------------------------------- | ---------------------------------------------- |
+| [Step Chaining](docs/features/basic.md)            | Sequential and parallel DAG execution          |
+| [Guards](docs/features/guards.md)                  | Conditional execution (When, OnlyIfChanged...) |
+| [Error Recovery](docs/features/error-recovery.md)  | Continue strategy with OnlyIfFailed cleanup    |
+| [Broadcast](docs/features/broadcast.md)            | Per-host results from `_all`/label targets     |
+| [Host Status](docs/features/guards.md)             | Skipped and failed detection per host          |
+| [Retry](docs/features/retry.md)                    | Automatic retry with exponential backoff       |
+| [Discovery](docs/features/discovery.md)            | Find agents by OS, arch, labels, conditions    |
+| [File Workflow](docs/features/file-workflow.md)    | Upload, deploy, drift detection, undeploy      |
+| [Result Decode](docs/features/result-decode.md)    | Typed struct decoding from step results        |
+| [TaskFunc](docs/features/task-func.md)             | Custom logic with access to prior results      |
+
+See the [DSL reference](docs/features/README.md) for guards, predicates, error
+strategies, and typed result tables.
+
+## 📋 Examples
+
+Runnable examples in [examples/operations/](examples/operations/) (per-domain
+workflows) and [examples/features/](examples/features/) (DSL features). Run
+with:
+
+    OSAPI_TOKEN="<jwt>" go run examples/features/basic.go
+
+## 📖 Documentation
+
+See the [package documentation][] on pkg.go.dev for API details.
+
+## 🧭 Targeting
 
 Most operations accept a `target` parameter to control which agents receive
 the request:
@@ -70,44 +103,10 @@ the request:
 | Agent       | [4 operations](docs/operations/agent/)                 | [agent-drain.go](examples/operations/agent-drain.go)         |
 | Health      | [1 operation](docs/operations/health/)                 | [basic.go](examples/features/basic.go)                       |
 
-## ✨ Features
-
-The orchestrator provides a declarative DSL for composing operations into
-DAG-based plans with typed results, guards, retry, and discovery.
-
-| Feature                                            | Description                                    |
-| -------------------------------------------------- | ---------------------------------------------- |
-| [Step Chaining](docs/features/basic.md)            | Sequential and parallel DAG execution          |
-| [Guards](docs/features/guards.md)                  | Conditional execution (When, OnlyIfChanged...) |
-| [Error Recovery](docs/features/error-recovery.md)  | Continue strategy with OnlyIfFailed cleanup    |
-| [Broadcast](docs/features/broadcast.md)            | Per-host results from `_all`/label targets     |
-| [Host Status](docs/features/guards.md)             | Skipped and failed detection per host          |
-| [Retry](docs/features/retry.md)                    | Automatic retry with exponential backoff       |
-| [Discovery](docs/features/discovery.md)            | Find agents by OS, arch, labels, conditions    |
-| [File Workflow](docs/features/file-workflow.md)    | Upload, deploy, drift detection, undeploy      |
-| [Result Decode](docs/features/result-decode.md)    | Typed struct decoding from step results        |
-| [TaskFunc](docs/features/task-func.md)             | Custom logic with access to prior results      |
-
-See the [DSL reference](docs/features/README.md) for guards, predicates, error
-strategies, and typed result tables.
-
-## 📖 Documentation
-
-See the [package documentation][] on pkg.go.dev for API details.
-
-## 📋 Examples
-
-Runnable examples in [examples/operations/](examples/operations/) (per-domain
-workflows) and [examples/features/](examples/features/) (DSL features). Run
-with:
-
-    OSAPI_TOKEN="<jwt>" go run examples/features/basic.go
-
 ## 🤝 Contributing
 
-See the [Development](docs/development.md) guide for prerequisites, setup,
-and conventions. See the [Contributing](docs/contributing.md) guide before
-submitting a PR.
+See the [Contributing](CONTRIBUTING.md) guide for prerequisites, setup,
+conventions, and the PR workflow.
 
 ## 📄 License
 
