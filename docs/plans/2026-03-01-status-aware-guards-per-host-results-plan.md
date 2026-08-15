@@ -24,7 +24,7 @@ charmbracelet/lipgloss
 - `osapi-io/osapi-sdk` — Tasks 1-5
 - `osapi-io/osapi-orchestrator` — Tasks 6-14
 
----
+______________________________________________________________________
 
 ## Task 1: Add Status Field to SDK Result
 
@@ -89,7 +89,7 @@ git add pkg/orchestrator/result.go pkg/orchestrator/result_test.go
 git commit -m "feat(orchestrator): add Status field to Result"
 ```
 
----
+______________________________________________________________________
 
 ## Task 2: Always Store Results in Runner
 
@@ -290,7 +290,7 @@ git add pkg/orchestrator/runner.go pkg/orchestrator/runner_test.go
 git commit -m "feat(orchestrator): always store Result for skipped and failed tasks"
 ```
 
----
+______________________________________________________________________
 
 ## Task 3: Add HostResult Type to SDK
 
@@ -380,7 +380,7 @@ git add pkg/orchestrator/result.go pkg/orchestrator/result_test.go
 git commit -m "feat(orchestrator): add HostResult type for broadcast results"
 ```
 
----
+______________________________________________________________________
 
 ## Task 4: Extract Per-Host Results and Handle Non-Zero Exit in Runner
 
@@ -529,7 +529,7 @@ git add pkg/orchestrator/runner.go pkg/orchestrator/task.go pkg/orchestrator/run
 git commit -m "feat(orchestrator): per-host result extraction and non-zero exit handling"
 ```
 
----
+______________________________________________________________________
 
 ## Task 5: Add TaskFnWithResults and Data on TaskResult to SDK
 
@@ -716,7 +716,7 @@ git add pkg/orchestrator/task.go pkg/orchestrator/result.go pkg/orchestrator/run
 git commit -m "feat(orchestrator): add TaskFnWithResults and Data on TaskResult"
 ```
 
----
+______________________________________________________________________
 
 ## Task 6: Update osapi-sdk Dependency in Orchestrator
 
@@ -743,7 +743,7 @@ git add go.mod go.sum
 git commit -m "chore(deps): update osapi-sdk with status-aware results"
 ```
 
----
+______________________________________________________________________
 
 ## Task 7: Add TaskStatus Type and Results.Status()
 
@@ -893,7 +893,7 @@ git add pkg/orchestrator/result.go pkg/orchestrator/result_public_test.go
 git commit -m "feat(orchestrator): add TaskStatus type and Results.Status()"
 ```
 
----
+______________________________________________________________________
 
 ## Task 8: Add OnlyIfFailed and OnlyIfAllChanged
 
@@ -989,7 +989,7 @@ git add pkg/orchestrator/step.go pkg/orchestrator/step_public_test.go
 git commit -m "feat(orchestrator): add OnlyIfFailed and OnlyIfAllChanged"
 ```
 
----
+______________________________________________________________________
 
 ## Task 9: Add HostResult Type and Results.HostResults()
 
@@ -1192,7 +1192,7 @@ git add pkg/orchestrator/result.go pkg/orchestrator/result_public_test.go
 git commit -m "feat(orchestrator): add HostResult type and Results.HostResults()"
 ```
 
----
+______________________________________________________________________
 
 ## Task 10: Add Error Field to Result Types
 
@@ -1300,7 +1300,7 @@ git add pkg/orchestrator/result_types.go pkg/orchestrator/result_public_test.go
 git commit -m "feat(orchestrator): add Error field to result types"
 ```
 
----
+______________________________________________________________________
 
 ## Task 11: Add TaskFunc and Report.Decode to Orchestrator
 
@@ -1463,7 +1463,7 @@ git add pkg/orchestrator/orchestrator.go pkg/orchestrator/result.go pkg/orchestr
 git commit -m "feat(orchestrator): add TaskFunc with Results and Report.Decode()"
 ```
 
----
+______________________________________________________________________
 
 ## Task 12: Add WithVerbose Option
 
@@ -1610,7 +1610,7 @@ git add pkg/orchestrator/options.go pkg/orchestrator/orchestrator.go \
 git commit -m "feat(orchestrator): add WithVerbose option"
 ```
 
----
+______________________________________________________________________
 
 ## Task 13: Update Renderer for Failure Detail and Verbose Output
 
@@ -1816,7 +1816,7 @@ git add pkg/orchestrator/renderer_lipgloss.go pkg/orchestrator/renderer_lipgloss
 git commit -m "feat(orchestrator): show failure detail and verbose output in renderer"
 ```
 
----
+______________________________________________________________________
 
 ## Task 14: Final Verification
 

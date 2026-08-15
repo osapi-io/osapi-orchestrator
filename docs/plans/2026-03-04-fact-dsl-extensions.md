@@ -15,7 +15,7 @@ query agents synchronously at plan-build time. One new `Step` method
 
 **Tech Stack:** Go, testify/suite, osapi-sdk
 
----
+______________________________________________________________________
 
 ### Task 1: Store URL and Token on Orchestrator
 
@@ -63,7 +63,7 @@ pass.
 feat(orchestrator): store url and token on Orchestrator
 ```
 
----
+______________________________________________________________________
 
 ### Task 2: Add Predicate Type and Helpers
 
@@ -528,7 +528,7 @@ Run: `just go-vet` Expected: No lint errors.
 feat(orchestrator): add Predicate type and helpers
 ```
 
----
+______________________________________________________________________
 
 ### Task 3: Add Discover Method
 
@@ -817,7 +817,7 @@ tests pass, no lint errors.
 feat(orchestrator): add Discover method
 ```
 
----
+______________________________________________________________________
 
 ### Task 4: Add GroupByFact Method
 
@@ -1116,7 +1116,7 @@ pass.
 feat(orchestrator): add GroupByFact method
 ```
 
----
+______________________________________________________________________
 
 ### Task 5: Add WhenFact Step Method
 
@@ -1256,7 +1256,7 @@ pass.
 feat(orchestrator): add WhenFact step method
 ```
 
----
+______________________________________________________________________
 
 ### Task 6: Add Examples
 
@@ -1651,7 +1651,7 @@ Run: `just go-vet` Expected: No lint errors.
 feat(examples): add discover, group-by-fact, when-fact, and fact-predicates examples
 ```
 
----
+______________________________________________________________________
 
 ### Task 7: Update README
 
@@ -1805,7 +1805,7 @@ Run: `just go-vet` Expected: No lint errors.
 docs(readme): add discovery, predicates, and categorized examples
 ```
 
----
+______________________________________________________________________
 
 ### Task 8: Final Verification
 

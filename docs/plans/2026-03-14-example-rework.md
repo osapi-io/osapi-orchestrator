@@ -20,7 +20,7 @@ idempotency. Dangerous operations use `OnError(Continue)`.
 **Commits:** Per-task commits during development. Squash into 1-3 commits before
 PR (one per chunk, or a single squash) per project conventions.
 
----
+______________________________________________________________________
 
 ## Chunk 1: Operations Examples
 
@@ -82,6 +82,7 @@ Expected:
 
 - Phase 1: both steps show `changed=true`, uptime stdout printed, uname stdout
   printed
+
 - Phase 2: ls step shows `changed=true` with error, Error/ExitCode printed
 
 - [ ] **Step 3: Commit**
@@ -186,6 +187,7 @@ Run:
 Expected:
 
 - Phase 2: upload and deploy show `changed=true`, status shows `in-sync`
+
 - Phase 3: upload and deploy show `changed=false`, status still `in-sync`
 
 - [ ] **Step 3: Commit**
@@ -241,6 +243,7 @@ Run:
 Expected:
 
 - Phase 2: check-file shows `changed=false`, upload/deploy show `[skip]`
+
 - Phase 3: check-file shows `changed=true`, upload/deploy show `changed=true`
 
 - [ ] **Step 3: Commit**
@@ -250,7 +253,7 @@ git add examples/operations/file-changed.go
 git commit -m "docs(examples): rewrite file-changed.go to show drift detection both ways"
 ```
 
----
+______________________________________________________________________
 
 ## Chunk 2: Features Examples — Guards and Error Handling
 
@@ -406,6 +409,7 @@ Run:
 Expected:
 
 - Plan 1: whoami runs (3 tasks, 1 changed, 2 unchanged)
+
 - Plan 2: whoami is skipped (3 tasks, 2 unchanged, 1 skipped)
 
 - [ ] **Step 3: Commit**
@@ -464,6 +468,7 @@ Run:
 Expected:
 
 - Phase 2: deploy `changed=true`, post-deploy runs
+
 - Phase 3: deploy `changed=false`, post-deploy `[skip]`
 
 - [ ] **Step 3: Commit**
@@ -526,6 +531,7 @@ Run:
 Expected:
 
 - Plan 1: deploy shows `[failed]`, cleanup runs
+
 - Plan 2: deploy shows `[changed]` with host error, cleanup runs
 
 - [ ] **Step 3: Commit**
@@ -590,7 +596,7 @@ git add examples/features/broadcast-guards.go
 git commit -m "docs(examples): trigger real host failure in broadcast-guards.go"
 ```
 
----
+______________________________________________________________________
 
 ## Chunk 3: Features Examples — TaskFunc and Minor Tweaks
 
