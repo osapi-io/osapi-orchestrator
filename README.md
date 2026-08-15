@@ -12,9 +12,9 @@
 
 # OSAPI Orchestrator
 
-A Go package for orchestrating operations across [OSAPI][]-managed hosts --
-typed operations, chaining, conditions, and result decoding built on top
-of the [osapi-sdk][] engine.
+A Go package for orchestrating operations across [OSAPI]-managed hosts -- typed
+operations, chaining, conditions, and result decoding built on top of the
+[osapi-sdk] engine.
 
 ## 📦 Install
 
@@ -33,18 +33,18 @@ go get github.com/osapi-io/osapi-orchestrator
 The orchestrator provides a declarative DSL for composing operations into
 DAG-based plans with typed results, guards, retry, and discovery.
 
-| Feature                                            | Description                                    |
-| -------------------------------------------------- | ---------------------------------------------- |
-| [Step Chaining](docs/features/basic.md)            | Sequential and parallel DAG execution          |
-| [Guards](docs/features/guards.md)                  | Conditional execution (When, OnlyIfChanged...) |
-| [Error Recovery](docs/features/error-recovery.md)  | Continue strategy with OnlyIfFailed cleanup    |
-| [Broadcast](docs/features/broadcast.md)            | Per-host results from `_all`/label targets     |
-| [Host Status](docs/features/guards.md)             | Skipped and failed detection per host          |
-| [Retry](docs/features/retry.md)                    | Automatic retry with exponential backoff       |
-| [Discovery](docs/features/discovery.md)            | Find agents by OS, arch, labels, conditions    |
-| [File Workflow](docs/features/file-workflow.md)    | Upload, deploy, drift detection, undeploy      |
-| [Result Decode](docs/features/result-decode.md)    | Typed struct decoding from step results        |
-| [TaskFunc](docs/features/task-func.md)             | Custom logic with access to prior results      |
+| Feature                                           | Description                                    |
+| ------------------------------------------------- | ---------------------------------------------- |
+| [Step Chaining](docs/features/basic.md)           | Sequential and parallel DAG execution          |
+| [Guards](docs/features/guards.md)                 | Conditional execution (When, OnlyIfChanged...) |
+| [Error Recovery](docs/features/error-recovery.md) | Continue strategy with OnlyIfFailed cleanup    |
+| [Broadcast](docs/features/broadcast.md)           | Per-host results from `_all`/label targets     |
+| [Host Status](docs/features/guards.md)            | Skipped and failed detection per host          |
+| [Retry](docs/features/retry.md)                   | Automatic retry with exponential backoff       |
+| [Discovery](docs/features/discovery.md)           | Find agents by OS, arch, labels, conditions    |
+| [File Workflow](docs/features/file-workflow.md)   | Upload, deploy, drift detection, undeploy      |
+| [Result Decode](docs/features/result-decode.md)   | Typed struct decoding from step results        |
+| [TaskFunc](docs/features/task-func.md)            | Custom logic with access to prior results      |
 
 See the [DSL reference](docs/features/README.md) for guards, predicates, error
 strategies, and typed result tables.
@@ -55,16 +55,18 @@ Runnable examples in [examples/operations/](examples/operations/) (per-domain
 workflows) and [examples/features/](examples/features/) (DSL features). Run
 with:
 
-    OSAPI_TOKEN="<jwt>" go run examples/features/basic.go
+```
+OSAPI_TOKEN="<jwt>" go run examples/features/basic.go
+```
 
 ## 📖 Documentation
 
-See the [package documentation][] on pkg.go.dev for API details.
+See the [package documentation] on pkg.go.dev for API details.
 
 ## 🧭 Targeting
 
-Most operations accept a `target` parameter to control which agents receive
-the request:
+Most operations accept a `target` parameter to control which agents receive the
+request:
 
 | Target      | Behavior                                    |
 | ----------- | ------------------------------------------- |
@@ -77,31 +79,31 @@ the request:
 
 101 typed constructors across 23 domains:
 
-| Domain      | Docs                                                   | Example                                                      |
-| ----------- | ------------------------------------------------------ | ------------------------------------------------------------ |
-| Node        | [4 operations](docs/operations/node/)                  | [node-info.go](examples/operations/node-info.go)             |
-| Hostname    | [2 operations](docs/operations/config/hostname/)       | [hostname-update.go](examples/operations/hostname-update.go) |
-| Hardware    | [2 operations](docs/operations/hardware/node/)         | [node-info.go](examples/operations/node-info.go)             |
-| Network     | [4 operations](docs/operations/networking/network/)    | [dns-update.go](examples/operations/dns-update.go)           |
-| Interface   | [5 operations](docs/operations/networking/interface/)  | [interface.go](examples/operations/interface.go)             |
-| Route       | [5 operations](docs/operations/networking/route/)      | [route.go](examples/operations/route.go)                     |
-| Command     | [2 operations](docs/operations/cmd/command/)           | [command.go](examples/operations/command.go)                 |
-| Docker      | [9 operations](docs/operations/containers/docker/)     | [docker.go](examples/operations/docker.go)                   |
-| Cron        | [5 operations](docs/operations/services/cron/)         | [cron.go](examples/operations/cron.go)                       |
-| Sysctl      | [5 operations](docs/operations/config/sysctl/)         | [sysctl.go](examples/operations/sysctl.go)                   |
-| NTP         | [4 operations](docs/operations/config/ntp/)            | [ntp.go](examples/operations/ntp.go)                         |
-| Timezone    | [2 operations](docs/operations/config/timezone/)       | [timezone.go](examples/operations/timezone.go)               |
-| Service     | [10 operations](docs/operations/services/service/)     | [service.go](examples/operations/service.go)                 |
-| Package     | [6 operations](docs/operations/software/package/)      | [package.go](examples/operations/package.go)                 |
-| User        | [9 operations](docs/operations/security/user/)         | [user.go](examples/operations/user.go)                       |
-| Group       | [5 operations](docs/operations/security/group/)        | [group.go](examples/operations/group.go)                     |
-| Certificate | [4 operations](docs/operations/security/certificate/)  | [certificate.go](examples/operations/certificate.go)         |
-| Process     | [3 operations](docs/operations/node/process/)          | [process.go](examples/operations/process.go)                 |
-| Power       | [2 operations](docs/operations/node/power/)            | [power.go](examples/operations/power.go)                     |
-| Log         | [3 operations](docs/operations/node/log/)              | [log.go](examples/operations/log.go)                         |
-| File        | [5 operations](docs/operations/files/file/)            | [file-deploy.go](examples/operations/file-deploy.go)         |
-| Agent       | [4 operations](docs/operations/agent/)                 | [agent-drain.go](examples/operations/agent-drain.go)         |
-| Health      | [1 operation](docs/operations/health/)                 | [basic.go](examples/features/basic.go)                       |
+| Domain      | Docs                                                  | Example                                                      |
+| ----------- | ----------------------------------------------------- | ------------------------------------------------------------ |
+| Node        | [4 operations](docs/operations/node/)                 | [node-info.go](examples/operations/node-info.go)             |
+| Hostname    | [2 operations](docs/operations/config/hostname/)      | [hostname-update.go](examples/operations/hostname-update.go) |
+| Hardware    | [2 operations](docs/operations/hardware/node/)        | [node-info.go](examples/operations/node-info.go)             |
+| Network     | [4 operations](docs/operations/networking/network/)   | [dns-update.go](examples/operations/dns-update.go)           |
+| Interface   | [5 operations](docs/operations/networking/interface/) | [interface.go](examples/operations/interface.go)             |
+| Route       | [5 operations](docs/operations/networking/route/)     | [route.go](examples/operations/route.go)                     |
+| Command     | [2 operations](docs/operations/cmd/command/)          | [command.go](examples/operations/command.go)                 |
+| Docker      | [9 operations](docs/operations/containers/docker/)    | [docker.go](examples/operations/docker.go)                   |
+| Cron        | [5 operations](docs/operations/services/cron/)        | [cron.go](examples/operations/cron.go)                       |
+| Sysctl      | [5 operations](docs/operations/config/sysctl/)        | [sysctl.go](examples/operations/sysctl.go)                   |
+| NTP         | [4 operations](docs/operations/config/ntp/)           | [ntp.go](examples/operations/ntp.go)                         |
+| Timezone    | [2 operations](docs/operations/config/timezone/)      | [timezone.go](examples/operations/timezone.go)               |
+| Service     | [10 operations](docs/operations/services/service/)    | [service.go](examples/operations/service.go)                 |
+| Package     | [6 operations](docs/operations/software/package/)     | [package.go](examples/operations/package.go)                 |
+| User        | [9 operations](docs/operations/security/user/)        | [user.go](examples/operations/user.go)                       |
+| Group       | [5 operations](docs/operations/security/group/)       | [group.go](examples/operations/group.go)                     |
+| Certificate | [4 operations](docs/operations/security/certificate/) | [certificate.go](examples/operations/certificate.go)         |
+| Process     | [3 operations](docs/operations/node/process/)         | [process.go](examples/operations/process.go)                 |
+| Power       | [2 operations](docs/operations/node/power/)           | [power.go](examples/operations/power.go)                     |
+| Log         | [3 operations](docs/operations/node/log/)             | [log.go](examples/operations/log.go)                         |
+| File        | [5 operations](docs/operations/files/file/)           | [file-deploy.go](examples/operations/file-deploy.go)         |
+| Agent       | [4 operations](docs/operations/agent/)                | [agent-drain.go](examples/operations/agent-drain.go)         |
+| Health      | [1 operation](docs/operations/health/)                | [basic.go](examples/features/basic.go)                       |
 
 ## 🤝 Contributing
 
@@ -110,9 +112,9 @@ conventions, and the PR workflow.
 
 ## 📄 License
 
-The [MIT][] License.
+The [MIT] License.
 
-[OSAPI]: https://github.com/osapi-io/osapi
+[mit]: LICENSE
+[osapi]: https://github.com/osapi-io/osapi
 [osapi-sdk]: https://github.com/osapi-io/osapi/tree/main/pkg/sdk
 [package documentation]: https://pkg.go.dev/github.com/osapi-io/osapi-orchestrator/pkg/orchestrator
-[MIT]: LICENSE

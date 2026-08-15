@@ -17,7 +17,7 @@ constructors for all missing SDK operations.
 
 **Tech Stack:** Go 1.25, osapi SDK, testify/suite, lipgloss
 
----
+______________________________________________________________________
 
 ## File Structure
 
@@ -61,7 +61,7 @@ constructors for all missing SDK operations.
 - `examples/operations/cron.go`
 - `examples/features/host-status.go`
 
----
+______________________________________________________________________
 
 ### Task 1: Update SDK dependency
 
@@ -107,15 +107,18 @@ git add go.mod go.sum
 git commit -m "chore: bump osapi SDK to pick up HostResult.Status"
 ```
 
----
+______________________________________________________________________
 
 ### Task 2: Add host status constants and Status field to HostResult
 
 **Files:**
 
 - Create: `pkg/orchestrator/host_status.go`
+
 - Create: `pkg/orchestrator/host_status_public_test.go`
+
 - Modify: `pkg/orchestrator/result.go`
+
 - Modify: `pkg/orchestrator/result_public_test.go`
 
 - [ ] **Step 1: Write the test for host status constants**
@@ -295,13 +298,14 @@ git add pkg/orchestrator/host_status.go pkg/orchestrator/host_status_public_test
 git commit -m "feat: add host status constants and Status field to HostResult"
 ```
 
----
+______________________________________________________________________
 
 ### Task 3: Fix guards to use Status instead of Error
 
 **Files:**
 
 - Modify: `pkg/orchestrator/step.go`
+
 - Modify: `pkg/orchestrator/step_public_test.go` (or the file containing guard
   tests)
 
@@ -441,13 +445,14 @@ git add pkg/orchestrator/step.go pkg/orchestrator/step_public_test.go
 git commit -m "fix: guards check Status instead of Error to exclude skipped hosts"
 ```
 
----
+______________________________________________________________________
 
 ### Task 4: Add OnlyIfAnyHostSkipped guard
 
 **Files:**
 
 - Modify: `pkg/orchestrator/step.go`
+
 - Modify: `pkg/orchestrator/step_public_test.go`
 
 - [ ] **Step 1: Write tests for OnlyIfAnyHostSkipped**
@@ -455,9 +460,13 @@ git commit -m "fix: guards check Status instead of Error to exclude skipped host
 Add test cases:
 
 - Returns false when no dependencies
+
 - Returns false when no host results
+
 - Returns false when all hosts are ok
+
 - Returns true when any host has `Status: "skipped"`
+
 - Returns false when hosts are failed but not skipped
 
 - [ ] **Step 2: Run tests to verify they fail**
@@ -519,13 +528,14 @@ git add pkg/orchestrator/step.go pkg/orchestrator/step_public_test.go
 git commit -m "feat: add OnlyIfAnyHostSkipped guard for broadcast operations"
 ```
 
----
+______________________________________________________________________
 
 ### Task 5: Fix renderer to use Status
 
 **Files:**
 
 - Modify: `pkg/orchestrator/renderer_lipgloss.go`
+
 - Modify: `pkg/orchestrator/renderer_lipgloss_test.go`
 
 - [ ] **Step 1: Write test for skipped host rendering**
@@ -585,13 +595,14 @@ git add pkg/orchestrator/renderer_lipgloss.go pkg/orchestrator/renderer_lipgloss
 git commit -m "fix: renderer shows skipped status in yellow, distinct from failed"
 ```
 
----
+______________________________________________________________________
 
 ### Task 6: Add Status to all existing mappers in ops.go
 
 **Files:**
 
 - Modify: `pkg/orchestrator/ops.go`
+
 - Modify: `pkg/orchestrator/ops_public_test.go`
 
 - [ ] **Step 1: Add `Status: r.Status` to every `sdk.HostResult{}` in ops.go**
@@ -599,15 +610,15 @@ git commit -m "fix: renderer shows skipped status in yellow, distinct from faile
 There are 18 mappers that create `sdk.HostResult{}` in ops.go. Each needs
 `Status: r.Status` added between Hostname and Changed. The operations are:
 
-1. NodeHostnameGet
-2. NodeStatusGet
-3. NodeUptimeGet
-4. NodeDiskGet
-5. NodeMemoryGet
-6. NodeLoadGet
-7. NetworkDNSGet
-8. NetworkDNSUpdate
-9. NetworkPingDo
+01. NodeHostnameGet
+02. NodeStatusGet
+03. NodeUptimeGet
+04. NodeDiskGet
+05. NodeMemoryGet
+06. NodeLoadGet
+07. NetworkDNSGet
+08. NetworkDNSUpdate
+09. NetworkPingDo
 10. CommandExec
 11. CommandShell
 12. DockerPull
@@ -668,13 +679,14 @@ git add pkg/orchestrator/ops.go
 git commit -m "feat: pass Status through all existing operation mappers"
 ```
 
----
+______________________________________________________________________
 
 ### Task 7: Add missing operations — NodeHostnameUpdate and NodeOSGet
 
 **Files:**
 
 - Modify: `pkg/orchestrator/ops.go`
+
 - Modify: `pkg/orchestrator/ops_public_test.go`
 
 - [ ] **Step 1: Write tests for NodeHostnameUpdate and NodeOSGet**
@@ -788,13 +800,14 @@ git add pkg/orchestrator/ops.go pkg/orchestrator/ops_public_test.go
 git commit -m "feat: add NodeHostnameUpdate and NodeOSGet operations"
 ```
 
----
+______________________________________________________________________
 
 ### Task 8: Add missing operations — FileUndeploy
 
 **Files:**
 
 - Modify: `pkg/orchestrator/ops.go`
+
 - Modify: `pkg/orchestrator/ops_public_test.go`
 
 - [ ] **Step 1: Write test for FileUndeploy**
@@ -853,13 +866,14 @@ git add pkg/orchestrator/ops.go pkg/orchestrator/ops_public_test.go
 git commit -m "feat: add FileUndeploy operation"
 ```
 
----
+______________________________________________________________________
 
 ### Task 9: Add missing operations — all 5 Cron operations
 
 **Files:**
 
 - Modify: `pkg/orchestrator/ops.go`
+
 - Modify: `pkg/orchestrator/ops_public_test.go`
 
 - [ ] **Step 1: Read SDK cron method signatures**
@@ -943,13 +957,14 @@ git add pkg/orchestrator/ops.go pkg/orchestrator/ops_public_test.go
 git commit -m "feat: add CronList, CronGet, CronCreate, CronUpdate, CronDelete operations"
 ```
 
----
+______________________________________________________________________
 
 ### Task 10: Add missing operations — AgentDrain and AgentUndrain
 
 **Files:**
 
 - Modify: `pkg/orchestrator/ops.go`
+
 - Modify: `pkg/orchestrator/ops_public_test.go`
 
 - [ ] **Step 1: Read SDK agent drain/undrain signatures**
@@ -975,7 +990,7 @@ git add pkg/orchestrator/ops.go pkg/orchestrator/ops_public_test.go
 git commit -m "feat: add AgentDrain and AgentUndrain operations"
 ```
 
----
+______________________________________________________________________
 
 ### Task 11: Run full test suite and verify coverage
 
@@ -1001,25 +1016,38 @@ just go-vet
 just go-fmt
 ```
 
----
+______________________________________________________________________
 
 ### Task 12: Update documentation
 
 **Files:**
 
 - Create: `docs/operations/node-hostname-update.md`
+
 - Create: `docs/operations/node-os-get.md`
+
 - Create: `docs/operations/file-undeploy.md`
+
 - Create: `docs/operations/cron-list.md`
+
 - Create: `docs/operations/cron-get.md`
+
 - Create: `docs/operations/cron-create.md`
+
 - Create: `docs/operations/cron-update.md`
+
 - Create: `docs/operations/cron-delete.md`
+
 - Create: `docs/operations/agent-drain.md`
+
 - Create: `docs/operations/agent-undrain.md`
+
 - Modify: `docs/operations/README.md`
+
 - Modify: `docs/features/guards.md`
+
 - Modify: `docs/features/broadcast.md`
+
 - Modify: `docs/features/README.md`
 
 - [ ] **Step 1: Create operation docs**
@@ -1066,14 +1094,16 @@ git add docs/
 git commit -m "docs: add operation docs, host status semantics, and OnlyIfAnyHostSkipped"
 ```
 
----
+______________________________________________________________________
 
 ### Task 13: Add examples
 
 **Files:**
 
 - Create: `examples/operations/hostname-update.go`
+
 - Create: `examples/operations/cron.go`
+
 - Create: `examples/features/host-status.go`
 
 - [ ] **Step 1: Create hostname-update example**
@@ -1104,7 +1134,7 @@ git add examples/
 git commit -m "feat: add hostname-update, cron, and host-status examples"
 ```
 
----
+______________________________________________________________________
 
 ### Task 14: Update README
 
@@ -1125,7 +1155,7 @@ git add README.md
 git commit -m "docs: update README with new operations and host status features"
 ```
 
----
+______________________________________________________________________
 
 ### Task 15: Final verification
 
