@@ -701,7 +701,7 @@ Verify each shows the expected behavior.
 - [ ] **Step 3: Run linter**
 
 ```bash
-just go::vet
+just go-vet
 ```
 
 Fix any lint issues.
@@ -709,7 +709,7 @@ Fix any lint issues.
 - [ ] **Step 4: Run tests**
 
 ```bash
-just go::unit
+just go-unit
 ```
 
 Ensure no regressions.

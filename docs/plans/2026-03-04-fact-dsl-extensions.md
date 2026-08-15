@@ -520,7 +520,7 @@ Run: `go test ./pkg/orchestrator/... -v -count=1` Expected: All tests pass.
 
 **Step 6: Run linter**
 
-Run: `just go::vet` Expected: No lint errors.
+Run: `just go-vet` Expected: No lint errors.
 
 **Step 7: Commit**
 
@@ -808,7 +808,7 @@ server := httptest.NewServer(mux)
 
 **Step 6: Run full test suite and linter**
 
-Run: `go test ./pkg/orchestrator/... -v -count=1 && just go::vet` Expected: All
+Run: `go test ./pkg/orchestrator/... -v -count=1 && just go-vet` Expected: All
 tests pass, no lint errors.
 
 **Step 7: Commit**
@@ -1107,7 +1107,7 @@ Expected: All tests pass.
 
 **Step 5: Run full test suite and linter**
 
-Run: `go test ./pkg/orchestrator/... -v -count=1 && just go::vet` Expected: All
+Run: `go test ./pkg/orchestrator/... -v -count=1 && just go-vet` Expected: All
 pass.
 
 **Step 6: Commit**
@@ -1247,7 +1247,7 @@ Expected: All tests pass.
 
 **Step 5: Run full test suite and linter**
 
-Run: `go test ./pkg/orchestrator/... -v -count=1 && just go::vet` Expected: All
+Run: `go test ./pkg/orchestrator/... -v -count=1 && just go-vet` Expected: All
 pass.
 
 **Step 6: Commit**
@@ -1643,7 +1643,7 @@ Expected: No compilation errors.
 
 **Step 6: Run linter**
 
-Run: `just go::vet` Expected: No lint errors.
+Run: `just go-vet` Expected: No lint errors.
 
 **Step 7: Commit**
 
@@ -1797,7 +1797,7 @@ request:
 
 **Step 5: Run linter**
 
-Run: `just go::vet` Expected: No lint errors.
+Run: `just go-vet` Expected: No lint errors.
 
 **Step 6: Commit**
 
