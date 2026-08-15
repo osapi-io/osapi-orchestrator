@@ -95,7 +95,7 @@ Expected: clean build (no errors)
 - [ ] **Step 4: Verify tests still pass**
 
 ```bash
-just go::unit
+just go-unit
 ```
 
 Expected: all existing tests pass
@@ -982,7 +982,7 @@ git commit -m "feat: add AgentDrain and AgentUndrain operations"
 - [ ] **Step 1: Run all tests with coverage**
 
 ```bash
-just go::unit
+just go-unit
 go test -coverprofile=/tmp/orch_cov.out ./pkg/orchestrator/...
 go tool cover -func=/tmp/orch_cov.out | grep -v "100.0%" | grep -v "total:"
 ```
@@ -992,13 +992,13 @@ go tool cover -func=/tmp/orch_cov.out | grep -v "100.0%" | grep -v "total:"
 - [ ] **Step 3: Run linter**
 
 ```bash
-just go::vet
+just go-vet
 ```
 
 - [ ] **Step 4: Run formatter**
 
 ```bash
-just go::fmt
+just go-fmt
 ```
 
 ---
@@ -1140,8 +1140,8 @@ Expected: all pass
 - [ ] **Step 2: Verify formatting and lint**
 
 ```bash
-just go::fmt-check
-just go::vet
+just go-fmt-check
+just go-vet
 ```
 
 - [ ] **Step 3: Build**
