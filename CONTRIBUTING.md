@@ -120,9 +120,15 @@ just md-fmt         # Auto-fix formatting
 
 ## Code standards
 
+These conventions are shared across every Go repository in the organization and
+are specified in the `go-code-standards` capability in
+[osapi-io/specs](https://github.com/osapi-io/specs). They are restated here
+because a contributor should not have to read another repository to learn how to
+write code in this one. Where the two disagree, the specification wins.
+
 ### Function Signatures
 
-ALL function signatures MUST use multi-line format:
+Functions with parameters use multi-line format, one parameter per line:
 
 ```go
 func FunctionName(
@@ -132,17 +138,22 @@ func FunctionName(
 }
 ```
 
+Zero-parameter functions stay on one line.
+
 ### Testing
 
-- Public tests: `*_public_test.go` in test package (`package orchestrator_test`)
-  for exported functions
-- Internal tests: `*_test.go` in same package (`package orchestrator`) for
-  private functions
+- Public tests: `*_public_test.go` in `package orchestrator_test`, exercising
+  the exported surface. This is the default.
+- Internal tests: `*_test.go` in `package orchestrator`, for what the exported
+  surface cannot reach.
 - Suite naming: `*_public_test.go` → `{Name}PublicTestSuite`, `*_test.go` →
-  `{Name}TestSuite`
-- Use `testify/suite` with table-driven patterns
-- One suite method per function under test — all scenarios (success, errors,
-  edge cases) as rows in one table
+  `{Name}TestSuite`.
+- `testify/suite` with table-driven cases.
+- One suite method per function under test — success, errors, and edge cases are
+  rows in one table, not separate methods.
+
+Tests exercise a real HTTP server via `httptest.Server` rather than mocking the
+SDK client, so this repository declares no mocking library.
 
 ### Go Patterns
 
