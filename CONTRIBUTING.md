@@ -120,42 +120,14 @@ just md-fmt         # Auto-fix formatting
 
 ## Code standards
 
-### Function Signatures
+Go conventions — signatures, file naming, test structure, mocking, and the style
+baseline — are specified in the `go-code-standards` capability in
+[osapi-io/specs](https://github.com/osapi-io/specs). Where this page and the
+specification disagree, the specification wins.
 
-ALL function signatures MUST use multi-line format:
-
-```go
-func FunctionName(
-    param1 type1,
-    param2 type2,
-) (returnType, error) {
-}
-```
-
-### Testing
-
-- Public tests: `*_public_test.go` in test package (`package orchestrator_test`)
-  for exported functions
-- Internal tests: `*_test.go` in same package (`package orchestrator`) for
-  private functions
-- Suite naming: `*_public_test.go` → `{Name}PublicTestSuite`, `*_test.go` →
-  `{Name}TestSuite`
-- Use `testify/suite` with table-driven patterns
-- One suite method per function under test — all scenarios (success, errors,
-  edge cases) as rows in one table
-
-### Go Patterns
-
-- Error wrapping: `fmt.Errorf("context: %w", err)`
-- Early returns over nested if-else
-- Unused parameters: rename to `_`
-- Import order: stdlib, third-party, local (blank-line separated)
-
-### Linting
-
-golangci-lint with: errcheck, errname, goimports, govet, prealloc, predeclared,
-revive, staticcheck. Generated files (`*.gen.go`, `*.pb.go`) are excluded from
-formatting.
+In this repository the external test package is `package orchestrator_test`.
+Tests exercise a real HTTP server via `httptest.Server` rather than mocking the
+SDK client, so no mocking library is declared.
 
 ## Testing
 
