@@ -22,7 +22,7 @@ agents, and control job acceptance with drain/undrain.
 ## Example
 
 See
-[`examples/operations/agent-drain.go`](../../examples/operations/agent-drain.go)
+[`examples/operations/agent-drain.go`](../../../examples/operations/agent-drain.go)
 for a complete workflow example covering all operations.
 
 The example demonstrates:

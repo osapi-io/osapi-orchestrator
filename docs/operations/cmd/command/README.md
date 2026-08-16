@@ -18,8 +18,9 @@ interpreter.
 
 ## Example
 
-See [`examples/operations/command.go`](../../examples/operations/command.go) for
-a complete workflow example covering both operations.
+See
+[`examples/operations/command.go`](../../../../examples/operations/command.go)
+for a complete workflow example covering both operations.
 
 The example demonstrates:
 

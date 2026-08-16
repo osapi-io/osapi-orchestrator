@@ -27,8 +27,8 @@ through container creation, execution, and cleanup.
 
 ## Example
 
-See [`examples/operations/docker.go`](../../examples/operations/docker.go) for a
-complete workflow example covering all operations.
+See [`examples/operations/docker.go`](../../../../examples/operations/docker.go)
+for a complete workflow example covering all operations.
 
 The example demonstrates:
 

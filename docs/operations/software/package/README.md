@@ -23,5 +23,6 @@ install, remove, update all, and check for available updates.
 
 ## Example
 
-See [`examples/operations/package.go`](../../examples/operations/package.go) for
-a complete workflow example covering all operations.
+See
+[`examples/operations/package.go`](../../../../examples/operations/package.go)
+for a complete workflow example covering all operations.

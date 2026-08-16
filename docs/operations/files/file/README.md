@@ -23,9 +23,9 @@ detection, template rendering, and idempotent state tracking.
 ## Examples
 
 See
-[`examples/operations/file-deploy.go`](../../examples/operations/file-deploy.go)
+[`examples/operations/file-deploy.go`](../../../../examples/operations/file-deploy.go)
 for a complete upload-deploy-verify workflow.
 
 See
-[`examples/operations/file-changed.go`](../../examples/operations/file-changed.go)
+[`examples/operations/file-changed.go`](../../../../examples/operations/file-changed.go)
 for conditional upload with drift detection using `OnlyIfChanged`.

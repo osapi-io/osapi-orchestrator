@@ -1,7 +1,7 @@
 # ServiceCreate
 
 Creates a service unit file on the target node. The unit file must be uploaded
-to the NATS Object Store first (see [FileUpload](../file/upload.md)).
+to the NATS Object Store first (see [FileUpload](../../files/file/upload.md)).
 
 ## Usage
 

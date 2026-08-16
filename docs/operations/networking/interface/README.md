@@ -22,5 +22,6 @@ create, update, and delete interface configurations.
 
 ## Example
 
-See [`examples/operations/interface.go`](../../examples/operations/interface.go)
+See
+[`examples/operations/interface.go`](../../../../examples/operations/interface.go)
 for a complete workflow example covering all operations.

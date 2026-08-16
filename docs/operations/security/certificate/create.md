@@ -1,7 +1,8 @@
 # CertificateCreate
 
 Creates a CA certificate in the system trust store. The PEM file must be
-uploaded to the NATS Object Store first (see [FileUpload](../file/upload.md)).
+uploaded to the NATS Object Store first (see
+[FileUpload](../../files/file/upload.md)).
 
 ## Usage
 

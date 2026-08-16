@@ -17,6 +17,6 @@ confirms the server is reachable without going through the job system.
 
 ## Example
 
-See [`examples/features/basic.go`](../../examples/features/basic.go) for a
+See [`examples/features/basic.go`](../../../examples/features/basic.go) for a
 working example that uses `HealthCheck` as a gate before running other
 operations.

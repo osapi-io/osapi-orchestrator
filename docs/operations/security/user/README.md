@@ -26,5 +26,5 @@ create, update, delete users, and manage their SSH keys and passwords.
 
 ## Example
 
-See [`examples/operations/user.go`](../../examples/operations/user.go) for a
-complete workflow example covering all operations.
+See [`examples/operations/user.go`](../../../../examples/operations/user.go) for
+a complete workflow example covering all operations.

@@ -22,5 +22,5 @@ groups.
 
 ## Example
 
-See [`examples/operations/user.go`](../../examples/operations/user.go) for a
-complete workflow example covering group operations.
+See [`examples/operations/group.go`](../../../../examples/operations/group.go)
+for a complete workflow example covering group operations.

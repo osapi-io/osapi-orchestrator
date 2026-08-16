@@ -18,5 +18,5 @@ Query hardware resource information -- disk usage and memory statistics.
 ## Examples
 
 See
-[`examples/operations/node-info.go`](../../../examples/operations/node-info.go)
+[`examples/operations/node-info.go`](../../../../examples/operations/node-info.go)
 for a read-only workflow covering disk and memory queries.
