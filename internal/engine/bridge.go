@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	client "github.com/retr0h/osapi/pkg/sdk/client"
+	client "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // jsonUnmarshalFn is the JSON unmarshal function (injectable for testing).

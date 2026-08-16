@@ -80,7 +80,7 @@ git checkout -b feat/host-status-missing-ops main
 
 ```bash
 cd /Users/john/git/osapi-io/osapi-orchestrator
-go get github.com/retr0h/osapi@main
+go get github.com/osapi-io/osapi@main
 go mod tidy
 ```
 

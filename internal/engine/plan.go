@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	osapiclient "github.com/retr0h/osapi/pkg/sdk/client"
+	osapiclient "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // Plan is a DAG of tasks with dependency edges.

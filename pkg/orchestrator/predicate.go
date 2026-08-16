@@ -23,7 +23,7 @@ package orchestrator
 import (
 	"strings"
 
-	osapi "github.com/retr0h/osapi/pkg/sdk/client"
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // Predicate filters agents by their facts and properties.
