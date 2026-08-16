@@ -41,7 +41,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	osapi "github.com/retr0h/osapi/pkg/sdk/client"
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )

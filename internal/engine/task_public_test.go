@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi-orchestrator/internal/engine"
-	osapiclient "github.com/retr0h/osapi/pkg/sdk/client"
+	osapiclient "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 type TaskPublicTestSuite struct {

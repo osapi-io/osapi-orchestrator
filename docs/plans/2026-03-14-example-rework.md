@@ -70,7 +70,7 @@ Phase 2 plan:
 - Capture report, decode as `osapi.CommandResult`, print Error and ExitCode
 
 Key imports: `context`, `fmt`, `log`, `os`,
-`osapi "github.com/retr0h/osapi/pkg/sdk/client"`,
+`osapi "github.com/osapi-io/osapi/pkg/sdk/client"`,
 `"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"`
 
 - [ ] **Step 2: Run command.go and verify output**
@@ -281,7 +281,7 @@ if err := report.Decode("get-hostname", &h); err == nil {
 }
 ```
 
-Add imports: `fmt`, `osapi "github.com/retr0h/osapi/pkg/sdk/client"`
+Add imports: `fmt`, `osapi "github.com/osapi-io/osapi/pkg/sdk/client"`
 
 - [ ] **Step 2: Run and verify**
 
@@ -521,7 +521,7 @@ o2.CommandExec("_any", "echo", "running-host-cleanup").
     Named("cleanup").After(deploy2).OnlyIfAnyHostFailed()
 ```
 
-Imports: add `fmt`, `sdk "github.com/retr0h/osapi/pkg/sdk/orchestrator"`
+Imports: add `fmt`, `sdk "github.com/osapi-io/osapi/pkg/sdk/orchestrator"`
 
 - [ ] **Step 2: Run and verify**
 

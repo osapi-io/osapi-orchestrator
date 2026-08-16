@@ -26,7 +26,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	osapi "github.com/retr0h/osapi/pkg/sdk/client"
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 )
 

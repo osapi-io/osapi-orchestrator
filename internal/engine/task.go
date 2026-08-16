@@ -3,7 +3,7 @@ package engine
 import (
 	"context"
 
-	osapiclient "github.com/retr0h/osapi/pkg/sdk/client"
+	osapiclient "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // TaskFn is the signature for functional tasks. The client
