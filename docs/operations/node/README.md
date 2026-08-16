@@ -22,5 +22,6 @@ See also: [Power](power/), [Process](process/), [Log](log/)
 
 ## Examples
 
-See [`examples/operations/node-info.go`](../../examples/operations/node-info.go)
+See
+[`examples/operations/node-info.go`](../../../examples/operations/node-info.go)
 for a read-only workflow covering status, load, uptime, and OS queries.

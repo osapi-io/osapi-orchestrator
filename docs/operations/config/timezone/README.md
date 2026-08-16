@@ -19,5 +19,6 @@ update it.
 
 ## Example
 
-See [`examples/operations/timezone.go`](../../examples/operations/timezone.go)
+See
+[`examples/operations/timezone.go`](../../../../examples/operations/timezone.go)
 for a complete workflow example.

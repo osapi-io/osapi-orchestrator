@@ -19,5 +19,6 @@ List, inspect, and signal running processes on target nodes.
 
 ## Example
 
-See [`examples/operations/process.go`](../../examples/operations/process.go) for
-a complete workflow example covering all operations.
+See
+[`examples/operations/process.go`](../../../../examples/operations/process.go)
+for a complete workflow example covering all operations.

@@ -19,5 +19,5 @@ sources, and query by unit name.
 
 ## Example
 
-See [`examples/operations/log.go`](../../examples/operations/log.go) for a
+See [`examples/operations/log.go`](../../../../examples/operations/log.go) for a
 complete workflow example covering all operations.

@@ -22,5 +22,5 @@ create, update, and delete routes.
 
 ## Example
 
-See [`examples/operations/route.go`](../../examples/operations/route.go) for a
-complete workflow example covering all operations.
+See [`examples/operations/route.go`](../../../../examples/operations/route.go)
+for a complete workflow example covering all operations.

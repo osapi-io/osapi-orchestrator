@@ -21,5 +21,5 @@ and delete NTP configuration.
 
 ## Example
 
-See [`examples/operations/ntp.go`](../../examples/operations/ntp.go) for a
+See [`examples/operations/ntp.go`](../../../../examples/operations/ntp.go) for a
 complete workflow example covering all operations.

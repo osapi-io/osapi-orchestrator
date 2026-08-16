@@ -1,7 +1,7 @@
 # CronCreate
 
 Creates a new cron entry on the target node. The script must be uploaded to the
-NATS Object Store first (see [FileUpload](../file/upload.md)).
+NATS Object Store first (see [FileUpload](../../files/file/upload.md)).
 
 ## Usage
 

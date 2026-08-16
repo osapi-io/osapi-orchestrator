@@ -22,7 +22,7 @@ connectivity checks.
 ## Examples
 
 See
-[`examples/operations/dns-update.go`](../../examples/operations/dns-update.go)
+[`examples/operations/dns-update.go`](../../../../examples/operations/dns-update.go)
 for DNS read-then-write and
-[`examples/operations/ping.go`](../../examples/operations/ping.go) for
+[`examples/operations/ping.go`](../../../../examples/operations/ping.go) for
 connectivity verification.

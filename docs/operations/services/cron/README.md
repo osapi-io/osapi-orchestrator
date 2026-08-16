@@ -22,8 +22,8 @@ delete scheduled tasks backed by the file provider.
 
 ## Example
 
-See [`examples/operations/cron.go`](../../examples/operations/cron.go) for a
-complete workflow example covering all operations.
+See [`examples/operations/cron.go`](../../../../examples/operations/cron.go) for
+a complete workflow example covering all operations.
 
 The example demonstrates:
 

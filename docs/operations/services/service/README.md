@@ -27,5 +27,6 @@ files, and control service lifecycle (start, stop, restart, enable, disable).
 
 ## Example
 
-See [`examples/operations/service.go`](../../examples/operations/service.go) for
-a complete workflow example covering all operations.
+See
+[`examples/operations/service.go`](../../../../examples/operations/service.go)
+for a complete workflow example covering all operations.

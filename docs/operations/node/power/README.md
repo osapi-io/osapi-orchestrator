@@ -17,5 +17,5 @@ Reboot or shut down target nodes.
 
 ## Example
 
-See [`examples/operations/power.go`](../../examples/operations/power.go) for a
-complete workflow example.
+See [`examples/operations/power.go`](../../../../examples/operations/power.go)
+for a complete workflow example.

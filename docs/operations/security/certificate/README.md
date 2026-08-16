@@ -22,5 +22,5 @@ create, update, and delete certificates backed by the file provider.
 ## Example
 
 See
-[`examples/operations/certificate.go`](../../examples/operations/certificate.go)
+[`examples/operations/certificate.go`](../../../../examples/operations/certificate.go)
 for a complete workflow example covering all operations.

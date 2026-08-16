@@ -19,5 +19,5 @@ Query and update the system hostname.
 ## Examples
 
 See
-[`examples/operations/hostname-update.go`](../../../examples/operations/hostname-update.go)
+[`examples/operations/hostname-update.go`](../../../../examples/operations/hostname-update.go)
 for a read-then-write hostname workflow with broadcast targeting.
