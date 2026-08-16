@@ -62,7 +62,7 @@ just fetch
 just deps
 ```
 
-## Project Structure
+## Project structure
 
 ```
 pkg/orchestrator/          # User-facing DSL
@@ -90,8 +90,6 @@ examples/
     host-status.go, guards.go, broadcast.go, ...
 ```
 
-## Package Structure
-
 - **`pkg/orchestrator/`** — User-facing DSL
   - Typed operation constructors (NodeHostnameGet, CommandExec, etc.)
   - Uses SDK types directly (`osapi.HostnameResult`, `osapi.Agent`, etc.)
@@ -108,6 +106,11 @@ just go-fmt         # Auto-fix formatting
 just go-vet         # Run linter
 ```
 
+The linters that run are declared in `.golangci.yml`. Read them there rather
+than looking for a list here — a copied list goes stale the first time the
+configuration changes. Generated files (`*.gen.go`, `*.pb.go`) are excluded from
+formatting.
+
 ### Documentation
 
 Markdown files are formatted with [mdformat] through `uvx`. This style is
@@ -120,15 +123,10 @@ just md-fmt         # Auto-fix formatting
 
 ## Code standards
 
-These conventions are shared across every Go repository in the organization and
-are specified in the `go-code-standards` capability in
-[osapi-io/specs](https://github.com/osapi-io/specs). They are restated here
-because a contributor should not have to read another repository to learn how to
-write code in this one. Where the two disagree, the specification wins.
+### Function signatures
 
-### Function Signatures
-
-Functions with parameters use multi-line format, one parameter per line:
+Functions with parameters use multi-line format — one parameter per line, with
+the closing parenthesis and the return types on a line of their own:
 
 ```go
 func FunctionName(
@@ -138,35 +136,41 @@ func FunctionName(
 }
 ```
 
-Zero-parameter functions stay on one line.
+Functions taking no parameters stay on one line:
 
-### Testing
+```go
+func Name() string {
+}
+```
 
-- Public tests: `*_public_test.go` in `package orchestrator_test`, exercising
-  the exported surface. This is the default.
-- Internal tests: `*_test.go` in `package orchestrator`, for what the exported
-  surface cannot reach.
-- Suite naming: `*_public_test.go` → `{Name}PublicTestSuite`, `*_test.go` →
-  `{Name}TestSuite`.
-- `testify/suite` with table-driven cases.
-- One suite method per function under test — success, errors, and edge cases are
-  rows in one table, not separate methods.
+Adding a parameter then shows as one added line rather than a rewritten
+signature.
+
+### File naming
+
+Name a file for what it holds. Avoid `helpers.go`, `utils.go`, and names of that
+kind: they describe where code was put rather than what it is, and they
+accumulate whatever has no other home.
+
+`types.go` holds only type declarations — structs, interfaces, constants, and
+aliases. A function belongs in a file named for what it does.
+
+A test file is named for the production file it tests. Where tests grow too
+large to read, split the production file first so each test file keeps a
+counterpart, rather than splitting tests away from the file they cover.
+
+### Go patterns
+
+- Error wrapping: `fmt.Errorf("context: %w", err)`, so the chain names each
+  layer it passed through and stays inspectable with `errors.Is` and
+  `errors.As`.
+- Early returns rather than nesting the successful path inside conditionals.
+- Unused parameters: rename to `_`.
+- Import order: standard library, third party, then local, separated by blank
+  lines.
 
 Tests exercise a real HTTP server via `httptest.Server` rather than mocking the
-SDK client, so this repository declares no mocking library.
-
-### Go Patterns
-
-- Error wrapping: `fmt.Errorf("context: %w", err)`
-- Early returns over nested if-else
-- Unused parameters: rename to `_`
-- Import order: stdlib, third-party, local (blank-line separated)
-
-### Linting
-
-golangci-lint with: errcheck, errname, goimports, govet, prealloc, predeclared,
-revive, staticcheck. Generated files (`*.gen.go`, `*.pb.go`) are excluded from
-formatting.
+SDK client.
 
 ## Testing
 
@@ -189,21 +193,31 @@ module — change both together.
 
 ### Test file conventions
 
-- Public tests: `*_public_test.go` in test package (`package orchestrator_test`)
-  for exported functions.
-- Use `testify/suite` with table-driven patterns.
-- Table-driven structure with `validateFunc` callbacks.
-- **One suite method per function under test.** All scenarios for a function
-  (success, error codes, transport failures, nil responses) belong as rows in a
-  single table — never split into separate `TestFoo`, `TestFooError`,
-  `TestFooNilResponse` methods.
+- Public tests: `*_public_test.go` in the package's `_test` package, exercising
+  the exported surface. This is the default.
+- Internal tests: `*_test.go` in the same package, for what the exported surface
+  cannot reach.
+- Suite naming: `*_public_test.go` → `{Name}PublicTestSuite`, `*_test.go` →
+  `{Name}TestSuite`.
+- `testify/suite` with table-driven cases.
+- One suite method per function under test — success, errors, and edge cases are
+  rows in one table, not separate methods.
+- `export_test.go` exposes unexported symbols to external tests, by alias or by
+  setter. Do not use an alias to re-cover behavior the caller's own test already
+  reaches; a helper with its own contract is what the pattern is for.
+- Mocks are generated with `go.uber.org/mock` and committed, never hand-written.
+  A double that carries a real implementation — signing with a real key, serving
+  real HTTP — is not a mock and does not need generating.
+
+External tests in this repository live in `package orchestrator_test`, and
+tables carry `validateFunc` callbacks.
 
 ## Adding a new operation
 
 When adding a new typed constructor (e.g., `NodeRebootDo`), follow these steps
 in order. Every operation must ship with tests, docs, and an example.
 
-### Step 1: Operation Constructor
+### Step 1: operation constructor
 
 Add the method to `pkg/orchestrator/ops.go`, following the existing pattern:
 
@@ -252,7 +266,7 @@ Key rules:
 - The `engine` import is `internal/engine` — only used inside
   `pkg/orchestrator/`, never by external consumers
 
-### Step 2: Tests
+### Step 2: tests
 
 Two test files must be updated:
 
@@ -271,7 +285,7 @@ tests that the constructor creates valid steps:
 
 Target 100% coverage on both files.
 
-### Step 3: Operation Doc
+### Step 3: operation doc
 
 Create `docs/operations/{domain}/{operation}.md` following the existing template
 in that domain directory. Every doc must include these sections:
@@ -289,13 +303,13 @@ in that domain directory. Every doc must include these sections:
   for a complete working example.
   ```
 
-### Step 4: Update Domain Landing Page and Operation Index
+### Step 4: update the domain landing page and operation index
 
 Add the operation to the table in the domain landing page
 `docs/operations/{domain}/README.md`. Update the operation count in
 `docs/operations/README.md` if the total changes.
 
-### Step 5: Example
+### Step 5: example
 
 Add the operation to an existing workflow example in `examples/operations/` that
 covers the same domain. Domain groupings:
@@ -348,12 +362,12 @@ appear in at least one runnable example.
   `docs/operations/{domain}/` must link to the example file where that operation
   is demonstrated.
 
-### Step 6: Update README.md
+### Step 6: update README.md
 
 Update the operation count and tables in the root `README.md` if the total
 number of operations changes.
 
-### Step 7: Verify
+### Step 7: verify
 
 ```bash
 go build ./...                                       # compiles
