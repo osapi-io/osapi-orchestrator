@@ -6,6 +6,7 @@ tool (
 	github.com/boumenot/gocover-cobertura
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	github.com/segmentio/golines
+	go.uber.org/mock/mockgen
 	mvdan.cc/gofumpt
 )
 
@@ -13,6 +14,7 @@ require (
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/osapi-io/osapi v0.0.0-20260816051025-f3c1a6c57f59
 	github.com/stretchr/testify v1.11.1
+	go.uber.org/mock v0.6.0
 )
 
 require (
