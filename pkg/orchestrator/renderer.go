@@ -22,6 +22,13 @@ package orchestrator
 
 import engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 
+// renderer is unexported and its methods take types from this package, so a
+// mock in a sibling package would import this one while the internal test
+// imports the mock — an import cycle. It is generated into this package
+// instead, into a _test.go file so it never ships.
+//
+//go:generate go tool go.uber.org/mock/mockgen -source=renderer.go -destination=renderer_mock_test.go -package=orchestrator
+
 // renderer defines the internal output contract for plan execution.
 type renderer interface {
 	PlanStart(summary engine.PlanSummary)

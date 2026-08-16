@@ -30,6 +30,7 @@ import (
 
 	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 )
 
 type OrchestratorTestSuite struct {
@@ -138,12 +139,17 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 	retryErr := errors.New("transient error")
 
 	tests := []struct {
-		name         string
-		setupFunc    func(hooks engine.Hooks)
-		validateFunc func(m *mockRenderer)
+		name       string
+		expectFunc func(m *Mockrenderer)
+		setupFunc  func(hooks engine.Hooks)
 	}{
 		{
 			name: "BeforePlan calls PlanStart",
+			expectFunc: func(m *Mockrenderer) {
+				m.EXPECT().PlanStart(gomock.Cond(func(x engine.PlanSummary) bool {
+					return x.TotalTasks == 3 && len(x.Steps) == 2
+				}))
+			},
 			setupFunc: func(hooks engine.Hooks) {
 				hooks.BeforePlan(engine.PlanSummary{
 					TotalTasks: 3,
@@ -153,69 +159,60 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 					},
 				})
 			},
-			validateFunc: func(m *mockRenderer) {
-				s.True(m.planStartCalled)
-				s.Equal(3, m.planStartSummary.TotalTasks)
-				s.Len(m.planStartSummary.Steps, 2)
-			},
 		},
 		{
 			name: "AfterPlan calls PlanDone",
+			expectFunc: func(m *Mockrenderer) {
+				m.EXPECT().PlanDone(gomock.Cond(func(r *Report) bool {
+					return r != nil && len(r.Tasks) == 1 &&
+						r.Duration == 5*time.Second
+				}))
+			},
 			setupFunc: func(hooks engine.Hooks) {
 				hooks.AfterPlan(&engine.Report{
 					Tasks:    []engine.TaskResult{{Name: "a", Status: engine.StatusChanged}},
 					Duration: 5 * time.Second,
 				})
 			},
-			validateFunc: func(m *mockRenderer) {
-				s.True(m.planDoneCalled)
-				s.Require().NotNil(m.planDoneReport)
-				s.Len(m.planDoneReport.Tasks, 1)
-				s.Equal(5*time.Second, m.planDoneReport.Duration)
-			},
 		},
 		{
 			name: "BeforeLevel sequential single task",
+			expectFunc: func(m *Mockrenderer) {
+				m.EXPECT().LevelStart(0, []string{"task-1"}, false)
+			},
 			setupFunc: func(hooks engine.Hooks) {
 				hooks.BeforeLevel(0, []*engine.Task{engine.NewTaskFunc("task-1", nil)}, false)
-			},
-			validateFunc: func(m *mockRenderer) {
-				s.True(m.levelStartCalled)
-				s.Equal(0, m.levelStartLevel)
-				s.Equal([]string{"task-1"}, m.levelStartTasks)
-				s.False(m.levelStartParallel)
 			},
 		},
 		{
 			name: "BeforeLevel parallel multiple tasks",
+			expectFunc: func(m *Mockrenderer) {
+				m.EXPECT().LevelStart(0, []string{"task-1", "task-2"}, true)
+			},
 			setupFunc: func(hooks engine.Hooks) {
 				hooks.BeforeLevel(0, []*engine.Task{
 					engine.NewTaskFunc("task-1", nil),
 					engine.NewTaskFunc("task-2", nil),
 				}, true)
 			},
-			validateFunc: func(m *mockRenderer) {
-				s.True(m.levelStartCalled)
-				s.Equal([]string{"task-1", "task-2"}, m.levelStartTasks)
-				s.True(m.levelStartParallel)
-			},
 		},
 		{
 			name: "AfterLevel no results sequential",
+			expectFunc: func(m *Mockrenderer) {
+				m.EXPECT().LevelStart(1, []string{"t"}, false)
+				m.EXPECT().LevelDone(1, 0, 0, false)
+			},
 			setupFunc: func(hooks engine.Hooks) {
 				hooks.BeforeLevel(1, []*engine.Task{engine.NewTaskFunc("t", nil)}, false)
 				hooks.AfterLevel(1, nil)
 			},
-			validateFunc: func(m *mockRenderer) {
-				s.True(m.levelDoneCalled)
-				s.Equal(1, m.levelDoneLevel)
-				s.Equal(0, m.levelDoneChanged)
-				s.Equal(0, m.levelDoneTotal)
-				s.False(m.levelDoneParallel)
-			},
 		},
 		{
 			name: "AfterLevel with changed results parallel",
+			expectFunc: func(m *Mockrenderer) {
+				m.EXPECT().LevelStart(1, []string{"t"}, true)
+				m.EXPECT().LevelDone(1, 1, 2, true)
+			},
 			setupFunc: func(hooks engine.Hooks) {
 				hooks.BeforeLevel(1, []*engine.Task{engine.NewTaskFunc("t", nil)}, true)
 				hooks.AfterLevel(1, []engine.TaskResult{
@@ -223,26 +220,23 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 					{Name: "b", Status: engine.StatusUnchanged},
 				})
 			},
-			validateFunc: func(m *mockRenderer) {
-				s.True(m.levelDoneCalled)
-				s.Equal(1, m.levelDoneChanged)
-				s.Equal(2, m.levelDoneTotal)
-				s.True(m.levelDoneParallel)
-			},
 		},
 		{
 			name: "BeforeTask calls TaskStart with name",
+			expectFunc: func(m *Mockrenderer) {
+				m.EXPECT().TaskStart("fn-task", "")
+			},
 			setupFunc: func(hooks engine.Hooks) {
 				hooks.BeforeTask(engine.NewTaskFunc("fn-task", nil))
-			},
-			validateFunc: func(m *mockRenderer) {
-				s.True(m.taskStartCalled)
-				s.Equal("fn-task", m.taskStartName)
-				s.Empty(m.taskStartDetail)
 			},
 		},
 		{
 			name: "AfterTask calls TaskDone",
+			expectFunc: func(m *Mockrenderer) {
+				m.EXPECT().TaskDone(gomock.Cond(func(r engine.TaskResult) bool {
+					return r.Name == "task-1" && r.Status == engine.StatusChanged
+				}))
+			},
 			setupFunc: func(hooks engine.Hooks) {
 				hooks.AfterTask(nil, engine.TaskResult{
 					Name:     "task-1",
@@ -251,156 +245,36 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 					Duration: time.Second,
 				})
 			},
-			validateFunc: func(m *mockRenderer) {
-				s.True(m.taskDoneCalled)
-				s.Equal("task-1", m.taskDoneResult.Name)
-				s.Equal(engine.StatusChanged, m.taskDoneResult.Status)
-			},
 		},
 		{
 			name: "OnRetry calls TaskRetry",
+			expectFunc: func(m *Mockrenderer) {
+				m.EXPECT().TaskRetry("retry-task", 2, retryErr)
+			},
 			setupFunc: func(hooks engine.Hooks) {
 				hooks.OnRetry(engine.NewTaskFunc("retry-task", nil), 2, retryErr)
-			},
-			validateFunc: func(m *mockRenderer) {
-				s.True(m.taskRetryCalled)
-				s.Equal("retry-task", m.taskRetryName)
-				s.Equal(2, m.taskRetryAttempt)
-				s.Equal(retryErr, m.taskRetryErr)
 			},
 		},
 		{
 			name: "OnSkip calls TaskSkip",
+			expectFunc: func(m *Mockrenderer) {
+				m.EXPECT().TaskSkip("skip-task", "dependency failed")
+			},
 			setupFunc: func(hooks engine.Hooks) {
 				hooks.OnSkip(engine.NewTaskFunc("skip-task", nil), "dependency failed")
-			},
-			validateFunc: func(m *mockRenderer) {
-				s.True(m.taskSkipCalled)
-				s.Equal("skip-task", m.taskSkipName)
-				s.Equal("dependency failed", m.taskSkipReason)
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			m := &mockRenderer{}
-			hooks := rendererHooks(m)
+			ctrl := gomock.NewController(s.T())
+			m := NewMockrenderer(ctrl)
 
-			tc.setupFunc(hooks)
-			tc.validateFunc(m)
+			tc.expectFunc(m)
+			tc.setupFunc(rendererHooks(m))
 		})
 	}
-}
-
-// mockRenderer records renderer calls for verification.
-type mockRenderer struct {
-	planStartCalled  bool
-	planStartSummary engine.PlanSummary
-
-	planDoneCalled bool
-	planDoneReport *Report
-
-	levelStartCalled   bool
-	levelStartLevel    int
-	levelStartTasks    []string
-	levelStartParallel bool
-
-	levelDoneCalled   bool
-	levelDoneLevel    int
-	levelDoneChanged  int
-	levelDoneTotal    int
-	levelDoneParallel bool
-
-	taskStartCalled bool
-	taskStartName   string
-	taskStartDetail string
-
-	taskDoneCalled bool
-	taskDoneResult engine.TaskResult
-
-	taskRetryCalled  bool
-	taskRetryName    string
-	taskRetryAttempt int
-	taskRetryErr     error
-
-	taskSkipCalled bool
-	taskSkipName   string
-	taskSkipReason string
-}
-
-func (m *mockRenderer) PlanStart(
-	summary engine.PlanSummary,
-) {
-	m.planStartCalled = true
-	m.planStartSummary = summary
-}
-
-func (m *mockRenderer) PlanDone(
-	report *Report,
-) {
-	m.planDoneCalled = true
-	m.planDoneReport = report
-}
-
-func (m *mockRenderer) LevelStart(
-	level int,
-	tasks []string,
-	parallel bool,
-) {
-	m.levelStartCalled = true
-	m.levelStartLevel = level
-	m.levelStartTasks = tasks
-	m.levelStartParallel = parallel
-}
-
-func (m *mockRenderer) LevelDone(
-	level int,
-	changed int,
-	total int,
-	parallel bool,
-) {
-	m.levelDoneCalled = true
-	m.levelDoneLevel = level
-	m.levelDoneChanged = changed
-	m.levelDoneTotal = total
-	m.levelDoneParallel = parallel
-}
-
-func (m *mockRenderer) TaskStart(
-	name string,
-	detail string,
-) {
-	m.taskStartCalled = true
-	m.taskStartName = name
-	m.taskStartDetail = detail
-}
-
-func (m *mockRenderer) TaskDone(
-	result engine.TaskResult,
-) {
-	m.taskDoneCalled = true
-	m.taskDoneResult = result
-}
-
-func (m *mockRenderer) TaskRetry(
-	name string,
-	attempt int,
-	err error,
-) {
-	m.taskRetryCalled = true
-	m.taskRetryName = name
-	m.taskRetryAttempt = attempt
-	m.taskRetryErr = err
-}
-
-func (m *mockRenderer) TaskSkip(
-	name string,
-	reason string,
-) {
-	m.taskSkipCalled = true
-	m.taskSkipName = name
-	m.taskSkipReason = reason
 }
 
 func TestOrchestratorTestSuite(
