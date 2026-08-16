@@ -43,4 +43,6 @@ Co-Authored-By: Claude <noreply@anthropic.com>
 ## Task tracking
 
 Implementation planning and execution uses the superpowers plugin workflows
-(`writing-plans` and `executing-plans`). Plans live in `docs/plans/`.
+(`writing-plans` and `executing-plans`). Plans are working notes and are not
+committed — the design record for a change lives in
+[osapi-io/specs](https://github.com/osapi-io/specs).
