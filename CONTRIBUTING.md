@@ -10,10 +10,12 @@ the pull request workflow.
 - Read the [Code of Conduct](CODE_OF_CONDUCT.md). It applies to every
   interaction in this repo.
 
-- **Design records** — Reasoning behind a change lives in
-  [osapi-io/specs](https://github.com/osapi-io/specs) as a change, not in this
-  repository. A design document kept here goes stale the moment the code moves
-  past it, with nothing to catch the drift.
+- **Design records** — The conventions binding this repository are specified in
+  [osapi-io/specs](https://github.com/osapi-io/specs) under
+  `osapi-orchestrator/`, whose `.specify/memory/` is the standing record. Design
+  reasoning for a change lives there too, not here — a design document kept in
+  this repository goes stale the moment the code moves past it, with nothing to
+  catch the drift.
 
 - **Check existing work** — Is there an existing PR? Are there issues discussing
   the feature/change you want to make? Please make sure you consider/address
