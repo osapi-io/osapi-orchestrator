@@ -22,7 +22,7 @@ step := o.DockerCreate("_any", osapi.DockerCreateOpts{
 | `target`  | `string`                 | Target host or routing value. |
 | `opts`    | `osapi.DockerCreateOpts` | Container creation options.   |
 
-### DockerCreateOpts Fields
+### DockerCreateOpts fields
 
 | Field       | Type       | Description                                         |
 | ----------- | ---------- | --------------------------------------------------- |
@@ -34,7 +34,7 @@ step := o.DockerCreate("_any", osapi.DockerCreateOpts{
 | `Volumes`   | `[]string` | Volume mounts in `host_path:container_path` format. |
 | `AutoStart` | `*bool`    | Start the container after creation (default true).  |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.DockerResult

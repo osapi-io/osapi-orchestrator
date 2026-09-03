@@ -24,7 +24,7 @@ step := o.ProcessSignal("web-01", 1234, osapi.ProcessSignalOpts{
 | -------- | -------- | -------- | ------------------------------------------ |
 | `Signal` | `string` | Yes      | Signal name (e.g., `TERM`, `KILL`, `HUP`). |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.ProcessSignalResult

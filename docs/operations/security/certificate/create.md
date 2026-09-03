@@ -27,7 +27,7 @@ step := o.CertificateCreate("web-01", osapi.CertificateCreateOpts{
 | `Name`   | `string` | Yes      | Certificate name.                        |
 | `Object` | `string` | Yes      | Object Store reference for the PEM file. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.CertificateCAMutationResult

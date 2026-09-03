@@ -26,7 +26,7 @@ step := o.LogQuery("web-01", osapi.LogQueryOpts{
 | `Since`    | `*string` | No       | Filter entries since this time (e.g., `1h`).       |
 | `Priority` | `*string` | No       | Filter by priority level (e.g., `err`, `warning`). |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.LogEntryResult

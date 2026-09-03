@@ -15,7 +15,7 @@ step := o.GroupDelete("web-01", "developers")
 | `target`    | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `groupName` | `string` | Name of the group to delete.                              |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.GroupMutationResult

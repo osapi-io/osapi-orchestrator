@@ -24,7 +24,7 @@ step := o.GroupUpdate("web-01", "developers", osapi.GroupUpdateOpts{
 | --------- | ---------- | -------- | ------------------------------------------- |
 | `Members` | `[]string` | No       | Group member usernames (replaces existing). |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.GroupMutationResult

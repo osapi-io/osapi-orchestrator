@@ -16,7 +16,7 @@ step := o.NetworkDNSDelete("web-01", "eth0")
 | `target`        | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `interfaceName` | `string` | Network interface to delete DNS configuration from.       |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.DNSDeleteResult

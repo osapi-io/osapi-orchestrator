@@ -19,7 +19,7 @@ step := o.LogQueryUnit("web-01", "nginx", osapi.LogQueryOpts{
 | `unit`    | `string`       | Systemd unit name to query logs for.                      |
 | `opts`    | `LogQueryOpts` | Query options (see [LogQuery](query.md)).                 |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.LogEntryResult

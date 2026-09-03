@@ -15,7 +15,7 @@ step := o.UserListKeys("web-01", "deploy")
 | `target`   | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `username` | `string` | Username whose SSH keys to list.                          |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.SSHKeyInfoResult

@@ -1,4 +1,4 @@
-# Group Management
+# Group management
 
 Manage local groups on target nodes -- list, get, create, update, and delete
 groups.

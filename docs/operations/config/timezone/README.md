@@ -1,4 +1,4 @@
-# Timezone Management
+# Timezone management
 
 Manage the system timezone on target nodes -- get the current timezone and
 update it.

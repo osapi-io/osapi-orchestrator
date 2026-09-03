@@ -1,4 +1,4 @@
-# Certificate Management
+# Certificate management
 
 Manage CA certificates in the system trust store on target nodes -- list,
 create, update, and delete certificates backed by the file provider.

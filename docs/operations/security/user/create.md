@@ -29,7 +29,7 @@ step := o.UserCreate("web-01", osapi.UserCreateOpts{
 | `Home`  | `string` | No       | Home directory path.                               |
 | `Shell` | `string` | No       | Login shell path.                                  |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.UserMutationResult

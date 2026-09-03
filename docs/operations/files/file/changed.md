@@ -20,7 +20,7 @@ o.FileUpload("config.yaml", "raw", localContent).
 | `name`    | `string` | Object name in the Object Store. |
 | `data`    | `[]byte` | Local file content to compare.   |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.FileChanged

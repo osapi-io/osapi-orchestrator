@@ -16,7 +16,7 @@ step := o.AgentGet("web-01")
 | ---------- | -------- | ---------------------------------- |
 | `hostname` | `string` | Hostname of the agent to retrieve. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.Agent

@@ -15,7 +15,7 @@ step := o.ServiceDelete("web-01", "myapp")
 | `target`      | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `serviceName` | `string` | Name of the service to delete.                            |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.ServiceMutationResult

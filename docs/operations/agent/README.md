@@ -1,4 +1,4 @@
-# Agent Management
+# Agent management
 
 Discover and manage OSAPI agents -- list active agents, inspect individual
 agents, and control job acceptance with drain/undrain.

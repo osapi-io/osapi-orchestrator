@@ -1,4 +1,4 @@
-# Log Management
+# Log management
 
 Query systemd journal logs on target nodes -- query all entries, list log
 sources, and query by unit name.

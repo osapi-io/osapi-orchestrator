@@ -1,4 +1,4 @@
-# Interface Management
+# Interface management
 
 Manage network interface configuration via Netplan on target nodes -- list, get,
 create, update, and delete interface configurations.

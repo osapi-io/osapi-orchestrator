@@ -15,7 +15,7 @@ step := o.CertificateDelete("web-01", "internal-ca")
 | `target`   | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `certName` | `string` | Name of the certificate to delete.                        |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.CertificateCAMutationResult

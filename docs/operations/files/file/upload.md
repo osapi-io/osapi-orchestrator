@@ -35,7 +35,7 @@ step := o.FileUpload(
 | `data`        | `[]byte`          | Raw file content to upload.                                  |
 | `opts`        | `...UploadOption` | Optional. Use `WithForce()` to bypass the SHA-256 pre-check. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.FileUpload

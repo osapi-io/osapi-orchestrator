@@ -14,7 +14,7 @@ step := o.NodeUptimeGet("web-01")
 | --------- | -------- | --------------------------------------------------------- |
 | `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 
-## Result Type
+## Result type
 
 There is no typed result struct for this operation yet. The raw result data is
 available through the SDK result's `Data` field as `map[string]any`.

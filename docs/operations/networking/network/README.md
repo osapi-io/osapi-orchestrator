@@ -1,4 +1,4 @@
-# Network Management
+# Network management
 
 Query and update network configuration -- DNS server settings and ICMP ping
 connectivity checks.

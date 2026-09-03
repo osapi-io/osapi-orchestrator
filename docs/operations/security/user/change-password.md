@@ -16,7 +16,7 @@ step := o.UserChangePassword("web-01", "deploy", "newpassword123")
 | `username` | `string` | Username whose password to change.                        |
 | `password` | `string` | New password.                                             |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.UserMutationResult

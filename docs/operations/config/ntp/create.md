@@ -24,7 +24,7 @@ step := o.NTPCreate("web-01", osapi.NtpCreateOpts{
 | --------- | ---------- | -------- | ---------------------------------- |
 | `Servers` | `[]string` | Yes      | NTP server addresses to configure. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.NtpMutationResult

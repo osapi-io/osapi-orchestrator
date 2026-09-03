@@ -1,4 +1,4 @@
-# Container Management
+# Container management
 
 Manage Docker containers on target nodes -- full lifecycle from image pull
 through container creation, execution, and cleanup.

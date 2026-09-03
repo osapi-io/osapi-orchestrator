@@ -25,7 +25,7 @@ step := o.PowerReboot("web-01", osapi.PowerOpts{
 | `Delay`   | `int`    | No       | Seconds to wait before rebooting.       |
 | `Message` | `string` | No       | Message to broadcast before the reboot. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.PowerResult

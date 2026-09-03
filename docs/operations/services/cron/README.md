@@ -1,4 +1,4 @@
-# Cron Management
+# Cron management
 
 Manage cron drop-in files on target nodes -- create, update, list, get, and
 delete scheduled tasks backed by the file provider.

@@ -1,4 +1,4 @@
-# Error Recovery
+# Error recovery
 
 Use `OnError(Continue)` to keep independent tasks running when a step fails, and
 `OnlyIfFailed` to trigger cleanup only on failure.
@@ -19,7 +19,7 @@ o.CommandExec("_any", "echo", "running-cleanup").
 The `Continue` strategy lets the plan proceed even if some hosts fail. The
 cleanup step only runs when at least one dependency failed.
 
-## Error Strategies
+## Error strategies
 
 | Strategy   | Behavior                                        |
 | ---------- | ----------------------------------------------- |

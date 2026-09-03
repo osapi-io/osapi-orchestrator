@@ -1,9 +1,9 @@
-# DSL Reference
+# DSL reference
 
 The orchestrator provides a declarative DSL for composing OSAPI operations into
 DAG-based plans with typed results, guards, retry, and discovery.
 
-## How the DAG Works
+## How the DAG works
 
 Every operation method (`NodeHostnameGet`, `CommandExec`, etc.) returns a
 `*Step`. Steps are connected into a directed acyclic graph (DAG) using
@@ -26,7 +26,7 @@ load := o.NodeLoadGet("_any").After(health)
 o.CommandExec("_any", "whoami").After(hostname)
 ```
 
-## Step Chaining
+## Step chaining
 
 Chain methods on any `*Step` to declare ordering, conditions, and error
 handling:
@@ -49,7 +49,7 @@ handling:
 | `OnError`               | Set error strategy (`StopAll` or `Continue`)       | [Error Recovery](error-recovery.md) |
 | `Named`                 | Set a custom step name for result decoding         | [Result Decode](result-decode.md)   |
 
-## Typed Results
+## Typed results
 
 Decode step results into typed structs:
 
@@ -92,7 +92,7 @@ Composable filters passed to `Discover` and `GroupByFact`:
 | `NoCondition`  | Agent does NOT have active condition     |
 | `Healthy`      | Agent has no active conditions           |
 
-## Error Strategies
+## Error strategies
 
 | Strategy            | Behavior                                        |
 | ------------------- | ----------------------------------------------- |
@@ -101,7 +101,7 @@ Composable filters passed to `Discover` and `GroupByFact`:
 
 Per-step retry is available via `.Retry(n)`.
 
-## Feature Guides
+## Feature guides
 
 | Guide                               | What it covers                                |
 | ----------------------------------- | --------------------------------------------- |

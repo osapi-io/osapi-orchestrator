@@ -25,7 +25,7 @@ step := o.GroupCreate("web-01", osapi.GroupCreateOpts{
 | `GID`    | `int`    | No       | Numeric group ID (system assigns if zero). |
 | `System` | `bool`   | No       | Create a system group.                     |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.GroupMutationResult

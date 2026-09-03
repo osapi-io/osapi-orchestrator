@@ -16,7 +16,7 @@ step := o.NetworkPingDo("web-01", "8.8.8.8")
 | `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `address` | `string` | Hostname or IP address to ping.                           |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.PingResult

@@ -5,7 +5,7 @@ use exponential backoff to avoid overwhelming a recovering service.
 
 ## Usage
 
-### Immediate Retry
+### Immediate retry
 
 Retry up to 3 times with no delay between attempts:
 

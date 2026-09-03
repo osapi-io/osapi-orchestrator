@@ -24,7 +24,7 @@ step := o.UserAddKey("web-01", "deploy", osapi.SSHKeyAddOpts{
 | ----- | -------- | -------- | ------------------------- |
 | `Key` | `string` | Yes      | Full SSH public key line. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.SSHKeyMutationResult

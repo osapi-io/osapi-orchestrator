@@ -33,7 +33,7 @@ step := o.RouteCreate("web-01", "eth0", osapi.RouteConfigOpts{
 | `To`  | `string` | Yes      | Destination in CIDR notation. |
 | `Via` | `string` | Yes      | Gateway IP address.           |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.RouteMutationResult

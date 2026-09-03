@@ -14,7 +14,7 @@ step := o.HealthCheck()
 
 None. The health check always targets the configured API server.
 
-## Result Type
+## Result type
 
 `HealthCheck` does not return typed result data. The step succeeds if the server
 responds with HTTP 200, and fails otherwise.

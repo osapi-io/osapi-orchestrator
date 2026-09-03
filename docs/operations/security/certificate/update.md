@@ -24,7 +24,7 @@ step := o.CertificateUpdate("web-01", "internal-ca", osapi.CertificateUpdateOpts
 | -------- | -------- | -------- | -------------------------------------------- |
 | `Object` | `string` | Yes      | New Object Store reference for the PEM file. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.CertificateCAMutationResult

@@ -1,4 +1,4 @@
-# File Management
+# File management
 
 Upload, deploy, and manage files on target nodes -- with SHA-256 drift
 detection, template rendering, and idempotent state tracking.

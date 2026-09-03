@@ -15,7 +15,7 @@ step := o.ProcessGet("web-01", 1234)
 | `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `pid`     | `int`    | Process ID to retrieve.                                   |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.ProcessInfoResult

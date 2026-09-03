@@ -15,7 +15,7 @@ step := o.AgentDrain("web-01")
 | ---------- | -------- | ------------------------------- |
 | `hostname` | `string` | Hostname of the agent to drain. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.MessageResponse

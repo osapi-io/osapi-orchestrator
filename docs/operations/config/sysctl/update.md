@@ -24,7 +24,7 @@ step := o.SysctlUpdate("web-01", "net.ipv4.ip_forward", osapi.SysctlUpdateOpts{
 | ------- | -------- | -------- | ---------------------------- |
 | `Value` | `string` | Yes      | New value for the parameter. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.SysctlMutationResult

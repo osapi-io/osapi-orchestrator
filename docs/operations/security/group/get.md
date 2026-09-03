@@ -15,7 +15,7 @@ step := o.GroupGet("web-01", "developers")
 | `target`    | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `groupName` | `string` | Name of the group to retrieve.                            |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.GroupInfoResult

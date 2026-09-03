@@ -1,4 +1,4 @@
-# User Management
+# User management
 
 Manage local user accounts and SSH authorized keys on target nodes -- list, get,
 create, update, delete users, and manage their SSH keys and passwords.

@@ -15,7 +15,7 @@ step := o.ServiceGet("web-01", "nginx")
 | `target`      | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `serviceName` | `string` | Name of the service to retrieve.                          |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.ServiceGetResult

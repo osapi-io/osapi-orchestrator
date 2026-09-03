@@ -15,7 +15,7 @@ step := o.CronGet("web-01", "backup")
 | `target`    | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `entryName` | `string` | Name of the cron entry to retrieve.                       |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.CronEntryResult

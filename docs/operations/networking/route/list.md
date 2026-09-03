@@ -14,7 +14,7 @@ step := o.RouteList("web-01")
 | --------- | -------- | --------------------------------------------------------- |
 | `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.RouteListResult

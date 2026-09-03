@@ -28,7 +28,7 @@ step := o.UserUpdate("web-01", "deploy", osapi.UserUpdateOpts{
 | `Groups` | `[]string` | No       | Supplementary group names (replaces existing). |
 | `Lock`   | `*bool`    | No       | Lock or unlock the account.                    |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.UserMutationResult

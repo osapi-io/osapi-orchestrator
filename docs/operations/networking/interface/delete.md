@@ -15,7 +15,7 @@ step := o.InterfaceDelete("web-01", "eth1")
 | `target`    | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `ifaceName` | `string` | Name of the network interface to delete.                  |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.InterfaceMutationResult

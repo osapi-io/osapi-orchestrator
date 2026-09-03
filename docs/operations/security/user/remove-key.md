@@ -16,7 +16,7 @@ step := o.UserRemoveKey("web-01", "deploy", "SHA256:abc123...")
 | `username`    | `string` | Username to remove the key from.                          |
 | `fingerprint` | `string` | Fingerprint of the key to remove.                         |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.SSHKeyMutationResult

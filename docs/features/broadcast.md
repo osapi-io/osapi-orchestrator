@@ -15,7 +15,7 @@ For label-based targeting:
 o.CommandExec("group:web", "uptime")
 ```
 
-## Per-Host Results
+## Per-host results
 
 Broadcast operations return a `HostResult` for each responding agent:
 
@@ -53,7 +53,7 @@ step.When(func(r orchestrator.Results) bool {
 })
 ```
 
-## Partial Failure
+## Partial failure
 
 When some hosts succeed and others fail in a broadcast operation, the task
 result has:
@@ -75,7 +75,7 @@ step.OnlyIfAnyHostFailed()
 step.OnlyIfAllHostsFailed()
 ```
 
-## Broadcast Guards
+## Broadcast guards
 
 Four host-level guard methods inspect `HostResults` from broadcast dependencies.
 See [Guards: Broadcast Guards](guards.md#broadcast-guards) for details.

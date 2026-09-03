@@ -23,7 +23,7 @@ step := o.NetworkDNSUpdate(
 | `servers`       | `[]string` | DNS server addresses to set.                              |
 | `searchDomains` | `[]string` | DNS search domains to set.                                |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.DNSUpdateResult

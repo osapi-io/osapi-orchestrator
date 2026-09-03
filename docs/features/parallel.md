@@ -1,4 +1,4 @@
-# Parallel Execution
+# Parallel execution
 
 Steps at the same DAG level run concurrently. Give multiple steps the same
 dependency to fan out:

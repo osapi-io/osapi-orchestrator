@@ -62,7 +62,7 @@ o.CommandExec("_any", "cleanup.sh").
     OnlyIfFailed()
 ```
 
-## Broadcast Guards
+## Broadcast guards
 
 For broadcast operations (`_all`, label selectors), individual hosts can
 independently succeed, fail, or report changes. The four host-level guards
@@ -76,7 +76,7 @@ inspect `HostResults` from dependencies:
 | `OnlyIfAnyHostChanged`  | Any host in any dependency has `Changed == true`        |
 | `OnlyIfAllHostsChanged` | Every host in every dependency has `Changed == true`    |
 
-### Skipped vs Failed
+### Skipped vs failed
 
 - **Skipped** (`Status == "skipped"`) means the operation is not supported on
   this host (e.g., `ErrUnsupported` on Darwin). This is NOT an error, it
@@ -112,9 +112,9 @@ o.CommandExec("_all", "verify.sh").
     OnlyIfAllHostsChanged()
 ```
 
-## Guard Reference
+## Guard reference
 
-### Task-Level Guards
+### Task-level guards
 
 | Method             | Inspects        | Trigger condition              |
 | ------------------ | --------------- | ------------------------------ |

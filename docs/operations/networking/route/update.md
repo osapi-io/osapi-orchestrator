@@ -20,7 +20,7 @@ step := o.RouteUpdate("web-01", "eth0", osapi.RouteConfigOpts{
 | `interfaceName` | `string`          | Network interface to update routes for.                   |
 | `opts`          | `RouteConfigOpts` | Route configuration (see [RouteCreate](create.md)).       |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.RouteMutationResult

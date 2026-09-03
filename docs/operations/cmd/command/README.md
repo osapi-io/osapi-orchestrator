@@ -1,4 +1,4 @@
-# Command Execution
+# Command execution
 
 Execute arbitrary commands on target nodes -- either directly or through a shell
 interpreter.

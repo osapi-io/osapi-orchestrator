@@ -18,13 +18,13 @@ step := o.DockerRemove("web-01", "c1a2b3d4e5f6", &osapi.DockerRemoveParams{
 | `id`      | `string`                    | Container ID or name to remove. |
 | `params`  | `*osapi.DockerRemoveParams` | Optional remove parameters.     |
 
-### DockerRemoveParams Fields
+### DockerRemoveParams fields
 
 | Field   | Type   | Description                                              |
 | ------- | ------ | -------------------------------------------------------- |
 | `Force` | `bool` | Force removal of a running container (kill then remove). |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.DockerActionResult

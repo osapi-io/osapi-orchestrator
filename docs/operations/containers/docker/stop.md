@@ -18,13 +18,13 @@ step := o.DockerStop("web-01", "c1a2b3d4e5f6", osapi.DockerStopOpts{
 | `id`      | `string`               | Container ID or name to stop. |
 | `opts`    | `osapi.DockerStopOpts` | Stop options.                 |
 
-### DockerStopOpts Fields
+### DockerStopOpts fields
 
 | Field     | Type  | Description                                            |
 | --------- | ----- | ------------------------------------------------------ |
 | `Timeout` | `int` | Seconds to wait before killing. Zero uses the default. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.DockerActionResult

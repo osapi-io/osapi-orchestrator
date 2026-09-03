@@ -1,4 +1,4 @@
-# DNS Update
+# DNS update
 
 The read-then-write pattern: read current DNS configuration, then update it with
 new servers.

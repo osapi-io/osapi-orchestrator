@@ -15,7 +15,7 @@ step := o.PackageGet("web-01", "nginx")
 | `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `pkgName` | `string` | Name of the package to retrieve.                          |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.PackageInfoResult
