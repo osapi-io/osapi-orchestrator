@@ -15,7 +15,7 @@ step := o.AgentUndrain("web-01")
 | ---------- | -------- | --------------------------------- |
 | `hostname` | `string` | Hostname of the agent to undrain. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.MessageResponse

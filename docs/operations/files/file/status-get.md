@@ -17,7 +17,7 @@ step := o.FileStatusGet("web-01", "/etc/myapp/config.yaml")
 | `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `path`    | `string` | Absolute path of the file to check.                       |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.FileStatusResult
@@ -31,7 +31,7 @@ err := results.Decode("file.status.get-1", &result)
 | `SHA256` | `string` | SHA-256 checksum of the file on disk (empty when |
 |          |          | missing).                                        |
 
-### Status Values
+### Status values
 
 | Status    | Meaning                                             |
 | --------- | --------------------------------------------------- |

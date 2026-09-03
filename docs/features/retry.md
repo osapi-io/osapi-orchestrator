@@ -5,7 +5,7 @@ use exponential backoff to avoid overwhelming a recovering service.
 
 ## Usage
 
-### Immediate Retry
+### Immediate retry
 
 Retry up to 3 times with no delay between attempts:
 
@@ -14,7 +14,7 @@ o.TaskFunc("flaky-step", myFunc).
     Retry(3)
 ```
 
-### Retry with Default Exponential Backoff
+### Retry with default exponential backoff
 
 Use `WithExponentialBackoff()` for sensible defaults (1s initial, 30s max):
 
@@ -23,7 +23,7 @@ o.TaskFunc("flaky-step", myFunc).
     Retry(3, orchestrator.WithExponentialBackoff())
 ```
 
-### Retry with Custom Backoff
+### Retry with custom backoff
 
 Use `WithBackoff(initial, max)` for custom intervals. The delay doubles on each
 attempt, clamped to the max interval:
@@ -33,7 +33,7 @@ o.TaskFunc("flaky-step", myFunc).
     Retry(5, orchestrator.WithBackoff(500*time.Millisecond, 5*time.Second))
 ```
 
-## Transient Poll Errors
+## Transient poll errors
 
 Job polling automatically retries transient HTTP errors (404, 500) with
 exponential backoff. This handles the race where the agent hasn't written

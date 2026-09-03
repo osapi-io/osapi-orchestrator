@@ -23,7 +23,7 @@ step := o.NTPUpdate("web-01", osapi.NtpUpdateOpts{
 | --------- | ---------- | -------- | ---------------------------------- |
 | `Servers` | `[]string` | Yes      | NTP server addresses to configure. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.NtpMutationResult

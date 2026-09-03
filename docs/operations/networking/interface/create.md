@@ -30,7 +30,7 @@ step := o.InterfaceCreate("web-01", "eth1", osapi.InterfaceConfigOpts{
 | `Gateway6`  | `string`   | No       | IPv6 gateway address.          |
 | `MTU`       | `*int`     | No       | Maximum transmission unit.     |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.InterfaceMutationResult

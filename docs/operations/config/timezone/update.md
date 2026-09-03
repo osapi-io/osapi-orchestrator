@@ -23,7 +23,7 @@ step := o.TimezoneUpdate("web-01", osapi.TimezoneUpdateOpts{
 | ---------- | -------- | -------- | ----------------------------------------------------- |
 | `Timezone` | `string` | Yes      | IANA timezone name (e.g., `America/New_York`, `UTC`). |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.TimezoneMutationResult

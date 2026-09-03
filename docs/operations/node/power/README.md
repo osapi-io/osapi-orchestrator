@@ -1,4 +1,4 @@
-# Power Management
+# Power management
 
 Reboot or shut down target nodes.
 

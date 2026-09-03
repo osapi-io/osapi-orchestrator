@@ -1,4 +1,4 @@
-# Process Management
+# Process management
 
 List, inspect, and signal running processes on target nodes.
 

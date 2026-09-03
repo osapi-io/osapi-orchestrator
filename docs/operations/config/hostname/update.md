@@ -15,7 +15,7 @@ step := o.NodeHostnameUpdate("web-01", "new-hostname")
 | `target`   | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `hostname` | `string` | The new hostname to set.                                  |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.HostnameUpdateResult

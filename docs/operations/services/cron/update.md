@@ -30,7 +30,7 @@ step := o.CronUpdate("web-01", "backup", osapi.CronUpdateOpts{
 | `Vars`        | `map[string]any` | No       | Template variables when ContentType is |
 |               |                  |          | `"template"`.                          |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.CronMutationResult

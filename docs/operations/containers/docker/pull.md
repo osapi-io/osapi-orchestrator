@@ -17,7 +17,7 @@ step := o.DockerPull("_any", osapi.DockerPullOpts{
 | `target`  | `string`               | Target host or routing value. |
 | `opts`    | `osapi.DockerPullOpts` | Pull options (Image).         |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.DockerPullResult

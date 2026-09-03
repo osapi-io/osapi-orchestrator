@@ -24,7 +24,7 @@ step := o.ServiceUpdate("web-01", "myapp", osapi.ServiceUpdateOpts{
 | -------- | -------- | -------- | --------------------------------------------- |
 | `Object` | `string` | Yes      | New Object Store reference for the unit file. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.ServiceMutationResult

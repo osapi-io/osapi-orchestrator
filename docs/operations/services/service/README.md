@@ -1,4 +1,4 @@
-# Service Management
+# Service management
 
 Manage systemd services on target nodes -- list, inspect, create and update unit
 files, and control service lifecycle (start, stop, restart, enable, disable).

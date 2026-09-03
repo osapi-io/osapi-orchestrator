@@ -15,7 +15,7 @@ step := o.DockerStart("web-01", "c1a2b3d4e5f6")
 | `target`  | `string` | Target host or routing value.  |
 | `id`      | `string` | Container ID or name to start. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.DockerActionResult

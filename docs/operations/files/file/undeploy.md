@@ -16,7 +16,7 @@ step := o.FileUndeploy("web-01", "/etc/myapp/config.yaml")
 | `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `path`    | `string` | Path of the deployed file to remove.                      |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.FileUndeployResult

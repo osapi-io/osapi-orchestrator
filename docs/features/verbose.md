@@ -1,4 +1,4 @@
-# Verbose Output
+# Verbose output
 
 Enable detailed output with `WithVerbose()`. When enabled, the renderer shows
 stdout, stderr, and full response data for every task.

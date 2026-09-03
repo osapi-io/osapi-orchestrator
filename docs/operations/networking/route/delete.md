@@ -15,7 +15,7 @@ step := o.RouteDelete("web-01", "eth0")
 | `target`        | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `interfaceName` | `string` | Network interface to delete routes from.                  |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.RouteMutationResult

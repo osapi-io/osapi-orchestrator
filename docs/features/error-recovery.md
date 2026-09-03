@@ -1,4 +1,4 @@
-# Error Recovery
+# Error recovery
 
 Use `OnError(Continue)` to keep independent tasks running when a step fails, and
 `OnlyIfFailed` to trigger cleanup only on failure.
@@ -19,17 +19,17 @@ o.CommandExec("_any", "echo", "running-cleanup").
 The `Continue` strategy lets the plan proceed even if some hosts fail. The
 cleanup step only runs when at least one dependency failed.
 
-## Error Strategies
+## Error strategies
 
 | Strategy   | Behavior                                        |
 | ---------- | ----------------------------------------------- |
 | `StopAll`  | Fail fast, cancel everything (default)          |
 | `Continue` | Skip dependents, keep running independent tasks |
 
-## Broadcast Error Recovery
+## Broadcast error recovery
 
 For broadcast operations, `OnlyIfFailed` triggers when the task-level status is
-`Failed` — this happens when any host fails. To make finer-grained decisions
+`Failed`, this happens when any host fails. To make finer-grained decisions
 based on per-host results, use the host-level guards:
 
 ```go
@@ -52,11 +52,11 @@ o.CommandExec("_all", "rollback.sh").
 
 The difference from task-level `OnlyIfFailed`:
 
-- `OnlyIfFailed` checks `Status == Failed` — triggers on any failure
-- `OnlyIfAnyHostFailed` checks `HostResult.Error` — inspects individual hosts
+- `OnlyIfFailed` checks `Status == Failed`, triggers on any failure
+- `OnlyIfAnyHostFailed` checks `HostResult.Error`, inspects individual hosts
 - `OnlyIfAllHostsFailed` requires every host to have an error
 
-See [Guards — Broadcast Guards](guards.md#broadcast-guards) for the full
+See [Guards: Broadcast Guards](guards.md#broadcast-guards) for the full
 reference.
 
 ## Example

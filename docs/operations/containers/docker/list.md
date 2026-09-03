@@ -18,14 +18,14 @@ step := o.DockerList("_any", &osapi.DockerListParams{
 | `target`  | `string`                  | Target host or routing value. |
 | `params`  | `*osapi.DockerListParams` | Optional filter parameters.   |
 
-### DockerListParams Fields
+### DockerListParams fields
 
 | Field   | Type     | Description                                         |
 | ------- | -------- | --------------------------------------------------- |
 | `State` | `string` | Filter by state: `"running"`, `"stopped"`, `"all"`. |
 | `Limit` | `int`    | Maximum number of containers to return.             |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.DockerListResult
@@ -37,7 +37,7 @@ err := results.Decode("docker-list", &result)
 | `Containers` | `[]osapi.DockerSummaryItem` | List of matching containers. |
 | `Error`      | `string`                    | Error if listing failed.     |
 
-### DockerSummaryItem Fields
+### DockerSummaryItem fields
 
 | Field     | Type     | Description                   |
 | --------- | -------- | ----------------------------- |

@@ -21,7 +21,7 @@ step := o.CommandShell(
 | `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `command` | `string` | Shell command string to execute.                          |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.CommandResult

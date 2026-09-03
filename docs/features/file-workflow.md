@@ -1,9 +1,9 @@
-# File Workflow
+# File workflow
 
 The orchestrator provides a complete upload, deploy, verify lifecycle for
 managing files across agents.
 
-## Upload and Deploy
+## Upload and deploy
 
 ```go
 upload := o.FileUpload("config.yaml", "raw", data).After(health)
@@ -16,7 +16,7 @@ deploy := o.FileDeploy("_any", osapi.FileDeployOpts{
 o.FileStatusGet("_any", "/etc/myapp/config.yaml").After(deploy)
 ```
 
-## Conditional Upload
+## Conditional upload
 
 Use `FileChanged` with `OnlyIfChanged` to skip uploads when content is
 unchanged:
@@ -28,7 +28,7 @@ upload := o.FileUpload("config.yaml", "raw", data).
 o.FileDeploy("_any", opts).After(upload).OnlyIfChanged()
 ```
 
-## Force Upload
+## Force upload
 
 Bypass the SHA-256 pre-check with `WithForce()`:
 

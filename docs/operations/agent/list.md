@@ -15,7 +15,7 @@ step := o.AgentList()
 
 None.
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.AgentList

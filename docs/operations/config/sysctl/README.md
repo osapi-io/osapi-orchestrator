@@ -1,4 +1,4 @@
-# Sysctl Management
+# Sysctl management
 
 Manage kernel parameters via sysctl drop-in files on target nodes -- create,
 update, list, get, and delete parameters backed by the file provider.

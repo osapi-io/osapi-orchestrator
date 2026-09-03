@@ -26,7 +26,7 @@ A stricter variant that requires **all** dependencies to report changes:
 step.OnlyIfAllChanged()
 ```
 
-## Host-Level Variants
+## Host-level variants
 
 For broadcast operations, two host-level variants inspect per-host `Changed`
 status instead of the task-level `Changed` bool:
@@ -39,7 +39,7 @@ step.OnlyIfAnyHostChanged()
 step.OnlyIfAllHostsChanged()
 ```
 
-See [Guards — Broadcast Guards](guards.md#broadcast-guards) for details.
+See [Guards: Broadcast Guards](guards.md#broadcast-guards) for details.
 
 ## Example
 

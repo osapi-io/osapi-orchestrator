@@ -1,4 +1,4 @@
-# Package Management
+# Package management
 
 Manage system packages on target nodes -- list installed packages, get details,
 install, remove, update all, and check for available updates.

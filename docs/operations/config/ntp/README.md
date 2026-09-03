@@ -1,4 +1,4 @@
-# NTP Management
+# NTP management
 
 Manage NTP server configuration on target nodes -- get status, create, update,
 and delete NTP configuration.

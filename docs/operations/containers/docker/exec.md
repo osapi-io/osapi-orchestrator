@@ -18,7 +18,7 @@ step := o.DockerExec("web-01", "c1a2b3d4e5f6", osapi.DockerExecOpts{
 | `id`      | `string`               | Container ID or name to exec into. |
 | `opts`    | `osapi.DockerExecOpts` | Command execution options.         |
 
-### DockerExecOpts Fields
+### DockerExecOpts fields
 
 | Field        | Type       | Description                                           |
 | ------------ | ---------- | ----------------------------------------------------- |
@@ -26,7 +26,7 @@ step := o.DockerExec("web-01", "c1a2b3d4e5f6", osapi.DockerExecOpts{
 | `Env`        | `[]string` | Additional environment variables in KEY=VALUE format. |
 | `WorkingDir` | `string`   | Working directory inside the container.               |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.DockerExecResult

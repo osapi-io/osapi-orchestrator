@@ -16,7 +16,7 @@ step := o.NetworkDNSGet("web-01", "eth0")
 | `target`        | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `interfaceName` | `string` | Network interface to query (e.g., `eth0`, `ens33`).       |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.DNSConfig

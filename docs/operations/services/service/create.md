@@ -26,7 +26,7 @@ step := o.ServiceCreate("web-01", osapi.ServiceCreateOpts{
 | `Name`   | `string` | Yes      | Service unit name.                        |
 | `Object` | `string` | Yes      | Object Store reference for the unit file. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.ServiceMutationResult

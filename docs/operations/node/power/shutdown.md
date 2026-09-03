@@ -25,7 +25,7 @@ step := o.PowerShutdown("web-01", osapi.PowerOpts{
 | `Delay`   | `int`    | No       | Seconds to wait before shutting down.     |
 | `Message` | `string` | No       | Message to broadcast before the shutdown. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.PowerResult

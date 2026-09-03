@@ -15,7 +15,7 @@ step := o.SysctlGet("web-01", "net.ipv4.ip_forward")
 | `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `key`     | `string` | Sysctl parameter key to retrieve.                         |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.SysctlEntryResult

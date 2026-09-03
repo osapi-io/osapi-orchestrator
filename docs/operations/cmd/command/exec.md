@@ -19,7 +19,7 @@ step := o.CommandExec("web-01", "ls", "-la", "/var/log")
 | `command` | `string`    | The command to execute.                                   |
 | `args`    | `...string` | Variadic arguments passed to the command.                 |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.CommandResult

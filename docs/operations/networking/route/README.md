@@ -1,4 +1,4 @@
-# Route Management
+# Route management
 
 Manage network route configuration via Netplan on target nodes -- list, get,
 create, update, and delete routes.

@@ -52,7 +52,7 @@ step := o.FileDeploy("web-01", osapi.FileDeployOpts{
 | `Group`       | `string`         | No       | File owner group.                                    |
 | `Vars`        | `map[string]any` | No       | Template variables when ContentType is `"template"`. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.FileDeployResult

@@ -19,7 +19,7 @@ step := o.InterfaceUpdate("web-01", "eth0", osapi.InterfaceConfigOpts{
 | `ifaceName` | `string`              | Name of the network interface to update.                  |
 | `opts`      | `InterfaceConfigOpts` | Configuration options (see [InterfaceCreate](create.md)). |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.InterfaceMutationResult

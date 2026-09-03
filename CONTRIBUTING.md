@@ -10,18 +10,18 @@ the pull request workflow.
 - Read the [Code of Conduct](CODE_OF_CONDUCT.md). It applies to every
   interaction in this repo.
 
-- **Design records** — The conventions binding this repository are specified in
+- **Design records.** The conventions binding this repository are specified in
   [osapi-io/specs](https://github.com/osapi-io/specs) under
   `components/osapi-orchestrator/`, whose `.specify/memory/` is the standing
-  record. Design reasoning for a change lives there too, not here — a design
-  document kept in this repository goes stale the moment the code moves past it,
-  with nothing to catch the drift.
+  record. Design reasoning for a change lives there, not here. A design document
+  kept in this repository goes stale the moment the code moves past it, and
+  nothing catches the drift.
 
-- **Check existing work** — Is there an existing PR? Are there issues discussing
+- **Check existing work.** Is there an existing PR? Are there issues discussing
   the feature/change you want to make? Please make sure you consider/address
   these discussions in your work.
 
-- **Backwards compatibility** — Will your change break existing consumers of
+- **Backwards compatibility.** Will your change break existing consumers of
   osapi-orchestrator? It is much more likely that your change will be merged if
   it is backwards compatible. Is there an approach you can take that maintains
   this compatibility? If not, consider opening an issue first so that API
@@ -35,9 +35,9 @@ Install tools using [mise]:
 mise install
 ```
 
-- **[Go]** — osapi-orchestrator is written in Go. We always support the latest
+- **[Go].** osapi-orchestrator is written in Go. We always support the latest
   two major Go versions, so make sure your version is recent enough.
-- **[just]** — Task runner used for building, testing, formatting, and other
+- **[just].** Task runner used for building, testing, formatting, and other
   development workflows. Install with `brew install just`.
 
 ### Claude Code
@@ -49,7 +49,7 @@ marketplace:
 /plugin install commit-commands@claude-plugins-official
 ```
 
-- **commit-commands** — provides `/commit` and `/commit-push-pr` slash commands
+- **commit-commands.** provides `/commit` and `/commit-push-pr` slash commands
   that follow the project's commit conventions automatically.
 
 **Do not use superpowers.** Spec Kit governs specification, planning, and
@@ -95,7 +95,7 @@ examples/
     host-status.go, guards.go, broadcast.go, ...
 ```
 
-- **`pkg/orchestrator/`** — User-facing DSL
+- **`pkg/orchestrator/`.** User-facing DSL
   - Typed operation constructors (NodeHostnameGet, CommandExec, etc.)
   - Uses SDK types directly (`osapi.HostnameResult`, `osapi.Agent`, etc.)
   - Porcelain over osapi-sdk's orchestrator engine
@@ -112,7 +112,7 @@ just go-vet         # Run linter
 ```
 
 The linters that run are declared in `.golangci.yml`. Read them there rather
-than looking for a list here — a copied list goes stale the first time the
+than looking for a list here. A copied list goes stale the first time the
 configuration changes. Generated files (`*.gen.go`, `*.pb.go`) are excluded from
 formatting.
 
@@ -130,7 +130,7 @@ just md-fmt         # Auto-fix formatting
 
 ### Function signatures
 
-Functions with parameters use multi-line format — one parameter per line, with
+Functions with parameters use multi-line format, one parameter per line, with
 the closing parenthesis and the return types on a line of their own:
 
 ```go
@@ -157,7 +157,7 @@ Name a file for what it holds. Avoid `helpers.go`, `utils.go`, and names of that
 kind: they describe where code was put rather than what it is, and they
 accumulate whatever has no other home.
 
-`types.go` holds only type declarations — structs, interfaces, constants, and
+`types.go` holds only type declarations: structs, interfaces, constants, and
 aliases. A function belongs in a file named for what it does.
 
 A test file is named for the production file it tests. Where tests grow too
@@ -190,7 +190,7 @@ package mocks
 
 The generator is resolved through the module's tool dependencies, so every
 checkout runs the version `go.mod` records. Destination files end in `.gen.go`
-and are committed. Do not use `gen/` for mocks — that name is taken by API code
+and are committed. Do not use `gen/` for mocks. That name is taken by API code
 generation.
 
 When the interface is **unexported**, a sibling package cannot work: the mock
@@ -215,7 +215,7 @@ type. The generated mock is still what satisfies the interface.
 
 Three doubles are written by hand, because generating them buys nothing:
 
-- One standing in for a standard library interface — `net.Conn`, `fs.File`,
+- One standing in for a standard library interface: `net.Conn`, `fs.File`,
   `io.Writer`, `slog.Handler`. Those do not move when our code does.
 - One carrying a real implementation of the behavior under test, such as signing
   with a genuinely generated key pair.
@@ -243,7 +243,7 @@ just go-unit-cov-check   # Report coverage and fail below the target
 ```
 
 The target is declared in `.github/codecov.yml` and in the shared `go` justfile
-module — change both together.
+module. Change both together.
 
 ### Test file conventions
 
@@ -254,7 +254,7 @@ module — change both together.
 - Suite naming: `*_public_test.go` → `{Name}PublicTestSuite`, `*_test.go` →
   `{Name}TestSuite`.
 - `testify/suite` with table-driven cases.
-- One suite method per function under test — success, errors, and edge cases are
+- One suite method per function under test. Success, errors, and edge cases are
   rows in one table, not separate methods.
 - `export_test.go` exposes unexported symbols to external tests, by alias or by
   setter. Do not use an alias to re-cover behavior the caller's own test already
@@ -314,22 +314,22 @@ Key rules:
 - Wrap errors with context: `fmt.Errorf("verb noun: %w", err)`
 - Use `engine.CollectionResult` for node-targeted operations (returns per-host
   results), `engine.StructToMap` for non-collection responses
-- The `engine` import is `internal/engine` — only used inside
+- The `engine` import is `internal/engine`, used only inside
   `pkg/orchestrator/`, never by external consumers
 
 ### Step 2: tests
 
 Two test files must be updated:
 
-**`pkg/orchestrator/ops_test.go`** (internal, httptest pattern) — tests the full
+**`pkg/orchestrator/ops_test.go`** (internal, httptest pattern) tests the full
 HTTP round-trip with a mock server:
 
 - Create an `httptest.Server` that returns canned JSON
 - Exercise the constructor and verify the result via `report.Decode()`
 - Cover success, error, and edge-case scenarios as table rows
 
-**`pkg/orchestrator/ops_public_test.go`** (public, step-creation pattern) —
-tests that the constructor creates valid steps:
+**`pkg/orchestrator/ops_public_test.go`** (public, step-creation pattern) tests
+that the constructor creates valid steps:
 
 - Verify the step is non-nil and has the expected task name
 - One suite method per operation, all scenarios as rows
@@ -342,12 +342,12 @@ Create `docs/operations/{domain}/{operation}.md` following the existing template
 in that domain directory. Every doc must include these sections:
 
 - **Description** (h1 heading with the method name)
-- **Usage** — minimal Go snippet showing the constructor call
-- **Parameters** — table of all parameters with types and descriptions
-- **Result Type** — `Decode()` snippet and field table
-- **Idempotency** — one of: Read-only, Idempotent (Yes), Non-idempotent (No)
-- **Permissions** — required OSAPI permission (e.g., `node:write`)
-- **Example** — link to the example file where this operation is used:
+- **Usage.** minimal Go snippet showing the constructor call
+- **Parameters.** table of all parameters with types and descriptions
+- **Result Type.** `Decode()` snippet and field table
+- **Idempotency.** one of: Read-only, Idempotent (Yes), Non-idempotent (No)
+- **Permissions.** required OSAPI permission (e.g., `node:write`)
+- **Example.** link to the example file where this operation is used:
   ```
   See
   [`examples/operations/{domain}.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/{domain}.go)
@@ -408,7 +408,7 @@ appear in at least one runnable example.
 - **Decode and print**: decode at least one result so the example isn't silent.
   Use `report.Decode("step-name", &typedStruct)`.
 - **Keep it short**: under ~100 lines of code (excluding license). If longer,
-  you're demonstrating too much — split it.
+  you're demonstrating too much. Split it.
 - **Operation docs link to examples**: every operation doc in
   `docs/operations/{domain}/` must link to the example file where that operation
   is demonstrated.
@@ -467,20 +467,20 @@ be reasonable to split it in a few). Git squash and rebase is your friend!
 
 ## Submitting a PR
 
-- **Describe your changes** — Ensure that you provide a comprehensive
-  description of your changes.
-- **Issue/PR links** — Link any previous work such as related issues or PRs.
+- **Describe your changes.** Say what changed and why. A reviewer should not
+  have to read the diff to learn the reason for it.
+- **Issue/PR links.** Link any previous work such as related issues or PRs.
   Please describe how your changes differ to/extend this work.
-- **Examples** — Add any examples or screenshots that you think are useful to
+- **Examples.** Add any examples or screenshots that you think are useful to
   demonstrate the effect of your changes.
-- **Draft PRs** — If your changes are incomplete, but you would like to discuss
+- **Draft PRs.** If your changes are incomplete, but you would like to discuss
   them, open the PR as a draft and add a comment to start a discussion. Using
   comments rather than the PR description allows the description to be updated
   later while preserving any discussions.
 
 ## AI usage
 
-All contributions are subject to the [AI Usage Policy](AI_POLICY.md) — disclose
+All contributions are subject to the [AI Usage Policy](AI_POLICY.md). Disclose
 the tool you used, and make sure you can explain what your change does without
 the aid of AI tools.
 
@@ -494,7 +494,7 @@ answer questions.
 
 > I'm stuck, where can I get help?
 
-If you have questions, feel free to open a [Discussion] on GitHub.
+If you have questions, open a [Discussion] on GitHub.
 
 [claude code]: https://claude.ai/code
 [conventional commits]: https://www.conventionalcommits.org

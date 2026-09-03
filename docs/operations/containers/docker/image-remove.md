@@ -24,7 +24,7 @@ step := o.DockerImageRemove("_any", "nginx:latest",
 | ------- | ------ | -------------------------------------- |
 | `Force` | `bool` | Force removal even if image is in use. |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.DockerActionResult

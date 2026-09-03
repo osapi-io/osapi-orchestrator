@@ -1,4 +1,4 @@
-# Result Decode
+# Result decode
 
 After `o.Run()` returns a `Report`, decode typed results from any step.
 
@@ -16,7 +16,7 @@ if err := report.Decode("run-uptime", &cmd); err == nil {
 }
 ```
 
-## Status Inspection
+## Status inspection
 
 Check whether a step succeeded, failed, or was skipped:
 

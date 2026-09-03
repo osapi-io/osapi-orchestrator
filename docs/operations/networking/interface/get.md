@@ -15,7 +15,7 @@ step := o.InterfaceGet("web-01", "eth0")
 | `target`    | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
 | `ifaceName` | `string` | Name of the network interface.                            |
 
-## Result Type
+## Result type
 
 ```go
 var result osapi.InterfaceGetResult
