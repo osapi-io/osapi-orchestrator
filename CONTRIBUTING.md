@@ -102,8 +102,8 @@ examples/
 
 ## Code style
 
-Go code should be formatted by [`gofumpt`][gofumpt] and linted using
-[`golangci-lint`][golangci-lint]. This style is enforced by CI.
+Go code is formatted by [gofumpt] and linted using [golangci-lint], enforced by
+CI.
 
 ```bash
 just go-fmt-check   # Check formatting
@@ -480,9 +480,9 @@ be reasonable to split it in a few). Git squash and rebase is your friend!
 
 ## AI usage
 
-All contributions are subject to the [AI Usage Policy](AI_POLICY.md). Disclose
-the tool you used, and make sure you can explain what your change does without
-the aid of AI tools.
+This repo is written with AI assistance. All contributions are subject to the
+[AI Usage Policy](AI_POLICY.md). Disclose the tool you used, and make sure you
+can explain what your change does without the aid of AI tools.
 
 ## FAQ
 
