@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"time"
 
-	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 // Results provides access to completed step results inside When guards.
@@ -189,30 +189,47 @@ func (r *Report) Decode(
 	v any,
 ) error {
 	for _, t := range r.Tasks {
-		if t.Name == name {
-			data := t.Data
-			if len(t.HostResults) > 0 {
-				data = t.HostResults[0].Data
-			}
-
-			if data == nil {
-				return fmt.Errorf("no result data for %q", name)
-			}
-
-			b, err := json.Marshal(data)
-			if err != nil {
-				return fmt.Errorf("marshal result data: %w", err)
-			}
-
-			if err := json.Unmarshal(b, v); err != nil {
-				return fmt.Errorf("decode result data: %w", err)
-			}
-
-			return nil
+		if t.Name != name {
+			continue
 		}
+
+		return decodeInto(taskData(t), name, v)
 	}
 
 	return fmt.Errorf("no result for %q", name)
+}
+
+// taskData returns the data a task produced. A broadcast task reports
+// per host, and the first host's data stands for the task.
+func taskData(t engine.TaskResult) map[string]any {
+	if len(t.HostResults) > 0 {
+		return t.HostResults[0].Data
+	}
+
+	return t.Data
+}
+
+// decodeInto round-trips data through JSON into v, so a caller gets its
+// own type back rather than a map.
+func decodeInto(
+	data map[string]any,
+	name string,
+	v any,
+) error {
+	if data == nil {
+		return fmt.Errorf("no result data for %q", name)
+	}
+
+	b, err := json.Marshal(data)
+	if err != nil {
+		return fmt.Errorf("marshal result data: %w", err)
+	}
+
+	if err := json.Unmarshal(b, v); err != nil {
+		return fmt.Errorf("decode result data: %w", err)
+	}
+
+	return nil
 }
 
 // Summary returns a human-readable summary of the plan execution.

@@ -22,7 +22,7 @@ package engine_test
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
@@ -56,8 +56,8 @@ func (s *RunnerPublicTestSuite) TestLevelize() {
 		{
 			name: "linear chain has 3 levels",
 			setup: func() []*engine.Task {
-				a := engine.NewTaskFunc("a", noop)
-				b := engine.NewTaskFunc("b", noop)
+				a := engine.NewTaskFunc(taskA, noop)
+				b := engine.NewTaskFunc(taskB, noop)
 				c := engine.NewTaskFunc("c", noop)
 				b.DependsOn(a)
 				c.DependsOn(b)
@@ -69,8 +69,8 @@ func (s *RunnerPublicTestSuite) TestLevelize() {
 		{
 			name: "diamond has 3 levels",
 			setup: func() []*engine.Task {
-				a := engine.NewTaskFunc("a", noop)
-				b := engine.NewTaskFunc("b", noop)
+				a := engine.NewTaskFunc(taskA, noop)
+				b := engine.NewTaskFunc(taskB, noop)
 				c := engine.NewTaskFunc("c", noop)
 				d := engine.NewTaskFunc("d", noop)
 				b.DependsOn(a)
@@ -84,8 +84,8 @@ func (s *RunnerPublicTestSuite) TestLevelize() {
 		{
 			name: "independent tasks in 1 level",
 			setup: func() []*engine.Task {
-				a := engine.NewTaskFunc("a", noop)
-				b := engine.NewTaskFunc("b", noop)
+				a := engine.NewTaskFunc(taskA, noop)
+				b := engine.NewTaskFunc(taskB, noop)
 
 				return []*engine.Task{a, b}
 			},
@@ -121,7 +121,7 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 					return &engine.Result{Changed: false}, nil
 				})
 
-				child := plan.TaskFunc("child", func(
+				child := plan.TaskFunc(taskChild, func(
 					_ context.Context,
 					_ *osapiclient.Client,
 				) (*engine.Result, error) {
@@ -132,7 +132,7 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				return plan
 			},
-			taskName:   "child",
+			taskName:   taskChild,
 			wantStatus: engine.StatusSkipped,
 		},
 		{
@@ -140,16 +140,16 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 			setup: func() *engine.Plan {
 				plan := engine.NewPlan(nil, engine.OnError(engine.Continue))
 
-				plan.TaskFunc("failing", func(
+				plan.TaskFunc(taskFailing, func(
 					_ context.Context,
 					_ *osapiclient.Client,
 				) (*engine.Result, error) {
-					return nil, fmt.Errorf("deliberate error")
+					return nil, errors.New("deliberate error")
 				})
 
 				return plan
 			},
-			taskName:   "failing",
+			taskName:   taskFailing,
 			wantStatus: engine.StatusFailed,
 		},
 		{
@@ -180,10 +180,10 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 					_ context.Context,
 					_ *osapiclient.Client,
 				) (*engine.Result, error) {
-					return nil, fmt.Errorf("deliberate error")
+					return nil, errors.New("deliberate error")
 				})
 
-				child := plan.TaskFunc("child", func(
+				child := plan.TaskFunc(taskChild, func(
 					_ context.Context,
 					_ *osapiclient.Client,
 				) (*engine.Result, error) {
@@ -193,7 +193,7 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				return plan
 			},
-			taskName:   "child",
+			taskName:   taskChild,
 			wantStatus: engine.StatusSkipped,
 		},
 		{
@@ -201,7 +201,7 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 			setup: func() *engine.Plan {
 				plan := engine.NewPlan(nil, engine.OnError(engine.Continue))
 
-				plan.TaskFunc("ok", func(
+				plan.TaskFunc(taskOK, func(
 					_ context.Context,
 					_ *osapiclient.Client,
 				) (*engine.Result, error) {
@@ -210,7 +210,7 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				return plan
 			},
-			taskName:   "ok",
+			taskName:   taskOK,
 			wantStatus: engine.StatusChanged,
 		},
 		{
@@ -218,7 +218,7 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 			setup: func() *engine.Plan {
 				plan := engine.NewPlan(nil, engine.OnError(engine.Continue))
 
-				plan.TaskFunc("ok", func(
+				plan.TaskFunc(taskOK, func(
 					_ context.Context,
 					_ *osapiclient.Client,
 				) (*engine.Result, error) {
@@ -227,7 +227,7 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				return plan
 			},
-			taskName:   "ok",
+			taskName:   taskOK,
 			wantStatus: engine.StatusUnchanged,
 		},
 	}
@@ -342,7 +342,7 @@ func (s *RunnerPublicTestSuite) TestTaskFuncWithResultsReceivesResults() {
 				plan := engine.NewPlan(nil, engine.OnError(engine.StopAll))
 				var captured string
 
-				a := plan.TaskFunc("a", func(
+				a := plan.TaskFunc(taskA, func(
 					_ context.Context,
 					_ *osapiclient.Client,
 				) (*engine.Result, error) {
@@ -352,12 +352,12 @@ func (s *RunnerPublicTestSuite) TestTaskFuncWithResultsReceivesResults() {
 					}, nil
 				})
 
-				b := plan.TaskFuncWithResults("b", func(
+				b := plan.TaskFuncWithResults(taskB, func(
 					_ context.Context,
 					_ *osapiclient.Client,
 					results engine.Results,
 				) (*engine.Result, error) {
-					r := results.Get("a")
+					r := results.Get(taskA)
 					if r != nil {
 						if h, ok := r.Data["hostname"].(string); ok {
 							captured = h
@@ -399,7 +399,7 @@ func (s *RunnerPublicTestSuite) TestTaskResultCarriesData() {
 			setup: func() *engine.Plan {
 				plan := engine.NewPlan(nil, engine.OnError(engine.StopAll))
 
-				plan.TaskFunc("a", func(
+				plan.TaskFunc(taskA, func(
 					_ context.Context,
 					_ *osapiclient.Client,
 				) (*engine.Result, error) {
@@ -411,7 +411,7 @@ func (s *RunnerPublicTestSuite) TestTaskResultCarriesData() {
 
 				return plan
 			},
-			taskName: "a",
+			taskName: taskA,
 			wantKey:  "stdout",
 			wantVal:  "hello",
 		},
@@ -490,7 +490,7 @@ func (s *RunnerPublicTestSuite) TestRunTaskPreservesResultOnError() {
 			setup: func() *engine.Plan {
 				plan := engine.NewPlan(nil, engine.OnError(engine.Continue))
 
-				plan.TaskFunc("failing", func(
+				plan.TaskFunc(taskFailing, func(
 					_ context.Context,
 					_ *osapiclient.Client,
 				) (*engine.Result, error) {
@@ -500,12 +500,12 @@ func (s *RunnerPublicTestSuite) TestRunTaskPreservesResultOnError() {
 							{Hostname: "web-01", Changed: true},
 							{Hostname: "web-02", Error: "timeout"},
 						},
-					}, fmt.Errorf("partial failure")
+					}, errors.New("partial failure")
 				})
 
 				return plan
 			},
-			taskName:        "failing",
+			taskName:        taskFailing,
 			wantChanged:     true,
 			wantHostResults: 2,
 		},

@@ -27,7 +27,7 @@ package orchestrator
 import (
 	"context"
 
-	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -94,10 +94,33 @@ func (o *Orchestrator) TaskFunc(
 }
 
 // rendererHooks translates SDK hook callbacks into renderer calls.
+// taskNames lists the tasks in a level by name.
+func taskNames(tasks []*engine.Task) []string {
+	names := make([]string, len(tasks))
+	for i, t := range tasks {
+		names[i] = t.Name()
+	}
+
+	return names
+}
+
+// countChanged counts the results that reported a change.
+func countChanged(results []engine.TaskResult) int {
+	changed := 0
+
+	for _, res := range results {
+		if res.Changed {
+			changed++
+		}
+	}
+
+	return changed
+}
+
 func rendererHooks(
 	r renderer,
 ) engine.Hooks {
-	levelParallel := make(map[int]bool)
+	levelModes := make(map[int]levelMode)
 
 	return engine.Hooks{
 		BeforePlan: func(
@@ -118,27 +141,25 @@ func rendererHooks(
 			tasks []*engine.Task,
 			parallel bool,
 		) {
-			levelParallel[level] = parallel
-
-			names := make([]string, len(tasks))
-			for i, t := range tasks {
-				names[i] = t.Name()
+			mode := modeSequential
+			if parallel {
+				mode = modeParallel
 			}
 
-			r.LevelStart(level, names, parallel)
+			levelModes[level] = mode
+
+			r.LevelStart(level, taskNames(tasks), mode)
 		},
 		AfterLevel: func(
 			level int,
 			results []engine.TaskResult,
 		) {
-			changed := 0
-			for _, res := range results {
-				if res.Changed {
-					changed++
-				}
-			}
-
-			r.LevelDone(level, changed, len(results), levelParallel[level])
+			r.LevelDone(
+				level,
+				countChanged(results),
+				len(results),
+				levelModes[level],
+			)
 		},
 		BeforeTask: func(
 			task *engine.Task,

@@ -22,8 +22,9 @@ package orchestrator
 
 import (
 	"fmt"
+	"slices"
 
-	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -106,19 +107,9 @@ func (s *Step) OnlyIfFailed() *Step {
 // changes.
 func (s *Step) OnlyIfAllChanged() *Step {
 	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
-		deps := s.task.Dependencies()
-		if len(deps) == 0 {
-			return false
-		}
-
-		for _, dep := range deps {
-			r := sdkResults.Get(dep.Name())
-			if r == nil || !r.Changed {
-				return false
-			}
-		}
-
-		return true
+		return s.allDeps(sdkResults, func(r *engine.Result) bool {
+			return r.Changed
+		})
 	}, "only-if-all-changed: not all dependencies changed")
 
 	return s
@@ -128,25 +119,7 @@ func (s *Step) OnlyIfAllChanged() *Step {
 // dependency has an error. Only meaningful for broadcast operations.
 func (s *Step) OnlyIfAnyHostFailed() *Step {
 	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
-		deps := s.task.Dependencies()
-		if len(deps) == 0 {
-			return false
-		}
-
-		for _, dep := range deps {
-			r := sdkResults.Get(dep.Name())
-			if r == nil || len(r.HostResults) == 0 {
-				continue
-			}
-
-			for _, hr := range r.HostResults {
-				if hr.Status == "failed" || (hr.Error != "" && hr.Status != "skipped") {
-					return true
-				}
-			}
-		}
-
-		return false
+		return s.anyHost(sdkResults, hostFailed)
 	}, "only-if-any-host-failed: no host failed")
 
 	return s
@@ -158,25 +131,7 @@ func (s *Step) OnlyIfAnyHostFailed() *Step {
 // indicate the operation is not available on that OS family.
 func (s *Step) OnlyIfAnyHostSkipped() *Step {
 	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
-		deps := s.task.Dependencies()
-		if len(deps) == 0 {
-			return false
-		}
-
-		for _, dep := range deps {
-			r := sdkResults.Get(dep.Name())
-			if r == nil || len(r.HostResults) == 0 {
-				continue
-			}
-
-			for _, hr := range r.HostResults {
-				if hr.Status == "skipped" {
-					return true
-				}
-			}
-		}
-
-		return false
+		return s.anyHost(sdkResults, hostSkipped)
 	}, "only-if-any-host-skipped: no host skipped")
 
 	return s
@@ -186,25 +141,7 @@ func (s *Step) OnlyIfAnyHostSkipped() *Step {
 // dependency has an error. Only meaningful for broadcast operations.
 func (s *Step) OnlyIfAllHostsFailed() *Step {
 	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
-		deps := s.task.Dependencies()
-		if len(deps) == 0 {
-			return false
-		}
-
-		for _, dep := range deps {
-			r := sdkResults.Get(dep.Name())
-			if r == nil || len(r.HostResults) == 0 {
-				return false
-			}
-
-			for _, hr := range r.HostResults {
-				if hr.Status == "skipped" || (hr.Error == "" && hr.Status != "failed") {
-					return false
-				}
-			}
-		}
-
-		return true
+		return s.allHosts(sdkResults, hostFailed)
 	}, "only-if-all-hosts-failed: not all hosts failed")
 
 	return s
@@ -214,25 +151,7 @@ func (s *Step) OnlyIfAllHostsFailed() *Step {
 // dependency reported changes. Only meaningful for broadcast operations.
 func (s *Step) OnlyIfAnyHostChanged() *Step {
 	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
-		deps := s.task.Dependencies()
-		if len(deps) == 0 {
-			return false
-		}
-
-		for _, dep := range deps {
-			r := sdkResults.Get(dep.Name())
-			if r == nil || len(r.HostResults) == 0 {
-				continue
-			}
-
-			for _, hr := range r.HostResults {
-				if hr.Changed {
-					return true
-				}
-			}
-		}
-
-		return false
+		return s.anyHost(sdkResults, hostChanged)
 	}, "only-if-any-host-changed: no host changed")
 
 	return s
@@ -242,28 +161,118 @@ func (s *Step) OnlyIfAnyHostChanged() *Step {
 // dependency reported changes. Only meaningful for broadcast operations.
 func (s *Step) OnlyIfAllHostsChanged() *Step {
 	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
-		deps := s.task.Dependencies()
-		if len(deps) == 0 {
-			return false
-		}
-
-		for _, dep := range deps {
-			r := sdkResults.Get(dep.Name())
-			if r == nil || len(r.HostResults) == 0 {
-				return false
-			}
-
-			for _, hr := range r.HostResults {
-				if !hr.Changed {
-					return false
-				}
-			}
-		}
-
-		return true
+		return s.allHosts(sdkResults, hostChanged)
 	}, "only-if-all-hosts-changed: not all hosts changed")
 
 	return s
+}
+
+// hostFailed reports whether a host errored. A skipped host is not a
+// failure: it means the operation is unavailable on that OS family.
+func hostFailed(hr engine.HostResult) bool {
+	return hr.Status == string(engine.StatusFailed) ||
+		(hr.Error != "" && hr.Status != string(engine.StatusSkipped))
+}
+
+// hostSkipped reports whether the operation was unavailable on a host.
+func hostSkipped(hr engine.HostResult) bool {
+	return hr.Status == string(engine.StatusSkipped)
+}
+
+// hostChanged reports whether a host reported a change.
+func hostChanged(hr engine.HostResult) bool {
+	return hr.Changed
+}
+
+// allDeps reports whether every dependency produced a result satisfying
+// pred. A step with no dependencies satisfies nothing, so that a guard
+// written for dependencies does not pass when there are none.
+func (s *Step) allDeps(
+	results engine.Results,
+	pred func(*engine.Result) bool,
+) bool {
+	deps := s.task.Dependencies()
+	if len(deps) == 0 {
+		return false
+	}
+
+	for _, dep := range deps {
+		r := results.Get(dep.Name())
+		if r == nil || !pred(r) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// hostsOf returns the hosts a dependency reported, or nil when the
+// dependency produced no result at all.
+func hostsOf(results engine.Results, dep *engine.Task) []engine.HostResult {
+	r := results.Get(dep.Name())
+	if r == nil {
+		return nil
+	}
+
+	return r.HostResults
+}
+
+// everyHost reports whether every host in the slice satisfies pred. An
+// empty slice satisfies it vacuously; callers decide what that means.
+func everyHost(
+	hosts []engine.HostResult,
+	pred func(engine.HostResult) bool,
+) bool {
+	for _, hr := range hosts {
+		if !pred(hr) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// anyHost reports whether any host of any dependency satisfies pred. A
+// dependency that reported no hosts is passed over rather than failing
+// the test — there is nothing there to disagree with.
+func (s *Step) anyHost(
+	results engine.Results,
+	pred func(engine.HostResult) bool,
+) bool {
+	deps := s.task.Dependencies()
+	if len(deps) == 0 {
+		return false
+	}
+
+	for _, dep := range deps {
+		if slices.ContainsFunc(hostsOf(results, dep), pred) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// allHosts reports whether every host of every dependency satisfies
+// pred. Unlike anyHost, a dependency that reported no hosts fails the
+// test: "all hosts changed" is not true of a dependency that ran on none.
+func (s *Step) allHosts(
+	results engine.Results,
+	pred func(engine.HostResult) bool,
+) bool {
+	deps := s.task.Dependencies()
+	if len(deps) == 0 {
+		return false
+	}
+
+	for _, dep := range deps {
+		hosts := hostsOf(results, dep)
+		if len(hosts) == 0 || !everyHost(hosts, pred) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // When adds a guard condition — the step only runs if the predicate
@@ -287,37 +296,46 @@ func (s *Step) WhenFact(
 	fn Predicate,
 ) *Step {
 	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
-		r := Results{results: sdkResults}
-
-		var list osapi.AgentList
-		if err := r.Decode(agentListStep, &list); err != nil {
-			s.task.SetGuardReason(
-				fmt.Sprintf(
-					"when-fact: step %q not found or decode failed: %v",
-					agentListStep,
-					err,
-				),
-			)
-
+		agents, ok := s.agentsFrom(sdkResults, agentListStep)
+		if !ok {
 			return false
 		}
 
-		if len(list.Agents) == 0 {
-			s.task.SetGuardReason("when-fact: no agents returned")
-
-			return false
-		}
-
-		for _, a := range list.Agents {
-			if fn(a) {
-				return true
-			}
-		}
-
-		return false
+		return slices.ContainsFunc(agents, fn)
 	}, "when-fact: no matching agent")
 
 	return s
+}
+
+// agentsFrom reads the agent list a named earlier step produced. It
+// reports false, and records why, when the step is missing or listed no
+// agents — the two are worth telling apart in the skip reason.
+func (s *Step) agentsFrom(
+	results engine.Results,
+	agentListStep string,
+) ([]osapi.Agent, bool) {
+	var list osapi.AgentList
+
+	r := Results{results: results}
+	if err := r.Decode(agentListStep, &list); err != nil {
+		s.task.SetGuardReason(
+			fmt.Sprintf(
+				"when-fact: step %q not found or decode failed: %v",
+				agentListStep,
+				err,
+			),
+		)
+
+		return nil, false
+	}
+
+	if len(list.Agents) == 0 {
+		s.task.SetGuardReason("when-fact: no agents returned")
+
+		return nil, false
+	}
+
+	return list.Agents, true
 }
 
 // OnError sets the error strategy for this step.

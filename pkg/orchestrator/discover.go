@@ -24,7 +24,7 @@ import (
 	"context"
 	"fmt"
 
-	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
@@ -131,17 +131,13 @@ func factValue(
 ) string {
 	switch key {
 	case "os.distribution":
-		if a.OSInfo == nil {
-			return ""
-		}
-
-		return a.OSInfo.Distribution
+		return osField(a.OSInfo, func(o *osapi.OSInfo) string {
+			return o.Distribution
+		})
 	case "os.version":
-		if a.OSInfo == nil {
-			return ""
-		}
-
-		return a.OSInfo.Version
+		return osField(a.OSInfo, func(o *osapi.OSInfo) string {
+			return o.Version
+		})
 	case "architecture":
 		return a.Architecture
 	case "service_manager":
@@ -151,12 +147,37 @@ func factValue(
 	case "kernel_version":
 		return a.KernelVersion
 	default:
-		if a.Facts == nil {
-			return ""
-		}
-
-		v, _ := a.Facts[key].(string)
-
-		return v
+		return reportedFact(a, key)
 	}
+}
+
+// osField reads a field of the agent's OS information, which an agent
+// that has not reported it yet does not have.
+func osField(
+	info *osapi.OSInfo,
+	get func(*osapi.OSInfo) string,
+) string {
+	if info == nil {
+		return ""
+	}
+
+	return get(info)
+}
+
+// reportedFact reads a fact the agent reported itself. Only strings can
+// be matched against, so anything else reads as absent.
+func reportedFact(
+	a osapi.Agent,
+	key string,
+) string {
+	if a.Facts == nil {
+		return ""
+	}
+
+	v, ok := a.Facts[key].(string)
+	if !ok {
+		return ""
+	}
+
+	return v
 }

@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 // tagWidth is the visible width of the longest status tag ([unchanged]).
@@ -127,12 +127,10 @@ func (r *lipglossRenderer) PlanDone(
 func (r *lipglossRenderer) LevelStart(
 	level int,
 	tasks []string,
-	parallel bool,
+	mode levelMode,
 ) {
-	mode := "sequential"
 	style := r.dim.Bold(true)
-	if parallel {
-		mode = "parallel"
+	if mode == modeParallel {
 		style = r.cyan.Bold(true)
 	}
 
@@ -153,10 +151,10 @@ func (r *lipglossRenderer) LevelDone(
 	level int,
 	changed int,
 	total int,
-	parallel bool,
+	mode levelMode,
 ) {
 	style := r.dim
-	if parallel {
+	if mode == modeParallel {
 		style = r.cyan
 	}
 
@@ -202,64 +200,92 @@ func (r *lipglossRenderer) TaskDone(
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	label := fmt.Sprintf("[%s]", result.Status)
-
-	var tag string
-	if result.Status == engine.StatusFailed {
-		tag = padTag(r.red.Render(label), len(label))
-	} else {
-		tag = padTag(r.green.Render(label), len(label))
-	}
-
-	changedStr := fmt.Sprintf("changed=%v", result.Changed)
-	if result.Changed {
-		changedStr = r.greenB.Render(changedStr)
-	}
-
-	durationStr := formatDuration(result.Duration)
-	if r.verbose && result.JobDuration > 0 {
-		durationStr += fmt.Sprintf(" (job: %s)", formatDuration(result.JobDuration))
-	}
-
 	r.printf(
 		"  %s %-*s %s  %s\n",
-		tag,
+		r.taskTag(result.Status),
 		nameWidth,
 		result.Name,
-		changedStr,
-		r.dim.Render(durationStr),
+		r.changedLabel(result),
+		r.dim.Render(r.durationLabel(result)),
 	)
 
-	// Always show error detail on failure.
-	if result.Status == engine.StatusFailed && result.Error != nil {
-		r.printf(
-			"  %s %s\n",
-			strings.Repeat(" ", tagWidth),
-			r.red.Render(result.Error.Error()),
-		)
-	}
+	r.printTaskError(result)
 
-	// Show per-host results for broadcast operations.
-	hasBroadcast := len(result.HostResults) > 0
-	if hasBroadcast {
+	// A broadcast operation reports per host, and those lines stand in
+	// for the aggregated data printTaskDetail would otherwise write.
+	if len(result.HostResults) > 0 {
 		r.printHostResults(result.HostResults)
 	}
 
-	// Verbose mode: show job ID when present.
-	if r.verbose && result.JobID != "" {
+	r.printTaskDetail(result)
+}
+
+// printTaskError writes the error detail under a failed task. It is
+// shown whether or not the run is verbose.
+func (r *lipglossRenderer) printTaskError(result engine.TaskResult) {
+	if result.Status != engine.StatusFailed || result.Error == nil {
+		return
+	}
+
+	r.printf(
+		"  %s %s\n",
+		tagIndent,
+		r.red.Render(result.Error.Error()),
+	)
+}
+
+// printTaskDetail writes the job id and response data a verbose run
+// asks for. The aggregated data is left out of a broadcast, where the
+// per-host lines have already said it.
+func (r *lipglossRenderer) printTaskDetail(result engine.TaskResult) {
+	if !r.verbose {
+		return
+	}
+
+	if result.JobID != "" {
 		r.printf(
 			"%s%s\n",
-			strings.Repeat(" ", tagWidth+2),
+			detailIndent,
 			r.dim.Render(fmt.Sprintf("job_id: %s", result.JobID)),
 		)
 	}
 
-	// Verbose mode: show response data on success.
-	// Skip when per-host results are shown — the aggregated data
-	// is redundant with the per-host breakdown.
-	if r.verbose && result.Data != nil && !hasBroadcast {
+	if result.Data != nil && len(result.HostResults) == 0 {
 		r.printResultData(result.Data)
 	}
+}
+
+// taskTag renders the bracketed status tag, red on failure.
+func (r *lipglossRenderer) taskTag(status engine.Status) string {
+	label := fmt.Sprintf("[%s]", status)
+
+	style := r.green
+	if status == engine.StatusFailed {
+		style = r.red
+	}
+
+	return padTag(style.Render(label), len(label))
+}
+
+// changedLabel renders the changed flag, highlighted when it is set.
+func (r *lipglossRenderer) changedLabel(result engine.TaskResult) string {
+	label := fmt.Sprintf("changed=%v", result.Changed)
+	if !result.Changed {
+		return label
+	}
+
+	return r.greenB.Render(label)
+}
+
+// durationLabel renders how long a task took, with the job's own time
+// alongside it in verbose mode.
+func (r *lipglossRenderer) durationLabel(result engine.TaskResult) string {
+	label := formatDuration(result.Duration)
+	if r.verbose && result.JobDuration > 0 {
+		label += fmt.Sprintf(" (job: %s)", formatDuration(result.JobDuration))
+	}
+
+	return label
 }
 
 // printHostResults renders per-host results for broadcast operations.
@@ -268,67 +294,85 @@ func (r *lipglossRenderer) TaskDone(
 func (r *lipglossRenderer) printHostResults(
 	hostResults []engine.HostResult,
 ) {
-	indent := strings.Repeat(" ", tagWidth+2)
-	dataIndent := indent + "  "
-
 	for _, hr := range hostResults {
-		status := r.green.Render("ok")
-
-		switch hr.Status {
-		case "skipped":
-			msg := "skipped"
-			if hr.Error != "" {
-				msg = "skipped: " + hr.Error
-			}
-			status = r.yellow.Render(msg)
-		case "failed":
-			msg := "failed"
-			if hr.Error != "" {
-				msg = "failed: " + hr.Error
-			}
-			status = r.red.Render(msg)
-		default:
-			if hr.Error != "" {
-				status = r.red.Render("error: " + hr.Error)
-			}
-		}
-
-		changed := ""
-		if hr.Changed {
-			changed = r.greenB.Render(" changed")
-		}
-
-		duration := ""
-		if r.verbose && hr.JobDuration > 0 {
-			duration = r.dim.Render(
-				fmt.Sprintf(" (job: %s)", formatDuration(hr.JobDuration)),
-			)
-		}
-
 		r.printf(
 			"%s%s %s%s%s\n",
-			indent,
+			detailIndent,
 			r.cyan.Render(fmt.Sprintf("[%s]", hr.Hostname)),
-			status,
-			changed,
-			duration,
+			r.hostStatus(hr),
+			r.hostChanged(hr),
+			r.hostDuration(hr),
 		)
 
 		if r.verbose && hr.Data != nil {
-			for key, v := range hr.Data {
-				if skipKeys[key] {
-					continue
-				}
+			r.printHostData(detailIndent+"  ", hr.Data)
+		}
+	}
+}
 
-				str := formatValue(v)
-				if str != "" {
-					r.printf(
-						"%s%s\n",
-						dataIndent,
-						r.dim.Render(fmt.Sprintf("%s: %s", key, str)),
-					)
-				}
-			}
+// hostStatus renders a host's outcome, carrying its error message when
+// it has one. A skipped host is yellow rather than red: the operation
+// was unavailable there, which is not a failure.
+func (r *lipglossRenderer) hostStatus(hr engine.HostResult) string {
+	switch hr.Status {
+	case string(engine.StatusSkipped):
+		return r.yellow.Render(withDetail("skipped", hr.Error))
+	case string(engine.StatusFailed):
+		return r.red.Render(withDetail("failed", hr.Error))
+	default:
+		if hr.Error != "" {
+			return r.red.Render("error: " + hr.Error)
+		}
+
+		return r.green.Render("ok")
+	}
+}
+
+// withDetail appends an error to a status word when there is one.
+func withDetail(status string, err string) string {
+	if err == "" {
+		return status
+	}
+
+	return status + ": " + err
+}
+
+// hostChanged marks a host that reported a change.
+func (r *lipglossRenderer) hostChanged(hr engine.HostResult) string {
+	if !hr.Changed {
+		return ""
+	}
+
+	return r.greenB.Render(" changed")
+}
+
+// hostDuration reports how long the job took on a host, in verbose mode.
+func (r *lipglossRenderer) hostDuration(hr engine.HostResult) string {
+	if !r.verbose || hr.JobDuration <= 0 {
+		return ""
+	}
+
+	return r.dim.Render(
+		fmt.Sprintf(" (job: %s)", formatDuration(hr.JobDuration)),
+	)
+}
+
+// printHostData renders a host's response fields, less the noisy ones.
+func (r *lipglossRenderer) printHostData(
+	indent string,
+	data map[string]any,
+) {
+	for key, v := range data {
+		if skipKeys[key] {
+			continue
+		}
+
+		if str := formatValue(v); str != "" {
+			r.printf(
+				"%s%s\n",
+				indent,
+				r.dim.Render(fmt.Sprintf("%s: %s", key, str)),
+			)
 		}
 	}
 }
@@ -344,8 +388,6 @@ var skipKeys = map[string]bool{
 func (r *lipglossRenderer) printResultData(
 	data map[string]any,
 ) {
-	indent := strings.Repeat(" ", tagWidth+2)
-
 	for key, v := range data {
 		if skipKeys[key] {
 			continue
@@ -355,7 +397,7 @@ func (r *lipglossRenderer) printResultData(
 		if str != "" {
 			r.printf(
 				"%s%s\n",
-				indent,
+				detailIndent,
 				r.dim.Render(fmt.Sprintf("%s: %s", key, str)),
 			)
 		}
@@ -445,6 +487,14 @@ func formatDuration(
 ) string {
 	return d.Round(time.Millisecond).String()
 }
+
+// The indents continuation lines are written at: tagIndent lines an
+// error up under the status tag, detailIndent lines everything else up
+// under the task name.
+var (
+	tagIndent    = strings.Repeat(" ", tagWidth)
+	detailIndent = strings.Repeat(" ", tagWidth+2)
+)
 
 // padTag right-pads a styled tag string so the visible width equals tagWidth.
 func padTag(

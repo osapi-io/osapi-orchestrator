@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	client "github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // jsonUnmarshalFn is the JSON unmarshal function (injectable for testing).
@@ -41,15 +41,17 @@ func StructToMap(
 // When rawJSON is non-nil, it is unmarshaled into Result.Data to
 // provide the full response for downstream consumers (e.g., guards
 // or Results.Decode). Pass resp.RawJSON() for this, or nil to skip.
-func CollectionResult[T any](
-	col client.Collection[T],
-	rawJSON []byte,
+// collectHosts converts each item to a host result, filling in its data
+// from the item itself where the converter left it empty, and reports
+// whether any host changed.
+func collectHosts[T any](
+	items []T,
 	toHostResult func(T) HostResult,
-) (*Result, error) {
-	hostResults := make([]HostResult, 0, len(col.Results))
+) ([]HostResult, bool) {
+	hostResults := make([]HostResult, 0, len(items))
 	changed := false
 
-	for _, r := range col.Results {
+	for _, r := range items {
 		hr := toHostResult(r)
 
 		if hr.Data == nil {
@@ -63,11 +65,33 @@ func CollectionResult[T any](
 		hostResults = append(hostResults, hr)
 	}
 
+	return hostResults, changed
+}
+
+// decodeRaw unmarshals the aggregate response body, if there was one.
+func decodeRaw(rawJSON []byte) (map[string]any, error) {
+	if len(rawJSON) == 0 {
+		return nil, nil
+	}
+
 	var data map[string]any
-	if len(rawJSON) > 0 {
-		if err := jsonUnmarshalFn(rawJSON, &data); err != nil {
-			return nil, fmt.Errorf("unmarshal response data: %w", err)
-		}
+	if err := jsonUnmarshalFn(rawJSON, &data); err != nil {
+		return nil, fmt.Errorf("unmarshal response data: %w", err)
+	}
+
+	return data, nil
+}
+
+func CollectionResult[T any](
+	col client.Collection[T],
+	rawJSON []byte,
+	toHostResult func(T) HostResult,
+) (*Result, error) {
+	hostResults, changed := collectHosts(col.Results, toHostResult)
+
+	data, err := decodeRaw(rawJSON)
+	if err != nil {
+		return nil, err
 	}
 
 	return &Result{

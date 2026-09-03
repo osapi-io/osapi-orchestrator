@@ -1,13 +1,13 @@
 package engine_test
 
 import (
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi-orchestrator/internal/engine"
-	client "github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 type BridgePublicTestSuite struct {
@@ -38,10 +38,10 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 	}{
 		{
 			name:  "converts struct with json tags to map",
-			input: testStruct{Name: "web-01", Value: 42},
+			input: testStruct{Name: hostWeb01, Value: 42},
 			validateFn: func(m map[string]any) {
 				s.Require().NotNil(m)
-				s.Equal("web-01", m["name"])
+				s.Equal(hostWeb01, m["name"])
 				s.Equal(float64(42), m["value"])
 			},
 		},
@@ -71,12 +71,12 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 		{
 			name: "converts SDK type with json tags",
 			input: client.HostnameResult{
-				Hostname: "web-01",
+				Hostname: hostWeb01,
 				Changed:  true,
 			},
 			validateFn: func(m map[string]any) {
 				s.Require().NotNil(m)
-				s.Equal("web-01", m["hostname"])
+				s.Equal(hostWeb01, m["hostname"])
 				s.Equal(true, m["changed"])
 			},
 		},
@@ -94,7 +94,7 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 					_ []byte,
 					_ any,
 				) error {
-					return fmt.Errorf("forced unmarshal error")
+					return errors.New("forced unmarshal error")
 				})
 			},
 			teardownFn: engine.ResetJSONUnmarshalFn,
@@ -141,7 +141,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 			name: "single result with auto-populated data",
 			col: client.Collection[client.HostnameResult]{
 				Results: []client.HostnameResult{
-					{Hostname: "web-01", Changed: false},
+					{Hostname: hostWeb01, Changed: false},
 				},
 				JobID: "job-123",
 			},
@@ -152,17 +152,17 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				s.Require().Len(result.HostResults, 1)
 
 				hr := result.HostResults[0]
-				s.Equal("web-01", hr.Hostname)
+				s.Equal(hostWeb01, hr.Hostname)
 				s.False(hr.Changed)
 				s.Require().NotNil(hr.Data, "Data should be auto-populated via StructToMap")
-				s.Equal("web-01", hr.Data["hostname"])
+				s.Equal(hostWeb01, hr.Data["hostname"])
 			},
 		},
 		{
 			name: "multiple results with changed true when any host changed",
 			col: client.Collection[client.HostnameResult]{
 				Results: []client.HostnameResult{
-					{Hostname: "web-01", Changed: false},
+					{Hostname: hostWeb01, Changed: false},
 					{Hostname: "web-02", Changed: true},
 				},
 				JobID: "job-456",
@@ -238,7 +238,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 			name: "rawJSON populates Result.Data",
 			col: client.Collection[client.HostnameResult]{
 				Results: []client.HostnameResult{
-					{Hostname: "web-01"},
+					{Hostname: hostWeb01},
 				},
 				JobID: "job-raw",
 			},
@@ -253,7 +253,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 			name: "nil rawJSON leaves Result.Data nil",
 			col: client.Collection[client.HostnameResult]{
 				Results: []client.HostnameResult{
-					{Hostname: "web-01"},
+					{Hostname: hostWeb01},
 				},
 				JobID: "job-nil",
 			},
@@ -267,7 +267,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 			name: "invalid rawJSON returns error",
 			col: client.Collection[client.HostnameResult]{
 				Results: []client.HostnameResult{
-					{Hostname: "web-01"},
+					{Hostname: hostWeb01},
 				},
 				JobID: "job-bad",
 			},

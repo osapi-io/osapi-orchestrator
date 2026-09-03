@@ -40,7 +40,7 @@ const agentListJSON = `{
 			"cpu_count": 8,
 			"os_info": {"distribution": "Ubuntu", "version": "22.04"},
 			"memory": {"total": 16000, "used": 8000, "free": 8000},
-			"facts": {"env": "prod"}
+			"facts": {"env": "prod", "uptime_days": 12}
 		},
 		{
 			"hostname": "web-02",
@@ -49,7 +49,7 @@ const agentListJSON = `{
 			"cpu_count": 4,
 			"os_info": {"distribution": "Debian", "version": "12"},
 			"memory": {"total": 8000, "used": 4000, "free": 4000},
-			"facts": {"env": "staging"}
+			"facts": {"env": "staging", "uptime_days": 4}
 		},
 		{
 			"hostname": "web-03",
@@ -58,7 +58,7 @@ const agentListJSON = `{
 			"cpu_count": 2,
 			"os_info": {"distribution": "Ubuntu", "version": "20.04"},
 			"memory": {"total": 4000, "used": 2000, "free": 2000},
-			"facts": {"env": "prod"}
+			"facts": {"env": "prod", "uptime_days": 12}
 		}
 	],
 	"total": 3
@@ -103,14 +103,14 @@ func (s *DiscoverPublicTestSuite) TestDiscover() {
 		{
 			name:       "No predicates returns all agents",
 			predicates: nil,
-			expected:   []string{"web-01", "web-02", "web-03"},
+			expected:   []string{hostWeb01, hostWeb02, hostWeb03},
 		},
 		{
 			name: "Filter by OS returns matching agents",
 			predicates: []orchestrator.Predicate{
-				orchestrator.OS("Ubuntu"),
+				orchestrator.OS(distributionUbuntu),
 			},
-			expected: []string{"web-01", "web-03"},
+			expected: []string{hostWeb01, hostWeb03},
 		},
 		{
 			name: "Filter by OS and Arch returns matching agents",
@@ -118,15 +118,15 @@ func (s *DiscoverPublicTestSuite) TestDiscover() {
 				orchestrator.OS("Debian"),
 				orchestrator.Arch("arm64"),
 			},
-			expected: []string{"web-02"},
+			expected: []string{hostWeb02},
 		},
 		{
 			name: "Filter by OS and MinCPU returns matching agents",
 			predicates: []orchestrator.Predicate{
-				orchestrator.OS("Ubuntu"),
+				orchestrator.OS(distributionUbuntu),
 				orchestrator.MinCPU(4),
 			},
-			expected: []string{"web-01"},
+			expected: []string{hostWeb01},
 		},
 		{
 			name: "No agents match returns empty slice",
@@ -198,23 +198,30 @@ func (s *DiscoverPublicTestSuite) TestGroupByFact() {
 	}{
 		{
 			name: "Group by os.distribution",
-			key:  "os.distribution",
+			key:  factOSDistribution,
 			expected: map[string][]string{
-				"Ubuntu": {"web-01", "web-03"},
-				"Debian": {"web-02"},
+				distributionUbuntu: {hostWeb01, hostWeb03},
+				"Debian":           {hostWeb02},
 			},
+		},
+		{
+			// Facts are free-form JSON, so a value that is not a
+			// string cannot be grouped on and reads as absent.
+			name:     "Group by a fact whose value is not a string",
+			key:      "uptime_days",
+			expected: map[string][]string{},
 		},
 		{
 			name: "Group by architecture",
 			key:  "architecture",
 			expected: map[string][]string{
-				"amd64": {"web-01", "web-03"},
-				"arm64": {"web-02"},
+				"amd64": {hostWeb01, hostWeb03},
+				"arm64": {hostWeb02},
 			},
 		},
 		{
 			name: "Skips agents with empty fact value",
-			key:  "os.distribution",
+			key:  factOSDistribution,
 			setupServer: func() *httptest.Server {
 				return httptest.NewServer(
 					http.HandlerFunc(func(
@@ -234,22 +241,22 @@ func (s *DiscoverPublicTestSuite) TestGroupByFact() {
 				)
 			},
 			expected: map[string][]string{
-				"Ubuntu": {"web-01"},
+				distributionUbuntu: {hostWeb01},
 			},
 		},
 		{
 			name: "Group with predicate filter",
-			key:  "os.distribution",
+			key:  factOSDistribution,
 			predicates: []orchestrator.Predicate{
-				orchestrator.OS("Ubuntu"),
+				orchestrator.OS(distributionUbuntu),
 			},
 			expected: map[string][]string{
-				"Ubuntu": {"web-01", "web-03"},
+				distributionUbuntu: {hostWeb01, hostWeb03},
 			},
 		},
 		{
 			name:        "Returns error when discover fails",
-			key:         "os.distribution",
+			key:         factOSDistribution,
 			expectErr:   true,
 			errContains: "group by fact",
 			setupServer: func() *httptest.Server {

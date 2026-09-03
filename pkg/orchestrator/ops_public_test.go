@@ -61,7 +61,7 @@ func (s *OpsPublicTestSuite) TestHealthCheck() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
 				return s.orch.HealthCheck()
 			},
@@ -82,9 +82,9 @@ func (s *OpsPublicTestSuite) TestNodeHostnameUpdate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameUpdate("_any", "new-hostname")
+				return s.orch.NodeHostnameUpdate(anyAgent, "new-hostname")
 			},
 		},
 	}
@@ -103,9 +103,9 @@ func (s *OpsPublicTestSuite) TestNodeOSGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.NodeOSGet("_any")
+				return s.orch.NodeOSGet(anyAgent)
 			},
 		},
 	}
@@ -124,9 +124,9 @@ func (s *OpsPublicTestSuite) TestNodeHostnameGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any")
+				return s.orch.NodeHostnameGet(anyAgent)
 			},
 		},
 	}
@@ -145,9 +145,9 @@ func (s *OpsPublicTestSuite) TestNodeStatusGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.NodeStatusGet("_any")
+				return s.orch.NodeStatusGet(anyAgent)
 			},
 		},
 	}
@@ -166,9 +166,9 @@ func (s *OpsPublicTestSuite) TestNodeUptimeGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.NodeUptimeGet("_any")
+				return s.orch.NodeUptimeGet(anyAgent)
 			},
 		},
 	}
@@ -187,9 +187,9 @@ func (s *OpsPublicTestSuite) TestNodeDiskGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.NodeDiskGet("_any")
+				return s.orch.NodeDiskGet(anyAgent)
 			},
 		},
 	}
@@ -208,9 +208,9 @@ func (s *OpsPublicTestSuite) TestNodeMemoryGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.NodeMemoryGet("_any")
+				return s.orch.NodeMemoryGet(anyAgent)
 			},
 		},
 	}
@@ -229,9 +229,9 @@ func (s *OpsPublicTestSuite) TestNodeLoadGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.NodeLoadGet("_any")
+				return s.orch.NodeLoadGet(anyAgent)
 			},
 		},
 	}
@@ -250,9 +250,9 @@ func (s *OpsPublicTestSuite) TestNetworkDNSGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.NetworkDNSGet("_any", "eth0")
+				return s.orch.NetworkDNSGet(anyAgent, interfaceEth0)
 			},
 		},
 	}
@@ -271,11 +271,11 @@ func (s *OpsPublicTestSuite) TestNetworkDNSUpdate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
 				return s.orch.NetworkDNSUpdate(
-					"_any",
-					"eth0",
+					anyAgent,
+					interfaceEth0,
 					[]string{"8.8.8.8"},
 					[]string{"example.com"},
 				)
@@ -297,9 +297,9 @@ func (s *OpsPublicTestSuite) TestNetworkPingDo() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.NetworkPingDo("_any", "8.8.8.8")
+				return s.orch.NetworkPingDo(anyAgent, "8.8.8.8")
 			},
 		},
 	}
@@ -318,9 +318,9 @@ func (s *OpsPublicTestSuite) TestCommandExec() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.CommandExec("_any", "uptime", "-s")
+				return s.orch.CommandExec(anyAgent, "uptime", "-s")
 			},
 		},
 	}
@@ -339,9 +339,9 @@ func (s *OpsPublicTestSuite) TestCommandShell() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.CommandShell("_any", "echo hello")
+				return s.orch.CommandShell(anyAgent, "echo hello")
 			},
 		},
 	}
@@ -360,7 +360,7 @@ func (s *OpsPublicTestSuite) TestAgentList() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
 				return s.orch.AgentList()
 			},
@@ -381,7 +381,7 @@ func (s *OpsPublicTestSuite) TestAgentGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
 				return s.orch.AgentGet("server1")
 			},
@@ -402,7 +402,7 @@ func (s *OpsPublicTestSuite) TestAgentDrain() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
 				return s.orch.AgentDrain("server1")
 			},
@@ -423,7 +423,7 @@ func (s *OpsPublicTestSuite) TestAgentUndrain() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
 				return s.orch.AgentUndrain("server1")
 			},
@@ -446,7 +446,7 @@ func (s *OpsPublicTestSuite) TestFileDeploy() {
 		{
 			name: "Returns non-nil step with raw content type",
 			newFn: func() *orchestrator.Step {
-				return s.orch.FileDeploy("_any", osapi.FileDeployOpts{
+				return s.orch.FileDeploy(anyAgent, osapi.FileDeployOpts{
 					ObjectName:  "config.yaml",
 					Path:        "/etc/app/config.yaml",
 					ContentType: "raw",
@@ -459,7 +459,7 @@ func (s *OpsPublicTestSuite) TestFileDeploy() {
 		{
 			name: "Returns non-nil step with template content type and vars",
 			newFn: func() *orchestrator.Step {
-				return s.orch.FileDeploy("_any", osapi.FileDeployOpts{
+				return s.orch.FileDeploy(anyAgent, osapi.FileDeployOpts{
 					ObjectName:  "config.tmpl",
 					Path:        "/etc/app/config.yaml",
 					ContentType: "template",
@@ -483,9 +483,9 @@ func (s *OpsPublicTestSuite) TestFileStatusGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.FileStatusGet("_any", "/etc/app/config.yaml")
+				return s.orch.FileStatusGet(anyAgent, "/etc/app/config.yaml")
 			},
 		},
 	}
@@ -504,9 +504,9 @@ func (s *OpsPublicTestSuite) TestFileUndeploy() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.FileUndeploy("_any", "/etc/app/config.yaml")
+				return s.orch.FileUndeploy(anyAgent, "/etc/app/config.yaml")
 			},
 		},
 	}
@@ -525,7 +525,7 @@ func (s *OpsPublicTestSuite) TestFileUpload() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
 				return s.orch.FileUpload("test.txt", "raw", []byte("hello"))
 			},
@@ -546,7 +546,7 @@ func (s *OpsPublicTestSuite) TestFileChanged() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
 				return s.orch.FileChanged("test.txt", []byte("hello"))
 			},
@@ -567,9 +567,9 @@ func (s *OpsPublicTestSuite) TestDockerPull() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.DockerPull("_any", osapi.DockerPullOpts{
+				return s.orch.DockerPull(anyAgent, osapi.DockerPullOpts{
 					Image: "nginx:latest",
 				})
 			},
@@ -590,10 +590,10 @@ func (s *OpsPublicTestSuite) TestDockerCreate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.DockerCreate("_any", osapi.DockerCreateOpts{
-					Image: "nginx",
+				return s.orch.DockerCreate(anyAgent, osapi.DockerCreateOpts{
+					Image: serviceNginx,
 					Name:  "web",
 				})
 			},
@@ -614,9 +614,9 @@ func (s *OpsPublicTestSuite) TestDockerStart() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.DockerStart("_any", "c1")
+				return s.orch.DockerStart(anyAgent, containerC1)
 			},
 		},
 	}
@@ -635,9 +635,9 @@ func (s *OpsPublicTestSuite) TestDockerStop() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.DockerStop("_any", "c1", osapi.DockerStopOpts{
+				return s.orch.DockerStop(anyAgent, containerC1, osapi.DockerStopOpts{
 					Timeout: 10,
 				})
 			},
@@ -658,11 +658,11 @@ func (s *OpsPublicTestSuite) TestDockerRemove() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
 				return s.orch.DockerRemove(
-					"_any",
-					"c1",
+					anyAgent,
+					containerC1,
 					&osapi.DockerRemoveParams{Force: true},
 				)
 			},
@@ -683,11 +683,11 @@ func (s *OpsPublicTestSuite) TestDockerExec() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
 				return s.orch.DockerExec(
-					"_any",
-					"c1",
+					anyAgent,
+					containerC1,
 					osapi.DockerExecOpts{
 						Command: []string{"echo", "hello"},
 					},
@@ -710,9 +710,9 @@ func (s *OpsPublicTestSuite) TestDockerInspect() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.DockerInspect("_any", "c1")
+				return s.orch.DockerInspect(anyAgent, containerC1)
 			},
 		},
 	}
@@ -731,9 +731,9 @@ func (s *OpsPublicTestSuite) TestDockerList() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.DockerList("_any", &osapi.DockerListParams{
+				return s.orch.DockerList(anyAgent, &osapi.DockerListParams{
 					State: "running",
 				})
 			},
@@ -754,10 +754,10 @@ func (s *OpsPublicTestSuite) TestDockerImageRemove() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
 				return s.orch.DockerImageRemove(
-					"_any",
+					anyAgent,
 					"nginx:latest",
 					&osapi.DockerImageRemoveParams{Force: true},
 				)
@@ -779,9 +779,9 @@ func (s *OpsPublicTestSuite) TestCronList() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.CronList("_any")
+				return s.orch.CronList(anyAgent)
 			},
 		},
 	}
@@ -800,9 +800,9 @@ func (s *OpsPublicTestSuite) TestCronGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.CronGet("_any", "backup")
+				return s.orch.CronGet(anyAgent, "backup")
 			},
 		},
 	}
@@ -821,9 +821,9 @@ func (s *OpsPublicTestSuite) TestCronCreate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.CronCreate("_any", osapi.CronCreateOpts{
+				return s.orch.CronCreate(anyAgent, osapi.CronCreateOpts{
 					Name:     "backup",
 					Object:   "backup.sh",
 					Schedule: "0 2 * * *",
@@ -846,9 +846,9 @@ func (s *OpsPublicTestSuite) TestCronUpdate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.CronUpdate("_any", "backup", osapi.CronUpdateOpts{
+				return s.orch.CronUpdate(anyAgent, "backup", osapi.CronUpdateOpts{
 					Schedule: "0 3 * * *",
 				})
 			},
@@ -869,9 +869,9 @@ func (s *OpsPublicTestSuite) TestCronDelete() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.CronDelete("_any", "backup")
+				return s.orch.CronDelete(anyAgent, "backup")
 			},
 		},
 	}
@@ -890,9 +890,9 @@ func (s *OpsPublicTestSuite) TestNetworkDNSDelete() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.NetworkDNSDelete("_any", "eth0")
+				return s.orch.NetworkDNSDelete(anyAgent, interfaceEth0)
 			},
 		},
 	}
@@ -911,9 +911,9 @@ func (s *OpsPublicTestSuite) TestInterfaceList() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.InterfaceList("_any")
+				return s.orch.InterfaceList(anyAgent)
 			},
 		},
 	}
@@ -932,9 +932,9 @@ func (s *OpsPublicTestSuite) TestInterfaceGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.InterfaceGet("_any", "eth0")
+				return s.orch.InterfaceGet(anyAgent, interfaceEth0)
 			},
 		},
 	}
@@ -953,9 +953,9 @@ func (s *OpsPublicTestSuite) TestInterfaceCreate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.InterfaceCreate("_any", "eth0", osapi.InterfaceConfigOpts{})
+				return s.orch.InterfaceCreate(anyAgent, interfaceEth0, osapi.InterfaceConfigOpts{})
 			},
 		},
 	}
@@ -974,9 +974,9 @@ func (s *OpsPublicTestSuite) TestInterfaceUpdate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.InterfaceUpdate("_any", "eth0", osapi.InterfaceConfigOpts{})
+				return s.orch.InterfaceUpdate(anyAgent, interfaceEth0, osapi.InterfaceConfigOpts{})
 			},
 		},
 	}
@@ -995,9 +995,9 @@ func (s *OpsPublicTestSuite) TestInterfaceDelete() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.InterfaceDelete("_any", "eth0")
+				return s.orch.InterfaceDelete(anyAgent, interfaceEth0)
 			},
 		},
 	}
@@ -1016,9 +1016,9 @@ func (s *OpsPublicTestSuite) TestRouteList() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.RouteList("_any")
+				return s.orch.RouteList(anyAgent)
 			},
 		},
 	}
@@ -1037,9 +1037,9 @@ func (s *OpsPublicTestSuite) TestRouteGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.RouteGet("_any", "eth0")
+				return s.orch.RouteGet(anyAgent, interfaceEth0)
 			},
 		},
 	}
@@ -1058,9 +1058,9 @@ func (s *OpsPublicTestSuite) TestRouteCreate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.RouteCreate("_any", "eth0", osapi.RouteConfigOpts{})
+				return s.orch.RouteCreate(anyAgent, interfaceEth0, osapi.RouteConfigOpts{})
 			},
 		},
 	}
@@ -1079,9 +1079,9 @@ func (s *OpsPublicTestSuite) TestRouteUpdate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.RouteUpdate("_any", "eth0", osapi.RouteConfigOpts{})
+				return s.orch.RouteUpdate(anyAgent, interfaceEth0, osapi.RouteConfigOpts{})
 			},
 		},
 	}
@@ -1100,9 +1100,9 @@ func (s *OpsPublicTestSuite) TestRouteDelete() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.RouteDelete("_any", "eth0")
+				return s.orch.RouteDelete(anyAgent, interfaceEth0)
 			},
 		},
 	}
@@ -1121,9 +1121,9 @@ func (s *OpsPublicTestSuite) TestSysctlList() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.SysctlList("_any")
+				return s.orch.SysctlList(anyAgent)
 			},
 		},
 	}
@@ -1142,9 +1142,9 @@ func (s *OpsPublicTestSuite) TestSysctlGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.SysctlGet("_any", "net.ipv4.ip_forward")
+				return s.orch.SysctlGet(anyAgent, "net.ipv4.ip_forward")
 			},
 		},
 	}
@@ -1163,9 +1163,9 @@ func (s *OpsPublicTestSuite) TestSysctlCreate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.SysctlCreate("_any", osapi.SysctlCreateOpts{})
+				return s.orch.SysctlCreate(anyAgent, osapi.SysctlCreateOpts{})
 			},
 		},
 	}
@@ -1184,9 +1184,13 @@ func (s *OpsPublicTestSuite) TestSysctlUpdate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.SysctlUpdate("_any", "net.ipv4.ip_forward", osapi.SysctlUpdateOpts{})
+				return s.orch.SysctlUpdate(
+					anyAgent,
+					"net.ipv4.ip_forward",
+					osapi.SysctlUpdateOpts{},
+				)
 			},
 		},
 	}
@@ -1205,9 +1209,9 @@ func (s *OpsPublicTestSuite) TestSysctlDelete() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.SysctlDelete("_any", "net.ipv4.ip_forward")
+				return s.orch.SysctlDelete(anyAgent, "net.ipv4.ip_forward")
 			},
 		},
 	}
@@ -1226,9 +1230,9 @@ func (s *OpsPublicTestSuite) TestNTPGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.NTPGet("_any")
+				return s.orch.NTPGet(anyAgent)
 			},
 		},
 	}
@@ -1247,9 +1251,9 @@ func (s *OpsPublicTestSuite) TestNTPCreate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.NTPCreate("_any", osapi.NtpCreateOpts{})
+				return s.orch.NTPCreate(anyAgent, osapi.NtpCreateOpts{})
 			},
 		},
 	}
@@ -1268,9 +1272,9 @@ func (s *OpsPublicTestSuite) TestNTPUpdate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.NTPUpdate("_any", osapi.NtpUpdateOpts{})
+				return s.orch.NTPUpdate(anyAgent, osapi.NtpUpdateOpts{})
 			},
 		},
 	}
@@ -1289,9 +1293,9 @@ func (s *OpsPublicTestSuite) TestNTPDelete() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.NTPDelete("_any")
+				return s.orch.NTPDelete(anyAgent)
 			},
 		},
 	}
@@ -1310,9 +1314,9 @@ func (s *OpsPublicTestSuite) TestTimezoneGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.TimezoneGet("_any")
+				return s.orch.TimezoneGet(anyAgent)
 			},
 		},
 	}
@@ -1331,9 +1335,9 @@ func (s *OpsPublicTestSuite) TestTimezoneUpdate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.TimezoneUpdate("_any", osapi.TimezoneUpdateOpts{})
+				return s.orch.TimezoneUpdate(anyAgent, osapi.TimezoneUpdateOpts{})
 			},
 		},
 	}
@@ -1352,9 +1356,9 @@ func (s *OpsPublicTestSuite) TestServiceList() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceList("_any")
+				return s.orch.ServiceList(anyAgent)
 			},
 		},
 	}
@@ -1373,9 +1377,9 @@ func (s *OpsPublicTestSuite) TestServiceGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceGet("_any", "nginx")
+				return s.orch.ServiceGet(anyAgent, serviceNginx)
 			},
 		},
 	}
@@ -1394,9 +1398,9 @@ func (s *OpsPublicTestSuite) TestServiceCreate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceCreate("_any", osapi.ServiceCreateOpts{})
+				return s.orch.ServiceCreate(anyAgent, osapi.ServiceCreateOpts{})
 			},
 		},
 	}
@@ -1415,9 +1419,9 @@ func (s *OpsPublicTestSuite) TestServiceUpdate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceUpdate("_any", "nginx", osapi.ServiceUpdateOpts{})
+				return s.orch.ServiceUpdate(anyAgent, serviceNginx, osapi.ServiceUpdateOpts{})
 			},
 		},
 	}
@@ -1436,9 +1440,9 @@ func (s *OpsPublicTestSuite) TestServiceDelete() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceDelete("_any", "nginx")
+				return s.orch.ServiceDelete(anyAgent, serviceNginx)
 			},
 		},
 	}
@@ -1457,9 +1461,9 @@ func (s *OpsPublicTestSuite) TestServiceStart() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceStart("_any", "nginx")
+				return s.orch.ServiceStart(anyAgent, serviceNginx)
 			},
 		},
 	}
@@ -1478,9 +1482,9 @@ func (s *OpsPublicTestSuite) TestServiceStop() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceStop("_any", "nginx")
+				return s.orch.ServiceStop(anyAgent, serviceNginx)
 			},
 		},
 	}
@@ -1499,9 +1503,9 @@ func (s *OpsPublicTestSuite) TestServiceRestart() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceRestart("_any", "nginx")
+				return s.orch.ServiceRestart(anyAgent, serviceNginx)
 			},
 		},
 	}
@@ -1520,9 +1524,9 @@ func (s *OpsPublicTestSuite) TestServiceEnable() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceEnable("_any", "nginx")
+				return s.orch.ServiceEnable(anyAgent, serviceNginx)
 			},
 		},
 	}
@@ -1541,9 +1545,9 @@ func (s *OpsPublicTestSuite) TestServiceDisable() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceDisable("_any", "nginx")
+				return s.orch.ServiceDisable(anyAgent, serviceNginx)
 			},
 		},
 	}
@@ -1562,9 +1566,9 @@ func (s *OpsPublicTestSuite) TestPackageList() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.PackageList("_any")
+				return s.orch.PackageList(anyAgent)
 			},
 		},
 	}
@@ -1583,9 +1587,9 @@ func (s *OpsPublicTestSuite) TestPackageGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.PackageGet("_any", "nginx")
+				return s.orch.PackageGet(anyAgent, serviceNginx)
 			},
 		},
 	}
@@ -1604,9 +1608,9 @@ func (s *OpsPublicTestSuite) TestPackageInstall() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.PackageInstall("_any", "nginx")
+				return s.orch.PackageInstall(anyAgent, serviceNginx)
 			},
 		},
 	}
@@ -1625,9 +1629,9 @@ func (s *OpsPublicTestSuite) TestPackageRemove() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.PackageRemove("_any", "nginx")
+				return s.orch.PackageRemove(anyAgent, serviceNginx)
 			},
 		},
 	}
@@ -1646,9 +1650,9 @@ func (s *OpsPublicTestSuite) TestPackageUpdate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.PackageUpdate("_any")
+				return s.orch.PackageUpdate(anyAgent)
 			},
 		},
 	}
@@ -1667,9 +1671,9 @@ func (s *OpsPublicTestSuite) TestPackageListUpdates() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.PackageListUpdates("_any")
+				return s.orch.PackageListUpdates(anyAgent)
 			},
 		},
 	}
@@ -1688,9 +1692,9 @@ func (s *OpsPublicTestSuite) TestUserList() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.UserList("_any")
+				return s.orch.UserList(anyAgent)
 			},
 		},
 	}
@@ -1709,9 +1713,9 @@ func (s *OpsPublicTestSuite) TestUserGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.UserGet("_any", "admin")
+				return s.orch.UserGet(anyAgent, userAdmin)
 			},
 		},
 	}
@@ -1730,9 +1734,9 @@ func (s *OpsPublicTestSuite) TestUserCreate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.UserCreate("_any", osapi.UserCreateOpts{})
+				return s.orch.UserCreate(anyAgent, osapi.UserCreateOpts{})
 			},
 		},
 	}
@@ -1751,9 +1755,9 @@ func (s *OpsPublicTestSuite) TestUserUpdate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.UserUpdate("_any", "admin", osapi.UserUpdateOpts{})
+				return s.orch.UserUpdate(anyAgent, userAdmin, osapi.UserUpdateOpts{})
 			},
 		},
 	}
@@ -1772,9 +1776,9 @@ func (s *OpsPublicTestSuite) TestUserDelete() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.UserDelete("_any", "admin")
+				return s.orch.UserDelete(anyAgent, userAdmin)
 			},
 		},
 	}
@@ -1793,9 +1797,9 @@ func (s *OpsPublicTestSuite) TestUserListKeys() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.UserListKeys("_any", "admin")
+				return s.orch.UserListKeys(anyAgent, userAdmin)
 			},
 		},
 	}
@@ -1814,9 +1818,9 @@ func (s *OpsPublicTestSuite) TestUserAddKey() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.UserAddKey("_any", "admin", osapi.SSHKeyAddOpts{})
+				return s.orch.UserAddKey(anyAgent, userAdmin, osapi.SSHKeyAddOpts{})
 			},
 		},
 	}
@@ -1835,9 +1839,9 @@ func (s *OpsPublicTestSuite) TestUserRemoveKey() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.UserRemoveKey("_any", "admin", "SHA256:abc123")
+				return s.orch.UserRemoveKey(anyAgent, userAdmin, "SHA256:abc123")
 			},
 		},
 	}
@@ -1856,9 +1860,9 @@ func (s *OpsPublicTestSuite) TestUserChangePassword() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.UserChangePassword("_any", "admin", "newpass")
+				return s.orch.UserChangePassword(anyAgent, userAdmin, "newpass")
 			},
 		},
 	}
@@ -1877,9 +1881,9 @@ func (s *OpsPublicTestSuite) TestGroupList() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.GroupList("_any")
+				return s.orch.GroupList(anyAgent)
 			},
 		},
 	}
@@ -1898,9 +1902,9 @@ func (s *OpsPublicTestSuite) TestGroupGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.GroupGet("_any", "admins")
+				return s.orch.GroupGet(anyAgent, "admins")
 			},
 		},
 	}
@@ -1919,9 +1923,9 @@ func (s *OpsPublicTestSuite) TestGroupCreate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.GroupCreate("_any", osapi.GroupCreateOpts{})
+				return s.orch.GroupCreate(anyAgent, osapi.GroupCreateOpts{})
 			},
 		},
 	}
@@ -1940,9 +1944,9 @@ func (s *OpsPublicTestSuite) TestGroupUpdate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.GroupUpdate("_any", "admins", osapi.GroupUpdateOpts{})
+				return s.orch.GroupUpdate(anyAgent, "admins", osapi.GroupUpdateOpts{})
 			},
 		},
 	}
@@ -1961,9 +1965,9 @@ func (s *OpsPublicTestSuite) TestGroupDelete() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.GroupDelete("_any", "admins")
+				return s.orch.GroupDelete(anyAgent, "admins")
 			},
 		},
 	}
@@ -1982,9 +1986,9 @@ func (s *OpsPublicTestSuite) TestCertificateList() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.CertificateList("_any")
+				return s.orch.CertificateList(anyAgent)
 			},
 		},
 	}
@@ -2003,9 +2007,9 @@ func (s *OpsPublicTestSuite) TestCertificateCreate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.CertificateCreate("_any", osapi.CertificateCreateOpts{})
+				return s.orch.CertificateCreate(anyAgent, osapi.CertificateCreateOpts{})
 			},
 		},
 	}
@@ -2024,9 +2028,9 @@ func (s *OpsPublicTestSuite) TestCertificateUpdate() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.CertificateUpdate("_any", "my-ca", osapi.CertificateUpdateOpts{})
+				return s.orch.CertificateUpdate(anyAgent, "my-ca", osapi.CertificateUpdateOpts{})
 			},
 		},
 	}
@@ -2045,9 +2049,9 @@ func (s *OpsPublicTestSuite) TestCertificateDelete() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.CertificateDelete("_any", "my-ca")
+				return s.orch.CertificateDelete(anyAgent, "my-ca")
 			},
 		},
 	}
@@ -2066,9 +2070,9 @@ func (s *OpsPublicTestSuite) TestProcessList() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.ProcessList("_any")
+				return s.orch.ProcessList(anyAgent)
 			},
 		},
 	}
@@ -2087,9 +2091,9 @@ func (s *OpsPublicTestSuite) TestProcessGet() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.ProcessGet("_any", 1234)
+				return s.orch.ProcessGet(anyAgent, 1234)
 			},
 		},
 	}
@@ -2108,9 +2112,9 @@ func (s *OpsPublicTestSuite) TestProcessSignal() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.ProcessSignal("_any", 1234, osapi.ProcessSignalOpts{})
+				return s.orch.ProcessSignal(anyAgent, 1234, osapi.ProcessSignalOpts{})
 			},
 		},
 	}
@@ -2129,9 +2133,9 @@ func (s *OpsPublicTestSuite) TestPowerReboot() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.PowerReboot("_any", osapi.PowerOpts{})
+				return s.orch.PowerReboot(anyAgent, osapi.PowerOpts{})
 			},
 		},
 	}
@@ -2150,9 +2154,9 @@ func (s *OpsPublicTestSuite) TestPowerShutdown() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.PowerShutdown("_any", osapi.PowerOpts{})
+				return s.orch.PowerShutdown(anyAgent, osapi.PowerOpts{})
 			},
 		},
 	}
@@ -2171,9 +2175,9 @@ func (s *OpsPublicTestSuite) TestLogQuery() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.LogQuery("_any", osapi.LogQueryOpts{})
+				return s.orch.LogQuery(anyAgent, osapi.LogQueryOpts{})
 			},
 		},
 	}
@@ -2192,9 +2196,9 @@ func (s *OpsPublicTestSuite) TestLogSources() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.LogSources("_any")
+				return s.orch.LogSources(anyAgent)
 			},
 		},
 	}
@@ -2213,9 +2217,9 @@ func (s *OpsPublicTestSuite) TestLogQueryUnit() {
 		newFn func() *orchestrator.Step
 	}{
 		{
-			name: "Returns non-nil step",
+			name: caseReturnsNonNilStep,
 			newFn: func() *orchestrator.Step {
-				return s.orch.LogQueryUnit("_any", "nginx.service", osapi.LogQueryOpts{})
+				return s.orch.LogQueryUnit(anyAgent, "nginx.service", osapi.LogQueryOpts{})
 			},
 		},
 	}

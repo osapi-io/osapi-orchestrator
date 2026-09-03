@@ -41,27 +41,27 @@ func (m *Mockrenderer) EXPECT() *MockrendererMockRecorder {
 }
 
 // LevelDone mocks base method.
-func (m *Mockrenderer) LevelDone(level, changed, total int, parallel bool) {
+func (m *Mockrenderer) LevelDone(level, changed, total int, mode levelMode) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "LevelDone", level, changed, total, parallel)
+	m.ctrl.Call(m, "LevelDone", level, changed, total, mode)
 }
 
 // LevelDone indicates an expected call of LevelDone.
-func (mr *MockrendererMockRecorder) LevelDone(level, changed, total, parallel any) *gomock.Call {
+func (mr *MockrendererMockRecorder) LevelDone(level, changed, total, mode any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LevelDone", reflect.TypeOf((*Mockrenderer)(nil).LevelDone), level, changed, total, parallel)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LevelDone", reflect.TypeOf((*Mockrenderer)(nil).LevelDone), level, changed, total, mode)
 }
 
 // LevelStart mocks base method.
-func (m *Mockrenderer) LevelStart(level int, tasks []string, parallel bool) {
+func (m *Mockrenderer) LevelStart(level int, tasks []string, mode levelMode) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "LevelStart", level, tasks, parallel)
+	m.ctrl.Call(m, "LevelStart", level, tasks, mode)
 }
 
 // LevelStart indicates an expected call of LevelStart.
-func (mr *MockrendererMockRecorder) LevelStart(level, tasks, parallel any) *gomock.Call {
+func (mr *MockrendererMockRecorder) LevelStart(level, tasks, mode any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LevelStart", reflect.TypeOf((*Mockrenderer)(nil).LevelStart), level, tasks, parallel)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LevelStart", reflect.TypeOf((*Mockrenderer)(nil).LevelStart), level, tasks, mode)
 }
 
 // PlanDone mocks base method.

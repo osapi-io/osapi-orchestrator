@@ -198,27 +198,37 @@ func (r *runner) runLevel(
 	var wg sync.WaitGroup
 
 	for i, t := range tasks {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-
+		wg.Go(func() {
 			results[i] = r.runTask(ctx, t)
-		}()
+		})
 	}
 
 	wg.Wait()
 
-	for i, tr := range results {
-		if tr.Status == StatusFailed {
-			strategy := r.effectiveStrategy(tasks[i])
-			if strategy.kind != "continue" {
-				return results, tr.Error
-			}
-		}
+	if err := r.fatalFailure(tasks, results); err != nil {
+		return results, err
 	}
 
 	return results, nil
+}
+
+// fatalFailure returns the error of the first failed task whose strategy
+// says to stop. A task set to continue does not end the run.
+func (r *runner) fatalFailure(
+	tasks []*Task,
+	results []TaskResult,
+) error {
+	for i, tr := range results {
+		if tr.Status != StatusFailed {
+			continue
+		}
+
+		if r.effectiveStrategy(tasks[i]).kind != kindContinue {
+			return tr.Error
+		}
+	}
+
+	return nil
 }
 
 // runTask executes a single task with guard checks.
@@ -228,178 +238,243 @@ func (r *runner) runTask(
 ) TaskResult {
 	start := time.Now()
 
-	// Skip if any dependency failed — unless the task has a When guard,
-	// which may intentionally inspect failure status (e.g. alert-on-failure).
-	if t.guard == nil {
-		r.mu.Lock()
-
-		for _, dep := range t.deps {
-			if r.failed[dep.name] {
-				r.failed[t.name] = true
-				r.results[t.name] = &Result{Status: StatusSkipped}
-				r.mu.Unlock()
-
-				tr := TaskResult{
-					Name:     t.name,
-					Status:   StatusSkipped,
-					Duration: time.Since(start),
-				}
-				r.callOnSkip(t, "dependency failed")
-				r.callAfterTask(t, tr)
-
-				return tr
-			}
-		}
-
-		r.mu.Unlock()
-	}
-
-	if t.requiresChange {
-		anyChanged := false
-
-		r.mu.Lock()
-
-		for _, dep := range t.deps {
-			if res := r.results.Get(dep.name); res != nil && res.Changed {
-				anyChanged = true
-
-				break
-			}
-		}
-
-		r.mu.Unlock()
-
-		if !anyChanged {
-			r.mu.Lock()
-			r.results[t.name] = &Result{Status: StatusSkipped}
-			r.mu.Unlock()
-
-			tr := TaskResult{
-				Name:     t.name,
-				Status:   StatusSkipped,
-				Duration: time.Since(start),
-			}
-
-			r.callOnSkip(t, "no dependencies changed")
-			r.callAfterTask(t, tr)
-
-			return tr
-		}
-	}
-
-	if t.guard != nil {
-		r.mu.Lock()
-		shouldRun := t.guard(r.results)
-		r.mu.Unlock()
-
-		if !shouldRun {
-			r.mu.Lock()
-			r.results[t.name] = &Result{Status: StatusSkipped}
-			r.mu.Unlock()
-
-			tr := TaskResult{
-				Name:     t.name,
-				Status:   StatusSkipped,
-				Duration: time.Since(start),
-			}
-
-			reason := "guard returned false"
-			if t.guardReason != "" {
-				reason = t.guardReason
-			}
-			r.callOnSkip(t, reason)
-			r.callAfterTask(t, tr)
-
-			return tr
-		}
+	if reason, skip := r.skipReason(t); skip {
+		return r.recordSkip(t, reason, start)
 	}
 
 	r.callBeforeTask(t)
 
-	strategy := r.effectiveStrategy(t)
-	maxAttempts := 1
+	result, err := r.execute(ctx, t)
 
-	if strategy.kind == "retry" {
-		maxAttempts = strategy.retryCount + 1
+	elapsed := time.Since(start)
+	if err != nil {
+		return r.recordFailure(t, result, err, elapsed)
 	}
 
-	var result *Result
-	var err error
+	return r.recordSuccess(t, result, elapsed)
+}
 
-	client := r.plan.client
+// skipReason reports why a task should not run, and whether it should
+// not. The checks are ordered: a failed dependency stops a task
+// outright, requiresChange asks whether anything changed, and a guard
+// has the last word.
+func (r *runner) skipReason(t *Task) (string, bool) {
+	// A task with a guard may deliberately inspect failure — an
+	// alert-on-failure step, say — so a failed dependency does not skip it.
+	if t.guard == nil && r.markFailedByDep(t) {
+		return "dependency failed", true
+	}
 
-retryLoop:
+	if t.requiresChange && !r.anyDepChanged(t) {
+		return "no dependencies changed", true
+	}
+
+	if t.guard != nil && !r.guardPasses(t) {
+		return guardReason(t), true
+	}
+
+	return "", false
+}
+
+// guardReason says why a guard rejected a task, in the guard's own words
+// when it left any.
+func guardReason(t *Task) string {
+	if t.guardReason != "" {
+		return t.guardReason
+	}
+
+	return "guard returned false"
+}
+
+// markFailedByDep reports whether any dependency failed, marking this
+// task failed too when one did. The read and the write are one critical
+// section so a concurrent sibling cannot see the task in between.
+func (r *runner) markFailedByDep(t *Task) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for _, dep := range t.deps {
+		if r.failed[dep.name] {
+			r.failed[t.name] = true
+
+			return true
+		}
+	}
+
+	return false
+}
+
+// anyDepChanged reports whether any dependency reported a change.
+func (r *runner) anyDepChanged(t *Task) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for _, dep := range t.deps {
+		if res := r.results.Get(dep.name); res != nil && res.Changed {
+			return true
+		}
+	}
+
+	return false
+}
+
+// guardPasses evaluates the task's guard against the results so far.
+func (r *runner) guardPasses(t *Task) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	return t.guard(r.results)
+}
+
+// execute runs the task, retrying per its error strategy. It returns
+// the last result and error seen, so a partial failure keeps its result.
+func (r *runner) execute(
+	ctx context.Context,
+	t *Task,
+) (*Result, error) {
+	strategy := r.effectiveStrategy(t)
+	maxAttempts := attemptsFor(strategy)
+
+	var (
+		result *Result
+		err    error
+	)
+
 	for attempt := range maxAttempts {
-		if t.fnr != nil {
-			r.mu.Lock()
-			results := r.results
-			r.mu.Unlock()
-
-			result, err = t.fnr(ctx, client, results)
-		} else {
-			result, err = t.fn(ctx, client)
+		result, err = r.invoke(ctx, t)
+		if err == nil {
+			return result, nil
 		}
 
-		if err == nil {
+		if attempt == maxAttempts-1 {
 			break
 		}
 
-		if attempt < maxAttempts-1 {
-			r.callOnRetry(t, attempt+1, err)
+		r.callOnRetry(t, attempt+1, err)
 
-			// Backoff between retries if configured.
-			if strategy.initialInterval > 0 {
-				delay := strategy.backoffDelay(attempt)
-
-				select {
-				case <-ctx.Done():
-					err = ctx.Err()
-
-					break retryLoop
-				case <-time.After(delay):
-				}
-			}
+		if waitErr := backoff(ctx, strategy, attempt); waitErr != nil {
+			return result, waitErr
 		}
 	}
 
-	elapsed := time.Since(start)
+	return result, err
+}
 
-	if err != nil {
-		// Preserve the full result for partial failures (e.g. broadcast
-		// commands where some hosts succeeded and others failed).
-		// Guards like OnlyIfChanged and OnlyIfFailed inspect r.results,
-		// so they need Changed, HostResults, etc.
-		failedResult := &Result{Status: StatusFailed}
-		if result != nil {
-			result.Status = StatusFailed
-			failedResult = result
-		}
-
-		r.mu.Lock()
-		r.failed[t.name] = true
-		r.results[t.name] = failedResult
-		r.mu.Unlock()
-
-		tr := TaskResult{
-			Name:     t.name,
-			Status:   StatusFailed,
-			Duration: elapsed,
-			Error:    err,
-		}
-
-		if result != nil {
-			tr.JobID = result.JobID
-			tr.JobDuration = result.JobDuration
-			tr.Data = result.Data
-			tr.HostResults = result.HostResults
-			tr.Changed = result.Changed
-		}
-
-		r.callAfterTask(t, tr)
-
-		return tr
+// attemptsFor reports how many times a task may run under a strategy.
+// Only a retry strategy gets more than the one.
+func attemptsFor(strategy ErrorStrategy) int {
+	if strategy.kind != kindRetry {
+		return 1
 	}
 
+	return strategy.retryCount + 1
+}
+
+// invoke calls the task function, handing it the results so far when it
+// is the kind that asks for them.
+func (r *runner) invoke(
+	ctx context.Context,
+	t *Task,
+) (*Result, error) {
+	if t.fnr == nil {
+		return t.fn(ctx, r.plan.client)
+	}
+
+	r.mu.Lock()
+	results := r.results
+	r.mu.Unlock()
+
+	return t.fnr(ctx, r.plan.client, results)
+}
+
+// backoff waits between attempts, returning the context's error if it
+// is cancelled first. A strategy with no interval configured waits not
+// at all.
+func backoff(
+	ctx context.Context,
+	strategy ErrorStrategy,
+	attempt int,
+) error {
+	if strategy.initialInterval <= 0 {
+		return nil
+	}
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-time.After(strategy.backoffDelay(attempt)):
+		return nil
+	}
+}
+
+// recordSkip marks a task skipped and tells the callbacks why.
+func (r *runner) recordSkip(
+	t *Task,
+	reason string,
+	start time.Time,
+) TaskResult {
+	r.mu.Lock()
+	r.results[t.name] = &Result{Status: StatusSkipped}
+	r.mu.Unlock()
+
+	tr := TaskResult{
+		Name:     t.name,
+		Status:   StatusSkipped,
+		Duration: time.Since(start),
+	}
+
+	r.callOnSkip(t, reason)
+	r.callAfterTask(t, tr)
+
+	return tr
+}
+
+// recordFailure marks a task failed, keeping whatever result it
+// produced. A broadcast command that failed on one host of four still
+// carries the other three, and guards such as OnlyIfChanged read them.
+func (r *runner) recordFailure(
+	t *Task,
+	result *Result,
+	err error,
+	elapsed time.Duration,
+) TaskResult {
+	failedResult := &Result{Status: StatusFailed}
+	if result != nil {
+		result.Status = StatusFailed
+		failedResult = result
+	}
+
+	r.mu.Lock()
+	r.failed[t.name] = true
+	r.results[t.name] = failedResult
+	r.mu.Unlock()
+
+	tr := TaskResult{
+		Name:     t.name,
+		Status:   StatusFailed,
+		Duration: elapsed,
+		Error:    err,
+	}
+
+	if result != nil {
+		tr.JobID = result.JobID
+		tr.JobDuration = result.JobDuration
+		tr.Data = result.Data
+		tr.HostResults = result.HostResults
+		tr.Changed = result.Changed
+	}
+
+	r.callAfterTask(t, tr)
+
+	return tr
+}
+
+// recordSuccess stores a completed result and reports it.
+func (r *runner) recordSuccess(
+	t *Task,
+	result *Result,
+	elapsed time.Duration,
+) TaskResult {
 	status := StatusUnchanged
 	if result.Changed {
 		status = StatusChanged
@@ -427,38 +502,15 @@ retryLoop:
 	return tr
 }
 
-// levelize groups tasks into levels where all tasks in a level can
-// run concurrently (all dependencies are in earlier levels).
 func levelize(
 	tasks []*Task,
 ) [][]*Task {
 	level := make(map[string]int, len(tasks))
 
-	var computeLevel func(t *Task) int
-	computeLevel = func(t *Task) int {
-		if l, ok := level[t.name]; ok {
-			return l
-		}
-
-		maxDep := -1
-
-		for _, dep := range t.deps {
-			depLevel := computeLevel(dep)
-			if depLevel > maxDep {
-				maxDep = depLevel
-			}
-		}
-
-		level[t.name] = maxDep + 1
-
-		return maxDep + 1
-	}
-
 	maxLevel := 0
 
 	for _, t := range tasks {
-		l := computeLevel(t)
-		if l > maxLevel {
+		if l := computeLevel(t, level); l > maxLevel {
 			maxLevel = l
 		}
 	}
@@ -471,4 +523,27 @@ func levelize(
 	}
 
 	return levels
+}
+
+// computeLevel returns how deep a task sits — one past its deepest
+// dependency — memoising each answer in level as it goes.
+func computeLevel(
+	t *Task,
+	level map[string]int,
+) int {
+	if l, ok := level[t.name]; ok {
+		return l
+	}
+
+	maxDep := -1
+
+	for _, dep := range t.deps {
+		if depLevel := computeLevel(dep, level); depLevel > maxDep {
+			maxDep = depLevel
+		}
+	}
+
+	level[t.name] = maxDep + 1
+
+	return maxDep + 1
 }

@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 )
@@ -46,7 +46,7 @@ func (s *StepTestSuite) TestWhen() {
 	)
 	defer server.Close()
 
-	orch := New(server.URL, "test-token")
+	orch := New(server.URL, testToken)
 
 	tests := []struct {
 		name      string
@@ -119,7 +119,7 @@ func (s *StepTestSuite) TestNamed() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
+			orch := New(server.URL, testToken)
 			step := orch.NodeHostnameGet("_any").Named(tc.customName)
 
 			s.Equal(tc.expectedName, step.task.Name())
@@ -138,7 +138,7 @@ func (s *StepTestSuite) TestOnlyIfFailed() {
 	)
 	defer server.Close()
 
-	orch := New(server.URL, "test-token")
+	orch := New(server.URL, testToken)
 
 	tests := []struct {
 		name     string
@@ -148,14 +148,14 @@ func (s *StepTestSuite) TestOnlyIfFailed() {
 		{
 			name: "Returns true when dependency failed",
 			results: engine.Results{
-				"dep": &engine.Result{Status: engine.StatusFailed},
+				taskDep: &engine.Result{Status: engine.StatusFailed},
 			},
 			expected: true,
 		},
 		{
 			name: "Returns false when dependency succeeded",
 			results: engine.Results{
-				"dep": &engine.Result{Status: engine.StatusChanged},
+				taskDep: &engine.Result{Status: engine.StatusChanged},
 			},
 			expected: false,
 		},
@@ -168,7 +168,7 @@ func (s *StepTestSuite) TestOnlyIfFailed() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			dep := orch.NodeHostnameGet("_any").Named("dep")
+			dep := orch.NodeHostnameGet("_any").Named(taskDep)
 			step := orch.NodeHostnameGet("_any").After(dep).OnlyIfFailed()
 
 			guard := step.task.Guard()
@@ -189,7 +189,7 @@ func (s *StepTestSuite) TestOnlyIfAllChanged() {
 	)
 	defer server.Close()
 
-	orch := New(server.URL, "test-token")
+	orch := New(server.URL, testToken)
 
 	tests := []struct {
 		name     string
@@ -200,8 +200,8 @@ func (s *StepTestSuite) TestOnlyIfAllChanged() {
 		{
 			name: "Returns true when all deps changed",
 			results: engine.Results{
-				"dep-a": &engine.Result{Status: engine.StatusChanged, Changed: true},
-				"dep-b": &engine.Result{Status: engine.StatusChanged, Changed: true},
+				taskDepA: &engine.Result{Status: engine.StatusChanged, Changed: true},
+				"dep-b":  &engine.Result{Status: engine.StatusChanged, Changed: true},
 			},
 			hasDeps:  true,
 			expected: true,
@@ -209,8 +209,8 @@ func (s *StepTestSuite) TestOnlyIfAllChanged() {
 		{
 			name: "Returns false when one dep unchanged",
 			results: engine.Results{
-				"dep-a": &engine.Result{Status: engine.StatusChanged, Changed: true},
-				"dep-b": &engine.Result{Status: engine.StatusUnchanged},
+				taskDepA: &engine.Result{Status: engine.StatusChanged, Changed: true},
+				"dep-b":  &engine.Result{Status: engine.StatusUnchanged},
 			},
 			hasDeps:  true,
 			expected: false,
@@ -218,8 +218,8 @@ func (s *StepTestSuite) TestOnlyIfAllChanged() {
 		{
 			name: "Returns true when dep failed but Changed=true (broadcast partial failure)",
 			results: engine.Results{
-				"dep-a": &engine.Result{Status: engine.StatusFailed, Changed: true},
-				"dep-b": &engine.Result{Status: engine.StatusChanged, Changed: true},
+				taskDepA: &engine.Result{Status: engine.StatusFailed, Changed: true},
+				"dep-b":  &engine.Result{Status: engine.StatusChanged, Changed: true},
 			},
 			hasDeps:  true,
 			expected: true,
@@ -227,13 +227,13 @@ func (s *StepTestSuite) TestOnlyIfAllChanged() {
 		{
 			name: "Returns false when dep missing from results",
 			results: engine.Results{
-				"dep-a": &engine.Result{Status: engine.StatusChanged},
+				taskDepA: &engine.Result{Status: engine.StatusChanged},
 			},
 			hasDeps:  true,
 			expected: false,
 		},
 		{
-			name:     "Returns false with no dependencies",
+			name:     caseNoDependencies,
 			results:  engine.Results{},
 			hasDeps:  false,
 			expected: false,
@@ -244,7 +244,7 @@ func (s *StepTestSuite) TestOnlyIfAllChanged() {
 		s.Run(tc.name, func() {
 			var step *Step
 			if tc.hasDeps {
-				depA := orch.NodeHostnameGet("_any").Named("dep-a")
+				depA := orch.NodeHostnameGet("_any").Named(taskDepA)
 				depB := orch.NodeHostnameGet("_any").Named("dep-b")
 				step = orch.NodeHostnameGet("_any").
 					After(depA, depB).
@@ -271,7 +271,7 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 	)
 	defer server.Close()
 
-	orch := New(server.URL, "test-token")
+	orch := New(server.URL, testToken)
 
 	tests := []struct {
 		name     string
@@ -280,13 +280,19 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 		expected bool
 	}{
 		{
+			name:     "Returns false when the dependency produced no result",
+			results:  engine.Results{},
+			hasDeps:  true,
+			expected: false,
+		},
+		{
 			name: "Returns true when one host has Status failed",
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status: engine.StatusFailed,
 					HostResults: []engine.HostResult{
-						{Hostname: "web-01", Status: "failed", Error: "timeout"},
-						{Hostname: "web-02", Status: "ok"},
+						{Hostname: hostWeb01, Status: hostStatusFailed, Error: errTimeout},
+						{Hostname: hostWeb02, Status: hostStatusOK},
 					},
 				},
 			},
@@ -296,11 +302,11 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 		{
 			name: "Returns false when no hosts have Error",
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status: engine.StatusChanged,
 					HostResults: []engine.HostResult{
-						{Hostname: "web-01", Changed: true},
-						{Hostname: "web-02", Changed: true},
+						{Hostname: hostWeb01, Changed: true},
+						{Hostname: hostWeb02, Changed: true},
 					},
 				},
 			},
@@ -308,15 +314,15 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 			expected: false,
 		},
 		{
-			name:     "Returns false with no dependencies",
+			name:     caseNoDependencies,
 			results:  engine.Results{},
 			hasDeps:  false,
 			expected: false,
 		},
 		{
-			name: "Returns false when dep has no HostResults (unicast)",
+			name: caseNoHostResults,
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status:  engine.StatusChanged,
 					Changed: true,
 				},
@@ -327,11 +333,11 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 		{
 			name: "Returns false when host is skipped (not failed)",
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status: engine.StatusFailed,
 					HostResults: []engine.HostResult{
-						{Hostname: "web-01", Status: "skipped", Error: "unsupported"},
-						{Hostname: "web-02", Status: "ok"},
+						{Hostname: hostWeb01, Status: "skipped", Error: "unsupported"},
+						{Hostname: hostWeb02, Status: hostStatusOK},
 					},
 				},
 			},
@@ -341,11 +347,11 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 		{
 			name: "Returns true when host has Status failed",
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status: engine.StatusFailed,
 					HostResults: []engine.HostResult{
-						{Hostname: "web-01", Status: "failed", Error: "permission denied"},
-						{Hostname: "web-02", Status: "ok"},
+						{Hostname: hostWeb01, Status: hostStatusFailed, Error: "permission denied"},
+						{Hostname: hostWeb02, Status: hostStatusOK},
 					},
 				},
 			},
@@ -358,7 +364,7 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 		s.Run(tc.name, func() {
 			var step *Step
 			if tc.hasDeps {
-				dep := orch.NodeHostnameGet("_all").Named("dep")
+				dep := orch.NodeHostnameGet("_all").Named(taskDep)
 				step = orch.NodeHostnameGet("_any").
 					After(dep).
 					OnlyIfAnyHostFailed()
@@ -384,7 +390,7 @@ func (s *StepTestSuite) TestOnlyIfAnyHostSkipped() {
 	)
 	defer server.Close()
 
-	orch := New(server.URL, "test-token")
+	orch := New(server.URL, testToken)
 
 	tests := []struct {
 		name     string
@@ -393,15 +399,15 @@ func (s *StepTestSuite) TestOnlyIfAnyHostSkipped() {
 		expected bool
 	}{
 		{
-			name:     "Returns false with no dependencies",
+			name:     caseNoDependencies,
 			results:  engine.Results{},
 			hasDeps:  false,
 			expected: false,
 		},
 		{
-			name: "Returns false when dep has no HostResults (unicast)",
+			name: caseNoHostResults,
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status:  engine.StatusChanged,
 					Changed: true,
 				},
@@ -412,11 +418,11 @@ func (s *StepTestSuite) TestOnlyIfAnyHostSkipped() {
 		{
 			name: "Returns false when all hosts are ok",
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status: engine.StatusChanged,
 					HostResults: []engine.HostResult{
-						{Hostname: "web-01", Status: "ok", Changed: true},
-						{Hostname: "web-02", Status: "ok", Changed: true},
+						{Hostname: hostWeb01, Status: hostStatusOK, Changed: true},
+						{Hostname: hostWeb02, Status: hostStatusOK, Changed: true},
 					},
 				},
 			},
@@ -426,11 +432,11 @@ func (s *StepTestSuite) TestOnlyIfAnyHostSkipped() {
 		{
 			name: "Returns true when any host has Status skipped",
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status: engine.StatusFailed,
 					HostResults: []engine.HostResult{
-						{Hostname: "web-01", Status: "skipped", Error: "unsupported"},
-						{Hostname: "web-02", Status: "ok"},
+						{Hostname: hostWeb01, Status: "skipped", Error: "unsupported"},
+						{Hostname: hostWeb02, Status: hostStatusOK},
 					},
 				},
 			},
@@ -440,11 +446,11 @@ func (s *StepTestSuite) TestOnlyIfAnyHostSkipped() {
 		{
 			name: "Returns false when hosts are failed but not skipped",
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status: engine.StatusFailed,
 					HostResults: []engine.HostResult{
-						{Hostname: "web-01", Status: "failed", Error: "timeout"},
-						{Hostname: "web-02", Status: "ok"},
+						{Hostname: hostWeb01, Status: hostStatusFailed, Error: errTimeout},
+						{Hostname: hostWeb02, Status: hostStatusOK},
 					},
 				},
 			},
@@ -457,7 +463,7 @@ func (s *StepTestSuite) TestOnlyIfAnyHostSkipped() {
 		s.Run(tc.name, func() {
 			var step *Step
 			if tc.hasDeps {
-				dep := orch.NodeHostnameGet("_all").Named("dep")
+				dep := orch.NodeHostnameGet("_all").Named(taskDep)
 				step = orch.NodeHostnameGet("_any").
 					After(dep).
 					OnlyIfAnyHostSkipped()
@@ -483,7 +489,7 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 	)
 	defer server.Close()
 
-	orch := New(server.URL, "test-token")
+	orch := New(server.URL, testToken)
 
 	tests := []struct {
 		name     string
@@ -494,11 +500,15 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 		{
 			name: "Returns true when all hosts have Status failed",
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status: engine.StatusFailed,
 					HostResults: []engine.HostResult{
-						{Hostname: "web-01", Status: "failed", Error: "timeout"},
-						{Hostname: "web-02", Status: "failed", Error: "connection refused"},
+						{Hostname: hostWeb01, Status: hostStatusFailed, Error: errTimeout},
+						{
+							Hostname: hostWeb02,
+							Status:   hostStatusFailed,
+							Error:    "connection refused",
+						},
 					},
 				},
 			},
@@ -508,11 +518,11 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 		{
 			name: "Returns false when one host succeeded",
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status: engine.StatusFailed,
 					HostResults: []engine.HostResult{
-						{Hostname: "web-01", Status: "failed", Error: "timeout"},
-						{Hostname: "web-02", Status: "ok", Changed: true},
+						{Hostname: hostWeb01, Status: hostStatusFailed, Error: errTimeout},
+						{Hostname: hostWeb02, Status: hostStatusOK, Changed: true},
 					},
 				},
 			},
@@ -520,15 +530,15 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 			expected: false,
 		},
 		{
-			name:     "Returns false with no dependencies",
+			name:     caseNoDependencies,
 			results:  engine.Results{},
 			hasDeps:  false,
 			expected: false,
 		},
 		{
-			name: "Returns false when dep has no HostResults (unicast)",
+			name: caseNoHostResults,
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status:  engine.StatusFailed,
 					Changed: true,
 				},
@@ -539,11 +549,11 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 		{
 			name: "Returns false when some hosts are skipped not failed",
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status: engine.StatusFailed,
 					HostResults: []engine.HostResult{
-						{Hostname: "web-01", Status: "failed", Error: "timeout"},
-						{Hostname: "web-02", Status: "skipped", Error: "unsupported"},
+						{Hostname: hostWeb01, Status: hostStatusFailed, Error: errTimeout},
+						{Hostname: hostWeb02, Status: "skipped", Error: "unsupported"},
 					},
 				},
 			},
@@ -556,7 +566,7 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 		s.Run(tc.name, func() {
 			var step *Step
 			if tc.hasDeps {
-				dep := orch.NodeHostnameGet("_all").Named("dep")
+				dep := orch.NodeHostnameGet("_all").Named(taskDep)
 				step = orch.NodeHostnameGet("_any").
 					After(dep).
 					OnlyIfAllHostsFailed()
@@ -582,7 +592,7 @@ func (s *StepTestSuite) TestOnlyIfAnyHostChanged() {
 	)
 	defer server.Close()
 
-	orch := New(server.URL, "test-token")
+	orch := New(server.URL, testToken)
 
 	tests := []struct {
 		name     string
@@ -593,11 +603,11 @@ func (s *StepTestSuite) TestOnlyIfAnyHostChanged() {
 		{
 			name: "Returns true when one host Changed=true",
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status: engine.StatusChanged,
 					HostResults: []engine.HostResult{
-						{Hostname: "web-01", Changed: true},
-						{Hostname: "web-02", Changed: false},
+						{Hostname: hostWeb01, Changed: true},
+						{Hostname: hostWeb02, Changed: false},
 					},
 				},
 			},
@@ -607,11 +617,11 @@ func (s *StepTestSuite) TestOnlyIfAnyHostChanged() {
 		{
 			name: "Returns false when no hosts Changed",
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status: engine.StatusUnchanged,
 					HostResults: []engine.HostResult{
-						{Hostname: "web-01", Changed: false},
-						{Hostname: "web-02", Changed: false},
+						{Hostname: hostWeb01, Changed: false},
+						{Hostname: hostWeb02, Changed: false},
 					},
 				},
 			},
@@ -619,15 +629,15 @@ func (s *StepTestSuite) TestOnlyIfAnyHostChanged() {
 			expected: false,
 		},
 		{
-			name:     "Returns false with no dependencies",
+			name:     caseNoDependencies,
 			results:  engine.Results{},
 			hasDeps:  false,
 			expected: false,
 		},
 		{
-			name: "Returns false when dep has no HostResults (unicast)",
+			name: caseNoHostResults,
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status:  engine.StatusChanged,
 					Changed: true,
 				},
@@ -641,7 +651,7 @@ func (s *StepTestSuite) TestOnlyIfAnyHostChanged() {
 		s.Run(tc.name, func() {
 			var step *Step
 			if tc.hasDeps {
-				dep := orch.NodeHostnameGet("_all").Named("dep")
+				dep := orch.NodeHostnameGet("_all").Named(taskDep)
 				step = orch.NodeHostnameGet("_any").
 					After(dep).
 					OnlyIfAnyHostChanged()
@@ -667,7 +677,7 @@ func (s *StepTestSuite) TestOnlyIfAllHostsChanged() {
 	)
 	defer server.Close()
 
-	orch := New(server.URL, "test-token")
+	orch := New(server.URL, testToken)
 
 	tests := []struct {
 		name     string
@@ -678,11 +688,11 @@ func (s *StepTestSuite) TestOnlyIfAllHostsChanged() {
 		{
 			name: "Returns true when all hosts Changed=true",
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status: engine.StatusChanged,
 					HostResults: []engine.HostResult{
-						{Hostname: "web-01", Changed: true},
-						{Hostname: "web-02", Changed: true},
+						{Hostname: hostWeb01, Changed: true},
+						{Hostname: hostWeb02, Changed: true},
 					},
 				},
 			},
@@ -692,11 +702,11 @@ func (s *StepTestSuite) TestOnlyIfAllHostsChanged() {
 		{
 			name: "Returns false when one host Changed=false",
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status: engine.StatusChanged,
 					HostResults: []engine.HostResult{
-						{Hostname: "web-01", Changed: true},
-						{Hostname: "web-02", Changed: false},
+						{Hostname: hostWeb01, Changed: true},
+						{Hostname: hostWeb02, Changed: false},
 					},
 				},
 			},
@@ -704,15 +714,15 @@ func (s *StepTestSuite) TestOnlyIfAllHostsChanged() {
 			expected: false,
 		},
 		{
-			name:     "Returns false with no dependencies",
+			name:     caseNoDependencies,
 			results:  engine.Results{},
 			hasDeps:  false,
 			expected: false,
 		},
 		{
-			name: "Returns false when dep has no HostResults (unicast)",
+			name: caseNoHostResults,
 			results: engine.Results{
-				"dep": &engine.Result{
+				taskDep: &engine.Result{
 					Status:  engine.StatusChanged,
 					Changed: true,
 				},
@@ -726,7 +736,7 @@ func (s *StepTestSuite) TestOnlyIfAllHostsChanged() {
 		s.Run(tc.name, func() {
 			var step *Step
 			if tc.hasDeps {
-				dep := orch.NodeHostnameGet("_all").Named("dep")
+				dep := orch.NodeHostnameGet("_all").Named(taskDep)
 				step = orch.NodeHostnameGet("_any").
 					After(dep).
 					OnlyIfAllHostsChanged()
@@ -752,7 +762,7 @@ func (s *StepTestSuite) TestWhenFact() {
 	)
 	defer server.Close()
 
-	orch := New(server.URL, "test-token")
+	orch := New(server.URL, testToken)
 
 	tests := []struct {
 		name       string
@@ -765,8 +775,8 @@ func (s *StepTestSuite) TestWhenFact() {
 		{
 			name:     "Returns false when agent list step not found",
 			results:  engine.Results{},
-			stepName: "list-agents",
-			target:   "web-01",
+			stepName: stepListAgents,
+			target:   hostWeb01,
 			predicate: func(_ osapi.Agent) bool {
 				return true
 			},
@@ -775,67 +785,67 @@ func (s *StepTestSuite) TestWhenFact() {
 		{
 			name: "Returns true when target hostname matches and predicate passes",
 			results: engine.Results{
-				"list-agents": &engine.Result{
+				stepListAgents: &engine.Result{
 					Data: map[string]any{
-						"agents": []any{
+						fieldAgents: []any{
 							map[string]any{
-								"hostname": "web-01",
-								"os_info": map[string]any{
-									"distribution": "Ubuntu",
+								fieldHostname: hostWeb01,
+								fieldOSInfo: map[string]any{
+									fieldDistribution: distributionUbuntu,
 								},
 							},
 						},
-						"total": float64(1),
+						fieldTotal: float64(1),
 					},
 				},
 			},
-			stepName: "list-agents",
-			target:   "web-01",
+			stepName: stepListAgents,
+			target:   hostWeb01,
 			predicate: func(a osapi.Agent) bool {
-				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
+				return a.OSInfo != nil && a.OSInfo.Distribution == distributionUbuntu
 			},
 			wantResult: true,
 		},
 		{
 			name: "Returns false when target hostname matches but predicate fails",
 			results: engine.Results{
-				"list-agents": &engine.Result{
+				stepListAgents: &engine.Result{
 					Data: map[string]any{
-						"agents": []any{
+						fieldAgents: []any{
 							map[string]any{
-								"hostname": "web-01",
-								"os_info": map[string]any{
-									"distribution": "Debian",
+								fieldHostname: hostWeb01,
+								fieldOSInfo: map[string]any{
+									fieldDistribution: "Debian",
 								},
 							},
 						},
-						"total": float64(1),
+						fieldTotal: float64(1),
 					},
 				},
 			},
-			stepName: "list-agents",
-			target:   "web-01",
+			stepName: stepListAgents,
+			target:   hostWeb01,
 			predicate: func(a osapi.Agent) bool {
-				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
+				return a.OSInfo != nil && a.OSInfo.Distribution == distributionUbuntu
 			},
 			wantResult: false,
 		},
 		{
 			name: "Returns true when predicate matches any agent regardless of target",
 			results: engine.Results{
-				"list-agents": &engine.Result{
+				stepListAgents: &engine.Result{
 					Data: map[string]any{
-						"agents": []any{
+						fieldAgents: []any{
 							map[string]any{
-								"hostname": "web-02",
+								fieldHostname: hostWeb02,
 							},
 						},
-						"total": float64(1),
+						fieldTotal: float64(1),
 					},
 				},
 			},
-			stepName: "list-agents",
-			target:   "web-01",
+			stepName: stepListAgents,
+			target:   hostWeb01,
 			predicate: func(_ osapi.Agent) bool {
 				return true
 			},
@@ -844,68 +854,68 @@ func (s *StepTestSuite) TestWhenFact() {
 		{
 			name: "Returns true for _all target when any agent matches predicate",
 			results: engine.Results{
-				"list-agents": &engine.Result{
+				stepListAgents: &engine.Result{
 					Data: map[string]any{
-						"agents": []any{
+						fieldAgents: []any{
 							map[string]any{
-								"hostname": "web-01",
-								"os_info": map[string]any{
-									"distribution": "Debian",
+								fieldHostname: hostWeb01,
+								fieldOSInfo: map[string]any{
+									fieldDistribution: "Debian",
 								},
 							},
 							map[string]any{
-								"hostname": "web-02",
-								"os_info": map[string]any{
-									"distribution": "Ubuntu",
+								fieldHostname: hostWeb02,
+								fieldOSInfo: map[string]any{
+									fieldDistribution: distributionUbuntu,
 								},
 							},
 						},
-						"total": float64(2),
+						fieldTotal: float64(2),
 					},
 				},
 			},
-			stepName: "list-agents",
+			stepName: stepListAgents,
 			target:   "_all",
 			predicate: func(a osapi.Agent) bool {
-				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
+				return a.OSInfo != nil && a.OSInfo.Distribution == distributionUbuntu
 			},
 			wantResult: true,
 		},
 		{
 			name: "Returns false for _all target when no agent matches predicate",
 			results: engine.Results{
-				"list-agents": &engine.Result{
+				stepListAgents: &engine.Result{
 					Data: map[string]any{
-						"agents": []any{
+						fieldAgents: []any{
 							map[string]any{
-								"hostname": "web-01",
-								"os_info": map[string]any{
-									"distribution": "Debian",
+								fieldHostname: hostWeb01,
+								fieldOSInfo: map[string]any{
+									fieldDistribution: "Debian",
 								},
 							},
 						},
-						"total": float64(1),
+						fieldTotal: float64(1),
 					},
 				},
 			},
-			stepName: "list-agents",
+			stepName: stepListAgents,
 			target:   "_all",
 			predicate: func(a osapi.Agent) bool {
-				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
+				return a.OSInfo != nil && a.OSInfo.Distribution == distributionUbuntu
 			},
 			wantResult: false,
 		},
 		{
 			name: "Returns false when agent list is empty",
 			results: engine.Results{
-				"list-agents": &engine.Result{
+				stepListAgents: &engine.Result{
 					Data: map[string]any{
-						"agents": []any{},
-						"total":  float64(0),
+						fieldAgents: []any{},
+						fieldTotal:  float64(0),
 					},
 				},
 			},
-			stepName: "list-agents",
+			stepName: stepListAgents,
 			target:   "_all",
 			predicate: func(_ osapi.Agent) bool {
 				return true
@@ -937,7 +947,7 @@ func (s *StepTestSuite) TestRetry() {
 	)
 	defer server.Close()
 
-	orch := New(server.URL, "test-token")
+	orch := New(server.URL, testToken)
 
 	tests := []struct {
 		name               string

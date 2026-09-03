@@ -135,7 +135,7 @@ func (s *OpsTestSuite) TestNodeHostnameGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -204,7 +204,7 @@ func (s *OpsTestSuite) TestNodeStatusGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -270,7 +270,7 @@ func (s *OpsTestSuite) TestNodeUptimeGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -336,7 +336,7 @@ func (s *OpsTestSuite) TestNodeDiskGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -402,7 +402,7 @@ func (s *OpsTestSuite) TestNodeMemoryGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -468,7 +468,7 @@ func (s *OpsTestSuite) TestNodeLoadGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -534,7 +534,7 @@ func (s *OpsTestSuite) TestNetworkDNSGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -600,7 +600,7 @@ func (s *OpsTestSuite) TestNetworkDNSUpdate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -672,7 +672,7 @@ func (s *OpsTestSuite) TestNetworkPingDo() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -738,7 +738,7 @@ func (s *OpsTestSuite) TestCommandExec() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -805,7 +805,7 @@ func (s *OpsTestSuite) TestCommandShell() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -872,7 +872,7 @@ func (s *OpsTestSuite) TestFileDeploy() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -944,7 +944,7 @@ func (s *OpsTestSuite) TestFileStatusGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -1009,7 +1009,7 @@ func (s *OpsTestSuite) TestAgentList() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -1297,7 +1297,7 @@ func (s *OpsTestSuite) TestHealthCheckNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "health-check",
 			secondName: "health-check-2",
 		},
@@ -1331,7 +1331,7 @@ func (s *OpsTestSuite) TestNodeHostnameGetNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "get-hostname",
 			secondName: "get-hostname-2",
 		},
@@ -1365,7 +1365,7 @@ func (s *OpsTestSuite) TestNodeStatusGetNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "get-status",
 			secondName: "get-status-2",
 		},
@@ -1399,7 +1399,7 @@ func (s *OpsTestSuite) TestNodeUptimeGetNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "get-uptime",
 			secondName: "get-uptime-2",
 		},
@@ -1433,7 +1433,7 @@ func (s *OpsTestSuite) TestNodeDiskGetNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "get-disk",
 			secondName: "get-disk-2",
 		},
@@ -1467,7 +1467,7 @@ func (s *OpsTestSuite) TestNodeMemoryGetNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "get-memory",
 			secondName: "get-memory-2",
 		},
@@ -1501,7 +1501,7 @@ func (s *OpsTestSuite) TestNodeLoadGetNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "get-load",
 			secondName: "get-load-2",
 		},
@@ -1535,7 +1535,7 @@ func (s *OpsTestSuite) TestNetworkDNSGetNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "get-dns",
 			secondName: "get-dns-2",
 		},
@@ -1569,7 +1569,7 @@ func (s *OpsTestSuite) TestNetworkDNSUpdateNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "update-dns",
 			secondName: "update-dns-2",
 		},
@@ -1604,7 +1604,7 @@ func (s *OpsTestSuite) TestNetworkPingDoNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "ping",
 			secondName: "ping-2",
 		},
@@ -1644,7 +1644,7 @@ func (s *OpsTestSuite) TestCommandExecNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "run-uptime",
 			secondName: "run-uptime-2",
 		},
@@ -1678,7 +1678,7 @@ func (s *OpsTestSuite) TestCommandShellNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "shell-echo",
 			secondName: "shell-echo-2",
 		},
@@ -1713,7 +1713,7 @@ func (s *OpsTestSuite) TestFileDeployNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "deploy-file",
 			secondName: "deploy-file-2",
 		},
@@ -1748,7 +1748,7 @@ func (s *OpsTestSuite) TestFileStatusGetNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "file-status",
 			secondName: "file-status-2",
 		},
@@ -1782,7 +1782,7 @@ func (s *OpsTestSuite) TestAgentListNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "list-agents",
 			secondName: "list-agents-2",
 		},
@@ -1816,7 +1816,7 @@ func (s *OpsTestSuite) TestAgentGetNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "get-agent",
 			secondName: "get-agent-2",
 		},
@@ -1850,7 +1850,7 @@ func (s *OpsTestSuite) TestFileUploadNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "upload-file",
 			secondName: "upload-file-2",
 		},
@@ -1885,7 +1885,7 @@ func (s *OpsTestSuite) TestFileChangedNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "check-file",
 			secondName: "check-file-2",
 		},
@@ -1972,7 +1972,7 @@ func (s *OpsTestSuite) TestDockerPull() {
 			}),
 		},
 		{
-			name: "Returns error on server error",
+			name: caseServerError,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -2041,7 +2041,7 @@ func (s *OpsTestSuite) TestDockerCreate() {
 			}),
 		},
 		{
-			name: "Returns error on server error",
+			name: caseServerError,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -2110,7 +2110,7 @@ func (s *OpsTestSuite) TestDockerStart() {
 			}),
 		},
 		{
-			name: "Returns error on server error",
+			name: caseServerError,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -2177,7 +2177,7 @@ func (s *OpsTestSuite) TestDockerStop() {
 			}),
 		},
 		{
-			name: "Returns error on server error",
+			name: caseServerError,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -2244,7 +2244,7 @@ func (s *OpsTestSuite) TestDockerRemove() {
 			}),
 		},
 		{
-			name: "Returns error on server error",
+			name: caseServerError,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -2315,7 +2315,7 @@ func (s *OpsTestSuite) TestDockerExec() {
 			}),
 		},
 		{
-			name: "Returns error on server error",
+			name: caseServerError,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -2386,7 +2386,7 @@ func (s *OpsTestSuite) TestDockerInspect() {
 			}),
 		},
 		{
-			name: "Returns error on server error",
+			name: caseServerError,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -2454,7 +2454,7 @@ func (s *OpsTestSuite) TestDockerList() {
 			}),
 		},
 		{
-			name: "Returns error on server error",
+			name: caseServerError,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -2515,7 +2515,7 @@ func (s *OpsTestSuite) TestDockerPullNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "docker-pull",
 			secondName: "docker-pull-2",
 		},
@@ -2550,7 +2550,7 @@ func (s *OpsTestSuite) TestDockerCreateNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "docker-create",
 			secondName: "docker-create-2",
 		},
@@ -2585,7 +2585,7 @@ func (s *OpsTestSuite) TestDockerStartNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "docker-start",
 			secondName: "docker-start-2",
 		},
@@ -2619,7 +2619,7 @@ func (s *OpsTestSuite) TestDockerStopNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "docker-stop",
 			secondName: "docker-stop-2",
 		},
@@ -2654,7 +2654,7 @@ func (s *OpsTestSuite) TestDockerRemoveNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "docker-remove",
 			secondName: "docker-remove-2",
 		},
@@ -2689,7 +2689,7 @@ func (s *OpsTestSuite) TestDockerExecNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "docker-exec",
 			secondName: "docker-exec-2",
 		},
@@ -2725,7 +2725,7 @@ func (s *OpsTestSuite) TestDockerInspectNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "docker-inspect",
 			secondName: "docker-inspect-2",
 		},
@@ -2760,7 +2760,7 @@ func (s *OpsTestSuite) TestDockerListNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "docker-list",
 			secondName: "docker-list-2",
 		},
@@ -2800,7 +2800,7 @@ func (s *OpsTestSuite) TestDockerImageRemove() {
 			}),
 		},
 		{
-			name: "Returns error on server error",
+			name: caseServerError,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -2865,7 +2865,7 @@ func (s *OpsTestSuite) TestDockerImageRemoveNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "docker-image-remove",
 			secondName: "docker-image-remove-2",
 		},
@@ -2906,7 +2906,7 @@ func (s *OpsTestSuite) TestFileUndeploy() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -2973,7 +2973,7 @@ func (s *OpsTestSuite) TestNodeHostnameUpdate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -3040,7 +3040,7 @@ func (s *OpsTestSuite) TestNodeOSGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -3230,7 +3230,7 @@ func (s *OpsTestSuite) TestCronList() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -3296,7 +3296,7 @@ func (s *OpsTestSuite) TestCronGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -3362,7 +3362,7 @@ func (s *OpsTestSuite) TestCronCreate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -3433,7 +3433,7 @@ func (s *OpsTestSuite) TestCronUpdate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -3502,7 +3502,7 @@ func (s *OpsTestSuite) TestCronDelete() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -3563,7 +3563,7 @@ func (s *OpsTestSuite) TestFileUndeployNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "undeploy-file",
 			secondName: "undeploy-file-2",
 		},
@@ -3598,7 +3598,7 @@ func (s *OpsTestSuite) TestNodeHostnameUpdateNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "update-hostname",
 			secondName: "update-hostname-2",
 		},
@@ -3633,7 +3633,7 @@ func (s *OpsTestSuite) TestNodeOSGetNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "get-os",
 			secondName: "get-os-2",
 		},
@@ -3667,7 +3667,7 @@ func (s *OpsTestSuite) TestAgentDrainNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "drain-agent",
 			secondName: "drain-agent-2",
 		},
@@ -3701,7 +3701,7 @@ func (s *OpsTestSuite) TestAgentUndrainNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "undrain-agent",
 			secondName: "undrain-agent-2",
 		},
@@ -3735,7 +3735,7 @@ func (s *OpsTestSuite) TestCronListNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "list-cron",
 			secondName: "list-cron-2",
 		},
@@ -3769,7 +3769,7 @@ func (s *OpsTestSuite) TestCronGetNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "get-cron",
 			secondName: "get-cron-2",
 		},
@@ -3803,7 +3803,7 @@ func (s *OpsTestSuite) TestCronCreateNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "create-cron",
 			secondName: "create-cron-2",
 		},
@@ -3838,7 +3838,7 @@ func (s *OpsTestSuite) TestCronUpdateNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "update-cron",
 			secondName: "update-cron-2",
 		},
@@ -3873,7 +3873,7 @@ func (s *OpsTestSuite) TestCronDeleteNameCounter() {
 		secondName string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
+			name:       caseDuplicateName,
 			firstName:  "delete-cron",
 			secondName: "delete-cron-2",
 		},
@@ -3913,7 +3913,7 @@ func (s *OpsTestSuite) TestNetworkDNSDelete() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -3979,7 +3979,7 @@ func (s *OpsTestSuite) TestInterfaceList() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -4045,7 +4045,7 @@ func (s *OpsTestSuite) TestInterfaceGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -4111,7 +4111,7 @@ func (s *OpsTestSuite) TestInterfaceCreate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -4177,7 +4177,7 @@ func (s *OpsTestSuite) TestInterfaceUpdate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -4243,7 +4243,7 @@ func (s *OpsTestSuite) TestInterfaceDelete() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -4309,7 +4309,7 @@ func (s *OpsTestSuite) TestRouteList() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -4375,7 +4375,7 @@ func (s *OpsTestSuite) TestRouteGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -4441,7 +4441,7 @@ func (s *OpsTestSuite) TestRouteCreate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -4507,7 +4507,7 @@ func (s *OpsTestSuite) TestRouteUpdate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -4573,7 +4573,7 @@ func (s *OpsTestSuite) TestRouteDelete() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -4639,7 +4639,7 @@ func (s *OpsTestSuite) TestSysctlList() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -4705,7 +4705,7 @@ func (s *OpsTestSuite) TestSysctlGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -4771,7 +4771,7 @@ func (s *OpsTestSuite) TestSysctlCreate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -4837,7 +4837,7 @@ func (s *OpsTestSuite) TestSysctlUpdate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -4903,7 +4903,7 @@ func (s *OpsTestSuite) TestSysctlDelete() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -4969,7 +4969,7 @@ func (s *OpsTestSuite) TestNTPGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -5035,7 +5035,7 @@ func (s *OpsTestSuite) TestNTPCreate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -5101,7 +5101,7 @@ func (s *OpsTestSuite) TestNTPUpdate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -5167,7 +5167,7 @@ func (s *OpsTestSuite) TestNTPDelete() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -5233,7 +5233,7 @@ func (s *OpsTestSuite) TestTimezoneGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -5299,7 +5299,7 @@ func (s *OpsTestSuite) TestTimezoneUpdate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -5365,7 +5365,7 @@ func (s *OpsTestSuite) TestServiceList() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -5431,7 +5431,7 @@ func (s *OpsTestSuite) TestServiceGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -5497,7 +5497,7 @@ func (s *OpsTestSuite) TestServiceCreate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -5563,7 +5563,7 @@ func (s *OpsTestSuite) TestServiceUpdate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -5629,7 +5629,7 @@ func (s *OpsTestSuite) TestServiceDelete() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -5695,7 +5695,7 @@ func (s *OpsTestSuite) TestServiceStart() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -5761,7 +5761,7 @@ func (s *OpsTestSuite) TestServiceStop() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -5827,7 +5827,7 @@ func (s *OpsTestSuite) TestServiceRestart() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -5893,7 +5893,7 @@ func (s *OpsTestSuite) TestServiceEnable() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -5959,7 +5959,7 @@ func (s *OpsTestSuite) TestServiceDisable() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -6025,7 +6025,7 @@ func (s *OpsTestSuite) TestPackageList() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -6091,7 +6091,7 @@ func (s *OpsTestSuite) TestPackageGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -6157,7 +6157,7 @@ func (s *OpsTestSuite) TestPackageInstall() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -6223,7 +6223,7 @@ func (s *OpsTestSuite) TestPackageRemove() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -6289,7 +6289,7 @@ func (s *OpsTestSuite) TestPackageUpdate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -6355,7 +6355,7 @@ func (s *OpsTestSuite) TestPackageListUpdates() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -6421,7 +6421,7 @@ func (s *OpsTestSuite) TestUserList() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -6487,7 +6487,7 @@ func (s *OpsTestSuite) TestUserGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -6553,7 +6553,7 @@ func (s *OpsTestSuite) TestUserCreate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -6619,7 +6619,7 @@ func (s *OpsTestSuite) TestUserUpdate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -6685,7 +6685,7 @@ func (s *OpsTestSuite) TestUserDelete() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -6751,7 +6751,7 @@ func (s *OpsTestSuite) TestUserListKeys() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -6817,7 +6817,7 @@ func (s *OpsTestSuite) TestUserAddKey() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -6883,7 +6883,7 @@ func (s *OpsTestSuite) TestUserRemoveKey() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -6949,7 +6949,7 @@ func (s *OpsTestSuite) TestUserChangePassword() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -7015,7 +7015,7 @@ func (s *OpsTestSuite) TestGroupList() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -7081,7 +7081,7 @@ func (s *OpsTestSuite) TestGroupGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -7147,7 +7147,7 @@ func (s *OpsTestSuite) TestGroupCreate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -7213,7 +7213,7 @@ func (s *OpsTestSuite) TestGroupUpdate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -7279,7 +7279,7 @@ func (s *OpsTestSuite) TestGroupDelete() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -7345,7 +7345,7 @@ func (s *OpsTestSuite) TestCertificateList() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -7411,7 +7411,7 @@ func (s *OpsTestSuite) TestCertificateCreate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -7477,7 +7477,7 @@ func (s *OpsTestSuite) TestCertificateUpdate() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -7543,7 +7543,7 @@ func (s *OpsTestSuite) TestCertificateDelete() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -7609,7 +7609,7 @@ func (s *OpsTestSuite) TestProcessList() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -7675,7 +7675,7 @@ func (s *OpsTestSuite) TestProcessGet() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -7741,7 +7741,7 @@ func (s *OpsTestSuite) TestProcessSignal() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -7807,7 +7807,7 @@ func (s *OpsTestSuite) TestPowerReboot() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -7873,7 +7873,7 @@ func (s *OpsTestSuite) TestPowerShutdown() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -7939,7 +7939,7 @@ func (s *OpsTestSuite) TestLogQuery() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -8005,7 +8005,7 @@ func (s *OpsTestSuite) TestLogSources() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -8071,7 +8071,7 @@ func (s *OpsTestSuite) TestLogQueryUnit() {
 			}),
 		},
 		{
-			name: "Returns error on auth failure",
+			name: caseAuthFailure,
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,

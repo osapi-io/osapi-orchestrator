@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 
@@ -50,12 +50,12 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			results: engine.Results{
 				"get-hostname": &engine.Result{
 					Changed: false,
-					Data:    map[string]any{"results": []any{}},
+					Data:    map[string]any{fieldResults: []any{}},
 					HostResults: []engine.HostResult{
 						{
-							Hostname: "web-01",
+							Hostname: hostWeb01,
 							Data: map[string]any{
-								"hostname": "web-01",
+								"hostname": hostWeb01,
 								"labels":   map[string]any{"env": "prod"},
 							},
 						},
@@ -67,12 +67,12 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			validateFunc: func() {
 				r := orchestrator.NewResults(engine.Results{
 					"get-hostname": &engine.Result{
-						Data: map[string]any{"results": []any{}},
+						Data: map[string]any{fieldResults: []any{}},
 						HostResults: []engine.HostResult{
 							{
-								Hostname: "web-01",
+								Hostname: hostWeb01,
 								Data: map[string]any{
-									"hostname": "web-01",
+									"hostname": hostWeb01,
 									"labels":   map[string]any{"env": "prod"},
 								},
 							},
@@ -82,7 +82,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 				var h osapi.HostnameResult
 				err := r.Decode("get-hostname", &h)
 				s.Require().NoError(err)
-				s.Equal("web-01", h.Hostname)
+				s.Equal(hostWeb01, h.Hostname)
 				s.Equal(map[string]string{"env": "prod"}, h.Labels)
 			},
 		},
@@ -90,13 +90,13 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			name: "Decodes command from host results",
 			results: engine.Results{
 				"run-uptime": &engine.Result{
-					Data: map[string]any{"results": []any{}},
+					Data: map[string]any{fieldResults: []any{}},
 					HostResults: []engine.HostResult{
 						{
-							Hostname: "web-01",
+							Hostname: hostWeb01,
 							Data: map[string]any{
-								"stdout":      "12:34:56 up 10 days",
-								"exit_code":   float64(0),
+								fieldStdout:   "12:34:56 up 10 days",
+								fieldExitCode: float64(0),
 								"duration_ms": float64(42),
 							},
 						},
@@ -108,13 +108,13 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			validateFunc: func() {
 				r := orchestrator.NewResults(engine.Results{
 					"run-uptime": &engine.Result{
-						Data: map[string]any{"results": []any{}},
+						Data: map[string]any{fieldResults: []any{}},
 						HostResults: []engine.HostResult{
 							{
-								Hostname: "web-01",
+								Hostname: hostWeb01,
 								Data: map[string]any{
-									"stdout":      "12:34:56 up 10 days",
-									"exit_code":   float64(0),
+									fieldStdout:   "12:34:56 up 10 days",
+									fieldExitCode: float64(0),
 									"duration_ms": float64(42),
 								},
 							},
@@ -134,7 +134,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			results: engine.Results{
 				"summarize": &engine.Result{
 					Changed: true,
-					Data:    map[string]any{"host": "web-01"},
+					Data:    map[string]any{"host": hostWeb01},
 				},
 			},
 			lookupName: "summarize",
@@ -143,13 +143,13 @@ func (s *ResultPublicTestSuite) TestDecode() {
 				r := orchestrator.NewResults(engine.Results{
 					"summarize": &engine.Result{
 						Changed: true,
-						Data:    map[string]any{"host": "web-01"},
+						Data:    map[string]any{"host": hostWeb01},
 					},
 				})
 				var m map[string]any
 				err := r.Decode("summarize", &m)
 				s.Require().NoError(err)
-				s.Equal("web-01", m["host"])
+				s.Equal(hostWeb01, m["host"])
 			},
 		},
 		{
@@ -163,7 +163,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 		{
 			name:        "Returns error for missing result",
 			results:     engine.Results{},
-			lookupName:  "nonexistent",
+			lookupName:  stepNonexistent,
 			target:      &osapi.HostnameResult{},
 			expectErr:   true,
 			errContains: "no result for",
@@ -171,17 +171,17 @@ func (s *ResultPublicTestSuite) TestDecode() {
 		{
 			name: "Decodes command error from host results",
 			results: engine.Results{
-				"run-cmd": &engine.Result{
+				stepRunCmd: &engine.Result{
 					Changed: true,
-					Data:    map[string]any{"results": []any{}},
+					Data:    map[string]any{fieldResults: []any{}},
 					HostResults: []engine.HostResult{
 						{
-							Hostname: "web-01",
+							Hostname: hostWeb01,
 							Error:    "exec failed",
 							Data: map[string]any{
-								"stdout":      "partial output",
+								fieldStdout:   "partial output",
 								"stderr":      "command not found",
-								"exit_code":   float64(127),
+								fieldExitCode: float64(127),
 								"duration_ms": float64(50),
 								"error":       "exec failed",
 							},
@@ -189,21 +189,21 @@ func (s *ResultPublicTestSuite) TestDecode() {
 					},
 				},
 			},
-			lookupName: "run-cmd",
+			lookupName: stepRunCmd,
 			target:     &osapi.CommandResult{},
 			validateFunc: func() {
 				r := orchestrator.NewResults(engine.Results{
-					"run-cmd": &engine.Result{
+					stepRunCmd: &engine.Result{
 						Changed: true,
-						Data:    map[string]any{"results": []any{}},
+						Data:    map[string]any{fieldResults: []any{}},
 						HostResults: []engine.HostResult{
 							{
-								Hostname: "web-01",
+								Hostname: hostWeb01,
 								Error:    "exec failed",
 								Data: map[string]any{
-									"stdout":      "partial output",
+									fieldStdout:   "partial output",
 									"stderr":      "command not found",
-									"exit_code":   float64(127),
+									fieldExitCode: float64(127),
 									"duration_ms": float64(50),
 									"error":       "exec failed",
 								},
@@ -212,7 +212,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 					},
 				})
 				var cmd osapi.CommandResult
-				err := r.Decode("run-cmd", &cmd)
+				err := r.Decode(stepRunCmd, &cmd)
 				s.Require().NoError(err)
 				s.Equal("exec failed", cmd.Error)
 				s.Equal(127, cmd.ExitCode)
@@ -234,11 +234,11 @@ func (s *ResultPublicTestSuite) TestDecode() {
 		{
 			name: "Returns error when marshal fails",
 			results: engine.Results{
-				"bad-marshal": &engine.Result{
+				stepBadMarshal: &engine.Result{
 					Data: map[string]any{"fn": func() {}},
 				},
 			},
-			lookupName:  "bad-marshal",
+			lookupName:  stepBadMarshal,
 			target:      &osapi.HostnameResult{},
 			expectErr:   true,
 			errContains: "marshal result data",
@@ -280,7 +280,7 @@ func (s *ResultPublicTestSuite) TestReportSummary() {
 		{
 			name: "All changed",
 			tasks: []engine.TaskResult{
-				{Name: "a", Status: engine.StatusChanged},
+				{Name: taskA, Status: engine.StatusChanged},
 				{Name: "b", Status: engine.StatusChanged},
 			},
 			expected: "2 tasks, 2 changed",
@@ -288,14 +288,14 @@ func (s *ResultPublicTestSuite) TestReportSummary() {
 		{
 			name: "All unchanged",
 			tasks: []engine.TaskResult{
-				{Name: "a", Status: engine.StatusUnchanged},
+				{Name: taskA, Status: engine.StatusUnchanged},
 			},
 			expected: "1 tasks, 1 unchanged",
 		},
 		{
 			name: "Mixed statuses",
 			tasks: []engine.TaskResult{
-				{Name: "a", Status: engine.StatusChanged},
+				{Name: taskA, Status: engine.StatusChanged},
 				{Name: "b", Status: engine.StatusUnchanged},
 				{Name: "c", Status: engine.StatusSkipped},
 				{Name: "d", Status: engine.StatusFailed},
@@ -305,14 +305,14 @@ func (s *ResultPublicTestSuite) TestReportSummary() {
 		{
 			name: "Skipped only",
 			tasks: []engine.TaskResult{
-				{Name: "a", Status: engine.StatusSkipped},
+				{Name: taskA, Status: engine.StatusSkipped},
 			},
 			expected: "1 tasks, 1 skipped",
 		},
 		{
 			name: "Failed only",
 			tasks: []engine.TaskResult{
-				{Name: "a", Status: engine.StatusFailed},
+				{Name: taskA, Status: engine.StatusFailed},
 			},
 			expected: "1 tasks, 1 failed",
 		},
@@ -340,59 +340,59 @@ func (s *ResultPublicTestSuite) TestStatus() {
 		{
 			name: "Returns TaskStatusChanged for changed result",
 			results: engine.Results{
-				"step-a": &engine.Result{
+				stepA: &engine.Result{
 					Changed: true,
 					Status:  engine.StatusChanged,
 				},
 			},
-			lookupName: "step-a",
+			lookupName: stepA,
 			wantStatus: orchestrator.TaskStatusChanged,
 		},
 		{
 			name: "Returns TaskStatusUnchanged for unchanged result",
 			results: engine.Results{
-				"step-a": &engine.Result{
+				stepA: &engine.Result{
 					Changed: false,
 					Status:  engine.StatusUnchanged,
 				},
 			},
-			lookupName: "step-a",
+			lookupName: stepA,
 			wantStatus: orchestrator.TaskStatusUnchanged,
 		},
 		{
 			name: "Returns TaskStatusSkipped for skipped result",
 			results: engine.Results{
-				"step-a": &engine.Result{
+				stepA: &engine.Result{
 					Status: engine.StatusSkipped,
 				},
 			},
-			lookupName: "step-a",
+			lookupName: stepA,
 			wantStatus: orchestrator.TaskStatusSkipped,
 		},
 		{
 			name: "Returns TaskStatusFailed for failed result",
 			results: engine.Results{
-				"step-a": &engine.Result{
+				stepA: &engine.Result{
 					Status: engine.StatusFailed,
 				},
 			},
-			lookupName: "step-a",
+			lookupName: stepA,
 			wantStatus: orchestrator.TaskStatusFailed,
 		},
 		{
 			name:       "Returns TaskStatusUnknown for missing result",
 			results:    engine.Results{},
-			lookupName: "nonexistent",
+			lookupName: stepNonexistent,
 			wantStatus: orchestrator.TaskStatusUnknown,
 		},
 		{
 			name: "Returns TaskStatusUnknown for unrecognized SDK status",
 			results: engine.Results{
-				"step-a": &engine.Result{
+				stepA: &engine.Result{
 					Status: engine.Status("unknown-status"),
 				},
 			},
-			lookupName: "step-a",
+			lookupName: stepA,
 			wantStatus: orchestrator.TaskStatusUnknown,
 		},
 	}
@@ -415,23 +415,23 @@ func (s *ResultPublicTestSuite) TestChanged() {
 		{
 			name: "Returns true when step reported changes",
 			results: engine.Results{
-				"deploy": &engine.Result{Changed: true, Status: engine.StatusChanged},
+				stepDeploy: &engine.Result{Changed: true, Status: engine.StatusChanged},
 			},
-			lookupName: "deploy",
+			lookupName: stepDeploy,
 			want:       true,
 		},
 		{
 			name: "Returns false when step did not report changes",
 			results: engine.Results{
-				"deploy": &engine.Result{Changed: false, Status: engine.StatusUnchanged},
+				stepDeploy: &engine.Result{Changed: false, Status: engine.StatusUnchanged},
 			},
-			lookupName: "deploy",
+			lookupName: stepDeploy,
 			want:       false,
 		},
 		{
 			name:       "Returns false when step not found",
 			results:    engine.Results{},
-			lookupName: "nonexistent",
+			lookupName: stepNonexistent,
 			want:       false,
 		},
 	}
@@ -456,15 +456,15 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 		{
 			name: "Returns per-host results",
 			results: engine.Results{
-				"deploy": &engine.Result{
+				stepDeploy: &engine.Result{
 					Changed: true,
 					Status:  engine.StatusChanged,
 					HostResults: []engine.HostResult{
 						{
-							Hostname: "web-01",
+							Hostname: hostWeb01,
 							Changed:  true,
 							Data: map[string]any{
-								"stdout": "deployed",
+								fieldStdout: "deployed",
 							},
 						},
 						{
@@ -475,10 +475,10 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 					},
 				},
 			},
-			lookupName: "deploy",
+			lookupName: stepDeploy,
 			wantLen:    2,
 			validateFn: func(hrs []orchestrator.HostResult) {
-				s.Equal("web-01", hrs[0].Hostname)
+				s.Equal(hostWeb01, hrs[0].Hostname)
 				s.True(hrs[0].Changed)
 				s.Empty(hrs[0].Error)
 				s.Equal("web-02", hrs[1].Hostname)
@@ -488,7 +488,7 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 		{
 			name:       "Returns nil for missing step",
 			results:    engine.Results{},
-			lookupName: "nonexistent",
+			lookupName: stepNonexistent,
 			wantNil:    true,
 		},
 		{
@@ -505,15 +505,15 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 		{
 			name: "with status fields",
 			results: engine.Results{
-				"deploy": &engine.Result{
+				stepDeploy: &engine.Result{
 					HostResults: []engine.HostResult{
-						{Hostname: "web-01", Status: "ok", Changed: true},
+						{Hostname: hostWeb01, Status: "ok", Changed: true},
 						{Hostname: "web-02", Status: "skipped", Error: "unsupported"},
 						{Hostname: "web-03", Status: "failed", Error: "permission denied"},
 					},
 				},
 			},
-			lookupName: "deploy",
+			lookupName: stepDeploy,
 			wantLen:    3,
 			validateFn: func(hrs []orchestrator.HostResult) {
 				s.Require().Len(hrs, 3)
@@ -558,16 +558,16 @@ func (s *ResultPublicTestSuite) TestHostResultDecode() {
 		{
 			name: "Decodes host result data into typed struct",
 			hostResult: orchestrator.HostResult{
-				Hostname: "web-01",
+				Hostname: hostWeb01,
 				Changed:  true,
 				Data: map[string]any{
-					"stdout":    "hello",
-					"stderr":    "",
-					"exit_code": float64(0),
+					fieldStdout:   fileContents,
+					"stderr":      "",
+					fieldExitCode: float64(0),
 				},
 			},
 			validateFn: func(cmd osapi.CommandResult) {
-				s.Equal("hello", cmd.Stdout)
+				s.Equal(fileContents, cmd.Stdout)
 				s.Equal(0, cmd.ExitCode)
 			},
 		},
@@ -582,7 +582,7 @@ func (s *ResultPublicTestSuite) TestHostResultDecode() {
 		{
 			name: "Returns error when decode target is invalid",
 			hostResult: orchestrator.HostResult{
-				Data: map[string]any{"stdout": "hello"},
+				Data: map[string]any{fieldStdout: fileContents},
 			},
 			target:      &struct{ Stdout chan int }{},
 			expectErr:   true,
@@ -633,18 +633,18 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 			name: "Decodes task result from report",
 			tasks: []engine.TaskResult{
 				{
-					Name:    "run-cmd",
+					Name:    stepRunCmd,
 					Status:  engine.StatusChanged,
 					Changed: true,
 					Data: map[string]any{
-						"stdout":    "hello",
-						"exit_code": float64(0),
+						fieldStdout:   fileContents,
+						fieldExitCode: float64(0),
 					},
 				},
 			},
-			lookupName: "run-cmd",
+			lookupName: stepRunCmd,
 			validateFn: func(cmd osapi.CommandResult) {
-				s.Equal("hello", cmd.Stdout)
+				s.Equal(fileContents, cmd.Stdout)
 				s.Equal(0, cmd.ExitCode)
 			},
 		},
@@ -652,22 +652,22 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 			name: "Decodes from host results when present",
 			tasks: []engine.TaskResult{
 				{
-					Name:    "run-cmd",
+					Name:    stepRunCmd,
 					Status:  engine.StatusChanged,
 					Changed: true,
-					Data:    map[string]any{"results": []any{}},
+					Data:    map[string]any{fieldResults: []any{}},
 					HostResults: []engine.HostResult{
 						{
-							Hostname: "web-01",
+							Hostname: hostWeb01,
 							Data: map[string]any{
-								"stdout":    "hello from host",
-								"exit_code": float64(0),
+								fieldStdout:   "hello from host",
+								fieldExitCode: float64(0),
 							},
 						},
 					},
 				},
 			},
-			lookupName: "run-cmd",
+			lookupName: stepRunCmd,
 			validateFn: func(cmd osapi.CommandResult) {
 				s.Equal("hello from host", cmd.Stdout)
 				s.Equal(0, cmd.ExitCode)
@@ -676,7 +676,7 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 		{
 			name:        "Returns error for missing task",
 			tasks:       []engine.TaskResult{},
-			lookupName:  "nonexistent",
+			lookupName:  stepNonexistent,
 			expectErr:   true,
 			errContains: "no result for",
 		},
@@ -696,12 +696,12 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 			name: "Returns error when marshal fails",
 			tasks: []engine.TaskResult{
 				{
-					Name:   "bad-marshal",
+					Name:   stepBadMarshal,
 					Status: engine.StatusChanged,
 					Data:   map[string]any{"fn": func() {}},
 				},
 			},
-			lookupName:  "bad-marshal",
+			lookupName:  stepBadMarshal,
 			expectErr:   true,
 			errContains: "marshal result data",
 		},
@@ -711,7 +711,7 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 				{
 					Name:   "bad-decode",
 					Status: engine.StatusChanged,
-					Data:   map[string]any{"stdout": "hello"},
+					Data:   map[string]any{fieldStdout: fileContents},
 				},
 			},
 			lookupName:  "bad-decode",

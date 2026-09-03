@@ -20,7 +20,7 @@
 
 package orchestrator
 
-import engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+import "github.com/osapi-io/osapi-orchestrator/internal/engine"
 
 // Result is the outcome of a single task execution. Users return
 // this from TaskFunc callbacks.

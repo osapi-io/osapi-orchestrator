@@ -23,7 +23,7 @@ package orchestrator
 import (
 	"time"
 
-	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 // Option configures the Orchestrator.
@@ -86,12 +86,19 @@ type retryConfig struct {
 	maxInterval     time.Duration
 }
 
+// The defaults WithExponentialBackoff applies: wait a second, then
+// double, and never wait longer than half a minute.
+const (
+	defaultInitialInterval = 1 * time.Second
+	defaultMaxInterval     = 30 * time.Second
+)
+
 // WithExponentialBackoff enables exponential backoff between retry
 // attempts with sensible defaults (1s initial, 30s max).
 func WithExponentialBackoff() RetryOption {
 	return func(c *retryConfig) {
-		c.initialInterval = 1 * time.Second
-		c.maxInterval = 30 * time.Second
+		c.initialInterval = defaultInitialInterval
+		c.maxInterval = defaultMaxInterval
 	}
 }
 

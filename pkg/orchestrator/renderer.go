@@ -20,14 +20,32 @@
 
 package orchestrator
 
-import engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+import "github.com/osapi-io/osapi-orchestrator/internal/engine"
+
+// levelMode says whether the tasks in a level ran at the same time.
+// Named rather than a bare bool so a call site says which it passed.
+type levelMode int
+
+const (
+	modeSequential levelMode = iota
+	modeParallel
+)
+
+// String names the mode as it appears in rendered output.
+func (m levelMode) String() string {
+	if m == modeParallel {
+		return "parallel"
+	}
+
+	return "sequential"
+}
 
 // renderer defines the internal output contract for plan execution.
 type renderer interface {
 	PlanStart(summary engine.PlanSummary)
 	PlanDone(report *Report)
-	LevelStart(level int, tasks []string, parallel bool)
-	LevelDone(level int, changed int, total int, parallel bool)
+	LevelStart(level int, tasks []string, mode levelMode)
+	LevelDone(level int, changed int, total int, mode levelMode)
 	TaskStart(name string, detail string)
 	TaskDone(result engine.TaskResult)
 	TaskRetry(name string, attempt int, err error)

@@ -2,8 +2,6 @@
 package engine
 
 import (
-	"fmt"
-	"strings"
 	"time"
 )
 
@@ -65,62 +63,4 @@ func (r Results) Get(
 	name string,
 ) *Result {
 	return r[name]
-}
-
-// StepSummary describes a single execution step (DAG level).
-type StepSummary struct {
-	Tasks    []string
-	Parallel bool
-}
-
-// PlanSummary describes the execution plan before it runs.
-type PlanSummary struct {
-	TotalTasks int
-	Steps      []StepSummary
-}
-
-// Report is the aggregate output of a plan execution.
-type Report struct {
-	Tasks    []TaskResult
-	Duration time.Duration
-}
-
-// Summary returns a human-readable summary of the report.
-func (r *Report) Summary() string {
-	var changed, unchanged, skipped, failed int
-
-	for _, t := range r.Tasks {
-		switch t.Status {
-		case StatusChanged:
-			changed++
-		case StatusUnchanged:
-			unchanged++
-		case StatusSkipped:
-			skipped++
-		case StatusFailed:
-			failed++
-		}
-	}
-
-	parts := []string{
-		fmt.Sprintf("%d tasks", len(r.Tasks)),
-	}
-
-	if changed > 0 {
-		parts = append(parts, fmt.Sprintf("%d changed", changed))
-	}
-
-	if unchanged > 0 {
-		parts = append(parts, fmt.Sprintf("%d unchanged", unchanged))
-	}
-
-	if skipped > 0 {
-		parts = append(parts, fmt.Sprintf("%d skipped", skipped))
-	}
-
-	if failed > 0 {
-		parts = append(parts, fmt.Sprintf("%d failed", failed))
-	}
-
-	return strings.Join(parts, ", ")
 }

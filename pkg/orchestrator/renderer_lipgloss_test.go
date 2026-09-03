@@ -23,12 +23,11 @@ package orchestrator
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"strings"
 	"testing"
 	"time"
 
-	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -71,7 +70,7 @@ func (s *RendererLipglossTestSuite) TestPlanStart() {
 				r.PlanStart(engine.PlanSummary{
 					TotalTasks: 3,
 					Steps: []engine.StepSummary{
-						{Tasks: []string{"health-check", "dns-update"}, Parallel: true},
+						{Tasks: []string{stepHealthCheck, "dns-update"}, Parallel: true},
 						{Tasks: []string{"get-hostname"}, Parallel: false},
 					},
 				})
@@ -156,21 +155,21 @@ func (s *RendererLipglossTestSuite) TestLevelStart() {
 		name     string
 		level    int
 		tasks    []string
-		parallel bool
+		mode     levelMode
 		contains string
 	}{
 		{
 			name:     "Sequential level",
 			level:    0,
-			tasks:    []string{"health-check"},
-			parallel: false,
+			tasks:    []string{stepHealthCheck},
+			mode:     modeSequential,
 			contains: "sequential",
 		},
 		{
 			name:     "Parallel level",
 			level:    1,
 			tasks:    []string{"get-hostname", "get-disk"},
-			parallel: true,
+			mode:     modeParallel,
 			contains: "parallel",
 		},
 	}
@@ -180,7 +179,7 @@ func (s *RendererLipglossTestSuite) TestLevelStart() {
 			var buf bytes.Buffer
 			r := newLipglossRendererWithWriter(&buf)
 
-			r.LevelStart(tc.level, tc.tasks, tc.parallel)
+			r.LevelStart(tc.level, tc.tasks, tc.mode)
 
 			output := buf.String()
 			s.Contains(output, ">>> Step")
@@ -194,25 +193,25 @@ func (s *RendererLipglossTestSuite) TestLevelStart() {
 
 func (s *RendererLipglossTestSuite) TestLevelDone() {
 	tests := []struct {
-		name     string
-		level    int
-		changed  int
-		total    int
-		parallel bool
+		name    string
+		level   int
+		changed int
+		total   int
+		mode    levelMode
 	}{
 		{
-			name:     "No changes sequential",
-			level:    0,
-			changed:  0,
-			total:    2,
-			parallel: false,
+			name:    "No changes sequential",
+			level:   0,
+			changed: 0,
+			total:   2,
+			mode:    modeSequential,
 		},
 		{
-			name:     "Some changes parallel",
-			level:    1,
-			changed:  1,
-			total:    3,
-			parallel: true,
+			name:    "Some changes parallel",
+			level:   1,
+			changed: 1,
+			total:   3,
+			mode:    modeParallel,
 		},
 	}
 
@@ -221,7 +220,7 @@ func (s *RendererLipglossTestSuite) TestLevelDone() {
 			var buf bytes.Buffer
 			r := newLipglossRendererWithWriter(&buf)
 
-			r.LevelDone(tc.level, tc.changed, tc.total, tc.parallel)
+			r.LevelDone(tc.level, tc.changed, tc.total, tc.mode)
 
 			output := buf.String()
 			s.Contains(output, "<<< Step")
@@ -239,9 +238,9 @@ func (s *RendererLipglossTestSuite) TestTaskStart() {
 		{
 			name: "Renders start tag and details",
 			callFunc: func(r *lipglossRenderer) {
-				r.TaskStart("health-check", "target=_any")
+				r.TaskStart(stepHealthCheck, "target=_any")
 			},
-			contains: []string{"[start]", "health-check", "target=_any"},
+			contains: []string{"[start]", stepHealthCheck, "target=_any"},
 		},
 	}
 
@@ -269,9 +268,9 @@ func (s *RendererLipglossTestSuite) TestTaskRetry() {
 		{
 			name: "Renders retry tag with attempt",
 			callFunc: func(r *lipglossRenderer) {
-				r.TaskRetry("run-command", 1, errors.New("timeout"))
+				r.TaskRetry(opRunCommand, 1, errors.New("timeout"))
 			},
-			contains: []string{"[retry]", "run-command", "attempt=1", "timeout"},
+			contains: []string{"[retry]", opRunCommand, "attempt=1", "timeout"},
 		},
 	}
 
@@ -332,13 +331,13 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		{
 			name: "Unchanged task",
 			result: engine.TaskResult{
-				Name:     "health-check",
+				Name:     stepHealthCheck,
 				Status:   engine.StatusUnchanged,
 				Changed:  false,
 				Duration: 12 * time.Millisecond,
 			},
 			contains: []string{
-				"health-check",
+				stepHealthCheck,
 				"changed=false",
 				"12ms",
 			},
@@ -346,13 +345,13 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		{
 			name: "Changed task",
 			result: engine.TaskResult{
-				Name:     "run-command",
+				Name:     opRunCommand,
 				Status:   engine.StatusChanged,
 				Changed:  true,
 				Duration: 230 * time.Millisecond,
 			},
 			contains: []string{
-				"run-command",
+				opRunCommand,
 				"changed=true",
 				"230ms",
 			},
@@ -382,27 +381,27 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		{
 			name: "Shows error message on failure",
 			result: engine.TaskResult{
-				Name:     "deploy",
+				Name:     stepDeploy,
 				Status:   engine.StatusFailed,
 				Duration: 45 * time.Millisecond,
-				Error:    fmt.Errorf("command exited with code 1"),
+				Error:    errors.New("command exited with code 1"),
 			},
 			contains: []string{
 				"[failed]",
-				"deploy",
+				stepDeploy,
 				"command exited with code 1",
 			},
 		},
 		{
 			name: "No error line when error is nil",
 			result: engine.TaskResult{
-				Name:     "deploy",
+				Name:     stepDeploy,
 				Status:   engine.StatusFailed,
 				Duration: 45 * time.Millisecond,
 			},
 			contains: []string{
 				"[failed]",
-				"deploy",
+				stepDeploy,
 			},
 		},
 		{
@@ -414,7 +413,7 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 				Changed:  true,
 				Duration: 100 * time.Millisecond,
 				Data: map[string]any{
-					"stdout":    "hello world",
+					fieldStdout: "hello world",
 					"exit_code": float64(0),
 				},
 			},
@@ -431,7 +430,7 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 				Changed:  true,
 				Duration: 100 * time.Millisecond,
 				Data: map[string]any{
-					"stdout":    "hello world",
+					fieldStdout: "hello world",
 					"exit_code": float64(0),
 				},
 			},
@@ -451,8 +450,8 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 				Changed:  true,
 				Duration: 100 * time.Millisecond,
 				Data: map[string]any{
-					"stdout": "output",
-					"stderr": "",
+					fieldStdout: "output",
+					"stderr":    "",
 				},
 			},
 			contains: []string{
@@ -493,7 +492,7 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 				"ok",
 			},
 			notContains: []string{
-				"skipped",
+				hostStatusSkipped,
 				"failed",
 				"error:",
 			},
@@ -504,7 +503,7 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 				Name:   "broadcast-skipped",
 				Status: engine.StatusUnchanged,
 				HostResults: []engine.HostResult{
-					{Hostname: "darwin-01", Status: "skipped", Error: "unsupported"},
+					{Hostname: "darwin-01", Status: hostStatusSkipped, Error: "unsupported"},
 				},
 			},
 			contains: []string{
@@ -521,12 +520,12 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 				Name:   "broadcast-skipped-no-err",
 				Status: engine.StatusUnchanged,
 				HostResults: []engine.HostResult{
-					{Hostname: "darwin-02", Status: "skipped"},
+					{Hostname: "darwin-02", Status: hostStatusSkipped},
 				},
 			},
 			contains: []string{
 				"[darwin-02]",
-				"skipped",
+				hostStatusSkipped,
 			},
 			notContains: []string{
 				"error:",
@@ -563,7 +562,7 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 				"error: connection refused",
 			},
 			notContains: []string{
-				"skipped",
+				hostStatusSkipped,
 				"failed:",
 			},
 		},
@@ -575,14 +574,14 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 				Status:   engine.StatusUnchanged,
 				Duration: 1500 * time.Millisecond,
 				Data: map[string]any{
-					"hostname": "nerd",
+					"hostname": hostNerd,
 				},
 				HostResults: []engine.HostResult{
 					{
-						Hostname:    "nerd",
+						Hostname:    hostNerd,
 						JobDuration: 2 * time.Millisecond,
 						Data: map[string]any{
-							"hostname": "nerd",
+							"hostname": hostNerd,
 						},
 					},
 				},
@@ -604,9 +603,9 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 				Status: engine.StatusUnchanged,
 				HostResults: []engine.HostResult{
 					{
-						Hostname: "nerd",
+						Hostname: hostNerd,
 						Data: map[string]any{
-							"hostname": "nerd",
+							"hostname": hostNerd,
 						},
 					},
 				},
@@ -682,7 +681,7 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 						Hostname: "web-01",
 						Changed:  true,
 						Data: map[string]any{
-							"stdout":    "deployed",
+							fieldStdout: "deployed",
 							"exit_code": float64(0),
 						},
 					},
@@ -700,7 +699,7 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 			name:    "Verbose hides job ID when empty",
 			verbose: true,
 			result: engine.TaskResult{
-				Name:     "health-check",
+				Name:     stepHealthCheck,
 				Status:   engine.StatusUnchanged,
 				Duration: 10 * time.Millisecond,
 			},

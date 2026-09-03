@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 )
@@ -178,7 +178,7 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		{
 			name: "BeforeLevel sequential single task",
 			expectFunc: func(m *Mockrenderer) {
-				m.EXPECT().LevelStart(0, []string{"task-1"}, false)
+				m.EXPECT().LevelStart(0, []string{"task-1"}, modeSequential)
 			},
 			setupFunc: func(hooks engine.Hooks) {
 				hooks.BeforeLevel(0, []*engine.Task{engine.NewTaskFunc("task-1", nil)}, false)
@@ -187,7 +187,7 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		{
 			name: "BeforeLevel parallel multiple tasks",
 			expectFunc: func(m *Mockrenderer) {
-				m.EXPECT().LevelStart(0, []string{"task-1", "task-2"}, true)
+				m.EXPECT().LevelStart(0, []string{"task-1", "task-2"}, modeParallel)
 			},
 			setupFunc: func(hooks engine.Hooks) {
 				hooks.BeforeLevel(0, []*engine.Task{
@@ -199,8 +199,8 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		{
 			name: "AfterLevel no results sequential",
 			expectFunc: func(m *Mockrenderer) {
-				m.EXPECT().LevelStart(1, []string{"t"}, false)
-				m.EXPECT().LevelDone(1, 0, 0, false)
+				m.EXPECT().LevelStart(1, []string{"t"}, modeSequential)
+				m.EXPECT().LevelDone(1, 0, 0, modeSequential)
 			},
 			setupFunc: func(hooks engine.Hooks) {
 				hooks.BeforeLevel(1, []*engine.Task{engine.NewTaskFunc("t", nil)}, false)
@@ -210,8 +210,8 @@ func (s *OrchestratorTestSuite) TestRendererHooks() {
 		{
 			name: "AfterLevel with changed results parallel",
 			expectFunc: func(m *Mockrenderer) {
-				m.EXPECT().LevelStart(1, []string{"t"}, true)
-				m.EXPECT().LevelDone(1, 1, 2, true)
+				m.EXPECT().LevelStart(1, []string{"t"}, modeParallel)
+				m.EXPECT().LevelDone(1, 1, 2, modeParallel)
 			},
 			setupFunc: func(hooks engine.Hooks) {
 				hooks.BeforeLevel(1, []*engine.Task{engine.NewTaskFunc("t", nil)}, true)

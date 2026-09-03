@@ -42,10 +42,10 @@ func (s *PredicatePublicTestSuite) TestOS() {
 	}{
 		{
 			name:         "Matches exact distribution",
-			distribution: "ubuntu",
+			distribution: osFamilyUbuntu,
 			agent: osapi.Agent{
 				OSInfo: &osapi.OSInfo{
-					Distribution: "ubuntu",
+					Distribution: osFamilyUbuntu,
 				},
 			},
 			expected: true,
@@ -55,14 +55,14 @@ func (s *PredicatePublicTestSuite) TestOS() {
 			distribution: "Ubuntu",
 			agent: osapi.Agent{
 				OSInfo: &osapi.OSInfo{
-					Distribution: "ubuntu",
+					Distribution: osFamilyUbuntu,
 				},
 			},
 			expected: true,
 		},
 		{
 			name:         "Returns false when OSInfo is nil",
-			distribution: "ubuntu",
+			distribution: osFamilyUbuntu,
 			agent:        osapi.Agent{},
 			expected:     false,
 		},
@@ -71,7 +71,7 @@ func (s *PredicatePublicTestSuite) TestOS() {
 			distribution: "debian",
 			agent: osapi.Agent{
 				OSInfo: &osapi.OSInfo{
-					Distribution: "ubuntu",
+					Distribution: osFamilyUbuntu,
 				},
 			},
 			expected: false,
@@ -95,9 +95,9 @@ func (s *PredicatePublicTestSuite) TestArch() {
 	}{
 		{
 			name:         "Matches architecture",
-			architecture: "x86_64",
+			architecture: archX8664,
 			agent: osapi.Agent{
-				Architecture: "x86_64",
+				Architecture: archX8664,
 			},
 			expected: true,
 		},
@@ -105,7 +105,7 @@ func (s *PredicatePublicTestSuite) TestArch() {
 			name:         "Matches case-insensitive architecture",
 			architecture: "X86_64",
 			agent: osapi.Agent{
-				Architecture: "x86_64",
+				Architecture: archX8664,
 			},
 			expected: true,
 		},
@@ -113,7 +113,7 @@ func (s *PredicatePublicTestSuite) TestArch() {
 			name:         "Returns false for non-matching architecture",
 			architecture: "arm64",
 			agent: osapi.Agent{
-				Architecture: "x86_64",
+				Architecture: archX8664,
 			},
 			expected: false,
 		},
@@ -231,31 +231,31 @@ func (s *PredicatePublicTestSuite) TestHasLabel() {
 	}{
 		{
 			name:  "Matches label key-value pair",
-			key:   "env",
-			value: "prod",
+			key:   labelEnv,
+			value: envProd,
 			agent: osapi.Agent{
 				Labels: map[string]string{
-					"env":  "prod",
-					"team": "infra",
+					labelEnv: envProd,
+					"team":   "infra",
 				},
 			},
 			expected: true,
 		},
 		{
 			name:  "Returns false for wrong value",
-			key:   "env",
-			value: "prod",
+			key:   labelEnv,
+			value: envProd,
 			agent: osapi.Agent{
 				Labels: map[string]string{
-					"env": "staging",
+					labelEnv: "staging",
 				},
 			},
 			expected: false,
 		},
 		{
 			name:     "Returns false when labels are nil",
-			key:      "env",
-			value:    "prod",
+			key:      labelEnv,
+			value:    envProd,
 			agent:    osapi.Agent{},
 			expected: false,
 		},
@@ -279,11 +279,11 @@ func (s *PredicatePublicTestSuite) TestFactEquals() {
 	}{
 		{
 			name:  "Matches string fact",
-			key:   "datacenter",
-			value: "us-east-1",
+			key:   labelDatacenter,
+			value: regionUSEast1,
 			agent: osapi.Agent{
 				Facts: map[string]any{
-					"datacenter": "us-east-1",
+					labelDatacenter: regionUSEast1,
 				},
 			},
 			expected: true,
@@ -301,19 +301,19 @@ func (s *PredicatePublicTestSuite) TestFactEquals() {
 		},
 		{
 			name:  "Returns false for wrong value",
-			key:   "datacenter",
+			key:   labelDatacenter,
 			value: "us-west-2",
 			agent: osapi.Agent{
 				Facts: map[string]any{
-					"datacenter": "us-east-1",
+					labelDatacenter: regionUSEast1,
 				},
 			},
 			expected: false,
 		},
 		{
 			name:     "Returns false when facts are nil",
-			key:      "datacenter",
-			value:    "us-east-1",
+			key:      labelDatacenter,
+			value:    regionUSEast1,
 			agent:    osapi.Agent{},
 			expected: false,
 		},
@@ -336,37 +336,37 @@ func (s *PredicatePublicTestSuite) TestHasCondition() {
 	}{
 		{
 			name:          "Matches active condition",
-			conditionType: "DiskPressure",
+			conditionType: conditionDiskPressure,
 			agent: osapi.Agent{
 				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: true},
+					{Type: conditionDiskPressure, Status: true},
 				},
 			},
 			expected: true,
 		},
 		{
 			name:          "No match when condition is inactive",
-			conditionType: "DiskPressure",
+			conditionType: conditionDiskPressure,
 			agent: osapi.Agent{
 				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: false},
+					{Type: conditionDiskPressure, Status: false},
 				},
 			},
 			expected: false,
 		},
 		{
 			name:          "No match for wrong type",
-			conditionType: "MemoryPressure",
+			conditionType: conditionMemoryPressure,
 			agent: osapi.Agent{
 				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: true},
+					{Type: conditionDiskPressure, Status: true},
 				},
 			},
 			expected: false,
 		},
 		{
 			name:          "No match when conditions are nil",
-			conditionType: "DiskPressure",
+			conditionType: conditionDiskPressure,
 			agent:         osapi.Agent{},
 			expected:      false,
 		},
@@ -389,37 +389,37 @@ func (s *PredicatePublicTestSuite) TestNoCondition() {
 	}{
 		{
 			name:          "No match when condition is active",
-			conditionType: "DiskPressure",
+			conditionType: conditionDiskPressure,
 			agent: osapi.Agent{
 				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: true},
+					{Type: conditionDiskPressure, Status: true},
 				},
 			},
 			expected: false,
 		},
 		{
 			name:          "Matches when condition is inactive",
-			conditionType: "DiskPressure",
+			conditionType: conditionDiskPressure,
 			agent: osapi.Agent{
 				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: false},
+					{Type: conditionDiskPressure, Status: false},
 				},
 			},
 			expected: true,
 		},
 		{
 			name:          "Matches when type is missing",
-			conditionType: "MemoryPressure",
+			conditionType: conditionMemoryPressure,
 			agent: osapi.Agent{
 				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: true},
+					{Type: conditionDiskPressure, Status: true},
 				},
 			},
 			expected: true,
 		},
 		{
 			name:          "Matches when conditions are nil",
-			conditionType: "DiskPressure",
+			conditionType: conditionDiskPressure,
 			agent:         osapi.Agent{},
 			expected:      true,
 		},
@@ -448,8 +448,8 @@ func (s *PredicatePublicTestSuite) TestHealthy() {
 			name: "Matches when all conditions inactive",
 			agent: osapi.Agent{
 				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: false},
-					{Type: "MemoryPressure", Status: false},
+					{Type: conditionDiskPressure, Status: false},
+					{Type: conditionMemoryPressure, Status: false},
 				},
 			},
 			expected: true,
@@ -458,8 +458,8 @@ func (s *PredicatePublicTestSuite) TestHealthy() {
 			name: "No match when one condition active",
 			agent: osapi.Agent{
 				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: false},
-					{Type: "MemoryPressure", Status: true},
+					{Type: conditionDiskPressure, Status: false},
+					{Type: conditionMemoryPressure, Status: true},
 				},
 			},
 			expected: false,
@@ -491,15 +491,15 @@ func (s *PredicatePublicTestSuite) TestMatchAll() {
 		{
 			name: "Returns true when all predicates match",
 			agent: osapi.Agent{
-				Architecture: "x86_64",
+				Architecture: archX8664,
 				CPUCount:     8,
 				OSInfo: &osapi.OSInfo{
-					Distribution: "ubuntu",
+					Distribution: osFamilyUbuntu,
 				},
 			},
 			predicates: []orchestrator.Predicate{
-				orchestrator.OS("ubuntu"),
-				orchestrator.Arch("x86_64"),
+				orchestrator.OS(osFamilyUbuntu),
+				orchestrator.Arch(archX8664),
 				orchestrator.MinCPU(4),
 			},
 			expected: true,
@@ -507,14 +507,14 @@ func (s *PredicatePublicTestSuite) TestMatchAll() {
 		{
 			name: "Returns false when one predicate fails",
 			agent: osapi.Agent{
-				Architecture: "x86_64",
+				Architecture: archX8664,
 				CPUCount:     2,
 				OSInfo: &osapi.OSInfo{
-					Distribution: "ubuntu",
+					Distribution: osFamilyUbuntu,
 				},
 			},
 			predicates: []orchestrator.Predicate{
-				orchestrator.OS("ubuntu"),
+				orchestrator.OS(osFamilyUbuntu),
 				orchestrator.MinCPU(4),
 			},
 			expected: false,

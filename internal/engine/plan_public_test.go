@@ -87,15 +87,15 @@ func (s *PlanPublicTestSuite) TestRun() {
 			}))
 		}
 
-		a := mk("a", true)
-		b := mk("b", true)
+		a := mk(taskA, true)
+		b := mk(taskB, true)
 		c := mk("c", false)
 		b.DependsOn(a)
 		c.DependsOn(b)
 
 		report, err := plan.Run(context.Background())
 		s.Require().NoError(err)
-		s.Equal([]string{"a", "b", "c"}, order)
+		s.Equal([]string{taskA, taskB, "c"}, order)
 		s.Len(report.Tasks, 3)
 		s.Contains(report.Summary(), "2 changed")
 		s.Contains(report.Summary(), "1 unchanged")
@@ -107,7 +107,7 @@ func (s *PlanPublicTestSuite) TestRun() {
 
 		plan := engine.NewPlan(nil)
 
-		for _, name := range []string{"a", "b", "c"} {
+		for _, name := range []string{taskA, taskB, "c"} {
 			plan.TaskFunc(name, func(
 				_ context.Context,
 				_ *osapiclient.Client,
@@ -115,11 +115,11 @@ func (s *PlanPublicTestSuite) TestRun() {
 				cur := concurrent.Add(1)
 				for {
 					prev := concurrentMax.Load()
-					if cur > prev {
-						if concurrentMax.CompareAndSwap(prev, cur) {
-							break
-						}
-					} else {
+					if cur <= prev {
+						break
+					}
+
+					if concurrentMax.CompareAndSwap(prev, cur) {
 						break
 					}
 				}
@@ -135,10 +135,23 @@ func (s *PlanPublicTestSuite) TestRun() {
 		s.GreaterOrEqual(int(concurrentMax.Load()), 1)
 	})
 
+	s.Run("a task already reached as a dependency is not rewalked", func() {
+		plan := engine.NewPlan(nil)
+		a := plan.TaskFunc(taskA, taskFunc(false, nil))
+		b := plan.TaskFunc(taskB, taskFunc(false, nil))
+		// a is registered first and depends on b, so the cycle check
+		// reaches b through a before the outer walk arrives at it.
+		a.DependsOn(b)
+
+		report, err := plan.Run(context.Background())
+		s.Require().NoError(err)
+		s.Len(report.Tasks, 2)
+	})
+
 	s.Run("cycle detection returns error", func() {
 		plan := engine.NewPlan(nil)
-		a := plan.TaskFunc("a", taskFunc(false, nil))
-		b := plan.TaskFunc("b", taskFunc(false, nil))
+		a := plan.TaskFunc(taskA, taskFunc(false, nil))
+		b := plan.TaskFunc(taskB, taskFunc(false, nil))
 		a.DependsOn(b)
 		b.DependsOn(a)
 
@@ -211,8 +224,8 @@ func (s *PlanPublicTestSuite) TestRunGuard() {
 			plan := engine.NewPlan(nil)
 			ran := false
 
-			a := plan.TaskFunc("a", taskFunc(false, nil))
-			b := plan.TaskFunc("b", taskFunc(true, func() {
+			a := plan.TaskFunc(taskA, taskFunc(false, nil))
+			b := plan.TaskFunc(taskB, taskFunc(true, func() {
 				ran = true
 			}))
 			b.DependsOn(a)
@@ -319,16 +332,16 @@ func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
 			engine.OnError(engine.Continue),
 		)
 
-		a := plan.TaskFunc("a", failFunc("a failed"))
-		plan.TaskFunc("b", taskFunc(true, nil)).DependsOn(a)
+		a := plan.TaskFunc(taskA, failFunc("a failed"))
+		plan.TaskFunc(taskB, taskFunc(true, nil)).DependsOn(a)
 		plan.TaskFunc("c", taskFunc(true, nil))
 
 		report, err := plan.Run(context.Background())
 		s.NoError(err)
 		s.Len(report.Tasks, 3)
 		m := statusMap(report)
-		s.Equal(engine.StatusFailed, m["a"])
-		s.Equal(engine.StatusSkipped, m["b"])
+		s.Equal(engine.StatusFailed, m[taskA])
+		s.Equal(engine.StatusSkipped, m[taskB])
 		s.Equal(engine.StatusChanged, m["c"])
 	})
 
@@ -338,8 +351,8 @@ func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
 			engine.OnError(engine.Continue),
 		)
 
-		a := plan.TaskFunc("a", failFunc("a failed"))
-		b := plan.TaskFunc("b", taskFunc(true, nil))
+		a := plan.TaskFunc(taskA, failFunc("a failed"))
+		b := plan.TaskFunc(taskB, taskFunc(true, nil))
 		b.DependsOn(a)
 		c := plan.TaskFunc("c", taskFunc(true, nil))
 		c.DependsOn(b)
@@ -347,23 +360,23 @@ func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
 		report, err := plan.Run(context.Background())
 		s.NoError(err)
 		m := statusMap(report)
-		s.Equal(engine.StatusFailed, m["a"])
-		s.Equal(engine.StatusSkipped, m["b"])
+		s.Equal(engine.StatusFailed, m[taskA])
+		s.Equal(engine.StatusSkipped, m[taskB])
 		s.Equal(engine.StatusSkipped, m["c"])
 	})
 
 	s.Run("per-task continue override", func() {
 		plan := engine.NewPlan(nil) // default StopAll
 
-		a := plan.TaskFunc("a", failFunc("a failed"))
+		a := plan.TaskFunc(taskA, failFunc("a failed"))
 		a.OnError(engine.Continue)
-		plan.TaskFunc("b", taskFunc(true, nil))
+		plan.TaskFunc(taskB, taskFunc(true, nil))
 
 		report, err := plan.Run(context.Background())
 		s.NoError(err)
 		m := statusMap(report)
-		s.Equal(engine.StatusFailed, m["a"])
-		s.Equal(engine.StatusChanged, m["b"])
+		s.Equal(engine.StatusFailed, m[taskA])
+		s.Equal(engine.StatusChanged, m[taskB])
 	})
 
 	s.Run("retry succeeds after transient failure", func() {
@@ -539,8 +552,8 @@ func (s *PlanPublicTestSuite) TestRunHooks() {
 		hooks := allHooks(&events)
 		plan := engine.NewPlan(nil, engine.WithHooks(hooks))
 
-		a := plan.TaskFunc("a", taskFunc(true, nil))
-		plan.TaskFunc("b", taskFunc(false, nil)).DependsOn(a)
+		a := plan.TaskFunc(taskA, taskFunc(true, nil))
+		plan.TaskFunc(taskB, taskFunc(false, nil)).DependsOn(a)
 
 		report, err := plan.Run(context.Background())
 		s.NoError(err)
@@ -601,8 +614,8 @@ func (s *PlanPublicTestSuite) TestRunHooks() {
 			engine.OnError(engine.Continue),
 		)
 
-		a := plan.TaskFunc("a", failFunc("a failed"))
-		plan.TaskFunc("b", taskFunc(true, nil)).DependsOn(a)
+		a := plan.TaskFunc(taskA, failFunc("a failed"))
+		plan.TaskFunc(taskB, taskFunc(true, nil)).DependsOn(a)
 
 		_, err := plan.Run(context.Background())
 		s.NoError(err)
@@ -618,8 +631,8 @@ func (s *PlanPublicTestSuite) TestRunHooks() {
 		hooks := allHooks(&events)
 		plan := engine.NewPlan(nil, engine.WithHooks(hooks))
 
-		a := plan.TaskFunc("a", taskFunc(false, nil))
-		b := plan.TaskFunc("b", taskFunc(true, nil))
+		a := plan.TaskFunc(taskA, taskFunc(false, nil))
+		b := plan.TaskFunc(taskB, taskFunc(true, nil))
 		b.DependsOn(a)
 		b.When(func(_ engine.Results) bool { return false })
 
@@ -637,8 +650,8 @@ func (s *PlanPublicTestSuite) TestRunHooks() {
 		hooks := allHooks(&events)
 		plan := engine.NewPlan(nil, engine.WithHooks(hooks))
 
-		a := plan.TaskFunc("a", taskFunc(false, nil))
-		b := plan.TaskFunc("b", taskFunc(true, nil))
+		a := plan.TaskFunc(taskA, taskFunc(false, nil))
+		b := plan.TaskFunc(taskB, taskFunc(true, nil))
 		b.DependsOn(a)
 		b.WhenWithReason(
 			func(_ engine.Results) bool { return false },
@@ -659,8 +672,8 @@ func (s *PlanPublicTestSuite) TestRunHooks() {
 		hooks := allHooks(&events)
 		plan := engine.NewPlan(nil, engine.WithHooks(hooks))
 
-		a := plan.TaskFunc("a", taskFunc(false, nil))
-		b := plan.TaskFunc("b", taskFunc(true, nil))
+		a := plan.TaskFunc(taskA, taskFunc(false, nil))
+		b := plan.TaskFunc(taskB, taskFunc(true, nil))
 		b.DependsOn(a)
 		b.OnlyIfChanged()
 
@@ -703,13 +716,13 @@ func (s *PlanPublicTestSuite) TestRunHooks() {
 			engine.OnError(engine.Continue),
 		)
 
-		a := plan.TaskFunc("a", failFunc("a failed"))
-		plan.TaskFunc("b", taskFunc(true, nil)).DependsOn(a)
+		a := plan.TaskFunc(taskA, failFunc("a failed"))
+		plan.TaskFunc(taskB, taskFunc(true, nil)).DependsOn(a)
 
 		report, err := plan.Run(context.Background())
 		s.NoError(err)
 		m := statusMap(report)
-		s.Equal(engine.StatusSkipped, m["b"])
+		s.Equal(engine.StatusSkipped, m[taskB])
 	})
 }
 
@@ -737,8 +750,8 @@ func (s *PlanPublicTestSuite) TestTasks() {
 	plan := engine.NewPlan(nil)
 	s.Empty(plan.Tasks())
 
-	plan.TaskFunc("a", taskFunc(false, nil))
-	plan.TaskFunc("b", taskFunc(false, nil))
+	plan.TaskFunc(taskA, taskFunc(false, nil))
+	plan.TaskFunc(taskB, taskFunc(false, nil))
 	s.Len(plan.Tasks(), 2)
 }
 
@@ -762,8 +775,8 @@ func (s *PlanPublicTestSuite) TestValidate() {
 		{
 			name: "valid plan returns nil",
 			setup: func(plan *engine.Plan) {
-				plan.TaskFunc("a", taskFunc(false, nil))
-				plan.TaskFunc("b", taskFunc(false, nil))
+				plan.TaskFunc(taskA, taskFunc(false, nil))
+				plan.TaskFunc(taskB, taskFunc(false, nil))
 			},
 			validateFunc: func(err error) {
 				s.NoError(err)
@@ -789,8 +802,8 @@ func (s *PlanPublicTestSuite) TestLevels() {
 		{
 			name: "returns levels for valid plan",
 			setup: func(plan *engine.Plan) {
-				a := plan.TaskFunc("a", taskFunc(false, nil))
-				plan.TaskFunc("b", taskFunc(false, nil)).DependsOn(a)
+				a := plan.TaskFunc(taskA, taskFunc(false, nil))
+				plan.TaskFunc(taskB, taskFunc(false, nil)).DependsOn(a)
 			},
 			validateFunc: func(levels [][]*engine.Task, err error) {
 				s.NoError(err)
@@ -800,8 +813,8 @@ func (s *PlanPublicTestSuite) TestLevels() {
 		{
 			name: "returns error for invalid plan",
 			setup: func(plan *engine.Plan) {
-				a := plan.TaskFunc("a", taskFunc(false, nil))
-				b := plan.TaskFunc("b", taskFunc(false, nil))
+				a := plan.TaskFunc(taskA, taskFunc(false, nil))
+				b := plan.TaskFunc(taskB, taskFunc(false, nil))
 				a.DependsOn(b)
 				b.DependsOn(a)
 			},
@@ -831,8 +844,8 @@ func (s *PlanPublicTestSuite) TestExplain() {
 		{
 			name: "valid plan with dependencies and guards",
 			setup: func(plan *engine.Plan) {
-				a := plan.TaskFunc("a", taskFunc(false, nil))
-				b := plan.TaskFunc("b", taskFunc(false, nil))
+				a := plan.TaskFunc(taskA, taskFunc(false, nil))
+				b := plan.TaskFunc(taskB, taskFunc(false, nil))
 				b.DependsOn(a)
 				b.OnlyIfChanged()
 			},
@@ -848,8 +861,8 @@ func (s *PlanPublicTestSuite) TestExplain() {
 		{
 			name: "invalid plan returns error string",
 			setup: func(plan *engine.Plan) {
-				a := plan.TaskFunc("a", taskFunc(false, nil))
-				b := plan.TaskFunc("b", taskFunc(false, nil))
+				a := plan.TaskFunc(taskA, taskFunc(false, nil))
+				b := plan.TaskFunc(taskB, taskFunc(false, nil))
 				a.DependsOn(b)
 				b.DependsOn(a)
 			},
@@ -858,8 +871,8 @@ func (s *PlanPublicTestSuite) TestExplain() {
 		{
 			name: "parallel tasks shown as parallel",
 			setup: func(plan *engine.Plan) {
-				plan.TaskFunc("a", taskFunc(false, nil))
-				plan.TaskFunc("b", taskFunc(false, nil))
+				plan.TaskFunc(taskA, taskFunc(false, nil))
+				plan.TaskFunc(taskB, taskFunc(false, nil))
 			},
 			contains: []string{
 				"Plan: 2 tasks, 1 levels",
@@ -869,8 +882,8 @@ func (s *PlanPublicTestSuite) TestExplain() {
 		{
 			name: "guard shown in flags",
 			setup: func(plan *engine.Plan) {
-				a := plan.TaskFunc("a", taskFunc(false, nil))
-				b := plan.TaskFunc("b", taskFunc(false, nil))
+				a := plan.TaskFunc(taskA, taskFunc(false, nil))
+				b := plan.TaskFunc(taskB, taskFunc(false, nil))
 				b.DependsOn(a)
 				b.When(func(_ engine.Results) bool { return true })
 			},

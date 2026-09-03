@@ -6,6 +6,14 @@ import (
 	"time"
 )
 
+// The strategies a task can take on failure, as stored in
+// ErrorStrategy.kind.
+const (
+	kindStopAll  = "stop_all"
+	kindContinue = "continue"
+	kindRetry    = "retry"
+)
+
 // ErrorStrategy defines how the runner handles task failures.
 type ErrorStrategy struct {
 	kind            string
@@ -15,11 +23,11 @@ type ErrorStrategy struct {
 }
 
 // StopAll cancels all remaining tasks on first failure.
-var StopAll = ErrorStrategy{kind: "stop_all"}
+var StopAll = ErrorStrategy{kind: kindStopAll}
 
 // Continue skips dependents of the failed task but continues
 // independent tasks.
-var Continue = ErrorStrategy{kind: "continue"}
+var Continue = ErrorStrategy{kind: kindContinue}
 
 // RetryOption configures retry behavior.
 type RetryOption func(*ErrorStrategy)
@@ -42,7 +50,7 @@ func Retry(
 	n int,
 	opts ...RetryOption,
 ) ErrorStrategy {
-	s := ErrorStrategy{kind: "retry", retryCount: n}
+	s := ErrorStrategy{kind: kindRetry, retryCount: n}
 	for _, opt := range opts {
 		opt(&s)
 	}
@@ -67,7 +75,7 @@ func (e ErrorStrategy) backoffDelay(
 
 // String returns a human-readable representation of the strategy.
 func (e ErrorStrategy) String() string {
-	if e.kind == "retry" {
+	if e.kind == kindRetry {
 		return fmt.Sprintf("retry(%d)", e.retryCount)
 	}
 

@@ -84,45 +84,69 @@ func (p *Plan) Explain() string {
 
 	var b strings.Builder
 
-	fmt.Fprintf(&b, "Plan: %d tasks, %d levels\n", len(p.tasks), len(levels))
+	writef(&b, "Plan: %d tasks, %d levels\n", len(p.tasks), len(levels))
 
 	for i, level := range levels {
-		if len(level) > 1 {
-			fmt.Fprintf(&b, "\nLevel %d (parallel):\n", i)
-		} else {
-			fmt.Fprintf(&b, "\nLevel %d:\n", i)
-		}
+		writef(&b, "\nLevel %d%s:\n", i, parallelSuffix(len(level)))
 
 		for _, t := range level {
-			fmt.Fprintf(&b, "  %s [fn]", t.name)
-
-			if len(t.deps) > 0 {
-				names := make([]string, len(t.deps))
-				for j, dep := range t.deps {
-					names[j] = dep.name
-				}
-
-				fmt.Fprintf(&b, " <- %s", strings.Join(names, ", "))
-			}
-
-			var flags []string
-			if t.requiresChange {
-				flags = append(flags, "only-if-changed")
-			}
-
-			if t.guard != nil {
-				flags = append(flags, "when")
-			}
-
-			if len(flags) > 0 {
-				fmt.Fprintf(&b, " (%s)", strings.Join(flags, ", "))
-			}
-
-			fmt.Fprintln(&b)
+			writef(&b, "  %s\n", explainTask(t))
 		}
 	}
 
 	return b.String()
+}
+
+// writef writes to a strings.Builder, whose Write never returns an error. The
+// ignore is here once rather than at each of the call sites.
+func writef(b *strings.Builder, format string, a ...any) {
+	_, _ = fmt.Fprintf(b, format, a...)
+}
+
+// parallelSuffix marks a level holding more than one task.
+func parallelSuffix(taskCount int) string {
+	if taskCount > 1 {
+		return " (parallel)"
+	}
+
+	return ""
+}
+
+// explainTask renders one task as its name, what it waits on, and its flags.
+func explainTask(t *Task) string {
+	var b strings.Builder
+
+	writef(&b, "%s [fn]", t.name)
+
+	if len(t.deps) > 0 {
+		names := make([]string, len(t.deps))
+		for i, dep := range t.deps {
+			names[i] = dep.name
+		}
+
+		writef(&b, " <- %s", strings.Join(names, ", "))
+	}
+
+	if flags := taskFlags(t); len(flags) > 0 {
+		writef(&b, " (%s)", strings.Join(flags, ", "))
+	}
+
+	return b.String()
+}
+
+// taskFlags lists the conditions attached to a task.
+func taskFlags(t *Task) []string {
+	var flags []string
+
+	if t.requiresChange {
+		flags = append(flags, "only-if-changed")
+	}
+
+	if t.guard != nil {
+		flags = append(flags, "when")
+	}
+
+	return flags
 }
 
 // Levels returns the levelized DAG -- tasks grouped into execution
@@ -165,46 +189,58 @@ func (p *Plan) Run(
 }
 
 // detectCycle uses DFS to find cycles in the dependency graph.
+// nodeColor tracks depth-first search state. A gray node is on the path
+// being walked right now, so an edge back to one closes a cycle.
+type nodeColor int
+
+const (
+	nodeWhite nodeColor = iota // unvisited, and the zero value the map returns
+	nodeGray                   // on the current path
+	nodeBlack                  // fully explored
+)
+
 func (p *Plan) detectCycle() error {
-	const (
-		white = 0 // unvisited
-		gray  = 1 // in progress
-		black = 2 // done
-	)
-
-	color := make(map[string]int, len(p.tasks))
-
-	var visit func(t *Task) error
-	visit = func(t *Task) error {
-		color[t.name] = gray
-
-		for _, dep := range t.deps {
-			switch color[dep.name] {
-			case gray:
-				return fmt.Errorf(
-					"cycle detected: %q depends on %q",
-					t.name,
-					dep.name,
-				)
-			case white:
-				if err := visit(dep); err != nil {
-					return err
-				}
-			}
-		}
-
-		color[t.name] = black
-
-		return nil
-	}
+	color := make(map[string]nodeColor, len(p.tasks))
 
 	for _, t := range p.tasks {
-		if color[t.name] == white {
-			if err := visit(t); err != nil {
-				return err
-			}
+		if color[t.name] != nodeWhite {
+			continue
+		}
+
+		if err := visitTask(t, color); err != nil {
+			return err
 		}
 	}
+
+	return nil
+}
+
+// visitTask walks a task's dependencies depth-first, reporting the first
+// edge that closes a cycle.
+func visitTask(
+	t *Task,
+	color map[string]nodeColor,
+) error {
+	color[t.name] = nodeGray
+
+	for _, dep := range t.deps {
+		switch color[dep.name] {
+		case nodeGray:
+			return fmt.Errorf(
+				"cycle detected: %q depends on %q",
+				t.name,
+				dep.name,
+			)
+		case nodeWhite:
+			if err := visitTask(dep, color); err != nil {
+				return err
+			}
+		default:
+			// black: already fully explored, and no cycle came of it.
+		}
+	}
+
+	color[t.name] = nodeBlack
 
 	return nil
 }
