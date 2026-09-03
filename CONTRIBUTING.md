@@ -82,7 +82,7 @@ docs/
   operations/              # Operation reference (one doc per operation)
     README.md              # Master index linking to domains
     node/                  # Domain subdirectory with landing page
-      README.md            # "Node Management": ops table, permissions, example
+      README.md            # "Node Management" — ops table, permissions, example
       hostname-get.md      # Individual operation reference
       ...
     network/, command/, docker/, cron/, file/, agent/, health/
