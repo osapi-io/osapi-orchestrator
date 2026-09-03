@@ -27,7 +27,7 @@ Broadcast operations return a `HostResult` for each responding agent:
 | `Error`    | `string`         | Error message (empty on success)   |
 | `Data`     | `map[string]any` | Host-specific response data        |
 
-### Host Status Values
+### Host status values
 
 | Value     | Meaning                              |
 | --------- | ------------------------------------ |

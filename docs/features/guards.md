@@ -124,7 +124,7 @@ o.CommandExec("_all", "verify.sh").
 | `When`             | Custom function | Predicate returns true         |
 | `WhenFact`         | Agent facts     | Predicate matches target agent |
 
-### Host-Level Guards (Broadcast)
+### Host-level guards (broadcast)
 
 | Method                  | Inspects             | Trigger condition    |
 | ----------------------- | -------------------- | -------------------- |

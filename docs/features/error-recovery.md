@@ -26,7 +26,7 @@ cleanup step only runs when at least one dependency failed.
 | `StopAll`  | Fail fast, cancel everything (default)          |
 | `Continue` | Skip dependents, keep running independent tasks |
 
-## Broadcast Error Recovery
+## Broadcast error recovery
 
 For broadcast operations, `OnlyIfFailed` triggers when the task-level status is
 `Failed`, this happens when any host fails. To make finer-grained decisions

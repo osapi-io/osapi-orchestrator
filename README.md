@@ -16,7 +16,7 @@ A Go package for orchestrating operations across [OSAPI]-managed hosts -- typed
 operations, chaining, conditions, and result decoding built on top of the
 [osapi-sdk] engine.
 
-## 📦 Install
+## Install
 
 ```bash
 go install github.com/osapi-io/osapi-orchestrator@latest
@@ -28,7 +28,7 @@ As a library dependency:
 go get github.com/osapi-io/osapi-orchestrator
 ```
 
-## ✨ Features
+## Features
 
 The orchestrator provides a declarative DSL for composing operations into
 DAG-based plans with typed results, guards, retry, and discovery.
@@ -49,7 +49,7 @@ DAG-based plans with typed results, guards, retry, and discovery.
 See the [DSL reference](docs/features/README.md) for guards, predicates, error
 strategies, and typed result tables.
 
-## 📋 Examples
+## Examples
 
 Runnable examples in [examples/operations/](examples/operations/) (per-domain
 workflows) and [examples/features/](examples/features/) (DSL features). Run
@@ -59,11 +59,11 @@ with:
 OSAPI_TOKEN="<jwt>" go run examples/features/basic.go
 ```
 
-## 📖 Documentation
+## Documentation
 
 See the [package documentation] on pkg.go.dev for API details.
 
-## 🧭 Targeting
+## Targeting
 
 Most operations accept a `target` parameter to control which agents receive the
 request:
@@ -75,7 +75,7 @@ request:
 | `hostname`  | Send to a specific host                     |
 | `key:value` | Send to agents matching a label             |
 
-## ⚙️ Operations
+## Operations
 
 101 typed constructors across 23 domains:
 
@@ -105,12 +105,12 @@ request:
 | Agent       | [4 operations](docs/operations/agent/)                | [agent-drain.go](examples/operations/agent-drain.go)         |
 | Health      | [1 operation](docs/operations/health/)                | [basic.go](examples/features/basic.go)                       |
 
-## 🤝 Contributing
+## Contributing
 
 See the [Contributing](CONTRIBUTING.md) guide for prerequisites, setup,
 conventions, and the PR workflow.
 
-## 📄 License
+## License
 
 The [MIT] License.
 
