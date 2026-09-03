@@ -58,10 +58,10 @@ step.When(func(r orchestrator.Results) bool {
 When some hosts succeed and others fail in a broadcast operation, the task
 result has:
 
-- `Status = Failed` — the overall task is marked as failed
-- `Changed = true` — at least one host reported a change
-- `HostResults` — contains per-host details with individual `Error` and
-  `Changed` fields
+- `Status = Failed`. The overall task is marked as failed
+- `Changed = true`. At least one host reported a change
+- `HostResults`. Contains per-host details with individual `Error` and `Changed`
+  fields
 
 This allows downstream guards to distinguish between "all hosts failed" and
 "some hosts failed":
@@ -78,7 +78,7 @@ step.OnlyIfAllHostsFailed()
 ## Broadcast Guards
 
 Four host-level guard methods inspect `HostResults` from broadcast dependencies.
-See [Guards — Broadcast Guards](guards.md#broadcast-guards) for details.
+See [Guards: Broadcast Guards](guards.md#broadcast-guards) for details.
 
 ## Example
 

@@ -79,7 +79,7 @@ inspect `HostResults` from dependencies:
 ### Skipped vs Failed
 
 - **Skipped** (`Status == "skipped"`) means the operation is not supported on
-  this host (e.g., `ErrUnsupported` on Darwin). This is NOT an error — it
+  this host (e.g., `ErrUnsupported` on Darwin). This is NOT an error, it
   indicates the host cannot perform the operation.
 - **Failed** (`Status == "failed"`) means the operation was attempted but
   encountered an error. This IS an error.

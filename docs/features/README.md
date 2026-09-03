@@ -17,7 +17,7 @@ level:
 ```go
 health := o.HealthCheck()
 
-// These three run in parallel — all depend on health.
+// These three run in parallel, all depend on health.
 hostname := o.NodeHostnameGet("_any").After(health)
 disk := o.NodeDiskGet("_any").After(health)
 load := o.NodeLoadGet("_any").After(health)

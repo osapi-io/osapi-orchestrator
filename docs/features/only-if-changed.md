@@ -39,7 +39,7 @@ step.OnlyIfAnyHostChanged()
 step.OnlyIfAllHostsChanged()
 ```
 
-See [Guards — Broadcast Guards](guards.md#broadcast-guards) for details.
+See [Guards: Broadcast Guards](guards.md#broadcast-guards) for details.
 
 ## Example
 
