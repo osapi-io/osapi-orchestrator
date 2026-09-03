@@ -344,7 +344,7 @@ in that domain directory. Every doc must include these sections:
 - **Description** (h1 heading with the method name)
 - **Usage.** minimal Go snippet showing the constructor call
 - **Parameters.** table of all parameters with types and descriptions
-- **Result Type.** `Decode()` snippet and field table
+- **Result type.** `Decode()` snippet and field table
 - **Idempotency.** one of: Read-only, Idempotent (Yes), Non-idempotent (No)
 - **Permissions.** required OSAPI permission (e.g., `node:write`)
 - **Example.** link to the example file where this operation is used:
