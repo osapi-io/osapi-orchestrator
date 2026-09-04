@@ -34,6 +34,10 @@ type OpsTestSuite struct {
 	suite.Suite
 }
 
+// exitCommandNotFound is the shell's exit status for a command that is
+// not on PATH — a real status, not an arbitrary non-zero number.
+const exitCommandNotFound = 127
+
 func (s *OpsTestSuite) TestHealthCheck() {
 	tests := []struct {
 		name        string
@@ -1918,7 +1922,7 @@ func (s *OpsTestSuite) TestCommandError() {
 		},
 		{
 			name:   "returns exit code when non-zero",
-			result: osapi.CommandResult{ExitCode: 127},
+			result: osapi.CommandResult{ExitCode: exitCommandNotFound},
 			validateFn: func(got string) {
 				s.Equal("exit code 127", got)
 			},

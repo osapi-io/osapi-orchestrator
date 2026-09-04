@@ -32,6 +32,10 @@ type OptionsTestSuite struct {
 	suite.Suite
 }
 
+// unknownStrategy is a value no ErrorStrategy constant has, used to
+// check that an unrecognised strategy falls back to StopAll.
+const unknownStrategy = ErrorStrategy(99)
+
 func (s *OptionsTestSuite) TestToSDKStrategy() {
 	tests := []struct {
 		name     string
@@ -50,7 +54,7 @@ func (s *OptionsTestSuite) TestToSDKStrategy() {
 		},
 		{
 			name:     "Unknown defaults to SDK StopAll",
-			input:    ErrorStrategy(99),
+			input:    unknownStrategy,
 			expected: engine.StopAll,
 		},
 	}
