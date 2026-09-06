@@ -38,7 +38,7 @@ func (s *PredicatePublicTestSuite) TestOS() {
 		name         string
 		distribution string
 		agent        osapi.Agent
-		expected     bool
+		validateFunc func(bool)
 	}{
 		{
 			name:         "Matches exact distribution",
@@ -48,7 +48,9 @@ func (s *PredicatePublicTestSuite) TestOS() {
 					Distribution: "ubuntu",
 				},
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name:         "Matches case-insensitive distribution",
@@ -58,13 +60,17 @@ func (s *PredicatePublicTestSuite) TestOS() {
 					Distribution: "ubuntu",
 				},
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name:         "Returns false when OSInfo is nil",
 			distribution: "ubuntu",
 			agent:        osapi.Agent{},
-			expected:     false,
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 		{
 			name:         "Returns false for non-matching distribution",
@@ -74,14 +80,16 @@ func (s *PredicatePublicTestSuite) TestOS() {
 					Distribution: "ubuntu",
 				},
 			},
-			expected: false,
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			predicate := orchestrator.OS(tc.distribution)
-			s.Equal(tc.expected, predicate(tc.agent))
+			tc.validateFunc(predicate(tc.agent))
 		})
 	}
 }
@@ -91,7 +99,7 @@ func (s *PredicatePublicTestSuite) TestArch() {
 		name         string
 		architecture string
 		agent        osapi.Agent
-		expected     bool
+		validateFunc func(bool)
 	}{
 		{
 			name:         "Matches architecture",
@@ -99,7 +107,9 @@ func (s *PredicatePublicTestSuite) TestArch() {
 			agent: osapi.Agent{
 				Architecture: "x86_64",
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name:         "Matches case-insensitive architecture",
@@ -107,7 +117,9 @@ func (s *PredicatePublicTestSuite) TestArch() {
 			agent: osapi.Agent{
 				Architecture: "x86_64",
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name:         "Returns false for non-matching architecture",
@@ -115,24 +127,26 @@ func (s *PredicatePublicTestSuite) TestArch() {
 			agent: osapi.Agent{
 				Architecture: "x86_64",
 			},
-			expected: false,
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			predicate := orchestrator.Arch(tc.architecture)
-			s.Equal(tc.expected, predicate(tc.agent))
+			tc.validateFunc(predicate(tc.agent))
 		})
 	}
 }
 
 func (s *PredicatePublicTestSuite) TestMinMemory() {
 	tests := []struct {
-		name     string
-		total    int
-		agent    osapi.Agent
-		expected bool
+		name         string
+		total        int
+		agent        osapi.Agent
+		validateFunc func(bool)
 	}{
 		{
 			name:  "Matches when memory exceeds minimum",
@@ -142,7 +156,9 @@ func (s *PredicatePublicTestSuite) TestMinMemory() {
 					Total: 8192,
 				},
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name:  "Matches when memory equals minimum",
@@ -152,7 +168,9 @@ func (s *PredicatePublicTestSuite) TestMinMemory() {
 					Total: 4096,
 				},
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name:  "Returns false when memory below minimum",
@@ -162,30 +180,34 @@ func (s *PredicatePublicTestSuite) TestMinMemory() {
 					Total: 4096,
 				},
 			},
-			expected: false,
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 		{
-			name:     "Returns false when Memory is nil",
-			total:    4096,
-			agent:    osapi.Agent{},
-			expected: false,
+			name:  "Returns false when Memory is nil",
+			total: 4096,
+			agent: osapi.Agent{},
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			predicate := orchestrator.MinMemory(tc.total)
-			s.Equal(tc.expected, predicate(tc.agent))
+			tc.validateFunc(predicate(tc.agent))
 		})
 	}
 }
 
 func (s *PredicatePublicTestSuite) TestMinCPU() {
 	tests := []struct {
-		name     string
-		count    int
-		agent    osapi.Agent
-		expected bool
+		name         string
+		count        int
+		agent        osapi.Agent
+		validateFunc func(bool)
 	}{
 		{
 			name:  "Matches when CPU count exceeds minimum",
@@ -193,7 +215,9 @@ func (s *PredicatePublicTestSuite) TestMinCPU() {
 			agent: osapi.Agent{
 				CPUCount: 4,
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name:  "Matches when CPU count equals minimum",
@@ -201,7 +225,9 @@ func (s *PredicatePublicTestSuite) TestMinCPU() {
 			agent: osapi.Agent{
 				CPUCount: 4,
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name:  "Returns false when CPU count below minimum",
@@ -209,25 +235,27 @@ func (s *PredicatePublicTestSuite) TestMinCPU() {
 			agent: osapi.Agent{
 				CPUCount: 4,
 			},
-			expected: false,
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			predicate := orchestrator.MinCPU(tc.count)
-			s.Equal(tc.expected, predicate(tc.agent))
+			tc.validateFunc(predicate(tc.agent))
 		})
 	}
 }
 
 func (s *PredicatePublicTestSuite) TestHasLabel() {
 	tests := []struct {
-		name     string
-		key      string
-		value    string
-		agent    osapi.Agent
-		expected bool
+		name         string
+		key          string
+		value        string
+		agent        osapi.Agent
+		validateFunc func(bool)
 	}{
 		{
 			name:  "Matches label key-value pair",
@@ -239,7 +267,9 @@ func (s *PredicatePublicTestSuite) TestHasLabel() {
 					"team": "infra",
 				},
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name:  "Returns false for wrong value",
@@ -250,32 +280,36 @@ func (s *PredicatePublicTestSuite) TestHasLabel() {
 					"env": "staging",
 				},
 			},
-			expected: false,
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 		{
-			name:     "Returns false when labels are nil",
-			key:      "env",
-			value:    "prod",
-			agent:    osapi.Agent{},
-			expected: false,
+			name:  "Returns false when labels are nil",
+			key:   "env",
+			value: "prod",
+			agent: osapi.Agent{},
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			predicate := orchestrator.HasLabel(tc.key, tc.value)
-			s.Equal(tc.expected, predicate(tc.agent))
+			tc.validateFunc(predicate(tc.agent))
 		})
 	}
 }
 
 func (s *PredicatePublicTestSuite) TestFactEquals() {
 	tests := []struct {
-		name     string
-		key      string
-		value    any
-		agent    osapi.Agent
-		expected bool
+		name         string
+		key          string
+		value        any
+		agent        osapi.Agent
+		validateFunc func(bool)
 	}{
 		{
 			name:  "Matches string fact",
@@ -286,7 +320,9 @@ func (s *PredicatePublicTestSuite) TestFactEquals() {
 					"datacenter": "us-east-1",
 				},
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name:  "Matches numeric fact (float64)",
@@ -297,7 +333,9 @@ func (s *PredicatePublicTestSuite) TestFactEquals() {
 					"version": float64(3),
 				},
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name:  "Returns false for wrong value",
@@ -308,21 +346,25 @@ func (s *PredicatePublicTestSuite) TestFactEquals() {
 					"datacenter": "us-east-1",
 				},
 			},
-			expected: false,
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 		{
-			name:     "Returns false when facts are nil",
-			key:      "datacenter",
-			value:    "us-east-1",
-			agent:    osapi.Agent{},
-			expected: false,
+			name:  "Returns false when facts are nil",
+			key:   "datacenter",
+			value: "us-east-1",
+			agent: osapi.Agent{},
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			predicate := orchestrator.FactEquals(tc.key, tc.value)
-			s.Equal(tc.expected, predicate(tc.agent))
+			tc.validateFunc(predicate(tc.agent))
 		})
 	}
 }
@@ -332,7 +374,7 @@ func (s *PredicatePublicTestSuite) TestHasCondition() {
 		name          string
 		conditionType string
 		agent         osapi.Agent
-		expected      bool
+		validateFunc  func(bool)
 	}{
 		{
 			name:          "Matches active condition",
@@ -342,7 +384,9 @@ func (s *PredicatePublicTestSuite) TestHasCondition() {
 					{Type: "DiskPressure", Status: true},
 				},
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name:          "No match when condition is inactive",
@@ -352,7 +396,9 @@ func (s *PredicatePublicTestSuite) TestHasCondition() {
 					{Type: "DiskPressure", Status: false},
 				},
 			},
-			expected: false,
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 		{
 			name:          "No match for wrong type",
@@ -362,20 +408,24 @@ func (s *PredicatePublicTestSuite) TestHasCondition() {
 					{Type: "DiskPressure", Status: true},
 				},
 			},
-			expected: false,
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 		{
 			name:          "No match when conditions are nil",
 			conditionType: "DiskPressure",
 			agent:         osapi.Agent{},
-			expected:      false,
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			predicate := orchestrator.HasCondition(tc.conditionType)
-			s.Equal(tc.expected, predicate(tc.agent))
+			tc.validateFunc(predicate(tc.agent))
 		})
 	}
 }
@@ -385,7 +435,7 @@ func (s *PredicatePublicTestSuite) TestNoCondition() {
 		name          string
 		conditionType string
 		agent         osapi.Agent
-		expected      bool
+		validateFunc  func(bool)
 	}{
 		{
 			name:          "No match when condition is active",
@@ -395,7 +445,9 @@ func (s *PredicatePublicTestSuite) TestNoCondition() {
 					{Type: "DiskPressure", Status: true},
 				},
 			},
-			expected: false,
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 		{
 			name:          "Matches when condition is inactive",
@@ -405,7 +457,9 @@ func (s *PredicatePublicTestSuite) TestNoCondition() {
 					{Type: "DiskPressure", Status: false},
 				},
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name:          "Matches when type is missing",
@@ -415,34 +469,40 @@ func (s *PredicatePublicTestSuite) TestNoCondition() {
 					{Type: "DiskPressure", Status: true},
 				},
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name:          "Matches when conditions are nil",
 			conditionType: "DiskPressure",
 			agent:         osapi.Agent{},
-			expected:      true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			predicate := orchestrator.NoCondition(tc.conditionType)
-			s.Equal(tc.expected, predicate(tc.agent))
+			tc.validateFunc(predicate(tc.agent))
 		})
 	}
 }
 
 func (s *PredicatePublicTestSuite) TestHealthy() {
 	tests := []struct {
-		name     string
-		agent    osapi.Agent
-		expected bool
+		name         string
+		agent        osapi.Agent
+		validateFunc func(bool)
 	}{
 		{
-			name:     "Matches when no conditions",
-			agent:    osapi.Agent{},
-			expected: true,
+			name:  "Matches when no conditions",
+			agent: osapi.Agent{},
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name: "Matches when all conditions inactive",
@@ -452,7 +512,9 @@ func (s *PredicatePublicTestSuite) TestHealthy() {
 					{Type: "MemoryPressure", Status: false},
 				},
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name: "No match when one condition active",
@@ -462,31 +524,35 @@ func (s *PredicatePublicTestSuite) TestHealthy() {
 					{Type: "MemoryPressure", Status: true},
 				},
 			},
-			expected: false,
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 		{
 			name: "Matches with empty conditions slice",
 			agent: osapi.Agent{
 				Conditions: []osapi.Condition{},
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			predicate := orchestrator.Healthy()
-			s.Equal(tc.expected, predicate(tc.agent))
+			tc.validateFunc(predicate(tc.agent))
 		})
 	}
 }
 
 func (s *PredicatePublicTestSuite) TestMatchAll() {
 	tests := []struct {
-		name       string
-		agent      osapi.Agent
-		predicates []orchestrator.Predicate
-		expected   bool
+		name         string
+		agent        osapi.Agent
+		predicates   []orchestrator.Predicate
+		validateFunc func(bool)
 	}{
 		{
 			name: "Returns true when all predicates match",
@@ -502,7 +568,9 @@ func (s *PredicatePublicTestSuite) TestMatchAll() {
 				orchestrator.Arch("x86_64"),
 				orchestrator.MinCPU(4),
 			},
-			expected: true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 		{
 			name: "Returns false when one predicate fails",
@@ -517,20 +585,23 @@ func (s *PredicatePublicTestSuite) TestMatchAll() {
 				orchestrator.OS("ubuntu"),
 				orchestrator.MinCPU(4),
 			},
-			expected: false,
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
 		},
 		{
 			name:       "Returns true when no predicates are provided",
 			agent:      osapi.Agent{},
 			predicates: nil,
-			expected:   true,
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			result := orchestrator.MatchAll(tc.agent, tc.predicates...)
-			s.Equal(tc.expected, result)
+			tc.validateFunc(orchestrator.MatchAll(tc.agent, tc.predicates...))
 		})
 	}
 }

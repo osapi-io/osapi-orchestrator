@@ -154,8 +154,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 		col          client.Collection[client.HostnameResult]
 		rawJSON      []byte
 		toHost       func(client.HostnameResult) engine.HostResult
-		expectErr    bool
-		validateFunc func(result *engine.Result)
+		validateFunc func(*engine.Result, error)
 	}{
 		{
 			name: "single result with auto-populated data",
@@ -166,7 +165,9 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				JobID: "job-123",
 			},
 			toHost: mapper,
-			validateFunc: func(result *engine.Result) {
+			validateFunc: func(result *engine.Result, err error) {
+				s.NoError(err)
+				s.Require().NotNil(result)
 				s.Equal("job-123", result.JobID)
 				s.False(result.Changed)
 				s.Require().Len(result.HostResults, 1)
@@ -188,7 +189,9 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				JobID: "job-456",
 			},
 			toHost: mapper,
-			validateFunc: func(result *engine.Result) {
+			validateFunc: func(result *engine.Result, err error) {
+				s.NoError(err)
+				s.Require().NotNil(result)
 				s.Equal("job-456", result.JobID)
 				s.True(result.Changed)
 				s.Len(result.HostResults, 2)
@@ -203,7 +206,9 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				JobID:   "job-789",
 			},
 			toHost: mapper,
-			validateFunc: func(result *engine.Result) {
+			validateFunc: func(result *engine.Result, err error) {
+				s.NoError(err)
+				s.Require().NotNil(result)
 				s.Equal("job-789", result.JobID)
 				s.False(result.Changed)
 				s.Empty(result.HostResults)
@@ -224,7 +229,9 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 					Error:    r.Error,
 				}
 			},
-			validateFunc: func(result *engine.Result) {
+			validateFunc: func(result *engine.Result, err error) {
+				s.NoError(err)
+				s.Require().NotNil(result)
 				hr := result.HostResults[0]
 				s.Require().NotNil(hr.Data)
 				s.Equal("db-01", hr.Data["hostname"])
@@ -246,7 +253,9 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 					Data:     map[string]any{"custom": "value"},
 				}
 			},
-			validateFunc: func(result *engine.Result) {
+			validateFunc: func(result *engine.Result, err error) {
+				s.NoError(err)
+				s.Require().NotNil(result)
 				hr := result.HostResults[0]
 				s.Require().NotNil(hr.Data)
 				s.Equal("value", hr.Data["custom"])
@@ -264,7 +273,9 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 			},
 			rawJSON: []byte(`{"job_id":"job-raw","results":[{"hostname":"web-01"}]}`),
 			toHost:  mapper,
-			validateFunc: func(result *engine.Result) {
+			validateFunc: func(result *engine.Result, err error) {
+				s.NoError(err)
+				s.Require().NotNil(result)
 				s.Require().NotNil(result.Data)
 				s.Equal("job-raw", result.Data["job_id"])
 			},
@@ -279,7 +290,9 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 			},
 			rawJSON: nil,
 			toHost:  mapper,
-			validateFunc: func(result *engine.Result) {
+			validateFunc: func(result *engine.Result, err error) {
+				s.NoError(err)
+				s.Require().NotNil(result)
 				s.Nil(result.Data)
 			},
 		},
@@ -291,30 +304,22 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				},
 				JobID: "job-bad",
 			},
-			rawJSON:   []byte(`not valid json`),
-			toHost:    mapper,
-			expectErr: true,
+			rawJSON: []byte(`not valid json`),
+			toHost:  mapper,
+			validateFunc: func(result *engine.Result, err error) {
+				s.Error(err)
+				s.Nil(result)
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			result, err := engine.CollectionResult(
+			tt.validateFunc(engine.CollectionResult(
 				tt.col,
 				tt.rawJSON,
 				tt.toHost,
-			)
-
-			if tt.expectErr {
-				s.Error(err)
-				s.Nil(result)
-
-				return
-			}
-
-			s.NoError(err)
-			s.Require().NotNil(result)
-			tt.validateFunc(result)
+			))
 		})
 	}
 }
