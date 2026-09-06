@@ -61,7 +61,7 @@ OSAPI_TOKEN="<jwt>" go run examples/features/basic.go
 
 ## Documentation
 
-See the [package documentation] on pkg.go.dev for API details.
+- [Package documentation] on pkg.go.dev. API reference.
 
 ## Targeting
 
