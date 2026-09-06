@@ -1,3 +1,23 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
 package engine_test
 
 import (
@@ -30,16 +50,16 @@ type testNested struct {
 
 func (s *BridgePublicTestSuite) TestStructToMap() {
 	tests := []struct {
-		name       string
-		setupFn    func()
-		teardownFn func()
-		input      any
-		validateFn func(m map[string]any)
+		name         string
+		setupFn      func()
+		teardownFn   func()
+		input        any
+		validateFunc func(m map[string]any)
 	}{
 		{
 			name:  "converts struct with json tags to map",
 			input: testStruct{Name: "web-01", Value: 42},
-			validateFn: func(m map[string]any) {
+			validateFunc: func(m map[string]any) {
 				s.Require().NotNil(m)
 				s.Equal("web-01", m["name"])
 				s.Equal(float64(42), m["value"])
@@ -48,7 +68,7 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 		{
 			name:  "returns nil for nil input",
 			input: nil,
-			validateFn: func(m map[string]any) {
+			validateFunc: func(m map[string]any) {
 				s.Nil(m)
 			},
 		},
@@ -58,7 +78,7 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 				Label: "parent",
 				Inner: testStruct{Name: "child", Value: 7},
 			},
-			validateFn: func(m map[string]any) {
+			validateFunc: func(m map[string]any) {
 				s.Require().NotNil(m)
 				s.Equal("parent", m["label"])
 
@@ -74,7 +94,7 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 				Hostname: "web-01",
 				Changed:  true,
 			},
-			validateFn: func(m map[string]any) {
+			validateFunc: func(m map[string]any) {
 				s.Require().NotNil(m)
 				s.Equal("web-01", m["hostname"])
 				s.Equal(true, m["changed"])
@@ -83,7 +103,7 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 		{
 			name:  "returns nil for unmarshalable input",
 			input: make(chan int),
-			validateFn: func(m map[string]any) {
+			validateFunc: func(m map[string]any) {
 				s.Nil(m)
 			},
 		},
@@ -99,7 +119,7 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 			},
 			teardownFn: engine.ResetJSONUnmarshalFn,
 			input:      testStruct{Name: "test"},
-			validateFn: func(m map[string]any) {
+			validateFunc: func(m map[string]any) {
 				s.Nil(m)
 			},
 		},
@@ -115,7 +135,7 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 			}
 
 			got := engine.StructToMap(tt.input)
-			tt.validateFn(got)
+			tt.validateFunc(got)
 		})
 	}
 }
@@ -130,12 +150,12 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 	}
 
 	tests := []struct {
-		name       string
-		col        client.Collection[client.HostnameResult]
-		rawJSON    []byte
-		toHost     func(client.HostnameResult) engine.HostResult
-		expectErr  bool
-		validateFn func(result *engine.Result)
+		name         string
+		col          client.Collection[client.HostnameResult]
+		rawJSON      []byte
+		toHost       func(client.HostnameResult) engine.HostResult
+		expectErr    bool
+		validateFunc func(result *engine.Result)
 	}{
 		{
 			name: "single result with auto-populated data",
@@ -146,7 +166,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				JobID: "job-123",
 			},
 			toHost: mapper,
-			validateFn: func(result *engine.Result) {
+			validateFunc: func(result *engine.Result) {
 				s.Equal("job-123", result.JobID)
 				s.False(result.Changed)
 				s.Require().Len(result.HostResults, 1)
@@ -168,7 +188,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				JobID: "job-456",
 			},
 			toHost: mapper,
-			validateFn: func(result *engine.Result) {
+			validateFunc: func(result *engine.Result) {
 				s.Equal("job-456", result.JobID)
 				s.True(result.Changed)
 				s.Len(result.HostResults, 2)
@@ -183,7 +203,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				JobID:   "job-789",
 			},
 			toHost: mapper,
-			validateFn: func(result *engine.Result) {
+			validateFunc: func(result *engine.Result) {
 				s.Equal("job-789", result.JobID)
 				s.False(result.Changed)
 				s.Empty(result.HostResults)
@@ -204,7 +224,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 					Error:    r.Error,
 				}
 			},
-			validateFn: func(result *engine.Result) {
+			validateFunc: func(result *engine.Result) {
 				hr := result.HostResults[0]
 				s.Require().NotNil(hr.Data)
 				s.Equal("db-01", hr.Data["hostname"])
@@ -226,7 +246,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 					Data:     map[string]any{"custom": "value"},
 				}
 			},
-			validateFn: func(result *engine.Result) {
+			validateFunc: func(result *engine.Result) {
 				hr := result.HostResults[0]
 				s.Require().NotNil(hr.Data)
 				s.Equal("value", hr.Data["custom"])
@@ -244,7 +264,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 			},
 			rawJSON: []byte(`{"job_id":"job-raw","results":[{"hostname":"web-01"}]}`),
 			toHost:  mapper,
-			validateFn: func(result *engine.Result) {
+			validateFunc: func(result *engine.Result) {
 				s.Require().NotNil(result.Data)
 				s.Equal("job-raw", result.Data["job_id"])
 			},
@@ -259,7 +279,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 			},
 			rawJSON: nil,
 			toHost:  mapper,
-			validateFn: func(result *engine.Result) {
+			validateFunc: func(result *engine.Result) {
 				s.Nil(result.Data)
 			},
 		},
@@ -294,7 +314,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 
 			s.NoError(err)
 			s.Require().NotNil(result)
-			tt.validateFn(result)
+			tt.validateFunc(result)
 		})
 	}
 }

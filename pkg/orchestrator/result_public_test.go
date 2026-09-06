@@ -446,12 +446,12 @@ func (s *ResultPublicTestSuite) TestChanged() {
 
 func (s *ResultPublicTestSuite) TestHostResults() {
 	tests := []struct {
-		name       string
-		results    engine.Results
-		lookupName string
-		wantNil    bool
-		wantLen    int
-		validateFn func(hrs []orchestrator.HostResult)
+		name         string
+		results      engine.Results
+		lookupName   string
+		wantNil      bool
+		wantLen      int
+		validateFunc func(hrs []orchestrator.HostResult)
 	}{
 		{
 			name: "Returns per-host results",
@@ -477,7 +477,7 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 			},
 			lookupName: "deploy",
 			wantLen:    2,
-			validateFn: func(hrs []orchestrator.HostResult) {
+			validateFunc: func(hrs []orchestrator.HostResult) {
 				s.Equal("web-01", hrs[0].Hostname)
 				s.True(hrs[0].Changed)
 				s.Empty(hrs[0].Error)
@@ -515,7 +515,7 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 			},
 			lookupName: "deploy",
 			wantLen:    3,
-			validateFn: func(hrs []orchestrator.HostResult) {
+			validateFunc: func(hrs []orchestrator.HostResult) {
 				s.Require().Len(hrs, 3)
 				s.Equal("ok", hrs[0].Status)
 				s.True(hrs[0].Changed)
@@ -539,8 +539,8 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 
 			s.Len(hrs, tc.wantLen)
 
-			if tc.validateFn != nil {
-				tc.validateFn(hrs)
+			if tc.validateFunc != nil {
+				tc.validateFunc(hrs)
 			}
 		})
 	}
@@ -548,12 +548,12 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 
 func (s *ResultPublicTestSuite) TestHostResultDecode() {
 	tests := []struct {
-		name        string
-		hostResult  orchestrator.HostResult
-		target      any
-		expectErr   bool
-		errContains string
-		validateFn  func(cmd osapi.CommandResult)
+		name         string
+		hostResult   orchestrator.HostResult
+		target       any
+		expectErr    bool
+		errContains  string
+		validateFunc func(cmd osapi.CommandResult)
 	}{
 		{
 			name: "Decodes host result data into typed struct",
@@ -566,7 +566,7 @@ func (s *ResultPublicTestSuite) TestHostResultDecode() {
 					"exit_code": float64(0),
 				},
 			},
-			validateFn: func(cmd osapi.CommandResult) {
+			validateFunc: func(cmd osapi.CommandResult) {
 				s.Equal("hello", cmd.Stdout)
 				s.Equal(0, cmd.ExitCode)
 			},
@@ -612,8 +612,8 @@ func (s *ResultPublicTestSuite) TestHostResultDecode() {
 
 			s.Require().NoError(err)
 
-			if tc.validateFn != nil {
-				tc.validateFn(cmd)
+			if tc.validateFunc != nil {
+				tc.validateFunc(cmd)
 			}
 		})
 	}
@@ -621,13 +621,13 @@ func (s *ResultPublicTestSuite) TestHostResultDecode() {
 
 func (s *ResultPublicTestSuite) TestReportDecode() {
 	tests := []struct {
-		name        string
-		tasks       []engine.TaskResult
-		lookupName  string
-		target      any
-		expectErr   bool
-		errContains string
-		validateFn  func(cmd osapi.CommandResult)
+		name         string
+		tasks        []engine.TaskResult
+		lookupName   string
+		target       any
+		expectErr    bool
+		errContains  string
+		validateFunc func(cmd osapi.CommandResult)
 	}{
 		{
 			name: "Decodes task result from report",
@@ -643,7 +643,7 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 				},
 			},
 			lookupName: "run-cmd",
-			validateFn: func(cmd osapi.CommandResult) {
+			validateFunc: func(cmd osapi.CommandResult) {
 				s.Equal("hello", cmd.Stdout)
 				s.Equal(0, cmd.ExitCode)
 			},
@@ -668,7 +668,7 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 				},
 			},
 			lookupName: "run-cmd",
-			validateFn: func(cmd osapi.CommandResult) {
+			validateFunc: func(cmd osapi.CommandResult) {
 				s.Equal("hello from host", cmd.Stdout)
 				s.Equal(0, cmd.ExitCode)
 			},
@@ -747,8 +747,8 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 
 			s.Require().NoError(err)
 
-			if tc.validateFn != nil {
-				tc.validateFn(cmd)
+			if tc.validateFunc != nil {
+				tc.validateFunc(cmd)
 			}
 		})
 	}

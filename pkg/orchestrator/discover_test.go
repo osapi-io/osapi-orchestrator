@@ -135,11 +135,11 @@ func (s *DiscoverTestSuite) TestFactValue() {
 
 func (s *DiscoverTestSuite) TestFetchAgents() {
 	tests := []struct {
-		name       string
-		handler    http.HandlerFunc
-		setup      func()
-		teardown   func()
-		validateFn func([]osapi.Agent, error)
+		name         string
+		handler      http.HandlerFunc
+		setup        func()
+		teardown     func()
+		validateFunc func([]osapi.Agent, error)
 	}{
 		{
 			name: "returns agents on success",
@@ -153,7 +153,7 @@ func (s *DiscoverTestSuite) TestFetchAgents() {
 					`{"agents":[{"hostname":"web-01","status":"Ready"}],"total":1}`,
 				))
 			}),
-			validateFn: func(
+			validateFunc: func(
 				agents []osapi.Agent,
 				err error,
 			) {
@@ -171,7 +171,7 @@ func (s *DiscoverTestSuite) TestFetchAgents() {
 				w.WriteHeader(http.StatusInternalServerError)
 				_, _ = w.Write([]byte(`{"error":"server error"}`))
 			}),
-			validateFn: func(
+			validateFunc: func(
 				agents []osapi.Agent,
 				err error,
 			) {
@@ -198,7 +198,7 @@ func (s *DiscoverTestSuite) TestFetchAgents() {
 			teardown: func() {
 				fetchAgentsDecodeName = "list-agents"
 			},
-			validateFn: func(
+			validateFunc: func(
 				agents []osapi.Agent,
 				err error,
 			) {
@@ -223,7 +223,7 @@ func (s *DiscoverTestSuite) TestFetchAgents() {
 
 			orch := New(server.URL, "test-token")
 			agents, err := orch.fetchAgents(context.Background())
-			tc.validateFn(agents, err)
+			tc.validateFunc(agents, err)
 		})
 	}
 }

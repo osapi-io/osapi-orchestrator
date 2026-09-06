@@ -26,6 +26,7 @@ package orchestrator
 
 import (
 	"context"
+	"fmt"
 
 	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
 	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
@@ -165,4 +166,17 @@ func rendererHooks(
 			r.TaskSkip(task.Name(), reason)
 		},
 	}
+}
+
+// nextOpName generates a human-readable task name from a prefix.
+// Appends a counter suffix on collision (e.g. "get-hostname-2").
+func (o *Orchestrator) nextOpName(
+	prefix string,
+) string {
+	o.nameCount[prefix]++
+	if o.nameCount[prefix] > 1 {
+		return fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
+	}
+
+	return prefix
 }

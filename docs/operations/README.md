@@ -35,7 +35,7 @@ error handling.
 | [Power](node/power/)     | 2          | Reboot and shutdown                  |
 | [Process](node/process/) | 3          | Process listing, inspection, signals |
 | [Log](node/log/)         | 3          | Systemd journal queries              |
-| Node                     | 5          | Status, load, uptime, OS             |
+| Node                     | 4          | Status, load, uptime, OS             |
 
 ### [Networking](networking/)
 
