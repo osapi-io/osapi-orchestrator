@@ -41,9 +41,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 		results      engine.Results
 		lookupName   string
 		target       any
-		expectErr    bool
-		errContains  string
-		validateFunc func()
+		validateFunc func(error)
 	}{
 		{
 			name: "Decodes hostname from host results",
@@ -64,7 +62,8 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			},
 			lookupName: "get-hostname",
 			target:     &osapi.HostnameResult{},
-			validateFunc: func() {
+			validateFunc: func(decodeErr error) {
+				s.NoError(decodeErr)
 				r := orchestrator.NewResults(engine.Results{
 					"get-hostname": &engine.Result{
 						Data: map[string]any{"results": []any{}},
@@ -105,7 +104,8 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			},
 			lookupName: "run-uptime",
 			target:     &osapi.CommandResult{},
-			validateFunc: func() {
+			validateFunc: func(decodeErr error) {
+				s.NoError(decodeErr)
 				r := orchestrator.NewResults(engine.Results{
 					"run-uptime": &engine.Result{
 						Data: map[string]any{"results": []any{}},
@@ -139,7 +139,8 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			},
 			lookupName: "summarize",
 			target:     &map[string]any{},
-			validateFunc: func() {
+			validateFunc: func(decodeErr error) {
+				s.NoError(decodeErr)
 				r := orchestrator.NewResults(engine.Results{
 					"summarize": &engine.Result{
 						Changed: true,
@@ -159,14 +160,19 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			},
 			lookupName: "empty-task",
 			target:     &osapi.HostnameResult{},
+			validateFunc: func(decodeErr error) {
+				s.NoError(decodeErr)
+			},
 		},
 		{
-			name:        "Returns error for missing result",
-			results:     engine.Results{},
-			lookupName:  "nonexistent",
-			target:      &osapi.HostnameResult{},
-			expectErr:   true,
-			errContains: "no result for",
+			name:       "Returns error for missing result",
+			results:    engine.Results{},
+			lookupName: "nonexistent",
+			target:     &osapi.HostnameResult{},
+			validateFunc: func(err error) {
+				s.Require().Error(err)
+				s.Contains(err.Error(), "no result for")
+			},
 		},
 		{
 			name: "Decodes command error from host results",
@@ -191,7 +197,8 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			},
 			lookupName: "run-cmd",
 			target:     &osapi.CommandResult{},
-			validateFunc: func() {
+			validateFunc: func(decodeErr error) {
+				s.NoError(decodeErr)
 				r := orchestrator.NewResults(engine.Results{
 					"run-cmd": &engine.Result{
 						Changed: true,
@@ -226,10 +233,12 @@ func (s *ResultPublicTestSuite) TestDecode() {
 					Data: map[string]any{"hostname": 12345},
 				},
 			},
-			lookupName:  "bad-task",
-			target:      &struct{ Hostname chan int }{},
-			expectErr:   true,
-			errContains: "decode result data",
+			lookupName: "bad-task",
+			target:     &struct{ Hostname chan int }{},
+			validateFunc: func(err error) {
+				s.Require().Error(err)
+				s.Contains(err.Error(), "decode result data")
+			},
 		},
 		{
 			name: "Returns error when marshal fails",
@@ -238,44 +247,36 @@ func (s *ResultPublicTestSuite) TestDecode() {
 					Data: map[string]any{"fn": func() {}},
 				},
 			},
-			lookupName:  "bad-marshal",
-			target:      &osapi.HostnameResult{},
-			expectErr:   true,
-			errContains: "marshal result data",
+			lookupName: "bad-marshal",
+			target:     &osapi.HostnameResult{},
+			validateFunc: func(err error) {
+				s.Require().Error(err)
+				s.Contains(err.Error(), "marshal result data")
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			results := orchestrator.NewResults(tc.results)
-			err := results.Decode(tc.lookupName, tc.target)
 
-			if tc.expectErr {
-				s.Require().Error(err)
-				s.Contains(err.Error(), tc.errContains)
-
-				return
-			}
-
-			s.NoError(err)
-
-			if tc.validateFunc != nil {
-				tc.validateFunc()
-			}
+			tc.validateFunc(results.Decode(tc.lookupName, tc.target))
 		})
 	}
 }
 
 func (s *ResultPublicTestSuite) TestReportSummary() {
 	tests := []struct {
-		name     string
-		tasks    []engine.TaskResult
-		expected string
+		name         string
+		tasks        []engine.TaskResult
+		validateFunc func(string)
 	}{
 		{
-			name:     "Empty report",
-			tasks:    nil,
-			expected: "0 tasks",
+			name:  "Empty report",
+			tasks: nil,
+			validateFunc: func(summary string) {
+				s.Equal("0 tasks", summary)
+			},
 		},
 		{
 			name: "All changed",
@@ -283,14 +284,18 @@ func (s *ResultPublicTestSuite) TestReportSummary() {
 				{Name: "a", Status: engine.StatusChanged},
 				{Name: "b", Status: engine.StatusChanged},
 			},
-			expected: "2 tasks, 2 changed",
+			validateFunc: func(summary string) {
+				s.Equal("2 tasks, 2 changed", summary)
+			},
 		},
 		{
 			name: "All unchanged",
 			tasks: []engine.TaskResult{
 				{Name: "a", Status: engine.StatusUnchanged},
 			},
-			expected: "1 tasks, 1 unchanged",
+			validateFunc: func(summary string) {
+				s.Equal("1 tasks, 1 unchanged", summary)
+			},
 		},
 		{
 			name: "Mixed statuses",
@@ -300,21 +305,27 @@ func (s *ResultPublicTestSuite) TestReportSummary() {
 				{Name: "c", Status: engine.StatusSkipped},
 				{Name: "d", Status: engine.StatusFailed},
 			},
-			expected: "4 tasks, 1 changed, 1 unchanged, 1 skipped, 1 failed",
+			validateFunc: func(summary string) {
+				s.Equal("4 tasks, 1 changed, 1 unchanged, 1 skipped, 1 failed", summary)
+			},
 		},
 		{
 			name: "Skipped only",
 			tasks: []engine.TaskResult{
 				{Name: "a", Status: engine.StatusSkipped},
 			},
-			expected: "1 tasks, 1 skipped",
+			validateFunc: func(summary string) {
+				s.Equal("1 tasks, 1 skipped", summary)
+			},
 		},
 		{
 			name: "Failed only",
 			tasks: []engine.TaskResult{
 				{Name: "a", Status: engine.StatusFailed},
 			},
-			expected: "1 tasks, 1 failed",
+			validateFunc: func(summary string) {
+				s.Equal("1 tasks, 1 failed", summary)
+			},
 		},
 	}
 
@@ -325,17 +336,17 @@ func (s *ResultPublicTestSuite) TestReportSummary() {
 				Duration: 5 * time.Second,
 			}
 
-			s.Equal(tc.expected, report.Summary())
+			tc.validateFunc(report.Summary())
 		})
 	}
 }
 
 func (s *ResultPublicTestSuite) TestStatus() {
 	tests := []struct {
-		name       string
-		results    engine.Results
-		lookupName string
-		wantStatus orchestrator.TaskStatus
+		name         string
+		results      engine.Results
+		lookupName   string
+		validateFunc func(orchestrator.TaskStatus)
 	}{
 		{
 			name: "Returns TaskStatusChanged for changed result",
@@ -346,7 +357,9 @@ func (s *ResultPublicTestSuite) TestStatus() {
 				},
 			},
 			lookupName: "step-a",
-			wantStatus: orchestrator.TaskStatusChanged,
+			validateFunc: func(status orchestrator.TaskStatus) {
+				s.Equal(orchestrator.TaskStatusChanged, status)
+			},
 		},
 		{
 			name: "Returns TaskStatusUnchanged for unchanged result",
@@ -357,7 +370,9 @@ func (s *ResultPublicTestSuite) TestStatus() {
 				},
 			},
 			lookupName: "step-a",
-			wantStatus: orchestrator.TaskStatusUnchanged,
+			validateFunc: func(status orchestrator.TaskStatus) {
+				s.Equal(orchestrator.TaskStatusUnchanged, status)
+			},
 		},
 		{
 			name: "Returns TaskStatusSkipped for skipped result",
@@ -367,7 +382,9 @@ func (s *ResultPublicTestSuite) TestStatus() {
 				},
 			},
 			lookupName: "step-a",
-			wantStatus: orchestrator.TaskStatusSkipped,
+			validateFunc: func(status orchestrator.TaskStatus) {
+				s.Equal(orchestrator.TaskStatusSkipped, status)
+			},
 		},
 		{
 			name: "Returns TaskStatusFailed for failed result",
@@ -377,13 +394,17 @@ func (s *ResultPublicTestSuite) TestStatus() {
 				},
 			},
 			lookupName: "step-a",
-			wantStatus: orchestrator.TaskStatusFailed,
+			validateFunc: func(status orchestrator.TaskStatus) {
+				s.Equal(orchestrator.TaskStatusFailed, status)
+			},
 		},
 		{
 			name:       "Returns TaskStatusUnknown for missing result",
 			results:    engine.Results{},
 			lookupName: "nonexistent",
-			wantStatus: orchestrator.TaskStatusUnknown,
+			validateFunc: func(status orchestrator.TaskStatus) {
+				s.Equal(orchestrator.TaskStatusUnknown, status)
+			},
 		},
 		{
 			name: "Returns TaskStatusUnknown for unrecognized SDK status",
@@ -393,24 +414,26 @@ func (s *ResultPublicTestSuite) TestStatus() {
 				},
 			},
 			lookupName: "step-a",
-			wantStatus: orchestrator.TaskStatusUnknown,
+			validateFunc: func(status orchestrator.TaskStatus) {
+				s.Equal(orchestrator.TaskStatusUnknown, status)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			r := orchestrator.NewResults(tc.results)
-			s.Equal(tc.wantStatus, r.Status(tc.lookupName))
+			tc.validateFunc(r.Status(tc.lookupName))
 		})
 	}
 }
 
 func (s *ResultPublicTestSuite) TestChanged() {
 	tests := []struct {
-		name       string
-		results    engine.Results
-		lookupName string
-		want       bool
+		name         string
+		results      engine.Results
+		lookupName   string
+		validateFunc func(bool)
 	}{
 		{
 			name: "Returns true when step reported changes",
@@ -418,7 +441,9 @@ func (s *ResultPublicTestSuite) TestChanged() {
 				"deploy": &engine.Result{Changed: true, Status: engine.StatusChanged},
 			},
 			lookupName: "deploy",
-			want:       true,
+			validateFunc: func(changed bool) {
+				s.True(changed)
+			},
 		},
 		{
 			name: "Returns false when step did not report changes",
@@ -426,20 +451,24 @@ func (s *ResultPublicTestSuite) TestChanged() {
 				"deploy": &engine.Result{Changed: false, Status: engine.StatusUnchanged},
 			},
 			lookupName: "deploy",
-			want:       false,
+			validateFunc: func(changed bool) {
+				s.False(changed)
+			},
 		},
 		{
 			name:       "Returns false when step not found",
 			results:    engine.Results{},
 			lookupName: "nonexistent",
-			want:       false,
+			validateFunc: func(changed bool) {
+				s.False(changed)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			r := orchestrator.NewResults(tc.results)
-			s.Equal(tc.want, r.Changed(tc.lookupName))
+			tc.validateFunc(r.Changed(tc.lookupName))
 		})
 	}
 }
@@ -449,9 +478,7 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 		name         string
 		results      engine.Results
 		lookupName   string
-		wantNil      bool
-		wantLen      int
-		validateFunc func(hrs []orchestrator.HostResult)
+		validateFunc func([]orchestrator.HostResult)
 	}{
 		{
 			name: "Returns per-host results",
@@ -476,8 +503,8 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 				},
 			},
 			lookupName: "deploy",
-			wantLen:    2,
 			validateFunc: func(hrs []orchestrator.HostResult) {
+				s.Require().Len(hrs, 2)
 				s.Equal("web-01", hrs[0].Hostname)
 				s.True(hrs[0].Changed)
 				s.Empty(hrs[0].Error)
@@ -489,7 +516,9 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 			name:       "Returns nil for missing step",
 			results:    engine.Results{},
 			lookupName: "nonexistent",
-			wantNil:    true,
+			validateFunc: func(hrs []orchestrator.HostResult) {
+				s.Nil(hrs)
+			},
 		},
 		{
 			name: "Returns nil for unicast result",
@@ -500,7 +529,9 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 				},
 			},
 			lookupName: "get-host",
-			wantNil:    true,
+			validateFunc: func(hrs []orchestrator.HostResult) {
+				s.Nil(hrs)
+			},
 		},
 		{
 			name: "with status fields",
@@ -514,7 +545,6 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 				},
 			},
 			lookupName: "deploy",
-			wantLen:    3,
 			validateFunc: func(hrs []orchestrator.HostResult) {
 				s.Require().Len(hrs, 3)
 				s.Equal("ok", hrs[0].Status)
@@ -530,18 +560,8 @@ func (s *ResultPublicTestSuite) TestHostResults() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			r := orchestrator.NewResults(tc.results)
-			hrs := r.HostResults(tc.lookupName)
 
-			if tc.wantNil {
-				s.Nil(hrs)
-				return
-			}
-
-			s.Len(hrs, tc.wantLen)
-
-			if tc.validateFunc != nil {
-				tc.validateFunc(hrs)
-			}
+			tc.validateFunc(r.HostResults(tc.lookupName))
 		})
 	}
 }
@@ -551,9 +571,7 @@ func (s *ResultPublicTestSuite) TestHostResultDecode() {
 		name         string
 		hostResult   orchestrator.HostResult
 		target       any
-		expectErr    bool
-		errContains  string
-		validateFunc func(cmd osapi.CommandResult)
+		validateFunc func(osapi.CommandResult, error)
 	}{
 		{
 			name: "Decodes host result data into typed struct",
@@ -566,7 +584,8 @@ func (s *ResultPublicTestSuite) TestHostResultDecode() {
 					"exit_code": float64(0),
 				},
 			},
-			validateFunc: func(cmd osapi.CommandResult) {
+			validateFunc: func(cmd osapi.CommandResult, err error) {
+				s.Require().NoError(err)
 				s.Equal("hello", cmd.Stdout)
 				s.Equal(0, cmd.ExitCode)
 			},
@@ -576,45 +595,34 @@ func (s *ResultPublicTestSuite) TestHostResultDecode() {
 			hostResult: orchestrator.HostResult{
 				Data: map[string]any{"fn": func() {}},
 			},
-			expectErr:   true,
-			errContains: "marshal host result data",
+			validateFunc: func(_ osapi.CommandResult, err error) {
+				s.Require().Error(err)
+				s.Contains(err.Error(), "marshal host result data")
+			},
 		},
 		{
 			name: "Returns error when decode target is invalid",
 			hostResult: orchestrator.HostResult{
 				Data: map[string]any{"stdout": "hello"},
 			},
-			target:      &struct{ Stdout chan int }{},
-			expectErr:   true,
-			errContains: "decode host result data",
+			target: &struct{ Stdout chan int }{},
+			validateFunc: func(_ osapi.CommandResult, err error) {
+				s.Require().Error(err)
+				s.Contains(err.Error(), "decode host result data")
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			if tc.target != nil {
-				err := tc.hostResult.Decode(tc.target)
-				s.Require().Error(err)
-				s.Contains(err.Error(), tc.errContains)
-
-				return
-			}
-
 			var cmd osapi.CommandResult
-			err := tc.hostResult.Decode(&cmd)
 
-			if tc.expectErr {
-				s.Require().Error(err)
-				s.Contains(err.Error(), tc.errContains)
-
-				return
+			target := tc.target
+			if target == nil {
+				target = &cmd
 			}
 
-			s.Require().NoError(err)
-
-			if tc.validateFunc != nil {
-				tc.validateFunc(cmd)
-			}
+			tc.validateFunc(cmd, tc.hostResult.Decode(target))
 		})
 	}
 }
@@ -625,9 +633,7 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 		tasks        []engine.TaskResult
 		lookupName   string
 		target       any
-		expectErr    bool
-		errContains  string
-		validateFunc func(cmd osapi.CommandResult)
+		validateFunc func(osapi.CommandResult, error)
 	}{
 		{
 			name: "Decodes task result from report",
@@ -643,7 +649,8 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 				},
 			},
 			lookupName: "run-cmd",
-			validateFunc: func(cmd osapi.CommandResult) {
+			validateFunc: func(cmd osapi.CommandResult, err error) {
+				s.Require().NoError(err)
 				s.Equal("hello", cmd.Stdout)
 				s.Equal(0, cmd.ExitCode)
 			},
@@ -668,17 +675,20 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 				},
 			},
 			lookupName: "run-cmd",
-			validateFunc: func(cmd osapi.CommandResult) {
+			validateFunc: func(cmd osapi.CommandResult, err error) {
+				s.Require().NoError(err)
 				s.Equal("hello from host", cmd.Stdout)
 				s.Equal(0, cmd.ExitCode)
 			},
 		},
 		{
-			name:        "Returns error for missing task",
-			tasks:       []engine.TaskResult{},
-			lookupName:  "nonexistent",
-			expectErr:   true,
-			errContains: "no result for",
+			name:       "Returns error for missing task",
+			tasks:      []engine.TaskResult{},
+			lookupName: "nonexistent",
+			validateFunc: func(_ osapi.CommandResult, err error) {
+				s.Require().Error(err)
+				s.Contains(err.Error(), "no result for")
+			},
 		},
 		{
 			name: "Returns error for nil data",
@@ -688,9 +698,11 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 					Status: engine.StatusSkipped,
 				},
 			},
-			lookupName:  "no-data",
-			expectErr:   true,
-			errContains: "no result data for",
+			lookupName: "no-data",
+			validateFunc: func(_ osapi.CommandResult, err error) {
+				s.Require().Error(err)
+				s.Contains(err.Error(), "no result data for")
+			},
 		},
 		{
 			name: "Returns error when marshal fails",
@@ -701,9 +713,11 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 					Data:   map[string]any{"fn": func() {}},
 				},
 			},
-			lookupName:  "bad-marshal",
-			expectErr:   true,
-			errContains: "marshal result data",
+			lookupName: "bad-marshal",
+			validateFunc: func(_ osapi.CommandResult, err error) {
+				s.Require().Error(err)
+				s.Contains(err.Error(), "marshal result data")
+			},
 		},
 		{
 			name: "Returns error when decode target is invalid",
@@ -714,10 +728,12 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 					Data:   map[string]any{"stdout": "hello"},
 				},
 			},
-			lookupName:  "bad-decode",
-			target:      &struct{ Stdout chan int }{},
-			expectErr:   true,
-			errContains: "decode result data",
+			lookupName: "bad-decode",
+			target:     &struct{ Stdout chan int }{},
+			validateFunc: func(_ osapi.CommandResult, err error) {
+				s.Require().Error(err)
+				s.Contains(err.Error(), "decode result data")
+			},
 		},
 	}
 
@@ -727,29 +743,14 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 				Tasks: tc.tasks,
 			}
 
-			if tc.target != nil {
-				err := report.Decode(tc.lookupName, tc.target)
-				s.Require().Error(err)
-				s.Contains(err.Error(), tc.errContains)
-
-				return
-			}
-
 			var cmd osapi.CommandResult
-			err := report.Decode(tc.lookupName, &cmd)
 
-			if tc.expectErr {
-				s.Require().Error(err)
-				s.Contains(err.Error(), tc.errContains)
-
-				return
+			target := tc.target
+			if target == nil {
+				target = &cmd
 			}
 
-			s.Require().NoError(err)
-
-			if tc.validateFunc != nil {
-				tc.validateFunc(cmd)
-			}
+			tc.validateFunc(cmd, report.Decode(tc.lookupName, target))
 		})
 	}
 }

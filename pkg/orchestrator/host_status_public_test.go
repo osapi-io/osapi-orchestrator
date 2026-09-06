@@ -40,30 +40,36 @@ func TestHostStatusPublicTestSuite(
 
 func (s *HostStatusPublicTestSuite) TestHostStatusConstants() {
 	tests := []struct {
-		name     string
-		status   string
-		expected string
+		name         string
+		status       string
+		validateFunc func(string)
 	}{
 		{
-			name:     "ok constant",
-			status:   orchestrator.HostStatusOk,
-			expected: "ok",
+			name:   "ok constant",
+			status: orchestrator.HostStatusOk,
+			validateFunc: func(status string) {
+				s.Equal("ok", status)
+			},
 		},
 		{
-			name:     "skipped constant",
-			status:   orchestrator.HostStatusSkipped,
-			expected: "skipped",
+			name:   "skipped constant",
+			status: orchestrator.HostStatusSkipped,
+			validateFunc: func(status string) {
+				s.Equal("skipped", status)
+			},
 		},
 		{
-			name:     "failed constant",
-			status:   orchestrator.HostStatusFailed,
-			expected: "failed",
+			name:   "failed constant",
+			status: orchestrator.HostStatusFailed,
+			validateFunc: func(status string) {
+				s.Equal("failed", status)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			s.Equal(tc.expected, tc.status)
+			tc.validateFunc(tc.status)
 		})
 	}
 }

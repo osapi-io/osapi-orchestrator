@@ -40,60 +40,72 @@ func TestOptionsPublicTestSuite(t *testing.T) {
 
 func (s *OptionsPublicTestSuite) TestErrorStrategy() {
 	tests := []struct {
-		name     string
-		strategy engine.ErrorStrategy
-		wantStr  string
+		name         string
+		strategy     engine.ErrorStrategy
+		validateFunc func(string)
 	}{
 		{
 			name:     "stop all",
 			strategy: engine.StopAll,
-			wantStr:  "stop_all",
+			validateFunc: func(got string) {
+				s.Equal("stop_all", got)
+			},
 		},
 		{
 			name:     "continue",
 			strategy: engine.Continue,
-			wantStr:  "continue",
+			validateFunc: func(got string) {
+				s.Equal("continue", got)
+			},
 		},
 		{
 			name:     "retry",
 			strategy: engine.Retry(3),
-			wantStr:  "retry(3)",
+			validateFunc: func(got string) {
+				s.Equal("retry(3)", got)
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.Equal(tt.wantStr, tt.strategy.String())
+			tt.validateFunc(tt.strategy.String())
 		})
 	}
 }
 
 func (s *OptionsPublicTestSuite) TestRetryCount() {
 	tests := []struct {
-		name     string
-		strategy engine.ErrorStrategy
-		want     int
+		name         string
+		strategy     engine.ErrorStrategy
+		validateFunc func(int)
 	}{
 		{
 			name:     "stop all has zero retries",
 			strategy: engine.StopAll,
-			want:     0,
+			validateFunc: func(got int) {
+				s.Equal(0, got)
+			},
 		},
 		{
 			name:     "continue has zero retries",
 			strategy: engine.Continue,
-			want:     0,
+			validateFunc: func(got int) {
+				s.Equal(0, got)
+			},
 		},
 		{
 			name:     "retry has n retries",
 			strategy: engine.Retry(5),
-			want:     5,
+			validateFunc: func(got int) {
+				s.Equal(5, got)
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.Equal(tt.want, tt.strategy.RetryCount())
+			tt.validateFunc(tt.strategy.RetryCount())
 		})
 	}
 }
@@ -143,14 +155,16 @@ func (s *OptionsPublicTestSuite) TestHooksDefaults() {
 
 func (s *OptionsPublicTestSuite) TestPlanOption() {
 	tests := []struct {
-		name        string
-		option      engine.PlanOption
-		wantOnError engine.ErrorStrategy
+		name         string
+		option       engine.PlanOption
+		validateFunc func(*engine.PlanConfig)
 	}{
 		{
-			name:        "on error sets strategy",
-			option:      engine.OnError(engine.Continue),
-			wantOnError: engine.Continue,
+			name:   "on error sets strategy",
+			option: engine.OnError(engine.Continue),
+			validateFunc: func(cfg *engine.PlanConfig) {
+				s.Equal(engine.Continue.String(), cfg.OnErrorStrategy.String())
+			},
 		},
 	}
 
@@ -158,7 +172,7 @@ func (s *OptionsPublicTestSuite) TestPlanOption() {
 		s.Run(tt.name, func() {
 			cfg := &engine.PlanConfig{}
 			tt.option(cfg)
-			s.Equal(tt.wantOnError.String(), cfg.OnErrorStrategy.String())
+			tt.validateFunc(cfg)
 		})
 	}
 }

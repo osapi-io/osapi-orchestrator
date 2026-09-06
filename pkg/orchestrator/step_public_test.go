@@ -57,8 +57,9 @@ func (s *StepPublicTestSuite) TearDownTest() {
 
 func (s *StepPublicTestSuite) TestAfter() {
 	tests := []struct {
-		name    string
-		chainFn func() *orchestrator.Step
+		name         string
+		chainFn      func() *orchestrator.Step
+		validateFunc func(*orchestrator.Step)
 	}{
 		{
 			name: "After returns same step",
@@ -67,6 +68,9 @@ func (s *StepPublicTestSuite) TestAfter() {
 				step := s.orch.NodeHostnameGet("_any")
 
 				return step.After(health)
+			},
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
 			},
 		},
 		{
@@ -77,6 +81,9 @@ func (s *StepPublicTestSuite) TestAfter() {
 				step := s.orch.NodeHostnameGet("_any")
 
 				return step.After(health, disk)
+			},
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
 			},
 		},
 		{
@@ -95,63 +102,72 @@ func (s *StepPublicTestSuite) TestAfter() {
 					}).
 					OnError(orchestrator.Continue)
 			},
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			step := tc.chainFn()
-			s.NotNil(step)
+			tc.validateFunc(tc.chainFn())
 		})
 	}
 }
 
 func (s *StepPublicTestSuite) TestRetry() {
 	tests := []struct {
-		name    string
-		chainFn func() *orchestrator.Step
+		name         string
+		chainFn      func() *orchestrator.Step
+		validateFunc func(*orchestrator.Step)
 	}{
 		{
 			name: "Retry returns same step",
 			chainFn: func() *orchestrator.Step {
 				return s.orch.NodeHostnameGet("_any").Retry(3)
 			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			step := tc.chainFn()
-			s.NotNil(step)
-		})
-	}
-}
-
-func (s *StepPublicTestSuite) TestOnlyIfChanged() {
-	tests := []struct {
-		name    string
-		chainFn func() *orchestrator.Step
-	}{
-		{
-			name: "OnlyIfChanged returns same step",
-			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").OnlyIfChanged()
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			step := tc.chainFn()
-			s.NotNil(step)
+			tc.validateFunc(tc.chainFn())
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestOnlyIfChanged() {
+	tests := []struct {
+		name         string
+		chainFn      func() *orchestrator.Step
+		validateFunc func(*orchestrator.Step)
+	}{
+		{
+			name: "OnlyIfChanged returns same step",
+			chainFn: func() *orchestrator.Step {
+				return s.orch.NodeHostnameGet("_any").OnlyIfChanged()
+			},
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.validateFunc(tc.chainFn())
 		})
 	}
 }
 
 func (s *StepPublicTestSuite) TestWhen() {
 	tests := []struct {
-		name    string
-		chainFn func() *orchestrator.Step
+		name         string
+		chainFn      func() *orchestrator.Step
+		validateFunc func(*orchestrator.Step)
 	}{
 		{
 			name: "When returns same step",
@@ -162,27 +178,33 @@ func (s *StepPublicTestSuite) TestWhen() {
 					return true
 				})
 			},
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			step := tc.chainFn()
-			s.NotNil(step)
+			tc.validateFunc(tc.chainFn())
 		})
 	}
 }
 
 func (s *StepPublicTestSuite) TestOnError() {
 	tests := []struct {
-		name    string
-		chainFn func() *orchestrator.Step
+		name         string
+		chainFn      func() *orchestrator.Step
+		validateFunc func(*orchestrator.Step)
 	}{
 		{
 			name: "OnError with Continue returns same step",
 			chainFn: func() *orchestrator.Step {
 				return s.orch.NodeHostnameGet("_any").
 					OnError(orchestrator.Continue)
+			},
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
 			},
 		},
 		{
@@ -191,6 +213,9 @@ func (s *StepPublicTestSuite) TestOnError() {
 				return s.orch.NodeHostnameGet("_any").
 					OnError(orchestrator.StopAll)
 			},
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
+			},
 		},
 		{
 			name: "ContinueOnError returns same step",
@@ -198,63 +223,72 @@ func (s *StepPublicTestSuite) TestOnError() {
 				return s.orch.NodeHostnameGet("_any").
 					ContinueOnError()
 			},
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			step := tc.chainFn()
-			s.NotNil(step)
+			tc.validateFunc(tc.chainFn())
 		})
 	}
 }
 
 func (s *StepPublicTestSuite) TestOnlyIfFailed() {
 	tests := []struct {
-		name    string
-		chainFn func() *orchestrator.Step
+		name         string
+		chainFn      func() *orchestrator.Step
+		validateFunc func(*orchestrator.Step)
 	}{
 		{
 			name: "OnlyIfFailed returns non-nil step",
 			chainFn: func() *orchestrator.Step {
 				return s.orch.NodeHostnameGet("_any").OnlyIfFailed()
 			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			step := tc.chainFn()
-			s.NotNil(step)
-		})
-	}
-}
-
-func (s *StepPublicTestSuite) TestOnlyIfAllChanged() {
-	tests := []struct {
-		name    string
-		chainFn func() *orchestrator.Step
-	}{
-		{
-			name: "OnlyIfAllChanged returns non-nil step",
-			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").OnlyIfAllChanged()
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			step := tc.chainFn()
-			s.NotNil(step)
+			tc.validateFunc(tc.chainFn())
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestOnlyIfAllChanged() {
+	tests := []struct {
+		name         string
+		chainFn      func() *orchestrator.Step
+		validateFunc func(*orchestrator.Step)
+	}{
+		{
+			name: "OnlyIfAllChanged returns non-nil step",
+			chainFn: func() *orchestrator.Step {
+				return s.orch.NodeHostnameGet("_any").OnlyIfAllChanged()
+			},
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.validateFunc(tc.chainFn())
 		})
 	}
 }
 
 func (s *StepPublicTestSuite) TestOnlyIfAnyHostFailed() {
 	tests := []struct {
-		name    string
-		chainFn func() *orchestrator.Step
+		name         string
+		chainFn      func() *orchestrator.Step
+		validateFunc func(*orchestrator.Step)
 	}{
 		{
 			name: "OnlyIfAnyHostFailed returns non-nil step",
@@ -262,21 +296,24 @@ func (s *StepPublicTestSuite) TestOnlyIfAnyHostFailed() {
 				return s.orch.NodeHostnameGet("_any").
 					OnlyIfAnyHostFailed()
 			},
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			step := tc.chainFn()
-			s.NotNil(step)
+			tc.validateFunc(tc.chainFn())
 		})
 	}
 }
 
 func (s *StepPublicTestSuite) TestOnlyIfAllHostsFailed() {
 	tests := []struct {
-		name    string
-		chainFn func() *orchestrator.Step
+		name         string
+		chainFn      func() *orchestrator.Step
+		validateFunc func(*orchestrator.Step)
 	}{
 		{
 			name: "OnlyIfAllHostsFailed returns non-nil step",
@@ -284,21 +321,24 @@ func (s *StepPublicTestSuite) TestOnlyIfAllHostsFailed() {
 				return s.orch.NodeHostnameGet("_any").
 					OnlyIfAllHostsFailed()
 			},
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			step := tc.chainFn()
-			s.NotNil(step)
+			tc.validateFunc(tc.chainFn())
 		})
 	}
 }
 
 func (s *StepPublicTestSuite) TestOnlyIfAnyHostSkipped() {
 	tests := []struct {
-		name    string
-		chainFn func() *orchestrator.Step
+		name         string
+		chainFn      func() *orchestrator.Step
+		validateFunc func(*orchestrator.Step)
 	}{
 		{
 			name: "OnlyIfAnyHostSkipped returns non-nil step",
@@ -306,21 +346,24 @@ func (s *StepPublicTestSuite) TestOnlyIfAnyHostSkipped() {
 				return s.orch.NodeHostnameGet("_any").
 					OnlyIfAnyHostSkipped()
 			},
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			step := tc.chainFn()
-			s.NotNil(step)
+			tc.validateFunc(tc.chainFn())
 		})
 	}
 }
 
 func (s *StepPublicTestSuite) TestOnlyIfAnyHostChanged() {
 	tests := []struct {
-		name    string
-		chainFn func() *orchestrator.Step
+		name         string
+		chainFn      func() *orchestrator.Step
+		validateFunc func(*orchestrator.Step)
 	}{
 		{
 			name: "OnlyIfAnyHostChanged returns non-nil step",
@@ -328,21 +371,24 @@ func (s *StepPublicTestSuite) TestOnlyIfAnyHostChanged() {
 				return s.orch.NodeHostnameGet("_any").
 					OnlyIfAnyHostChanged()
 			},
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			step := tc.chainFn()
-			s.NotNil(step)
+			tc.validateFunc(tc.chainFn())
 		})
 	}
 }
 
 func (s *StepPublicTestSuite) TestOnlyIfAllHostsChanged() {
 	tests := []struct {
-		name    string
-		chainFn func() *orchestrator.Step
+		name         string
+		chainFn      func() *orchestrator.Step
+		validateFunc func(*orchestrator.Step)
 	}{
 		{
 			name: "OnlyIfAllHostsChanged returns non-nil step",
@@ -350,42 +396,48 @@ func (s *StepPublicTestSuite) TestOnlyIfAllHostsChanged() {
 				return s.orch.NodeHostnameGet("_any").
 					OnlyIfAllHostsChanged()
 			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			step := tc.chainFn()
-			s.NotNil(step)
-		})
-	}
-}
-
-func (s *StepPublicTestSuite) TestNamed() {
-	tests := []struct {
-		name    string
-		chainFn func() *orchestrator.Step
-	}{
-		{
-			name: "Named returns same step",
-			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").Named("custom")
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
 			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			step := tc.chainFn()
-			s.NotNil(step)
+			tc.validateFunc(tc.chainFn())
+		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestNamed() {
+	tests := []struct {
+		name         string
+		chainFn      func() *orchestrator.Step
+		validateFunc func(*orchestrator.Step)
+	}{
+		{
+			name: "Named returns same step",
+			chainFn: func() *orchestrator.Step {
+				return s.orch.NodeHostnameGet("_any").Named("custom")
+			},
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			tc.validateFunc(tc.chainFn())
 		})
 	}
 }
 
 func (s *StepPublicTestSuite) TestWhenFact() {
 	tests := []struct {
-		name    string
-		chainFn func() *orchestrator.Step
+		name         string
+		chainFn      func() *orchestrator.Step
+		validateFunc func(*orchestrator.Step)
 	}{
 		{
 			name: "WhenFact returns same step",
@@ -397,13 +449,15 @@ func (s *StepPublicTestSuite) TestWhenFact() {
 						return true
 					})
 			},
+			validateFunc: func(step *orchestrator.Step) {
+				s.NotNil(step)
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			step := tc.chainFn()
-			s.NotNil(step)
+			tc.validateFunc(tc.chainFn())
 		})
 	}
 }

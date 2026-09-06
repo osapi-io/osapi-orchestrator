@@ -249,8 +249,7 @@ func (s *PlanPublicTestSuite) TestRunGuardWithFailedDependency() {
 	tests := []struct {
 		name         string
 		guard        func(engine.Results) bool
-		expectRan    bool
-		expectStatus engine.Status
+		validateFunc func(bool, engine.Status)
 	}{
 		{
 			name: "guard runs and returns true when dependency failed",
@@ -259,8 +258,10 @@ func (s *PlanPublicTestSuite) TestRunGuardWithFailedDependency() {
 
 				return res != nil && res.Status == engine.StatusFailed
 			},
-			expectRan:    true,
-			expectStatus: engine.StatusChanged,
+			validateFunc: func(ran bool, status engine.Status) {
+				s.True(ran)
+				s.Equal(engine.StatusChanged, status)
+			},
 		},
 		{
 			name: "guard runs and returns false when dependency failed",
@@ -269,8 +270,10 @@ func (s *PlanPublicTestSuite) TestRunGuardWithFailedDependency() {
 
 				return res != nil && res.Status == engine.StatusChanged
 			},
-			expectRan:    false,
-			expectStatus: engine.StatusSkipped,
+			validateFunc: func(ran bool, status engine.Status) {
+				s.False(ran)
+				s.Equal(engine.StatusSkipped, status)
+			},
 		},
 	}
 
@@ -291,10 +294,8 @@ func (s *PlanPublicTestSuite) TestRunGuardWithFailedDependency() {
 
 			report, err := plan.Run(context.Background())
 			s.Require().NoError(err)
-			s.Equal(tt.expectRan, ran)
 
-			sm := statusMap(report)
-			s.Equal(tt.expectStatus, sm["alert"])
+			tt.validateFunc(ran, statusMap(report)["alert"])
 		})
 	}
 }
@@ -844,9 +845,9 @@ func (s *PlanPublicTestSuite) TestLevels() {
 
 func (s *PlanPublicTestSuite) TestExplain() {
 	tests := []struct {
-		name     string
-		setup    func(plan *engine.Plan)
-		contains []string
+		name         string
+		setup        func(plan *engine.Plan)
+		validateFunc func(string)
 	}{
 		{
 			name: "valid plan with dependencies and guards",
@@ -856,13 +857,13 @@ func (s *PlanPublicTestSuite) TestExplain() {
 				b.DependsOn(a)
 				b.OnlyIfChanged()
 			},
-			contains: []string{
-				"Plan: 2 tasks, 2 levels",
-				"Level 0:",
-				"a [fn]",
-				"Level 1:",
-				"b [fn]",
-				"only-if-changed",
+			validateFunc: func(output string) {
+				s.Contains(output, "Plan: 2 tasks, 2 levels")
+				s.Contains(output, "Level 0:")
+				s.Contains(output, "a [fn]")
+				s.Contains(output, "Level 1:")
+				s.Contains(output, "b [fn]")
+				s.Contains(output, "only-if-changed")
 			},
 		},
 		{
@@ -873,7 +874,10 @@ func (s *PlanPublicTestSuite) TestExplain() {
 				a.DependsOn(b)
 				b.DependsOn(a)
 			},
-			contains: []string{"invalid plan:", "cycle"},
+			validateFunc: func(output string) {
+				s.Contains(output, "invalid plan:")
+				s.Contains(output, "cycle")
+			},
 		},
 		{
 			name: "parallel tasks shown as parallel",
@@ -881,9 +885,9 @@ func (s *PlanPublicTestSuite) TestExplain() {
 				plan.TaskFunc("a", taskFunc(false, nil))
 				plan.TaskFunc("b", taskFunc(false, nil))
 			},
-			contains: []string{
-				"Plan: 2 tasks, 1 levels",
-				"Level 0 (parallel):",
+			validateFunc: func(output string) {
+				s.Contains(output, "Plan: 2 tasks, 1 levels")
+				s.Contains(output, "Level 0 (parallel):")
 			},
 		},
 		{
@@ -894,7 +898,9 @@ func (s *PlanPublicTestSuite) TestExplain() {
 				b.DependsOn(a)
 				b.When(func(_ engine.Results) bool { return true })
 			},
-			contains: []string{"when"},
+			validateFunc: func(output string) {
+				s.Contains(output, "when")
+			},
 		},
 	}
 
@@ -902,10 +908,7 @@ func (s *PlanPublicTestSuite) TestExplain() {
 		s.Run(tt.name, func() {
 			plan := engine.NewPlan(nil)
 			tt.setup(plan)
-			output := plan.Explain()
-			for _, c := range tt.contains {
-				s.Contains(output, c)
-			}
+			tt.validateFunc(plan.Explain())
 		})
 	}
 }

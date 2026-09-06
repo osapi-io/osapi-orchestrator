@@ -48,26 +48,30 @@ func noop(
 
 func (s *TaskPublicTestSuite) TestDependsOn() {
 	tests := []struct {
-		name       string
-		setupDeps  func(a, b, c *engine.Task)
-		checkTask  string
-		wantDepLen int
+		name         string
+		setupDeps    func(a, b, c *engine.Task)
+		checkTask    string
+		validateFunc func(*engine.Task)
 	}{
 		{
 			name: "single dependency",
 			setupDeps: func(a, b, _ *engine.Task) {
 				b.DependsOn(a)
 			},
-			checkTask:  "b",
-			wantDepLen: 1,
+			checkTask: "b",
+			validateFunc: func(task *engine.Task) {
+				s.Len(task.Dependencies(), 1)
+			},
 		},
 		{
 			name: "multiple dependencies",
 			setupDeps: func(a, b, c *engine.Task) {
 				c.DependsOn(a, b)
 			},
-			checkTask:  "c",
-			wantDepLen: 2,
+			checkTask: "c",
+			validateFunc: func(task *engine.Task) {
+				s.Len(task.Dependencies(), 2)
+			},
 		},
 	}
 
@@ -79,7 +83,8 @@ func (s *TaskPublicTestSuite) TestDependsOn() {
 			tt.setupDeps(a, b, c)
 
 			tasks := map[string]*engine.Task{"a": a, "b": b, "c": c}
-			s.Len(tasks[tt.checkTask].Dependencies(), tt.wantDepLen)
+
+			tt.validateFunc(tasks[tt.checkTask])
 		})
 	}
 }
@@ -122,16 +127,18 @@ func (s *TaskPublicTestSuite) TestTaskFunc() {
 
 func (s *TaskPublicTestSuite) TestSetName() {
 	tests := []struct {
-		name     string
-		initial  string
-		renamed  string
-		wantName string
+		name         string
+		initial      string
+		renamed      string
+		validateFunc func(string)
 	}{
 		{
-			name:     "changes task name",
-			initial:  "original",
-			renamed:  "renamed",
-			wantName: "renamed",
+			name:    "changes task name",
+			initial: "original",
+			renamed: "renamed",
+			validateFunc: func(got string) {
+				s.Equal("renamed", got)
+			},
 		},
 	}
 
@@ -139,26 +146,36 @@ func (s *TaskPublicTestSuite) TestSetName() {
 		s.Run(tt.name, func() {
 			task := engine.NewTaskFunc(tt.initial, noop)
 			task.SetName(tt.renamed)
-			s.Equal(tt.wantName, task.Name())
+
+			tt.validateFunc(task.Name())
 		})
 	}
 }
 
 func (s *TaskPublicTestSuite) TestWhenWithReason() {
 	tests := []struct {
-		name        string
-		guardResult bool
-		reason      string
+		name         string
+		guardResult  bool
+		reason       string
+		validateFunc func(engine.GuardFn)
 	}{
 		{
 			name:        "sets guard and reason when guard returns false",
 			guardResult: false,
 			reason:      "host is unreachable",
+			validateFunc: func(guard engine.GuardFn) {
+				s.Require().NotNil(guard)
+				s.False(guard(engine.Results{}))
+			},
 		},
 		{
 			name:        "sets guard and reason when guard returns true",
 			guardResult: true,
 			reason:      "custom reason",
+			validateFunc: func(guard engine.GuardFn) {
+				s.Require().NotNil(guard)
+				s.True(guard(engine.Results{}))
+			},
 		},
 	}
 
@@ -169,9 +186,7 @@ func (s *TaskPublicTestSuite) TestWhenWithReason() {
 				return tt.guardResult
 			}, tt.reason)
 
-			guard := task.Guard()
-			s.NotNil(guard)
-			s.Equal(tt.guardResult, guard(engine.Results{}))
+			tt.validateFunc(task.Guard())
 		})
 	}
 }

@@ -49,9 +49,9 @@ func (s *RunnerPublicTestSuite) TestLevelize() {
 	}
 
 	tests := []struct {
-		name       string
-		setup      func() []*engine.Task
-		wantLevels int
+		name         string
+		setup        func() []*engine.Task
+		validateFunc func([][]*engine.Task)
 	}{
 		{
 			name: "linear chain has 3 levels",
@@ -64,7 +64,9 @@ func (s *RunnerPublicTestSuite) TestLevelize() {
 
 				return []*engine.Task{a, b, c}
 			},
-			wantLevels: 3,
+			validateFunc: func(levels [][]*engine.Task) {
+				s.Len(levels, 3)
+			},
 		},
 		{
 			name: "diamond has 3 levels",
@@ -79,7 +81,9 @@ func (s *RunnerPublicTestSuite) TestLevelize() {
 
 				return []*engine.Task{a, b, c, d}
 			},
-			wantLevels: 3,
+			validateFunc: func(levels [][]*engine.Task) {
+				s.Len(levels, 3)
+			},
 		},
 		{
 			name: "independent tasks in 1 level",
@@ -89,25 +93,25 @@ func (s *RunnerPublicTestSuite) TestLevelize() {
 
 				return []*engine.Task{a, b}
 			},
-			wantLevels: 1,
+			validateFunc: func(levels [][]*engine.Task) {
+				s.Len(levels, 1)
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			tasks := tt.setup()
-			levels := engine.ExportLevelize(tasks)
-			s.Len(levels, tt.wantLevels)
+			tt.validateFunc(engine.ExportLevelize(tt.setup()))
 		})
 	}
 }
 
 func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 	tests := []struct {
-		name       string
-		setup      func() *engine.Plan
-		taskName   string
-		wantStatus engine.Status
+		name         string
+		setup        func() *engine.Plan
+		taskName     string
+		validateFunc func(*engine.Result)
 	}{
 		{
 			name: "OnlyIfChanged skip stores StatusSkipped",
@@ -132,8 +136,11 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				return plan
 			},
-			taskName:   "child",
-			wantStatus: engine.StatusSkipped,
+			taskName: "child",
+			validateFunc: func(result *engine.Result) {
+				s.Require().NotNil(result)
+				s.Equal(engine.StatusSkipped, result.Status)
+			},
 		},
 		{
 			name: "failed task stores StatusFailed",
@@ -149,8 +156,11 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				return plan
 			},
-			taskName:   "failing",
-			wantStatus: engine.StatusFailed,
+			taskName: "failing",
+			validateFunc: func(result *engine.Result) {
+				s.Require().NotNil(result)
+				s.Equal(engine.StatusFailed, result.Status)
+			},
 		},
 		{
 			name: "guard-false skip stores StatusSkipped",
@@ -168,8 +178,11 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				return plan
 			},
-			taskName:   "guarded",
-			wantStatus: engine.StatusSkipped,
+			taskName: "guarded",
+			validateFunc: func(result *engine.Result) {
+				s.Require().NotNil(result)
+				s.Equal(engine.StatusSkipped, result.Status)
+			},
 		},
 		{
 			name: "dependency-failed skip stores StatusSkipped",
@@ -193,8 +206,11 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				return plan
 			},
-			taskName:   "child",
-			wantStatus: engine.StatusSkipped,
+			taskName: "child",
+			validateFunc: func(result *engine.Result) {
+				s.Require().NotNil(result)
+				s.Equal(engine.StatusSkipped, result.Status)
+			},
 		},
 		{
 			name: "successful changed task stores StatusChanged",
@@ -210,8 +226,11 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				return plan
 			},
-			taskName:   "ok",
-			wantStatus: engine.StatusChanged,
+			taskName: "ok",
+			validateFunc: func(result *engine.Result) {
+				s.Require().NotNil(result)
+				s.Equal(engine.StatusChanged, result.Status)
+			},
 		},
 		{
 			name: "successful unchanged task stores StatusUnchanged",
@@ -227,42 +246,31 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				return plan
 			},
-			taskName:   "ok",
-			wantStatus: engine.StatusUnchanged,
+			taskName: "ok",
+			validateFunc: func(result *engine.Result) {
+				s.Require().NotNil(result)
+				s.Equal(engine.StatusUnchanged, result.Status)
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			plan := tt.setup()
-			er := engine.ExportNewRunner(plan)
+			er := engine.ExportNewRunner(tt.setup())
 
-			_, err := er.Run(context.Background())
-			_ = err
+			_, _ = er.Run(context.Background())
 
-			result := er.GetResult(tt.taskName)
-			s.NotNil(
-				result,
-				"results map should contain entry for %q",
-				tt.taskName,
-			)
-			s.Equal(
-				tt.wantStatus,
-				result.Status,
-				"result status for %q",
-				tt.taskName,
-			)
+			tt.validateFunc(er.GetResult(tt.taskName))
 		})
 	}
 }
 
 func (s *RunnerPublicTestSuite) TestDownstreamGuardInspectsSkippedStatus() {
 	tests := []struct {
-		name            string
-		setup           func() (*engine.Plan, *bool)
-		observerName    string
-		wantGuardCalled bool
-		wantTaskStatus  engine.Status
+		name         string
+		setup        func() (*engine.Plan, *bool)
+		observerName string
+		validateFunc func(bool, *engine.Result)
 	}{
 		{
 			name: "guard can see guard-skipped task status",
@@ -296,9 +304,12 @@ func (s *RunnerPublicTestSuite) TestDownstreamGuardInspectsSkippedStatus() {
 
 				return plan, &guardCalled
 			},
-			observerName:    "observer",
-			wantGuardCalled: true,
-			wantTaskStatus:  engine.StatusUnchanged,
+			observerName: "observer",
+			validateFunc: func(guardCalled bool, result *engine.Result) {
+				s.True(guardCalled)
+				s.Require().NotNil(result)
+				s.Equal(engine.StatusUnchanged, result.Status)
+			},
 		},
 	}
 
@@ -307,34 +318,18 @@ func (s *RunnerPublicTestSuite) TestDownstreamGuardInspectsSkippedStatus() {
 			plan, guardCalled := tt.setup()
 			er := engine.ExportNewRunner(plan)
 
-			_, err := er.Run(context.Background())
-			_ = err
+			_, _ = er.Run(context.Background())
 
-			s.Equal(
-				tt.wantGuardCalled,
-				*guardCalled,
-				"guard should have been called",
-			)
-
-			result := er.GetResult(tt.observerName)
-			s.NotNil(
-				result,
-				"observer should have a result entry",
-			)
-			s.Equal(
-				tt.wantTaskStatus,
-				result.Status,
-				"observer task status",
-			)
+			tt.validateFunc(*guardCalled, er.GetResult(tt.observerName))
 		})
 	}
 }
 
 func (s *RunnerPublicTestSuite) TestTaskFuncWithResultsReceivesResults() {
 	tests := []struct {
-		name        string
-		setup       func() (*engine.Plan, *string)
-		wantCapture string
+		name         string
+		setup        func() (*engine.Plan, *string)
+		validateFunc func(string, error)
 	}{
 		{
 			name: "receives upstream result data",
@@ -370,7 +365,10 @@ func (s *RunnerPublicTestSuite) TestTaskFuncWithResultsReceivesResults() {
 
 				return plan, &captured
 			},
-			wantCapture: "web-01",
+			validateFunc: func(captured string, err error) {
+				s.Require().NoError(err)
+				s.Equal("web-01", captured)
+			},
 		},
 	}
 
@@ -380,19 +378,17 @@ func (s *RunnerPublicTestSuite) TestTaskFuncWithResultsReceivesResults() {
 
 			_, err := plan.Run(context.Background())
 
-			s.Require().NoError(err)
-			s.Equal(tt.wantCapture, *captured)
+			tt.validateFunc(*captured, err)
 		})
 	}
 }
 
 func (s *RunnerPublicTestSuite) TestTaskResultCarriesData() {
 	tests := []struct {
-		name     string
-		setup    func() *engine.Plan
-		taskName string
-		wantKey  string
-		wantVal  any
+		name         string
+		setup        func() *engine.Plan
+		taskName     string
+		validateFunc func(map[string]any)
 	}{
 		{
 			name: "success result includes data",
@@ -412,8 +408,9 @@ func (s *RunnerPublicTestSuite) TestTaskResultCarriesData() {
 				return plan
 			},
 			taskName: "a",
-			wantKey:  "stdout",
-			wantVal:  "hello",
+			validateFunc: func(data map[string]any) {
+				s.Equal("hello", data["stdout"])
+			},
 		},
 	}
 
@@ -429,7 +426,8 @@ func (s *RunnerPublicTestSuite) TestTaskResultCarriesData() {
 			for _, tr := range report.Tasks {
 				if tr.Name == tt.taskName {
 					found = true
-					s.Equal(tt.wantVal, tr.Data[tt.wantKey])
+
+					tt.validateFunc(tr.Data)
 				}
 			}
 
@@ -440,50 +438,56 @@ func (s *RunnerPublicTestSuite) TestTaskResultCarriesData() {
 
 func (s *RunnerPublicTestSuite) TestBackoffDelay() {
 	tests := []struct {
-		name    string
-		initial time.Duration
-		max     time.Duration
-		attempt int
-		want    time.Duration
+		name         string
+		initial      time.Duration
+		max          time.Duration
+		attempt      int
+		validateFunc func(time.Duration)
 	}{
 		{
 			name:    "first attempt uses initial interval",
 			initial: 100 * time.Millisecond,
 			max:     10 * time.Second,
 			attempt: 0,
-			want:    100 * time.Millisecond,
+			validateFunc: func(got time.Duration) {
+				s.Equal(100*time.Millisecond, got)
+			},
 		},
 		{
 			name:    "second attempt doubles",
 			initial: 100 * time.Millisecond,
 			max:     10 * time.Second,
 			attempt: 1,
-			want:    200 * time.Millisecond,
+			validateFunc: func(got time.Duration) {
+				s.Equal(200*time.Millisecond, got)
+			},
 		},
 		{
 			name:    "clamped to max interval",
 			initial: 100 * time.Millisecond,
 			max:     300 * time.Millisecond,
 			attempt: 5,
-			want:    300 * time.Millisecond,
+			validateFunc: func(got time.Duration) {
+				s.Equal(300*time.Millisecond, got)
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			got := engine.ExportBackoffDelay(tt.initial, tt.max, tt.attempt)
-			s.Equal(tt.want, got)
+			tt.validateFunc(
+				engine.ExportBackoffDelay(tt.initial, tt.max, tt.attempt),
+			)
 		})
 	}
 }
 
 func (s *RunnerPublicTestSuite) TestRunTaskPreservesResultOnError() {
 	tests := []struct {
-		name            string
-		setup           func() *engine.Plan
-		taskName        string
-		wantChanged     bool
-		wantHostResults int
+		name         string
+		setup        func() *engine.Plan
+		taskName     string
+		validateFunc func(*engine.Result)
 	}{
 		{
 			name: "TaskFunc error preserves Changed and HostResults",
@@ -505,25 +509,23 @@ func (s *RunnerPublicTestSuite) TestRunTaskPreservesResultOnError() {
 
 				return plan
 			},
-			taskName:        "failing",
-			wantChanged:     true,
-			wantHostResults: 2,
+			taskName: "failing",
+			validateFunc: func(result *engine.Result) {
+				s.Require().NotNil(result)
+				s.Equal(engine.StatusFailed, result.Status)
+				s.True(result.Changed)
+				s.Len(result.HostResults, 2)
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			plan := tt.setup()
-			er := engine.ExportNewRunner(plan)
+			er := engine.ExportNewRunner(tt.setup())
 
-			_, err := er.Run(context.Background())
-			_ = err
+			_, _ = er.Run(context.Background())
 
-			result := er.GetResult(tt.taskName)
-			s.Require().NotNil(result)
-			s.Equal(engine.StatusFailed, result.Status)
-			s.Equal(tt.wantChanged, result.Changed)
-			s.Len(result.HostResults, tt.wantHostResults)
+			tt.validateFunc(er.GetResult(tt.taskName))
 		})
 	}
 }

@@ -39,9 +39,9 @@ func TestResultPublicTestSuite(t *testing.T) {
 
 func (s *ResultPublicTestSuite) TestReportSummary() {
 	tests := []struct {
-		name     string
-		tasks    []engine.TaskResult
-		contains []string
+		name         string
+		tasks        []engine.TaskResult
+		validateFunc func(string)
 	}{
 		{
 			name: "mixed results",
@@ -66,7 +66,12 @@ func (s *ResultPublicTestSuite) TestReportSummary() {
 					Duration: 500 * time.Millisecond,
 				},
 			},
-			contains: []string{"4 tasks", "2 changed", "1 unchanged", "1 skipped"},
+			validateFunc: func(summary string) {
+				s.Contains(summary, "4 tasks")
+				s.Contains(summary, "2 changed")
+				s.Contains(summary, "1 unchanged")
+				s.Contains(summary, "1 skipped")
+			},
 		},
 		{
 			name: "all statuses including failed",
@@ -76,32 +81,37 @@ func (s *ResultPublicTestSuite) TestReportSummary() {
 				{Name: "c", Status: engine.StatusSkipped},
 				{Name: "d", Status: engine.StatusFailed},
 			},
-			contains: []string{"4 tasks", "1 changed", "1 unchanged", "1 skipped", "1 failed"},
+			validateFunc: func(summary string) {
+				s.Contains(summary, "4 tasks")
+				s.Contains(summary, "1 changed")
+				s.Contains(summary, "1 unchanged")
+				s.Contains(summary, "1 skipped")
+				s.Contains(summary, "1 failed")
+			},
 		},
 		{
-			name:     "empty report",
-			tasks:    nil,
-			contains: []string{"0 tasks"},
+			name:  "empty report",
+			tasks: nil,
+			validateFunc: func(summary string) {
+				s.Contains(summary, "0 tasks")
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			report := engine.Report{Tasks: tt.tasks}
-			summary := report.Summary()
-			for _, c := range tt.contains {
-				s.Contains(summary, c)
-			}
+
+			tt.validateFunc(report.Summary())
 		})
 	}
 }
 
 func (s *ResultPublicTestSuite) TestResultStatusField() {
 	tests := []struct {
-		name       string
-		result     *engine.Result
-		wantStatus engine.Status
-		wantChange bool
+		name         string
+		result       *engine.Result
+		validateFunc func(*engine.Result)
 	}{
 		{
 			name: "changed result carries status",
@@ -110,8 +120,10 @@ func (s *ResultPublicTestSuite) TestResultStatusField() {
 				Data:    map[string]any{"hostname": "web-01"},
 				Status:  engine.StatusChanged,
 			},
-			wantStatus: engine.StatusChanged,
-			wantChange: true,
+			validateFunc: func(result *engine.Result) {
+				s.Equal(engine.StatusChanged, result.Status)
+				s.True(result.Changed)
+			},
 		},
 		{
 			name: "unchanged result carries status",
@@ -119,8 +131,10 @@ func (s *ResultPublicTestSuite) TestResultStatusField() {
 				Changed: false,
 				Status:  engine.StatusUnchanged,
 			},
-			wantStatus: engine.StatusUnchanged,
-			wantChange: false,
+			validateFunc: func(result *engine.Result) {
+				s.Equal(engine.StatusUnchanged, result.Status)
+				s.False(result.Changed)
+			},
 		},
 		{
 			name: "failed result carries status",
@@ -128,8 +142,10 @@ func (s *ResultPublicTestSuite) TestResultStatusField() {
 				Changed: false,
 				Status:  engine.StatusFailed,
 			},
-			wantStatus: engine.StatusFailed,
-			wantChange: false,
+			validateFunc: func(result *engine.Result) {
+				s.Equal(engine.StatusFailed, result.Status)
+				s.False(result.Changed)
+			},
 		},
 		{
 			name: "skipped result carries status",
@@ -137,21 +153,24 @@ func (s *ResultPublicTestSuite) TestResultStatusField() {
 				Changed: false,
 				Status:  engine.StatusSkipped,
 			},
-			wantStatus: engine.StatusSkipped,
-			wantChange: false,
+			validateFunc: func(result *engine.Result) {
+				s.Equal(engine.StatusSkipped, result.Status)
+				s.False(result.Changed)
+			},
 		},
 		{
-			name:       "zero value has empty status",
-			result:     &engine.Result{},
-			wantStatus: "",
-			wantChange: false,
+			name:   "zero value has empty status",
+			result: &engine.Result{},
+			validateFunc: func(result *engine.Result) {
+				s.Empty(result.Status)
+				s.False(result.Changed)
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.Equal(tt.wantStatus, tt.result.Status)
-			s.Equal(tt.wantChange, tt.result.Changed)
+			tt.validateFunc(tt.result)
 		})
 	}
 }
@@ -160,8 +179,7 @@ func (s *ResultPublicTestSuite) TestResultHostResults() {
 	tests := []struct {
 		name         string
 		result       *engine.Result
-		wantLen      int
-		validateFunc func(hrs []engine.HostResult)
+		validateFunc func([]engine.HostResult)
 	}{
 		{
 			name: "result with multiple host results",
@@ -181,8 +199,8 @@ func (s *ResultPublicTestSuite) TestResultHostResults() {
 					},
 				},
 			},
-			wantLen: 2,
 			validateFunc: func(hrs []engine.HostResult) {
+				s.Len(hrs, 2)
 				s.Equal("web-01", hrs[0].Hostname)
 				s.True(hrs[0].Changed)
 				s.Equal("web-02", hrs[1].Hostname)
@@ -195,7 +213,9 @@ func (s *ResultPublicTestSuite) TestResultHostResults() {
 				Changed: false,
 				Status:  engine.StatusUnchanged,
 			},
-			wantLen: 0,
+			validateFunc: func(hrs []engine.HostResult) {
+				s.Empty(hrs)
+			},
 		},
 		{
 			name: "host result with data map",
@@ -213,8 +233,8 @@ func (s *ResultPublicTestSuite) TestResultHostResults() {
 					},
 				},
 			},
-			wantLen: 1,
 			validateFunc: func(hrs []engine.HostResult) {
+				s.Len(hrs, 1)
 				s.Equal("db-01", hrs[0].Hostname)
 				s.Equal("migrated", hrs[0].Data["stdout"])
 			},
@@ -223,22 +243,17 @@ func (s *ResultPublicTestSuite) TestResultHostResults() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.Len(tt.result.HostResults, tt.wantLen)
-
-			if tt.validateFunc != nil {
-				tt.validateFunc(tt.result.HostResults)
-			}
+			tt.validateFunc(tt.result.HostResults)
 		})
 	}
 }
 
 func (s *ResultPublicTestSuite) TestResultsGet() {
 	tests := []struct {
-		name       string
-		results    engine.Results
-		lookupName string
-		wantNil    bool
-		wantChange bool
+		name         string
+		results      engine.Results
+		lookupName   string
+		validateFunc func(*engine.Result)
 	}{
 		{
 			name: "found",
@@ -246,26 +261,24 @@ func (s *ResultPublicTestSuite) TestResultsGet() {
 				"install": {Changed: true},
 			},
 			lookupName: "install",
-			wantNil:    false,
-			wantChange: true,
+			validateFunc: func(got *engine.Result) {
+				s.Require().NotNil(got)
+				s.True(got.Changed)
+			},
 		},
 		{
 			name:       "not found",
 			results:    engine.Results{},
 			lookupName: "missing",
-			wantNil:    true,
+			validateFunc: func(got *engine.Result) {
+				s.Nil(got)
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			got := tt.results.Get(tt.lookupName)
-			if tt.wantNil {
-				s.Nil(got)
-			} else {
-				s.Require().NotNil(got)
-				s.Equal(tt.wantChange, got.Changed)
-			}
+			tt.validateFunc(tt.results.Get(tt.lookupName))
 		})
 	}
 }

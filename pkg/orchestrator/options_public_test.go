@@ -36,16 +36,23 @@ type OptionsPublicTestSuite struct {
 
 func (s *OptionsPublicTestSuite) TestWithVerbose() {
 	tests := []struct {
-		name string
-		opts []orchestrator.Option
+		name         string
+		opts         []orchestrator.Option
+		validateFunc func(*orchestrator.Orchestrator)
 	}{
 		{
 			name: "Creates orchestrator without verbose",
 			opts: nil,
+			validateFunc: func(o *orchestrator.Orchestrator) {
+				s.NotNil(o)
+			},
 		},
 		{
 			name: "Creates orchestrator with verbose",
 			opts: []orchestrator.Option{orchestrator.WithVerbose()},
+			validateFunc: func(o *orchestrator.Orchestrator) {
+				s.NotNil(o)
+			},
 		},
 	}
 
@@ -61,13 +68,11 @@ func (s *OptionsPublicTestSuite) TestWithVerbose() {
 			)
 			defer server.Close()
 
-			o := orchestrator.New(
+			tc.validateFunc(orchestrator.New(
 				server.URL,
 				"test-token",
 				tc.opts...,
-			)
-
-			s.NotNil(o)
+			))
 		})
 	}
 }
