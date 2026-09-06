@@ -31,19 +31,6 @@ import (
 	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
-// nextOpName generates a human-readable task name from a prefix.
-// Appends a counter suffix on collision (e.g. "get-hostname-2").
-func (o *Orchestrator) nextOpName(
-	prefix string,
-) string {
-	o.nameCount[prefix]++
-	if o.nameCount[prefix] > 1 {
-		return fmt.Sprintf("%s-%d", prefix, o.nameCount[prefix])
-	}
-
-	return prefix
-}
-
 // commandError returns an error string for a command result. If the
 // server set an explicit error, that takes precedence. Otherwise a
 // non-zero exit code is treated as a failure so that guards like

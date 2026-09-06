@@ -1,3 +1,23 @@
+// Copyright (c) 2026 John Dewey
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to
+// deal in the Software without restriction, including without limitation the
+// rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+// sell copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
 package engine_test
 
 import (
@@ -138,10 +158,10 @@ func (s *ResultPublicTestSuite) TestResultStatusField() {
 
 func (s *ResultPublicTestSuite) TestResultHostResults() {
 	tests := []struct {
-		name       string
-		result     *engine.Result
-		wantLen    int
-		validateFn func(hrs []engine.HostResult)
+		name         string
+		result       *engine.Result
+		wantLen      int
+		validateFunc func(hrs []engine.HostResult)
 	}{
 		{
 			name: "result with multiple host results",
@@ -162,7 +182,7 @@ func (s *ResultPublicTestSuite) TestResultHostResults() {
 				},
 			},
 			wantLen: 2,
-			validateFn: func(hrs []engine.HostResult) {
+			validateFunc: func(hrs []engine.HostResult) {
 				s.Equal("web-01", hrs[0].Hostname)
 				s.True(hrs[0].Changed)
 				s.Equal("web-02", hrs[1].Hostname)
@@ -194,7 +214,7 @@ func (s *ResultPublicTestSuite) TestResultHostResults() {
 				},
 			},
 			wantLen: 1,
-			validateFn: func(hrs []engine.HostResult) {
+			validateFunc: func(hrs []engine.HostResult) {
 				s.Equal("db-01", hrs[0].Hostname)
 				s.Equal("migrated", hrs[0].Data["stdout"])
 			},
@@ -205,8 +225,8 @@ func (s *ResultPublicTestSuite) TestResultHostResults() {
 		s.Run(tt.name, func() {
 			s.Len(tt.result.HostResults, tt.wantLen)
 
-			if tt.validateFn != nil {
-				tt.validateFn(tt.result.HostResults)
+			if tt.validateFunc != nil {
+				tt.validateFunc(tt.result.HostResults)
 			}
 		})
 	}

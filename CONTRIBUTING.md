@@ -71,21 +71,33 @@ just deps
 
 ```
 pkg/orchestrator/          # User-facing DSL
+  orchestrator.go          # New, Run, TaskFunc
   ops.go                   # Typed operation constructors
   step.go                  # Step chaining (guards, retry, ordering)
-  result.go                # Result types (HostResult, Results, Report)
+  result.go                # Result types (Results, TaskStatus, Report)
   host_status.go           # HostStatusOk/Skipped/Failed constants
+  discover.go              # Discover and GroupByFact
+  predicate.go             # Agent predicates (OS, Arch, HasLabel, ...)
+  renderer.go              # The renderer interface
   renderer_lipgloss.go     # Terminal output renderer
-  types.go                 # Orchestrator struct
+  generate.go              # mockgen directive, no code
   options.go               # Option types (verbose, upload, retry)
+  types.go                 # Orchestrator struct, aliases onto the engine
+internal/engine/           # Bridge onto osapi-sdk's orchestrator engine
 docs/
   operations/              # Operation reference (one doc per operation)
-    README.md              # Master index linking to domains
-    node/                  # Domain subdirectory with landing page
-      README.md            # "Node Management" — ops table, permissions, example
-      hostname-get.md      # Individual operation reference
-      ...
-    network/, command/, docker/, cron/, file/, agent/, health/
+    README.md              # Master index linking to each group
+    health/                # Group whose domain is the group itself
+      README.md            # Landing page — ops table, permissions, example
+      check.md             # Individual operation reference
+    node/                  # Group holding both its own ops and domains
+      README.md
+      status-get.md
+      power/               # Domain subdirectory with its own landing page
+        README.md
+        reboot.md
+    agent/, cmd/, config/, containers/, files/, hardware/,
+    networking/, security/, services/, software/
   features/                # Cross-cutting feature guides
     guards.md, broadcast.md, retry.md, ...
 examples/
@@ -94,6 +106,11 @@ examples/
   features/                # Runnable feature examples
     host-status.go, guards.go, broadcast.go, ...
 ```
+
+An operation doc sits at `docs/operations/{group}/{operation}.md` where the
+group has no inner domains, and at
+`docs/operations/{group}/{domain}/{operation}.md` where it does. The group
+landing page links whichever of the two it holds.
 
 - **`pkg/orchestrator/`.** User-facing DSL
   - Typed operation constructors (NodeHostnameGet, CommandExec, etc.)
@@ -344,8 +361,11 @@ Target 100% coverage on both files.
 
 ### Step 3: operation doc
 
-Create `docs/operations/{domain}/{operation}.md` following the existing template
-in that domain directory. Every doc must include these sections:
+Create the doc beside the others for its domain, at
+`docs/operations/{group}/{operation}.md` or
+`docs/operations/{group}/{domain}/{operation}.md` depending on how that group is
+laid out, and follow the template the neighbouring docs use. Every doc must
+include these sections:
 
 - **Description** (h1 heading with the method name)
 - **Usage.** minimal Go snippet showing the constructor call
@@ -362,9 +382,10 @@ in that domain directory. Every doc must include these sections:
 
 ### Step 4: update the domain landing page and operation index
 
-Add the operation to the table in the domain landing page
-`docs/operations/{domain}/README.md`. Update the operation count in
-`docs/operations/README.md` if the total changes.
+Add the operation to the table in the landing page of the directory the doc went
+into. Then update `docs/operations/README.md`: both the count on the domain's
+row and the total in the sentence above the group tables. The rows must sum to
+that total.
 
 ### Step 5: example
 
@@ -429,8 +450,11 @@ number of operations changes.
 ```bash
 go build ./...                                       # compiles
 go test ./... -count=1                               # tests pass
-cd examples/operations && go build *.go              # examples compile
-cd examples/features && go build *.go                # feature examples compile
+
+# Each example is its own `package main`, so they are built one at a time
+# rather than as a package.
+cd examples/operations && for f in *.go; do go build -o /dev/null "$f"; done
+cd examples/features   && for f in *.go; do go build -o /dev/null "$f"; done
 ```
 
 ## Before committing

@@ -1280,653 +1280,558 @@ func (s *OpsTestSuite) TestFileChanged() {
 	}
 }
 
-func (s *OpsTestSuite) TestHealthCheckNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
+// TestOperationStepNames pins the default step name of every operation. These
+// names are the keys a caller passes to Report.Decode, so renaming one breaks
+// consumers rather than only rearranging internals. The counter suffix applied
+// to a repeated name is TestNextOpName's subject, not this table's.
+func (s *OpsTestSuite) TestOperationStepNames() {
 	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
+		name     string
+		newFunc  func(o *Orchestrator) *Step
+		expected string
 	}{
 		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "health-check",
-			secondName: "health-check-2",
+			name:     "HealthCheck",
+			newFunc:  func(o *Orchestrator) *Step { return o.HealthCheck() },
+			expected: "health-check",
+		},
+		{
+			name:     "NodeHostnameGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.NodeHostnameGet("_any") },
+			expected: "get-hostname",
+		},
+		{
+			name:     "NodeHostnameUpdate",
+			newFunc:  func(o *Orchestrator) *Step { return o.NodeHostnameUpdate("_any", "web-01") },
+			expected: "update-hostname",
+		},
+		{
+			name:     "NodeStatusGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.NodeStatusGet("_any") },
+			expected: "get-status",
+		},
+		{
+			name:     "NodeUptimeGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.NodeUptimeGet("_any") },
+			expected: "get-uptime",
+		},
+		{
+			name:     "NodeDiskGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.NodeDiskGet("_any") },
+			expected: "get-disk",
+		},
+		{
+			name:     "NodeMemoryGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.NodeMemoryGet("_any") },
+			expected: "get-memory",
+		},
+		{
+			name:     "NodeLoadGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.NodeLoadGet("_any") },
+			expected: "get-load",
+		},
+		{
+			name:     "NodeOSGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.NodeOSGet("_any") },
+			expected: "get-os",
+		},
+		{
+			name:     "NetworkDNSGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.NetworkDNSGet("_any", "eth0") },
+			expected: "get-dns",
+		},
+		{
+			name:     "NetworkDNSUpdate",
+			newFunc:  func(o *Orchestrator) *Step { return o.NetworkDNSUpdate("_any", "eth0", nil, nil) },
+			expected: "update-dns",
+		},
+		{
+			name:     "NetworkDNSDelete",
+			newFunc:  func(o *Orchestrator) *Step { return o.NetworkDNSDelete("_any", "eth0") },
+			expected: "delete-dns",
+		},
+		{
+			name:     "NetworkPingDo",
+			newFunc:  func(o *Orchestrator) *Step { return o.NetworkPingDo("_any", "1.1.1.1") },
+			expected: "ping",
+		},
+		{
+			name:     "InterfaceList",
+			newFunc:  func(o *Orchestrator) *Step { return o.InterfaceList("_any") },
+			expected: "list-interface",
+		},
+		{
+			name:     "InterfaceGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.InterfaceGet("_any", "eth0") },
+			expected: "get-interface",
+		},
+		{
+			name:     "InterfaceCreate",
+			newFunc:  func(o *Orchestrator) *Step { return o.InterfaceCreate("_any", "eth0", osapi.InterfaceConfigOpts{}) },
+			expected: "create-interface",
+		},
+		{
+			name:     "InterfaceUpdate",
+			newFunc:  func(o *Orchestrator) *Step { return o.InterfaceUpdate("_any", "eth0", osapi.InterfaceConfigOpts{}) },
+			expected: "update-interface",
+		},
+		{
+			name:     "InterfaceDelete",
+			newFunc:  func(o *Orchestrator) *Step { return o.InterfaceDelete("_any", "eth0") },
+			expected: "delete-interface",
+		},
+		{
+			name:     "RouteList",
+			newFunc:  func(o *Orchestrator) *Step { return o.RouteList("_any") },
+			expected: "list-route",
+		},
+		{
+			name:     "RouteGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.RouteGet("_any", "eth0") },
+			expected: "get-route",
+		},
+		{
+			name:     "RouteCreate",
+			newFunc:  func(o *Orchestrator) *Step { return o.RouteCreate("_any", "eth0", osapi.RouteConfigOpts{}) },
+			expected: "create-route",
+		},
+		{
+			name:     "RouteUpdate",
+			newFunc:  func(o *Orchestrator) *Step { return o.RouteUpdate("_any", "eth0", osapi.RouteConfigOpts{}) },
+			expected: "update-route",
+		},
+		{
+			name:     "RouteDelete",
+			newFunc:  func(o *Orchestrator) *Step { return o.RouteDelete("_any", "eth0") },
+			expected: "delete-route",
+		},
+		{
+			name:     "CommandExec",
+			newFunc:  func(o *Orchestrator) *Step { return o.CommandExec("_any", "/usr/bin/uptime") },
+			expected: "run-uptime",
+		},
+		{
+			name:     "CommandShell",
+			newFunc:  func(o *Orchestrator) *Step { return o.CommandShell("_any", "df -h /") },
+			expected: "shell-df",
+		},
+		{
+			name:     "FileDeploy",
+			newFunc:  func(o *Orchestrator) *Step { return o.FileDeploy("_any", osapi.FileDeployOpts{}) },
+			expected: "deploy-file",
+		},
+		{
+			name:     "FileStatusGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.FileStatusGet("_any", "/etc/app.conf") },
+			expected: "file-status",
+		},
+		{
+			name:     "FileUndeploy",
+			newFunc:  func(o *Orchestrator) *Step { return o.FileUndeploy("_any", "/etc/app.conf") },
+			expected: "undeploy-file",
+		},
+		{
+			name:     "FileUpload",
+			newFunc:  func(o *Orchestrator) *Step { return o.FileUpload("app.conf", "text/plain", nil) },
+			expected: "upload-file",
+		},
+		{
+			name:     "FileChanged",
+			newFunc:  func(o *Orchestrator) *Step { return o.FileChanged("app.conf", nil) },
+			expected: "check-file",
+		},
+		{
+			name:     "DockerPull",
+			newFunc:  func(o *Orchestrator) *Step { return o.DockerPull("_any", osapi.DockerPullOpts{}) },
+			expected: "docker-pull",
+		},
+		{
+			name:     "DockerCreate",
+			newFunc:  func(o *Orchestrator) *Step { return o.DockerCreate("_any", osapi.DockerCreateOpts{}) },
+			expected: "docker-create",
+		},
+		{
+			name:     "DockerStart",
+			newFunc:  func(o *Orchestrator) *Step { return o.DockerStart("_any", "container-1") },
+			expected: "docker-start",
+		},
+		{
+			name:     "DockerStop",
+			newFunc:  func(o *Orchestrator) *Step { return o.DockerStop("_any", "container-1", osapi.DockerStopOpts{}) },
+			expected: "docker-stop",
+		},
+		{
+			name:     "DockerRemove",
+			newFunc:  func(o *Orchestrator) *Step { return o.DockerRemove("_any", "container-1", nil) },
+			expected: "docker-remove",
+		},
+		{
+			name:     "DockerExec",
+			newFunc:  func(o *Orchestrator) *Step { return o.DockerExec("_any", "container-1", osapi.DockerExecOpts{}) },
+			expected: "docker-exec",
+		},
+		{
+			name:     "DockerInspect",
+			newFunc:  func(o *Orchestrator) *Step { return o.DockerInspect("_any", "container-1") },
+			expected: "docker-inspect",
+		},
+		{
+			name:     "DockerList",
+			newFunc:  func(o *Orchestrator) *Step { return o.DockerList("_any", nil) },
+			expected: "docker-list",
+		},
+		{
+			name:     "DockerImageRemove",
+			newFunc:  func(o *Orchestrator) *Step { return o.DockerImageRemove("_any", "nginx:latest", nil) },
+			expected: "docker-image-remove",
+		},
+		{
+			name:     "CronList",
+			newFunc:  func(o *Orchestrator) *Step { return o.CronList("_any") },
+			expected: "list-cron",
+		},
+		{
+			name:     "CronGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.CronGet("_any", "nightly-backup") },
+			expected: "get-cron",
+		},
+		{
+			name:     "CronCreate",
+			newFunc:  func(o *Orchestrator) *Step { return o.CronCreate("_any", osapi.CronCreateOpts{}) },
+			expected: "create-cron",
+		},
+		{
+			name:     "CronUpdate",
+			newFunc:  func(o *Orchestrator) *Step { return o.CronUpdate("_any", "nightly-backup", osapi.CronUpdateOpts{}) },
+			expected: "update-cron",
+		},
+		{
+			name:     "CronDelete",
+			newFunc:  func(o *Orchestrator) *Step { return o.CronDelete("_any", "nightly-backup") },
+			expected: "delete-cron",
+		},
+		{
+			name:     "AgentList",
+			newFunc:  func(o *Orchestrator) *Step { return o.AgentList() },
+			expected: "list-agents",
+		},
+		{
+			name:     "AgentGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.AgentGet("web-01") },
+			expected: "get-agent",
+		},
+		{
+			name:     "AgentDrain",
+			newFunc:  func(o *Orchestrator) *Step { return o.AgentDrain("web-01") },
+			expected: "drain-agent",
+		},
+		{
+			name:     "AgentUndrain",
+			newFunc:  func(o *Orchestrator) *Step { return o.AgentUndrain("web-01") },
+			expected: "undrain-agent",
+		},
+		{
+			name:     "SysctlList",
+			newFunc:  func(o *Orchestrator) *Step { return o.SysctlList("_any") },
+			expected: "list-sysctl",
+		},
+		{
+			name:     "SysctlGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.SysctlGet("_any", "vm.swappiness") },
+			expected: "get-sysctl",
+		},
+		{
+			name:     "SysctlCreate",
+			newFunc:  func(o *Orchestrator) *Step { return o.SysctlCreate("_any", osapi.SysctlCreateOpts{}) },
+			expected: "create-sysctl",
+		},
+		{
+			name:     "SysctlUpdate",
+			newFunc:  func(o *Orchestrator) *Step { return o.SysctlUpdate("_any", "vm.swappiness", osapi.SysctlUpdateOpts{}) },
+			expected: "update-sysctl",
+		},
+		{
+			name:     "SysctlDelete",
+			newFunc:  func(o *Orchestrator) *Step { return o.SysctlDelete("_any", "vm.swappiness") },
+			expected: "delete-sysctl",
+		},
+		{
+			name:     "NTPGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.NTPGet("_any") },
+			expected: "get-ntp",
+		},
+		{
+			name:     "NTPCreate",
+			newFunc:  func(o *Orchestrator) *Step { return o.NTPCreate("_any", osapi.NtpCreateOpts{}) },
+			expected: "create-ntp",
+		},
+		{
+			name:     "NTPUpdate",
+			newFunc:  func(o *Orchestrator) *Step { return o.NTPUpdate("_any", osapi.NtpUpdateOpts{}) },
+			expected: "update-ntp",
+		},
+		{
+			name:     "NTPDelete",
+			newFunc:  func(o *Orchestrator) *Step { return o.NTPDelete("_any") },
+			expected: "delete-ntp",
+		},
+		{
+			name:     "TimezoneGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.TimezoneGet("_any") },
+			expected: "get-timezone",
+		},
+		{
+			name:     "TimezoneUpdate",
+			newFunc:  func(o *Orchestrator) *Step { return o.TimezoneUpdate("_any", osapi.TimezoneUpdateOpts{}) },
+			expected: "update-timezone",
+		},
+		{
+			name:     "ServiceList",
+			newFunc:  func(o *Orchestrator) *Step { return o.ServiceList("_any") },
+			expected: "list-service",
+		},
+		{
+			name:     "ServiceGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.ServiceGet("_any", "nginx") },
+			expected: "get-service",
+		},
+		{
+			name:     "ServiceCreate",
+			newFunc:  func(o *Orchestrator) *Step { return o.ServiceCreate("_any", osapi.ServiceCreateOpts{}) },
+			expected: "create-service",
+		},
+		{
+			name:     "ServiceUpdate",
+			newFunc:  func(o *Orchestrator) *Step { return o.ServiceUpdate("_any", "nginx", osapi.ServiceUpdateOpts{}) },
+			expected: "update-service",
+		},
+		{
+			name:     "ServiceDelete",
+			newFunc:  func(o *Orchestrator) *Step { return o.ServiceDelete("_any", "nginx") },
+			expected: "delete-service",
+		},
+		{
+			name:     "ServiceStart",
+			newFunc:  func(o *Orchestrator) *Step { return o.ServiceStart("_any", "nginx") },
+			expected: "start-service",
+		},
+		{
+			name:     "ServiceStop",
+			newFunc:  func(o *Orchestrator) *Step { return o.ServiceStop("_any", "nginx") },
+			expected: "stop-service",
+		},
+		{
+			name:     "ServiceRestart",
+			newFunc:  func(o *Orchestrator) *Step { return o.ServiceRestart("_any", "nginx") },
+			expected: "restart-service",
+		},
+		{
+			name:     "ServiceEnable",
+			newFunc:  func(o *Orchestrator) *Step { return o.ServiceEnable("_any", "nginx") },
+			expected: "enable-service",
+		},
+		{
+			name:     "ServiceDisable",
+			newFunc:  func(o *Orchestrator) *Step { return o.ServiceDisable("_any", "nginx") },
+			expected: "disable-service",
+		},
+		{
+			name:     "PackageList",
+			newFunc:  func(o *Orchestrator) *Step { return o.PackageList("_any") },
+			expected: "list-package",
+		},
+		{
+			name:     "PackageGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.PackageGet("_any", "curl") },
+			expected: "get-package",
+		},
+		{
+			name:     "PackageInstall",
+			newFunc:  func(o *Orchestrator) *Step { return o.PackageInstall("_any", "curl") },
+			expected: "install-package",
+		},
+		{
+			name:     "PackageRemove",
+			newFunc:  func(o *Orchestrator) *Step { return o.PackageRemove("_any", "curl") },
+			expected: "remove-package",
+		},
+		{
+			name:     "PackageUpdate",
+			newFunc:  func(o *Orchestrator) *Step { return o.PackageUpdate("_any") },
+			expected: "update-package",
+		},
+		{
+			name:     "PackageListUpdates",
+			newFunc:  func(o *Orchestrator) *Step { return o.PackageListUpdates("_any") },
+			expected: "list-package-updates",
+		},
+		{
+			name:     "UserList",
+			newFunc:  func(o *Orchestrator) *Step { return o.UserList("_any") },
+			expected: "list-user",
+		},
+		{
+			name:     "UserGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.UserGet("_any", "alice") },
+			expected: "get-user",
+		},
+		{
+			name:     "UserCreate",
+			newFunc:  func(o *Orchestrator) *Step { return o.UserCreate("_any", osapi.UserCreateOpts{}) },
+			expected: "create-user",
+		},
+		{
+			name:     "UserUpdate",
+			newFunc:  func(o *Orchestrator) *Step { return o.UserUpdate("_any", "alice", osapi.UserUpdateOpts{}) },
+			expected: "update-user",
+		},
+		{
+			name:     "UserDelete",
+			newFunc:  func(o *Orchestrator) *Step { return o.UserDelete("_any", "alice") },
+			expected: "delete-user",
+		},
+		{
+			name:     "UserListKeys",
+			newFunc:  func(o *Orchestrator) *Step { return o.UserListKeys("_any", "alice") },
+			expected: "list-ssh-key",
+		},
+		{
+			name:     "UserAddKey",
+			newFunc:  func(o *Orchestrator) *Step { return o.UserAddKey("_any", "alice", osapi.SSHKeyAddOpts{}) },
+			expected: "add-ssh-key",
+		},
+		{
+			name:     "UserRemoveKey",
+			newFunc:  func(o *Orchestrator) *Step { return o.UserRemoveKey("_any", "alice", "SHA256:abcdef") },
+			expected: "remove-ssh-key",
+		},
+		{
+			name:     "UserChangePassword",
+			newFunc:  func(o *Orchestrator) *Step { return o.UserChangePassword("_any", "alice", "s3cret") },
+			expected: "change-password",
+		},
+		{
+			name:     "GroupList",
+			newFunc:  func(o *Orchestrator) *Step { return o.GroupList("_any") },
+			expected: "list-group",
+		},
+		{
+			name:     "GroupGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.GroupGet("_any", "admins") },
+			expected: "get-group",
+		},
+		{
+			name:     "GroupCreate",
+			newFunc:  func(o *Orchestrator) *Step { return o.GroupCreate("_any", osapi.GroupCreateOpts{}) },
+			expected: "create-group",
+		},
+		{
+			name:     "GroupUpdate",
+			newFunc:  func(o *Orchestrator) *Step { return o.GroupUpdate("_any", "admins", osapi.GroupUpdateOpts{}) },
+			expected: "update-group",
+		},
+		{
+			name:     "GroupDelete",
+			newFunc:  func(o *Orchestrator) *Step { return o.GroupDelete("_any", "admins") },
+			expected: "delete-group",
+		},
+		{
+			name:     "CertificateList",
+			newFunc:  func(o *Orchestrator) *Step { return o.CertificateList("_any") },
+			expected: "list-certificate",
+		},
+		{
+			name:     "CertificateCreate",
+			newFunc:  func(o *Orchestrator) *Step { return o.CertificateCreate("_any", osapi.CertificateCreateOpts{}) },
+			expected: "create-certificate",
+		},
+		{
+			name: "CertificateUpdate",
+			newFunc: func(o *Orchestrator) *Step {
+				return o.CertificateUpdate("_any", "internal-ca", osapi.CertificateUpdateOpts{})
+			},
+			expected: "update-certificate",
+		},
+		{
+			name:     "CertificateDelete",
+			newFunc:  func(o *Orchestrator) *Step { return o.CertificateDelete("_any", "internal-ca") },
+			expected: "delete-certificate",
+		},
+		{
+			name:     "ProcessList",
+			newFunc:  func(o *Orchestrator) *Step { return o.ProcessList("_any") },
+			expected: "list-process",
+		},
+		{
+			name:     "ProcessGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.ProcessGet("_any", 1234) },
+			expected: "get-process",
+		},
+		{
+			name:     "ProcessSignal",
+			newFunc:  func(o *Orchestrator) *Step { return o.ProcessSignal("_any", 1234, osapi.ProcessSignalOpts{}) },
+			expected: "signal-process",
+		},
+		{
+			name:     "PowerReboot",
+			newFunc:  func(o *Orchestrator) *Step { return o.PowerReboot("_any", osapi.PowerOpts{}) },
+			expected: "reboot",
+		},
+		{
+			name:     "PowerShutdown",
+			newFunc:  func(o *Orchestrator) *Step { return o.PowerShutdown("_any", osapi.PowerOpts{}) },
+			expected: "shutdown",
+		},
+		{
+			name:     "LogQuery",
+			newFunc:  func(o *Orchestrator) *Step { return o.LogQuery("_any", osapi.LogQueryOpts{}) },
+			expected: "query-log",
+		},
+		{
+			name:     "LogSources",
+			newFunc:  func(o *Orchestrator) *Step { return o.LogSources("_any") },
+			expected: "list-log-sources",
+		},
+		{
+			name:     "LogQueryUnit",
+			newFunc:  func(o *Orchestrator) *Step { return o.LogQueryUnit("_any", "nginx.service", osapi.LogQueryOpts{}) },
+			expected: "query-log-unit",
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.HealthCheck(), orch.HealthCheck()
+			orch := New("http://orchestrator.invalid", "test-token")
 
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestNodeHostnameGetNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "get-hostname",
-			secondName: "get-hostname-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.NodeHostnameGet("_any"), orch.NodeHostnameGet("_any")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestNodeStatusGetNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "get-status",
-			secondName: "get-status-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.NodeStatusGet("_any"), orch.NodeStatusGet("_any")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestNodeUptimeGetNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "get-uptime",
-			secondName: "get-uptime-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.NodeUptimeGet("_any"), orch.NodeUptimeGet("_any")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestNodeDiskGetNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "get-disk",
-			secondName: "get-disk-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.NodeDiskGet("_any"), orch.NodeDiskGet("_any")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestNodeMemoryGetNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "get-memory",
-			secondName: "get-memory-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.NodeMemoryGet("_any"), orch.NodeMemoryGet("_any")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestNodeLoadGetNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "get-load",
-			secondName: "get-load-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.NodeLoadGet("_any"), orch.NodeLoadGet("_any")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestNetworkDNSGetNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "get-dns",
-			secondName: "get-dns-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.NetworkDNSGet("_any", "eth0"), orch.NetworkDNSGet("_any", "eth0")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestNetworkDNSUpdateNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "update-dns",
-			secondName: "update-dns-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.NetworkDNSUpdate("_any", "eth0", []string{"8.8.8.8"}, nil),
-				orch.NetworkDNSUpdate("_any", "eth0", []string{"8.8.8.8"}, nil)
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestNetworkPingDoNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "ping",
-			secondName: "ping-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.NetworkPingDo(
-				"_any",
-				"8.8.8.8",
-			), orch.NetworkPingDo(
-				"_any",
-				"8.8.8.8",
-			)
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestCommandExecNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "run-uptime",
-			secondName: "run-uptime-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.CommandExec("_any", "uptime"), orch.CommandExec("_any", "uptime")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestCommandShellNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "shell-echo",
-			secondName: "shell-echo-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.CommandShell("_any", "echo hello"),
-				orch.CommandShell("_any", "echo hello")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestFileDeployNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "deploy-file",
-			secondName: "deploy-file-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			opts := osapi.FileDeployOpts{ObjectName: "f", Path: "/p", ContentType: "raw"}
-			first, second := orch.FileDeploy("_any", opts), orch.FileDeploy("_any", opts)
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestFileStatusGetNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "file-status",
-			secondName: "file-status-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.FileStatusGet("_any", "/p"), orch.FileStatusGet("_any", "/p")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestAgentListNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "list-agents",
-			secondName: "list-agents-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.AgentList(), orch.AgentList()
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestAgentGetNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "get-agent",
-			secondName: "get-agent-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.AgentGet("web-01"), orch.AgentGet("web-01")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestFileUploadNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "upload-file",
-			secondName: "upload-file-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.FileUpload("test.txt", "raw", []byte("content")),
-				orch.FileUpload("test.txt", "raw", []byte("content"))
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestFileChangedNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "check-file",
-			secondName: "check-file-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.FileChanged("test.txt", []byte("content")),
-				orch.FileChanged("test.txt", []byte("content"))
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
+			s.Equal(tc.expected, tc.newFunc(orch).task.Name())
 		})
 	}
 }
 
 func (s *OpsTestSuite) TestCommandError() {
 	tests := []struct {
-		name       string
-		result     osapi.CommandResult
-		validateFn func(got string)
+		name         string
+		result       osapi.CommandResult
+		validateFunc func(got string)
 	}{
 		{
 			name:   "returns error string when set",
 			result: osapi.CommandResult{Error: "connection refused"},
-			validateFn: func(got string) {
+			validateFunc: func(got string) {
 				s.Equal("connection refused", got)
 			},
 		},
 		{
 			name:   "returns exit code when non-zero",
 			result: osapi.CommandResult{ExitCode: 127},
-			validateFn: func(got string) {
+			validateFunc: func(got string) {
 				s.Equal("exit code 127", got)
 			},
 		},
 		{
 			name:   "returns empty string on success",
 			result: osapi.CommandResult{ExitCode: 0},
-			validateFn: func(got string) {
+			validateFunc: func(got string) {
 				s.Empty(got)
 			},
 		},
@@ -1936,7 +1841,7 @@ func (s *OpsTestSuite) TestCommandError() {
 				Error:    "timeout",
 				ExitCode: 1,
 			},
-			validateFn: func(got string) {
+			validateFunc: func(got string) {
 				s.Equal("timeout", got)
 			},
 		},
@@ -1944,7 +1849,7 @@ func (s *OpsTestSuite) TestCommandError() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			tt.validateFn(commandError(tt.result))
+			tt.validateFunc(commandError(tt.result))
 		})
 	}
 }
@@ -2498,285 +2403,6 @@ func (s *OpsTestSuite) TestDockerList() {
 	}
 }
 
-func (s *OpsTestSuite) TestDockerPullNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "docker-pull",
-			secondName: "docker-pull-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			opts := osapi.DockerPullOpts{Image: "nginx:latest"}
-			first, second := orch.DockerPull("_any", opts), orch.DockerPull("_any", opts)
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestDockerCreateNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "docker-create",
-			secondName: "docker-create-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			opts := osapi.DockerCreateOpts{Image: "nginx"}
-			first, second := orch.DockerCreate("_any", opts), orch.DockerCreate("_any", opts)
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestDockerStartNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "docker-start",
-			secondName: "docker-start-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.DockerStart("_any", "c1"), orch.DockerStart("_any", "c1")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestDockerStopNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "docker-stop",
-			secondName: "docker-stop-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.DockerStop("_any", "c1", osapi.DockerStopOpts{}),
-				orch.DockerStop("_any", "c1", osapi.DockerStopOpts{})
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestDockerRemoveNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "docker-remove",
-			secondName: "docker-remove-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.DockerRemove("_any", "c1", nil),
-				orch.DockerRemove("_any", "c1", nil)
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestDockerExecNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "docker-exec",
-			secondName: "docker-exec-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			opts := osapi.DockerExecOpts{Command: []string{"ls"}}
-			first, second := orch.DockerExec("_any", "c1", opts),
-				orch.DockerExec("_any", "c1", opts)
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestDockerInspectNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "docker-inspect",
-			secondName: "docker-inspect-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.DockerInspect("_any", "c1"),
-				orch.DockerInspect("_any", "c1")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestDockerListNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "docker-list",
-			secondName: "docker-list-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.DockerList("_any", nil), orch.DockerList("_any", nil)
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
 func (s *OpsTestSuite) TestDockerImageRemove() {
 	tests := []struct {
 		name        string
@@ -2844,41 +2470,6 @@ func (s *OpsTestSuite) TestDockerImageRemove() {
 			s.True(result.Changed)
 			s.NotNil(result.Data)
 			s.Len(result.HostResults, 1)
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestDockerImageRemoveNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "docker-image-remove",
-			secondName: "docker-image-remove-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.DockerImageRemove("_any", "nginx:latest", nil),
-				orch.DockerImageRemove("_any", "nginx:latest", nil)
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
 		})
 	}
 }
@@ -3542,350 +3133,6 @@ func (s *OpsTestSuite) TestCronDelete() {
 			s.True(result.Changed)
 			s.NotNil(result.Data)
 			s.Equal("550e8400-e29b-41d4-a716-446655440000", result.JobID)
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestFileUndeployNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "undeploy-file",
-			secondName: "undeploy-file-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.FileUndeploy("_any", "/etc/app/config.yaml"),
-				orch.FileUndeploy("_any", "/etc/app/other.yaml")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestNodeHostnameUpdateNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "update-hostname",
-			secondName: "update-hostname-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.NodeHostnameUpdate("_any", "host-a"),
-				orch.NodeHostnameUpdate("_any", "host-b")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestNodeOSGetNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "get-os",
-			secondName: "get-os-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.NodeOSGet("_any"), orch.NodeOSGet("_any")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestAgentDrainNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "drain-agent",
-			secondName: "drain-agent-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.AgentDrain("web-01"), orch.AgentDrain("web-02")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestAgentUndrainNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "undrain-agent",
-			secondName: "undrain-agent-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.AgentUndrain("web-01"), orch.AgentUndrain("web-02")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestCronListNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "list-cron",
-			secondName: "list-cron-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.CronList("_any"), orch.CronList("_any")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestCronGetNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "get-cron",
-			secondName: "get-cron-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.CronGet("_any", "backup"), orch.CronGet("_any", "cleanup")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestCronCreateNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "create-cron",
-			secondName: "create-cron-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.CronCreate("_any", osapi.CronCreateOpts{Name: "backup"}),
-				orch.CronCreate("_any", osapi.CronCreateOpts{Name: "cleanup"})
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestCronUpdateNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "update-cron",
-			secondName: "update-cron-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.CronUpdate("_any", "backup", osapi.CronUpdateOpts{}),
-				orch.CronUpdate("_any", "cleanup", osapi.CronUpdateOpts{})
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
-		})
-	}
-}
-
-func (s *OpsTestSuite) TestCronDeleteNameCounter() {
-	server := httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-	defer server.Close()
-
-	tests := []struct {
-		name       string
-		firstName  string
-		secondName string
-	}{
-		{
-			name:       "Duplicate name gets counter suffix",
-			firstName:  "delete-cron",
-			secondName: "delete-cron-2",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			orch := New(server.URL, "test-token")
-			first, second := orch.CronDelete("_any", "backup"), orch.CronDelete("_any", "cleanup")
-
-			s.Equal(tc.firstName, first.task.Name())
-			s.Equal(tc.secondName, second.task.Name())
 		})
 	}
 }
