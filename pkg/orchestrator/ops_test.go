@@ -2451,7 +2451,7 @@ func (s *OpsTestSuite) TestDockerImageRemove() {
 			step := orch.DockerImageRemove(
 				"_any",
 				"nginx:latest",
-				&osapi.DockerImageRemoveParams{Force: true},
+				&osapi.DockerRemoveImageParams{Force: true},
 			)
 			fn := step.task.Fn()
 			s.Require().NotNil(fn)

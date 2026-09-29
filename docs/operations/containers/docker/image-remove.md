@@ -6,7 +6,7 @@ Removes a Docker image from the target host.
 
 ```go
 step := o.DockerImageRemove("_any", "nginx:latest",
-    &osapi.DockerImageRemoveParams{Force: true},
+    &osapi.DockerRemoveImageParams{Force: true},
 )
 ```
 
@@ -16,9 +16,9 @@ step := o.DockerImageRemove("_any", "nginx:latest",
 | ----------- | -------------------------------- | ----------------------------- |
 | `target`    | `string`                         | Target host or routing value. |
 | `imageName` | `string`                         | Image name or ID to remove.   |
-| `params`    | `*osapi.DockerImageRemoveParams` | Optional remove parameters.   |
+| `params`    | `*osapi.DockerRemoveImageParams` | Optional remove parameters.   |
 
-### DockerImageRemoveParams
+### DockerRemoveImageParams
 
 | Field   | Type   | Description                            |
 | ------- | ------ | -------------------------------------- |
