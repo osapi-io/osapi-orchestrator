@@ -63,7 +63,7 @@ func (o *Orchestrator) HealthCheck() *Step {
 			ctx context.Context,
 			c *osapi.Client,
 		) (*engine.Result, error) {
-			_, err := c.Health.Liveness(ctx)
+			_, err := c.Health.GetLiveness(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("health check: %w", err)
 			}
@@ -482,7 +482,7 @@ func (o *Orchestrator) NetworkPingDo(
 			ctx context.Context,
 			c *osapi.Client,
 		) (*engine.Result, error) {
-			resp, err := c.Ping.Do(ctx, target, address)
+			resp, err := c.Ping.Send(ctx, target, address)
 			if err != nil {
 				return nil, fmt.Errorf("ping: %w", err)
 			}
@@ -1139,7 +1139,7 @@ func (o *Orchestrator) FileChanged(
 			ctx context.Context,
 			c *osapi.Client,
 		) (*engine.Result, error) {
-			resp, err := c.File.Changed(
+			resp, err := c.File.GetChanged(
 				ctx,
 				name,
 				bytes.NewReader(data),
@@ -1450,7 +1450,7 @@ func (o *Orchestrator) DockerList(
 func (o *Orchestrator) DockerImageRemove(
 	target string,
 	imageName string,
-	params *osapi.DockerImageRemoveParams,
+	params *osapi.DockerRemoveImageParams,
 ) *Step {
 	name := o.nextOpName("docker-image-remove")
 
@@ -1460,7 +1460,7 @@ func (o *Orchestrator) DockerImageRemove(
 			ctx context.Context,
 			c *osapi.Client,
 		) (*engine.Result, error) {
-			resp, err := c.Docker.ImageRemove(
+			resp, err := c.Docker.RemoveImage(
 				ctx,
 				target,
 				imageName,

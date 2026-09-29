@@ -856,7 +856,7 @@ func (s *OpsPublicTestSuite) TestDockerImageRemove() {
 				return s.orch.DockerImageRemove(
 					"_any",
 					"nginx:latest",
-					&osapi.DockerImageRemoveParams{Force: true},
+					&osapi.DockerRemoveImageParams{Force: true},
 				)
 			},
 			validateFunc: func(step *orchestrator.Step) {

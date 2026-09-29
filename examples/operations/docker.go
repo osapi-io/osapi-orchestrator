@@ -55,7 +55,7 @@ func main() {
 	cleanup := orchestrator.New(url, token)
 	cleanup.DockerRemove(target, name, &osapi.DockerRemoveParams{Force: true}).
 		ContinueOnError()
-	cleanup.DockerImageRemove(target, image, &osapi.DockerImageRemoveParams{Force: true}).
+	cleanup.DockerImageRemove(target, image, &osapi.DockerRemoveImageParams{Force: true}).
 		ContinueOnError()
 	_, _ = cleanup.Run(context.Background())
 
@@ -84,7 +84,7 @@ func main() {
 	remove := o.DockerRemove(target, name, &osapi.DockerRemoveParams{Force: true}).
 		After(stop)
 
-	o.DockerImageRemove(target, image, &osapi.DockerImageRemoveParams{Force: true}).
+	o.DockerImageRemove(target, image, &osapi.DockerRemoveImageParams{Force: true}).
 		After(remove)
 
 	if _, err := o.Run(context.Background()); err != nil {
