@@ -9,7 +9,6 @@
 <p align="center">Compose operations across OSAPI-managed hosts as one plan.</p>
 
 <p align="center">
-  <a href="https://github.com/osapi-io/osapi-orchestrator/releases/latest"><img alt="release" src="https://img.shields.io/github/release/osapi-io/osapi-orchestrator.svg?style=for-the-badge"></a>
   <a href="https://codecov.io/gh/osapi-io/osapi-orchestrator"><img alt="codecov" src="https://img.shields.io/codecov/c/github/osapi-io/osapi-orchestrator?style=for-the-badge"></a>
   <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge"></a>
   <a href="https://github.com/osapi-io/osapi-orchestrator/actions/workflows/go.yml"><img alt="build" src="https://img.shields.io/github/actions/workflow/status/osapi-io/osapi-orchestrator/go.yml?style=for-the-badge"></a>
