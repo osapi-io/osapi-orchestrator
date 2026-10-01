@@ -1,19 +1,35 @@
-[![release](https://img.shields.io/github/release/osapi-io/osapi-orchestrator.svg?style=for-the-badge)](https://github.com/osapi-io/osapi-orchestrator/releases/latest)
-[![codecov](https://img.shields.io/codecov/c/github/osapi-io/osapi-orchestrator?style=for-the-badge)](https://codecov.io/gh/osapi-io/osapi-orchestrator)
-[![license](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge)](LICENSE)
-[![build](https://img.shields.io/github/actions/workflow/status/osapi-io/osapi-orchestrator/go.yml?style=for-the-badge)](https://github.com/osapi-io/osapi-orchestrator/actions/workflows/go.yml)
-[![powered by](https://img.shields.io/badge/powered%20by-goreleaser-green.svg?style=for-the-badge)](https://github.com/goreleaser)
-[![conventional commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=for-the-badge)](https://conventionalcommits.org)
-[![built with just](https://img.shields.io/badge/Built_with-Just-black?style=for-the-badge&logo=just&logoColor=white)](https://just.systems)
-![gitHub commit activity](https://img.shields.io/github/commit-activity/m/osapi-io/osapi-orchestrator?style=for-the-badge)
-[![go reference](https://img.shields.io/badge/go-reference-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://pkg.go.dev/github.com/osapi-io/osapi-orchestrator)
-[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=for-the-badge)](https://pkg.go.dev/github.com/osapi-io/osapi-orchestrator/pkg/orchestrator)
+<p align="center">
+  <picture>
+    <source srcset="asset/logo-dark.svg" media="(prefers-color-scheme: dark)">
+    <source srcset="asset/logo-light.svg" media="(prefers-color-scheme: light)">
+    <img src="asset/logo-dark.svg" alt="osapi-orchestrator" width="929">
+  </picture>
+</p>
 
-# OSAPI Orchestrator
+<p align="center">Compose operations across OSAPI-managed hosts as one plan.</p>
 
-A Go package for orchestrating operations across [OSAPI]-managed hosts -- typed
-operations, chaining, conditions, and result decoding built on top of the
-[osapi-sdk] engine.
+<p align="center">
+  <a href="https://github.com/osapi-io/osapi-orchestrator/releases/latest"><img alt="release" src="https://img.shields.io/github/release/osapi-io/osapi-orchestrator.svg?style=for-the-badge"></a>
+  <a href="https://codecov.io/gh/osapi-io/osapi-orchestrator"><img alt="codecov" src="https://img.shields.io/codecov/c/github/osapi-io/osapi-orchestrator?style=for-the-badge"></a>
+  <a href="LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-brightgreen.svg?style=for-the-badge"></a>
+  <a href="https://github.com/osapi-io/osapi-orchestrator/actions/workflows/go.yml"><img alt="build" src="https://img.shields.io/github/actions/workflow/status/osapi-io/osapi-orchestrator/go.yml?style=for-the-badge"></a>
+  <a href="https://github.com/goreleaser"><img alt="powered by" src="https://img.shields.io/badge/powered%20by-goreleaser-green.svg?style=for-the-badge"></a>
+  <a href="https://conventionalcommits.org"><img alt="conventional commits" src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=for-the-badge"></a>
+  <a href="https://just.systems"><img alt="built with just" src="https://img.shields.io/badge/Built_with-Just-black?style=for-the-badge&logo=just&logoColor=white"></a>
+  <img alt="gitHub commit activity" src="https://img.shields.io/github/commit-activity/m/osapi-io/osapi-orchestrator?style=for-the-badge">
+  <a href="https://pkg.go.dev/github.com/osapi-io/osapi-orchestrator"><img alt="go reference" src="https://img.shields.io/badge/go-reference-00ADD8?style=for-the-badge&logo=go&logoColor=white"></a>
+  <a href="https://pkg.go.dev/github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"><img alt="go.dev reference" src="https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=for-the-badge"></a>
+</p>
+
+<p align="center">
+<b>Describe the plan, not the order.</b>
+</p>
+
+<p align="center">
+Declare what has to happen and what depends on what, and the orchestrator
+resolves the order, runs independent work in parallel, and gives you one
+result per host rather than one answer for the fleet.
+</p>
 
 ## Install
 
@@ -114,6 +130,4 @@ conventions, and the PR workflow.
 The [MIT] License.
 
 [mit]: LICENSE
-[osapi]: https://github.com/osapi-io/osapi
-[osapi-sdk]: https://github.com/osapi-io/osapi/tree/main/pkg/sdk
 [package documentation]: https://pkg.go.dev/github.com/osapi-io/osapi-orchestrator/pkg/orchestrator
