@@ -872,7 +872,7 @@ func (s *OpsPublicTestSuite) TestDockerImageRemove() {
 	}
 }
 
-func (s *OpsPublicTestSuite) TestCronList() {
+func (s *OpsPublicTestSuite) TestScheduleList() {
 	tests := []struct {
 		name         string
 		newFn        func() *orchestrator.Step
@@ -881,7 +881,7 @@ func (s *OpsPublicTestSuite) TestCronList() {
 		{
 			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
-				return s.orch.CronList("_any")
+				return s.orch.ScheduleList("_any")
 			},
 			validateFunc: func(step *orchestrator.Step) {
 				s.NotNil(step)
@@ -896,7 +896,7 @@ func (s *OpsPublicTestSuite) TestCronList() {
 	}
 }
 
-func (s *OpsPublicTestSuite) TestCronGet() {
+func (s *OpsPublicTestSuite) TestScheduleGet() {
 	tests := []struct {
 		name         string
 		newFn        func() *orchestrator.Step
@@ -905,7 +905,7 @@ func (s *OpsPublicTestSuite) TestCronGet() {
 		{
 			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
-				return s.orch.CronGet("_any", "backup")
+				return s.orch.ScheduleGet("_any", "backup")
 			},
 			validateFunc: func(step *orchestrator.Step) {
 				s.NotNil(step)
@@ -920,7 +920,7 @@ func (s *OpsPublicTestSuite) TestCronGet() {
 	}
 }
 
-func (s *OpsPublicTestSuite) TestCronCreate() {
+func (s *OpsPublicTestSuite) TestScheduleCreate() {
 	tests := []struct {
 		name         string
 		newFn        func() *orchestrator.Step
@@ -929,7 +929,7 @@ func (s *OpsPublicTestSuite) TestCronCreate() {
 		{
 			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
-				return s.orch.CronCreate("_any", osapi.CronCreateOpts{
+				return s.orch.ScheduleCreate("_any", osapi.ScheduleCreateOpts{
 					Name:     "backup",
 					Object:   "backup.sh",
 					Schedule: "0 2 * * *",
@@ -948,7 +948,7 @@ func (s *OpsPublicTestSuite) TestCronCreate() {
 	}
 }
 
-func (s *OpsPublicTestSuite) TestCronUpdate() {
+func (s *OpsPublicTestSuite) TestScheduleUpdate() {
 	tests := []struct {
 		name         string
 		newFn        func() *orchestrator.Step
@@ -957,7 +957,7 @@ func (s *OpsPublicTestSuite) TestCronUpdate() {
 		{
 			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
-				return s.orch.CronUpdate("_any", "backup", osapi.CronUpdateOpts{
+				return s.orch.ScheduleUpdate("_any", "backup", osapi.ScheduleUpdateOpts{
 					Schedule: "0 3 * * *",
 				})
 			},
@@ -974,7 +974,7 @@ func (s *OpsPublicTestSuite) TestCronUpdate() {
 	}
 }
 
-func (s *OpsPublicTestSuite) TestCronDelete() {
+func (s *OpsPublicTestSuite) TestScheduleDelete() {
 	tests := []struct {
 		name         string
 		newFn        func() *orchestrator.Step
@@ -983,7 +983,7 @@ func (s *OpsPublicTestSuite) TestCronDelete() {
 		{
 			name: "Returns non-nil step",
 			newFn: func() *orchestrator.Step {
-				return s.orch.CronDelete("_any", "backup")
+				return s.orch.ScheduleDelete("_any", "backup")
 			},
 			validateFunc: func(step *orchestrator.Step) {
 				s.NotNil(step)

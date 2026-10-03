@@ -1488,14 +1488,14 @@ func (o *Orchestrator) DockerImageRemove(
 }
 
 // ---------------------------------------------------------------------------
-// Cron
+// Schedule
 // ---------------------------------------------------------------------------
 
-// CronList creates a step that lists cron entries on the target host.
-func (o *Orchestrator) CronList(
+// ScheduleList creates a step that lists scheduled entries on the target host.
+func (o *Orchestrator) ScheduleList(
 	target string,
 ) *Step {
-	name := o.nextOpName("list-cron")
+	name := o.nextOpName("list-schedule")
 
 	task := o.plan.TaskFunc(
 		name,
@@ -1503,14 +1503,14 @@ func (o *Orchestrator) CronList(
 			ctx context.Context,
 			c *osapi.Client,
 		) (*engine.Result, error) {
-			resp, err := c.Cron.List(ctx, target)
+			resp, err := c.Schedule.List(ctx, target)
 			if err != nil {
-				return nil, fmt.Errorf("list cron: %w", err)
+				return nil, fmt.Errorf("list schedule: %w", err)
 			}
 
 			return engine.CollectionResult(
 				resp.Data, resp.RawJSON(),
-				func(r osapi.CronEntryResult) engine.HostResult {
+				func(r osapi.ScheduleEntryResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
@@ -1525,12 +1525,12 @@ func (o *Orchestrator) CronList(
 	return &Step{task: task}
 }
 
-// CronGet creates a step that retrieves a specific cron entry on the target host.
-func (o *Orchestrator) CronGet(
+// ScheduleGet creates a step that retrieves a scheduled entry on the target host.
+func (o *Orchestrator) ScheduleGet(
 	target string,
 	entryName string,
 ) *Step {
-	name := o.nextOpName("get-cron")
+	name := o.nextOpName("get-schedule")
 
 	task := o.plan.TaskFunc(
 		name,
@@ -1538,14 +1538,14 @@ func (o *Orchestrator) CronGet(
 			ctx context.Context,
 			c *osapi.Client,
 		) (*engine.Result, error) {
-			resp, err := c.Cron.Get(ctx, target, entryName)
+			resp, err := c.Schedule.Get(ctx, target, entryName)
 			if err != nil {
-				return nil, fmt.Errorf("get cron: %w", err)
+				return nil, fmt.Errorf("get schedule: %w", err)
 			}
 
 			return engine.CollectionResult(
 				resp.Data, resp.RawJSON(),
-				func(r osapi.CronEntryResult) engine.HostResult {
+				func(r osapi.ScheduleEntryResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
@@ -1560,12 +1560,12 @@ func (o *Orchestrator) CronGet(
 	return &Step{task: task}
 }
 
-// CronCreate creates a step that creates a new cron entry on the target host.
-func (o *Orchestrator) CronCreate(
+// ScheduleCreate creates a step that creates a scheduled entry on the target host.
+func (o *Orchestrator) ScheduleCreate(
 	target string,
-	opts osapi.CronCreateOpts,
+	opts osapi.ScheduleCreateOpts,
 ) *Step {
-	name := o.nextOpName("create-cron")
+	name := o.nextOpName("create-schedule")
 
 	task := o.plan.TaskFunc(
 		name,
@@ -1573,14 +1573,14 @@ func (o *Orchestrator) CronCreate(
 			ctx context.Context,
 			c *osapi.Client,
 		) (*engine.Result, error) {
-			resp, err := c.Cron.Create(ctx, target, opts)
+			resp, err := c.Schedule.Create(ctx, target, opts)
 			if err != nil {
-				return nil, fmt.Errorf("create cron: %w", err)
+				return nil, fmt.Errorf("create schedule: %w", err)
 			}
 
 			return engine.CollectionResult(
 				resp.Data, resp.RawJSON(),
-				func(r osapi.CronMutationResult) engine.HostResult {
+				func(r osapi.ScheduleMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
@@ -1595,13 +1595,13 @@ func (o *Orchestrator) CronCreate(
 	return &Step{task: task}
 }
 
-// CronUpdate creates a step that updates an existing cron entry on the target host.
-func (o *Orchestrator) CronUpdate(
+// ScheduleUpdate creates a step that updates a scheduled entry on the target host.
+func (o *Orchestrator) ScheduleUpdate(
 	target string,
 	entryName string,
-	opts osapi.CronUpdateOpts,
+	opts osapi.ScheduleUpdateOpts,
 ) *Step {
-	name := o.nextOpName("update-cron")
+	name := o.nextOpName("update-schedule")
 
 	task := o.plan.TaskFunc(
 		name,
@@ -1609,14 +1609,14 @@ func (o *Orchestrator) CronUpdate(
 			ctx context.Context,
 			c *osapi.Client,
 		) (*engine.Result, error) {
-			resp, err := c.Cron.Update(ctx, target, entryName, opts)
+			resp, err := c.Schedule.Update(ctx, target, entryName, opts)
 			if err != nil {
-				return nil, fmt.Errorf("update cron: %w", err)
+				return nil, fmt.Errorf("update schedule: %w", err)
 			}
 
 			return engine.CollectionResult(
 				resp.Data, resp.RawJSON(),
-				func(r osapi.CronMutationResult) engine.HostResult {
+				func(r osapi.ScheduleMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,
@@ -1631,12 +1631,12 @@ func (o *Orchestrator) CronUpdate(
 	return &Step{task: task}
 }
 
-// CronDelete creates a step that deletes a cron entry on the target host.
-func (o *Orchestrator) CronDelete(
+// ScheduleDelete creates a step that deletes a scheduled entry on the target host.
+func (o *Orchestrator) ScheduleDelete(
 	target string,
 	entryName string,
 ) *Step {
-	name := o.nextOpName("delete-cron")
+	name := o.nextOpName("delete-schedule")
 
 	task := o.plan.TaskFunc(
 		name,
@@ -1644,14 +1644,14 @@ func (o *Orchestrator) CronDelete(
 			ctx context.Context,
 			c *osapi.Client,
 		) (*engine.Result, error) {
-			resp, err := c.Cron.Delete(ctx, target, entryName)
+			resp, err := c.Schedule.Delete(ctx, target, entryName)
 			if err != nil {
-				return nil, fmt.Errorf("delete cron: %w", err)
+				return nil, fmt.Errorf("delete schedule: %w", err)
 			}
 
 			return engine.CollectionResult(
 				resp.Data, resp.RawJSON(),
-				func(r osapi.CronMutationResult) engine.HostResult {
+				func(r osapi.ScheduleMutationResult) engine.HostResult {
 					return engine.HostResult{
 						Hostname: r.Hostname,
 						Status:   r.Status,

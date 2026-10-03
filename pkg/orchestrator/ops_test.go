@@ -1486,29 +1486,31 @@ func (s *OpsTestSuite) TestOperationStepNames() {
 			expected: "docker-image-remove",
 		},
 		{
-			name:     "CronList",
-			newFunc:  func(o *Orchestrator) *Step { return o.CronList("_any") },
-			expected: "list-cron",
+			name:     "ScheduleList",
+			newFunc:  func(o *Orchestrator) *Step { return o.ScheduleList("_any") },
+			expected: "list-schedule",
 		},
 		{
-			name:     "CronGet",
-			newFunc:  func(o *Orchestrator) *Step { return o.CronGet("_any", "nightly-backup") },
-			expected: "get-cron",
+			name:     "ScheduleGet",
+			newFunc:  func(o *Orchestrator) *Step { return o.ScheduleGet("_any", "nightly-backup") },
+			expected: "get-schedule",
 		},
 		{
-			name:     "CronCreate",
-			newFunc:  func(o *Orchestrator) *Step { return o.CronCreate("_any", osapi.CronCreateOpts{}) },
-			expected: "create-cron",
+			name:     "ScheduleCreate",
+			newFunc:  func(o *Orchestrator) *Step { return o.ScheduleCreate("_any", osapi.ScheduleCreateOpts{}) },
+			expected: "create-schedule",
 		},
 		{
-			name:     "CronUpdate",
-			newFunc:  func(o *Orchestrator) *Step { return o.CronUpdate("_any", "nightly-backup", osapi.CronUpdateOpts{}) },
-			expected: "update-cron",
+			name: "ScheduleUpdate",
+			newFunc: func(o *Orchestrator) *Step {
+				return o.ScheduleUpdate("_any", "nightly-backup", osapi.ScheduleUpdateOpts{})
+			},
+			expected: "update-schedule",
 		},
 		{
-			name:     "CronDelete",
-			newFunc:  func(o *Orchestrator) *Step { return o.CronDelete("_any", "nightly-backup") },
-			expected: "delete-cron",
+			name:     "ScheduleDelete",
+			newFunc:  func(o *Orchestrator) *Step { return o.ScheduleDelete("_any", "nightly-backup") },
+			expected: "delete-schedule",
 		},
 		{
 			name:     "AgentList",
@@ -2798,7 +2800,7 @@ func (s *OpsTestSuite) TestAgentUndrain() {
 	}
 }
 
-func (s *OpsTestSuite) TestCronList() {
+func (s *OpsTestSuite) TestScheduleList() {
 	tests := []struct {
 		name        string
 		handler     http.HandlerFunc
@@ -2806,7 +2808,7 @@ func (s *OpsTestSuite) TestCronList() {
 		errContains string
 	}{
 		{
-			name: "Returns success with cron list",
+			name: "Returns success with schedule list",
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -2831,7 +2833,7 @@ func (s *OpsTestSuite) TestCronList() {
 				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
 			}),
 			expectErr:   true,
-			errContains: "list cron",
+			errContains: "list schedule",
 		},
 	}
 
@@ -2843,7 +2845,7 @@ func (s *OpsTestSuite) TestCronList() {
 			client := osapi.New(server.URL, "test-token")
 
 			orch := New(server.URL, "test-token")
-			step := orch.CronList("_any")
+			step := orch.ScheduleList("_any")
 			fn := step.task.Fn()
 			s.Require().NotNil(fn)
 
@@ -2864,7 +2866,7 @@ func (s *OpsTestSuite) TestCronList() {
 	}
 }
 
-func (s *OpsTestSuite) TestCronGet() {
+func (s *OpsTestSuite) TestScheduleGet() {
 	tests := []struct {
 		name        string
 		handler     http.HandlerFunc
@@ -2872,7 +2874,7 @@ func (s *OpsTestSuite) TestCronGet() {
 		errContains string
 	}{
 		{
-			name: "Returns success with cron entry",
+			name: "Returns success with schedule entry",
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -2897,7 +2899,7 @@ func (s *OpsTestSuite) TestCronGet() {
 				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
 			}),
 			expectErr:   true,
-			errContains: "get cron",
+			errContains: "get schedule",
 		},
 	}
 
@@ -2909,7 +2911,7 @@ func (s *OpsTestSuite) TestCronGet() {
 			client := osapi.New(server.URL, "test-token")
 
 			orch := New(server.URL, "test-token")
-			step := orch.CronGet("_any", "backup")
+			step := orch.ScheduleGet("_any", "backup")
 			fn := step.task.Fn()
 			s.Require().NotNil(fn)
 
@@ -2930,7 +2932,7 @@ func (s *OpsTestSuite) TestCronGet() {
 	}
 }
 
-func (s *OpsTestSuite) TestCronCreate() {
+func (s *OpsTestSuite) TestScheduleCreate() {
 	tests := []struct {
 		name        string
 		handler     http.HandlerFunc
@@ -2938,7 +2940,7 @@ func (s *OpsTestSuite) TestCronCreate() {
 		errContains string
 	}{
 		{
-			name: "Returns success with cron create result",
+			name: "Returns success with schedule create result",
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -2963,7 +2965,7 @@ func (s *OpsTestSuite) TestCronCreate() {
 				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
 			}),
 			expectErr:   true,
-			errContains: "create cron",
+			errContains: "create schedule",
 		},
 	}
 
@@ -2975,7 +2977,7 @@ func (s *OpsTestSuite) TestCronCreate() {
 			client := osapi.New(server.URL, "test-token")
 
 			orch := New(server.URL, "test-token")
-			step := orch.CronCreate("_any", osapi.CronCreateOpts{
+			step := orch.ScheduleCreate("_any", osapi.ScheduleCreateOpts{
 				Name:     "backup",
 				Object:   "backup.sh",
 				Schedule: "0 2 * * *",
@@ -3001,7 +3003,7 @@ func (s *OpsTestSuite) TestCronCreate() {
 	}
 }
 
-func (s *OpsTestSuite) TestCronUpdate() {
+func (s *OpsTestSuite) TestScheduleUpdate() {
 	tests := []struct {
 		name        string
 		handler     http.HandlerFunc
@@ -3009,7 +3011,7 @@ func (s *OpsTestSuite) TestCronUpdate() {
 		errContains string
 	}{
 		{
-			name: "Returns success with cron update result",
+			name: "Returns success with schedule update result",
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -3034,7 +3036,7 @@ func (s *OpsTestSuite) TestCronUpdate() {
 				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
 			}),
 			expectErr:   true,
-			errContains: "update cron",
+			errContains: "update schedule",
 		},
 	}
 
@@ -3046,7 +3048,7 @@ func (s *OpsTestSuite) TestCronUpdate() {
 			client := osapi.New(server.URL, "test-token")
 
 			orch := New(server.URL, "test-token")
-			step := orch.CronUpdate("_any", "backup", osapi.CronUpdateOpts{
+			step := orch.ScheduleUpdate("_any", "backup", osapi.ScheduleUpdateOpts{
 				Schedule: "0 3 * * *",
 			})
 			fn := step.task.Fn()
@@ -3070,7 +3072,7 @@ func (s *OpsTestSuite) TestCronUpdate() {
 	}
 }
 
-func (s *OpsTestSuite) TestCronDelete() {
+func (s *OpsTestSuite) TestScheduleDelete() {
 	tests := []struct {
 		name        string
 		handler     http.HandlerFunc
@@ -3078,7 +3080,7 @@ func (s *OpsTestSuite) TestCronDelete() {
 		errContains string
 	}{
 		{
-			name: "Returns success with cron delete result",
+			name: "Returns success with schedule delete result",
 			handler: http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
@@ -3103,7 +3105,7 @@ func (s *OpsTestSuite) TestCronDelete() {
 				_, _ = w.Write([]byte(`{"error":"unauthorized"}`))
 			}),
 			expectErr:   true,
-			errContains: "delete cron",
+			errContains: "delete schedule",
 		},
 	}
 
@@ -3115,7 +3117,7 @@ func (s *OpsTestSuite) TestCronDelete() {
 			client := osapi.New(server.URL, "test-token")
 
 			orch := New(server.URL, "test-token")
-			step := orch.CronDelete("_any", "backup")
+			step := orch.ScheduleDelete("_any", "backup")
 			fn := step.task.Fn()
 			s.Require().NotNil(fn)
 

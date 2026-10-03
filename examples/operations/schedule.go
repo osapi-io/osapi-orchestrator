@@ -18,20 +18,20 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates the cron management lifecycle:
+// Package main demonstrates the schedule management lifecycle:
 // create an entry, inspect it, then delete it.
 //
 // Cleanup at the start ensures repeatability. The create step
-// depends on a file upload (the script the cron entry will run).
+// depends on a file upload (the script the scheduled entry will run).
 //
 // DAG:
 //
 //	upload-file
-//	    └── create-cron
-//	            └── get-cron
-//	                    └── delete-cron
+//	    └── create-schedule
+//	            └── get-schedule
+//	                    └── delete-schedule
 //
-// Run with: OSAPI_TOKEN="<jwt>" go run cron.go
+// Run with: OSAPI_TOKEN="<jwt>" go run schedule.go
 package main
 
 import (
@@ -60,7 +60,7 @@ func main() {
 
 	// Cleanup any leftover entry from a previous run.
 	oc := orchestrator.New(url, token)
-	oc.CronDelete("_any", "daily-cleanup").ContinueOnError()
+	oc.ScheduleDelete("_any", "daily-cleanup").ContinueOnError()
 	oc.Run(context.Background()) //nolint:errcheck
 
 	// Create → inspect → delete in one plan.
@@ -68,30 +68,30 @@ func main() {
 
 	upload := o.FileUpload("cleanup.sh", "raw", script, orchestrator.WithForce())
 
-	create := o.CronCreate("_any", osapi.CronCreateOpts{
+	create := o.ScheduleCreate("_any", osapi.ScheduleCreateOpts{
 		Name:     "daily-cleanup",
 		Object:   "cleanup.sh",
 		Interval: "daily",
 		User:     "root",
 	}).After(upload)
 
-	get := o.CronGet("_any", "daily-cleanup").After(create)
+	get := o.ScheduleGet("_any", "daily-cleanup").After(create)
 
-	list := o.CronList("_any").After(get)
+	list := o.ScheduleList("_any").After(get)
 
-	update := o.CronUpdate("_any", "daily-cleanup", osapi.CronUpdateOpts{
+	update := o.ScheduleUpdate("_any", "daily-cleanup", osapi.ScheduleUpdateOpts{
 		Schedule: "0 3 * * 0",
 	}).After(list)
 
-	o.CronDelete("_any", "daily-cleanup").After(update)
+	o.ScheduleDelete("_any", "daily-cleanup").After(update)
 
 	report, err := o.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var entry osapi.CronEntryResult
-	if err := report.Decode("get-cron", &entry); err == nil {
+	var entry osapi.ScheduleEntryResult
+	if err := report.Decode("get-schedule", &entry); err == nil {
 		schedule := entry.Interval
 		if schedule == "" {
 			schedule = entry.Schedule
