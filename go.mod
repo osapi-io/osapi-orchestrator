@@ -1,6 +1,6 @@
 module github.com/osapi-io/osapi-orchestrator
 
-go 1.27.1
+go 1.27.3
 
 tool (
 	github.com/boumenot/gocover-cobertura
