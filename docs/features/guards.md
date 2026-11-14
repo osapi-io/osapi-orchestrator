@@ -1,11 +1,12 @@
 # Guards
 
-Guards control whether a step runs based on runtime conditions.
+A guard decides if a step runs. It uses conditions that the plan finds when it
+runs.
 
 ## When
 
-`When` takes a predicate function that receives accumulated results from prior
-steps. The step only runs if the predicate returns true:
+`When` takes a predicate function. The function receives the results of the
+steps that ran before. The step runs only if the predicate returns true:
 
 ```go
 o.CommandExec("_any", "whoami").
@@ -21,8 +22,8 @@ o.CommandExec("_any", "whoami").
 
 ## WhenFact
 
-`WhenFact` is a specialized guard that inspects agent facts from a prior
-`AgentList` step:
+`WhenFact` is a special guard. It examines the agent facts from an `AgentList`
+step that ran before:
 
 ```go
 o.CommandShell(target, "apt-get update -qq").
@@ -35,13 +36,14 @@ o.CommandShell(target, "apt-get update -qq").
 
 ## OnlyIfChanged
 
-Skip unless at least one dependency reported changes. See
+Skip the step if no dependency reported a change. Refer to
 [OnlyIfChanged](only-if-changed.md).
 
 ## OnlyIfAllChanged
 
-Skip unless **all** dependencies reported changes. Uses the `Changed` bool, so a
-broadcast partial failure (Status=Failed, Changed=true) still counts as changed:
+Skip the step if one or more dependencies reported no change. All dependencies
+must report a change. The guard uses the `Changed` bool. Thus a broadcast with a
+partial failure (Status=Failed, Changed=true) counts as changed:
 
 ```go
 step.OnlyIfAllChanged()
@@ -49,7 +51,7 @@ step.OnlyIfAllChanged()
 
 ## OnlyIfFailed
 
-Skip unless at least one dependency has `Status == Failed`:
+Skip the step if no dependency has `Status == Failed`:
 
 ```go
 deploy := o.CommandExec("_all", "deploy.sh").
@@ -64,9 +66,9 @@ o.CommandExec("_any", "cleanup.sh").
 
 ## Broadcast guards
 
-For broadcast operations (`_all`, label selectors), individual hosts can
-independently succeed, fail, or report changes. The four host-level guards
-inspect `HostResults` from dependencies:
+In a broadcast operation (`_all`, label selectors), each host can succeed, fail,
+or report a change on its own. The host-level guards examine the `HostResults`
+of the dependencies:
 
 | Method                  | Semantics                                               |
 | ----------------------- | ------------------------------------------------------- |
@@ -78,19 +80,19 @@ inspect `HostResults` from dependencies:
 
 ### Skipped vs failed
 
-- **Skipped** (`Status == "skipped"`) means the operation is not supported on
-  this host (e.g., `ErrUnsupported` on Darwin). This is NOT an error, it
-  indicates the host cannot perform the operation.
-- **Failed** (`Status == "failed"`) means the operation was attempted but
-  encountered an error. This IS an error.
+- **Skipped** (`Status == "skipped"`) means that the host does not support the
+  operation (for example, `ErrUnsupported` on Darwin). This is NOT an error. It
+  shows that the host cannot do the operation.
+- **Failed** (`Status == "failed"`) means that the agent tried the operation and
+  got an error. This IS an error.
 - `OnlyIfAnyHostFailed` checks `Status`, not `Error`. It does **not** trigger
-  for skipped hosts, only for hosts where the operation actually failed.
+  for a skipped host. It triggers only for a host where the operation failed.
 
-Edge cases:
+Special cases:
 
-- No dependencies: all guards return false
-- Dependency has no `HostResults` (unicast): `OnlyIfAny*` skips the dependency,
-  `OnlyIfAll*` returns false
+- If the step has no dependencies, all guards return false.
+- If a dependency has no `HostResults` (unicast), `OnlyIfAny*` skips that
+  dependency and `OnlyIfAll*` returns false.
 
 ### Example
 
@@ -116,29 +118,29 @@ o.CommandExec("_all", "verify.sh").
 
 ### Task-level guards
 
-| Method             | Inspects        | Trigger condition              |
-| ------------------ | --------------- | ------------------------------ |
-| `OnlyIfChanged`    | `Changed` bool  | Any dependency changed         |
-| `OnlyIfAllChanged` | `Changed` bool  | All dependencies changed       |
-| `OnlyIfFailed`     | `Status` field  | Any dependency failed          |
-| `When`             | Custom function | Predicate returns true         |
-| `WhenFact`         | Agent facts     | Predicate matches target agent |
+| Method             | Inspects        | Trigger condition                      |
+| ------------------ | --------------- | -------------------------------------- |
+| `OnlyIfChanged`    | `Changed` bool  | One or more dependencies changed       |
+| `OnlyIfAllChanged` | `Changed` bool  | All dependencies changed               |
+| `OnlyIfFailed`     | `Status` field  | One or more dependencies failed        |
+| `When`             | Custom function | The predicate returns true             |
+| `WhenFact`         | Agent facts     | The predicate matches the target agent |
 
 ### Host-level guards (broadcast)
 
-| Method                  | Inspects             | Trigger condition    |
-| ----------------------- | -------------------- | -------------------- |
-| `OnlyIfAnyHostFailed`   | `HostResult.Status`  | Any host failed      |
-| `OnlyIfAllHostsFailed`  | `HostResult.Status`  | All hosts failed     |
-| `OnlyIfAnyHostSkipped`  | `HostResult.Status`  | Any host was skipped |
-| `OnlyIfAnyHostChanged`  | `HostResult.Changed` | Any host changed     |
-| `OnlyIfAllHostsChanged` | `HostResult.Changed` | All hosts changed    |
+| Method                  | Inspects             | Trigger condition              |
+| ----------------------- | -------------------- | ------------------------------ |
+| `OnlyIfAnyHostFailed`   | `HostResult.Status`  | One or more hosts failed       |
+| `OnlyIfAllHostsFailed`  | `HostResult.Status`  | All hosts failed               |
+| `OnlyIfAnyHostSkipped`  | `HostResult.Status`  | One or more hosts were skipped |
+| `OnlyIfAnyHostChanged`  | `HostResult.Changed` | One or more hosts changed      |
+| `OnlyIfAllHostsChanged` | `HostResult.Changed` | All hosts changed              |
 
 ## Example
 
-See
+Refer to
 [`examples/features/guards.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/guards.go),
 [`examples/features/when-fact.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/when-fact.go),
 and
 [`examples/features/broadcast-guards.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/broadcast-guards.go)
-for complete working examples.
+for complete examples.

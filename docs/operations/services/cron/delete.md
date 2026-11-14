@@ -1,6 +1,6 @@
 # CronDelete
 
-Deletes a cron entry from the target node.
+Deletes a cron entry from the target host.
 
 ## Usage
 
@@ -22,23 +22,24 @@ var result osapi.CronMutationResult
 err := results.Decode("delete-cron-1", &result)
 ```
 
-| Field     | Type     | Description                                         |
-| --------- | -------- | --------------------------------------------------- |
-| `Name`    | `string` | Name of the deleted cron entry.                     |
-| `Changed` | `bool`   | Whether the entry was removed or already absent.    |
-| `Error`   | `string` | Error message if deletion failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Name`    | `string` | Name of the deleted cron entry.                              |
+| `Changed` | `bool`   | `true` if the operation removed the entry.                   |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
 **Idempotent.** If the entry does not exist, the operation returns
-`Changed: false`. If the entry exists and is removed, returns `Changed: true`.
+`Changed: false`. If the entry exists, the operation removes it and returns
+`Changed: true`.
 
 ## Permissions
 
-Requires `cron:write` permission.
+The token must have the `cron:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/cron.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/cron.go)
-for a complete working example.
+for a complete example.

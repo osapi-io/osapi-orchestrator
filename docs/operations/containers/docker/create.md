@@ -1,7 +1,7 @@
 # DockerCreate
 
-Creates a new container on the target host. Optionally starts it immediately
-when `AutoStart` is set.
+Creates a new container on the target host. If you set `AutoStart`, the
+operation also starts the container immediately.
 
 ## Usage
 
@@ -17,22 +17,22 @@ step := o.DockerCreate("_any", osapi.DockerCreateOpts{
 
 ## Parameters
 
-| Parameter | Type                     | Description                   |
-| --------- | ------------------------ | ----------------------------- |
-| `target`  | `string`                 | Target host or routing value. |
-| `opts`    | `osapi.DockerCreateOpts` | Container creation options.   |
+| Parameter | Type                     | Description                        |
+| --------- | ------------------------ | ---------------------------------- |
+| `target`  | `string`                 | The target host or routing value.  |
+| `opts`    | `osapi.DockerCreateOpts` | The options for the new container. |
 
 ### DockerCreateOpts fields
 
-| Field       | Type       | Description                                         |
-| ----------- | ---------- | --------------------------------------------------- |
-| `Image`     | `string`   | Container image reference (required).               |
-| `Name`      | `string`   | Optional container name.                            |
-| `Command`   | `[]string` | Overrides the image's default command.              |
-| `Env`       | `[]string` | Environment variables in `KEY=VALUE` format.        |
-| `Ports`     | `[]string` | Port mappings in `host_port:container_port` format. |
-| `Volumes`   | `[]string` | Volume mounts in `host_path:container_path` format. |
-| `AutoStart` | `*bool`    | Start the container after creation (default true).  |
+| Field       | Type       | Description                                                        |
+| ----------- | ---------- | ------------------------------------------------------------------ |
+| `Image`     | `string`   | The reference of the container image (required).                   |
+| `Name`      | `string`   | The name of the container (optional).                              |
+| `Command`   | `[]string` | A command to use in place of the default command of the image.     |
+| `Env`       | `[]string` | The environment variables, in `KEY=VALUE` format.                  |
+| `Ports`     | `[]string` | The port mappings, in `host_port:container_port` format.           |
+| `Volumes`   | `[]string` | The volume mounts, in `host_path:container_path` format.           |
+| `AutoStart` | `*bool`    | Start the container after the operation creates it (default true). |
 
 ## Result type
 
@@ -41,25 +41,26 @@ var result osapi.DockerResult
 err := results.Decode("docker-create", &result)
 ```
 
-| Field   | Type     | Description                         |
-| ------- | -------- | ----------------------------------- |
-| `ID`    | `string` | Container ID.                       |
-| `Name`  | `string` | Container name.                     |
-| `Image` | `string` | Image used to create the container. |
-| `State` | `string` | Container state after creation.     |
-| `Error` | `string` | Error if creation failed.           |
+| Field   | Type     | Description                                                  |
+| ------- | -------- | ------------------------------------------------------------ |
+| `ID`    | `string` | The ID of the container.                                     |
+| `Name`  | `string` | The name of the container.                                   |
+| `Image` | `string` | The image that the operation used to create the container.   |
+| `State` | `string` | The state of the container after the operation created it.   |
+| `Error` | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**No.** Creates a new container each time the step runs. Use `DockerList` to
-check for an existing container before creating.
+**Non-idempotent.** The operation creates a new container each time the step
+runs. Before you create a container, use `DockerList` to find a container that
+exists.
 
 ## Permissions
 
-Requires `docker:write` permission.
+The token must have the `docker:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/docker.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/docker.go)
-for a complete working example.
+for a complete example.

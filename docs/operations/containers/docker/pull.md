@@ -1,6 +1,6 @@
 # DockerPull
 
-Pulls a Docker image on the target host.
+Pulls a Docker image to the target host.
 
 ## Usage
 
@@ -12,10 +12,10 @@ step := o.DockerPull("_any", osapi.DockerPullOpts{
 
 ## Parameters
 
-| Parameter | Type                   | Description                   |
-| --------- | ---------------------- | ----------------------------- |
-| `target`  | `string`               | Target host or routing value. |
-| `opts`    | `osapi.DockerPullOpts` | Pull options (Image).         |
+| Parameter | Type                   | Description                       |
+| --------- | ---------------------- | --------------------------------- |
+| `target`  | `string`               | The target host or routing value. |
+| `opts`    | `osapi.DockerPullOpts` | The pull options (Image).         |
 
 ## Result type
 
@@ -24,24 +24,24 @@ var result osapi.DockerPullResult
 err := results.Decode("docker-pull", &result)
 ```
 
-| Field     | Type     | Description             |
-| --------- | -------- | ----------------------- |
-| `ImageID` | `string` | Pulled image digest ID. |
-| `Tag`     | `string` | Image tag pulled.       |
-| `Size`    | `int64`  | Image size in bytes.    |
-| `Error`   | `string` | Error if pull failed.   |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `ImageID` | `string` | The digest ID of the pulled image.                           |
+| `Tag`     | `string` | The tag of the pulled image.                                 |
+| `Size`    | `int64`  | The size of the image, in bytes.                             |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**No.** Always pulls the latest version of the image from the registry, even if
-the image already exists locally.
+**Non-idempotent.** The operation always pulls the latest version of the image
+from the registry. It does this also if the image is already on the host.
 
 ## Permissions
 
-Requires `docker:write` permission.
+The token must have the `docker:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/docker.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/docker.go)
-for a complete working example.
+for a complete example.

@@ -1,6 +1,6 @@
 # NTPUpdate
 
-Updates the NTP configuration on the target node.
+Updates the NTP configuration on the target host.
 
 ## Usage
 
@@ -15,13 +15,13 @@ step := o.NTPUpdate("web-01", osapi.NtpUpdateOpts{
 | Parameter | Type            | Description                                               |
 | --------- | --------------- | --------------------------------------------------------- |
 | `target`  | `string`        | Target host: `_any`, `_all`, hostname, or label selector. |
-| `opts`    | `NtpUpdateOpts` | Update options (see below).                               |
+| `opts`    | `NtpUpdateOpts` | Update options (refer to the table below).                |
 
 ### NtpUpdateOpts
 
-| Field     | Type       | Required | Description                        |
-| --------- | ---------- | -------- | ---------------------------------- |
-| `Servers` | `[]string` | Yes      | NTP server addresses to configure. |
+| Field     | Type       | Required | Description                       |
+| --------- | ---------- | -------- | --------------------------------- |
+| `Servers` | `[]string` | Yes      | The addresses of the NTP servers. |
 
 ## Result type
 
@@ -30,22 +30,22 @@ var result osapi.NtpMutationResult
 err := results.Decode("update-ntp-1", &result)
 ```
 
-| Field     | Type     | Description                                       |
-| --------- | -------- | ------------------------------------------------- |
-| `Changed` | `bool`   | Whether the configuration was actually modified.  |
-| `Error`   | `string` | Error message if update failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Changed` | `bool`   | `true` if the operation changed the configuration.           |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Idempotent.** Compares the current NTP servers against the desired list.
-Returns `Changed: true` only if the configuration was actually modified.
+**Idempotent.** The operation compares the current NTP servers with the servers
+you give. It returns `Changed: true` only if it changed the configuration.
 
 ## Permissions
 
-Requires `ntp:write` permission.
+The token must have the `ntp:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/ntp.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/ntp.go)
-for a complete working example.
+for a complete example.

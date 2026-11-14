@@ -1,6 +1,6 @@
 # RouteCreate
 
-Creates route configuration for a network interface on the target node.
+Creates the route configuration for a network interface on the target host.
 
 ## Usage
 
@@ -18,7 +18,7 @@ step := o.RouteCreate("web-01", "eth0", osapi.RouteConfigOpts{
 | --------------- | ----------------- | --------------------------------------------------------- |
 | `target`        | `string`          | Target host: `_any`, `_all`, hostname, or label selector. |
 | `interfaceName` | `string`          | Network interface to add routes to.                       |
-| `opts`          | `RouteConfigOpts` | Route configuration (see below).                          |
+| `opts`          | `RouteConfigOpts` | Route configuration (refer to the table below).           |
 
 ### RouteConfigOpts
 
@@ -40,23 +40,23 @@ var result osapi.RouteMutationResult
 err := results.Decode("create-route-1", &result)
 ```
 
-| Field       | Type     | Description                                         |
-| ----------- | -------- | --------------------------------------------------- |
-| `Interface` | `string` | Interface name.                                     |
-| `Changed`   | `bool`   | Whether the routes were created.                    |
-| `Error`     | `string` | Error message if creation failed; empty on success. |
+| Field       | Type     | Description                                                  |
+| ----------- | -------- | ------------------------------------------------------------ |
+| `Interface` | `string` | Interface name.                                              |
+| `Changed`   | `bool`   | `true` if the operation created the routes.                  |
+| `Error`     | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Non-idempotent.** Creating routes on an interface that already has routes
-returns an error. Use [RouteUpdate](update.md) to modify existing routes.
+**Non-idempotent.** If the interface already has routes, the operation returns
+an error. Use [RouteUpdate](update.md) to change routes that exist.
 
 ## Permissions
 
-Requires `network:write` permission.
+The token must have the `network:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/route.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/route.go)
-for a complete working example.
+for a complete example.

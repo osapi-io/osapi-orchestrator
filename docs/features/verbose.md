@@ -1,7 +1,7 @@
 # Verbose output
 
-Enable detailed output with `WithVerbose()`. When enabled, the renderer shows
-stdout, stderr, and full response data for every task.
+Use `WithVerbose()` to get more output. With this option, the renderer shows
+stdout, stderr, and all the response data for each task.
 
 ## Usage
 
@@ -11,6 +11,6 @@ o := orchestrator.New(url, token, orchestrator.WithVerbose())
 
 ## Example
 
-See
+Refer to
 [`examples/features/verbose.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/verbose.go)
-for a complete working example.
+for a complete example.

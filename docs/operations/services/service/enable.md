@@ -1,6 +1,6 @@
 # ServiceEnable
 
-Enables a service to start on boot on the target node.
+Enables a service on the target host, so that it starts at boot.
 
 ## Usage
 
@@ -22,22 +22,23 @@ var result osapi.ServiceMutationResult
 err := results.Decode("enable-service-1", &result)
 ```
 
-| Field     | Type     | Description                                       |
-| --------- | -------- | ------------------------------------------------- |
-| `Name`    | `string` | Name of the enabled service.                      |
-| `Changed` | `bool`   | Whether the service was enabled.                  |
-| `Error`   | `string` | Error message if enable failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Name`    | `string` | Name of the enabled service.                                 |
+| `Changed` | `bool`   | `true` if the operation enabled the service.                 |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Idempotent.** If the service is already enabled, returns `Changed: false`.
+**Idempotent.** If the service is already enabled, the operation returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `service:write` permission.
+The token must have the `service:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/service.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/service.go)
-for a complete working example.
+for a complete example.

@@ -1,6 +1,6 @@
 # RouteList
 
-Lists network routes on the target node.
+Lists network routes on the target host.
 
 ## Usage
 
@@ -21,22 +21,23 @@ var result osapi.RouteListResult
 err := results.Decode("list-route-1", &result)
 ```
 
-| Field      | Type          | Description                                      |
-| ---------- | ------------- | ------------------------------------------------ |
-| `Hostname` | `string`      | The node's hostname.                             |
-| `Routes`   | `[]RouteInfo` | List of route entries.                           |
-| `Error`    | `string`      | Error message if query failed; empty on success. |
+| Field      | Type          | Description                                                  |
+| ---------- | ------------- | ------------------------------------------------------------ |
+| `Hostname` | `string`      | The hostname of the agent that ran the operation.            |
+| `Routes`   | `[]RouteInfo` | List of route entries.                                       |
+| `Error`    | `string`      | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `network:read` permission.
+The token must have the `network:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/route.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/route.go)
-for a complete working example.
+for a complete example.

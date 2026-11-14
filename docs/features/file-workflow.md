@@ -1,7 +1,7 @@
 # File workflow
 
-The orchestrator provides a complete upload, deploy, verify lifecycle for
-managing files across agents.
+The orchestrator can upload a file, deploy it to agents, and verify it. Use
+these steps to manage files on many agents.
 
 ## Upload and deploy
 
@@ -18,8 +18,8 @@ o.FileStatusGet("_any", "/etc/myapp/config.yaml").After(deploy)
 
 ## Conditional upload
 
-Use `FileChanged` with `OnlyIfChanged` to skip uploads when content is
-unchanged:
+Use `FileChanged` with `OnlyIfChanged` to skip the upload if the content did not
+change:
 
 ```go
 check := o.FileChanged("config.yaml", data).After(health)
@@ -30,7 +30,7 @@ o.FileDeploy("_any", opts).After(upload).OnlyIfChanged()
 
 ## Force upload
 
-Bypass the SHA-256 pre-check with `WithForce()`:
+Use `WithForce()` to skip the SHA-256 check before the upload:
 
 ```go
 o.FileUpload("config.yaml", "raw", data, orchestrator.WithForce())
@@ -38,8 +38,8 @@ o.FileUpload("config.yaml", "raw", data, orchestrator.WithForce())
 
 ## Example
 
-See
+Refer to
 [`examples/operations/file-deploy.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/file-deploy.go)
 and
 [`examples/operations/file-changed.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/file-changed.go)
-for complete working examples.
+for complete examples.

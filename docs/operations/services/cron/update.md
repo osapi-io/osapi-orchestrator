@@ -1,7 +1,8 @@
 # CronUpdate
 
-Updates an existing cron entry on the target node. Only the fields specified in
-the options are changed; unset fields retain their current values.
+Updates a cron entry on the target host. The operation changes only the fields
+that you set in the options. The fields that you do not set keep their current
+values.
 
 ## Usage
 
@@ -17,7 +18,7 @@ step := o.CronUpdate("web-01", "backup", osapi.CronUpdateOpts{
 | ----------- | ---------------- | --------------------------------------------------------- |
 | `target`    | `string`         | Target host: `_any`, `_all`, hostname, or label selector. |
 | `entryName` | `string`         | Name of the cron entry to update.                         |
-| `opts`      | `CronUpdateOpts` | Update options (see below).                               |
+| `opts`      | `CronUpdateOpts` | Update options (refer to the table below).                |
 
 ### CronUpdateOpts
 
@@ -37,24 +38,24 @@ var result osapi.CronMutationResult
 err := results.Decode("update-cron-1", &result)
 ```
 
-| Field     | Type     | Description                                       |
-| --------- | -------- | ------------------------------------------------- |
-| `Name`    | `string` | Name of the updated cron entry.                   |
-| `Changed` | `bool`   | Whether the entry was actually modified.          |
-| `Error`   | `string` | Error message if update failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Name`    | `string` | Name of the updated cron entry.                              |
+| `Changed` | `bool`   | `true` if the operation changed the entry.                   |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Idempotent.** Compares the current entry state against the desired state.
-Returns `Changed: true` only if the entry was actually modified. If the entry
-already matches, returns `Changed: false`.
+**Idempotent.** The operation compares the current entry with the values you
+give. It returns `Changed: true` only if it changed the entry. If the entry
+already matches, the operation returns `Changed: false`.
 
 ## Permissions
 
-Requires `cron:write` permission.
+The token must have the `cron:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/cron.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/cron.go)
-for a complete working example.
+for a complete example.

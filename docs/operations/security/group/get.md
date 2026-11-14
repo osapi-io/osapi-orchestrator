@@ -1,6 +1,6 @@
 # GroupGet
 
-Retrieves a specific group by name from the target node.
+Gets a specific group by name from the target host.
 
 ## Usage
 
@@ -13,7 +13,7 @@ step := o.GroupGet("web-01", "developers")
 | Parameter   | Type     | Description                                               |
 | ----------- | -------- | --------------------------------------------------------- |
 | `target`    | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `groupName` | `string` | Name of the group to retrieve.                            |
+| `groupName` | `string` | Name of the group to get.                                 |
 
 ## Result type
 
@@ -22,22 +22,23 @@ var result osapi.GroupInfoResult
 err := results.Decode("get-group-1", &result)
 ```
 
-| Field      | Type          | Description                                      |
-| ---------- | ------------- | ------------------------------------------------ |
-| `Hostname` | `string`      | The node's hostname.                             |
-| `Groups`   | `[]GroupInfo` | Group details (single entry).                    |
-| `Error`    | `string`      | Error message if query failed; empty on success. |
+| Field      | Type          | Description                                                  |
+| ---------- | ------------- | ------------------------------------------------------------ |
+| `Hostname` | `string`      | The hostname of the agent that ran the operation.            |
+| `Groups`   | `[]GroupInfo` | Group details (one entry).                                   |
+| `Error`    | `string`      | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `user:read` permission.
+The token must have the `user:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/user.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/user.go)
-for a complete working example.
+for a complete example.

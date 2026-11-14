@@ -1,7 +1,8 @@
 # Certificate management
 
-Manage CA certificates in the system trust store on target nodes -- list,
-create, update, and delete certificates backed by the file provider.
+Manage CA certificates in the system trust store on target hosts. You can list,
+create, update, and delete certificates. The file provider manages the
+certificate files.
 
 ## Operations
 
@@ -21,6 +22,6 @@ create, update, and delete certificates backed by the file provider.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/certificate.go`](../../../../examples/operations/certificate.go)
-for a complete workflow example covering all operations.
+for a complete workflow example that uses all the operations.

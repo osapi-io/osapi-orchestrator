@@ -1,6 +1,6 @@
 # ServiceStart
 
-Starts a service on the target node.
+Starts a service on the target host.
 
 ## Usage
 
@@ -22,22 +22,23 @@ var result osapi.ServiceMutationResult
 err := results.Decode("start-service-1", &result)
 ```
 
-| Field     | Type     | Description                                      |
-| --------- | -------- | ------------------------------------------------ |
-| `Name`    | `string` | Name of the started service.                     |
-| `Changed` | `bool`   | Whether the service was started.                 |
-| `Error`   | `string` | Error message if start failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Name`    | `string` | Name of the started service.                                 |
+| `Changed` | `bool`   | `true` if the operation started the service.                 |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Idempotent.** If the service is already running, returns `Changed: false`.
+**Idempotent.** If the service already runs, the operation returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `service:write` permission.
+The token must have the `service:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/service.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/service.go)
-for a complete working example.
+for a complete example.

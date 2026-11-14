@@ -1,7 +1,7 @@
 # Broadcast
 
-Target `_all` or a label selector to send a job to every matching agent. The
-renderer automatically shows per-host results.
+Target `_all` or a label selector to send a job to each agent that matches. The
+renderer shows the result of each host.
 
 ## Usage
 
@@ -9,7 +9,7 @@ renderer automatically shows per-host results.
 o.NodeHostnameGet("_all")
 ```
 
-For label-based targeting:
+To target by label:
 
 ```go
 o.CommandExec("group:web", "uptime")
@@ -17,30 +17,30 @@ o.CommandExec("group:web", "uptime")
 
 ## Per-host results
 
-Broadcast operations return a `HostResult` for each responding agent:
+A broadcast operation returns a `HostResult` for each agent that responds:
 
-| Field      | Type             | Description                        |
-| ---------- | ---------------- | ---------------------------------- |
-| `Hostname` | `string`         | Agent hostname                     |
-| `Status`   | `string`         | Host status (see below)            |
-| `Changed`  | `bool`           | Whether this host reported changes |
-| `Error`    | `string`         | Error message (empty on success)   |
-| `Data`     | `map[string]any` | Host-specific response data        |
+| Field      | Type             | Description                                                  |
+| ---------- | ---------------- | ------------------------------------------------------------ |
+| `Hostname` | `string`         | The hostname of the agent                                    |
+| `Status`   | `string`         | The host status (refer to the table below)                   |
+| `Changed`  | `bool`           | `true` if this host reported a change                        |
+| `Error`    | `string`         | The error message if the operation failed. Empty on success. |
+| `Data`     | `map[string]any` | The response data from this host                             |
 
 ### Host status values
 
-| Value     | Meaning                              |
-| --------- | ------------------------------------ |
-| `ok`      | Operation completed successfully     |
-| `skipped` | Operation not supported on this host |
-| `failed`  | Operation failed with an error       |
+| Value     | Meaning                                 |
+| --------- | --------------------------------------- |
+| `ok`      | The operation completed with no error   |
+| `skipped` | The host does not support the operation |
+| `failed`  | The operation failed with an error      |
 
-The `Status` field distinguishes between hosts that failed (encountered an
-error) and hosts that were skipped (operation unsupported). Guards like
-`OnlyIfAnyHostFailed` inspect `Status`, not `Error`, so skipped hosts do not
-trigger failure guards.
+The `Status` field shows the difference between a host that failed and a host
+that the agent skipped. A failed host had an error. A skipped host does not
+support the operation. Guards such as `OnlyIfAnyHostFailed` examine `Status`,
+not `Error`. Thus a skipped host does not trigger a failure guard.
 
-Access per-host results in a `When` guard or after execution:
+Read the result of each host in a `When` guard or after the plan runs:
 
 ```go
 step.When(func(r orchestrator.Results) bool {
@@ -55,16 +55,16 @@ step.When(func(r orchestrator.Results) bool {
 
 ## Partial failure
 
-When some hosts succeed and others fail in a broadcast operation, the task
-result has:
+If some hosts succeed and other hosts fail in a broadcast operation, the task
+result has these values:
 
-- `Status = Failed`. The overall task is marked as failed
-- `Changed = true`. At least one host reported a change
-- `HostResults`. Contains per-host details with individual `Error` and `Changed`
-  fields
+- `Status = Failed`. The orchestrator marks the full task as failed.
+- `Changed = true`. One or more hosts reported a change.
+- `HostResults`. This has the details of each host, with its own `Error` and
+  `Changed` fields.
 
-This allows downstream guards to distinguish between "all hosts failed" and
-"some hosts failed":
+Thus a guard on a later step can tell "all hosts failed" from "some hosts
+failed":
 
 ```go
 // Task-level: triggers on any failure (Status == Failed)
@@ -77,13 +77,14 @@ step.OnlyIfAllHostsFailed()
 
 ## Broadcast guards
 
-Four host-level guard methods inspect `HostResults` from broadcast dependencies.
-See [Guards: Broadcast Guards](guards.md#broadcast-guards) for details.
+Four host-level guard methods examine the `HostResults` of broadcast
+dependencies. Refer to [Guards: Broadcast Guards](guards.md#broadcast-guards)
+for the details.
 
 ## Example
 
-See
+Refer to
 [`examples/features/broadcast.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/broadcast.go)
 and
 [`examples/features/broadcast-guards.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/broadcast-guards.go)
-for complete working examples.
+for complete examples.

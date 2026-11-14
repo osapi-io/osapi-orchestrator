@@ -1,7 +1,7 @@
 # Route management
 
-Manage network route configuration via Netplan on target nodes -- list, get,
-create, update, and delete routes.
+Manage the network route configuration on target hosts through Netplan. You can
+list, get, create, update, and delete routes.
 
 ## Operations
 
@@ -22,5 +22,6 @@ create, update, and delete routes.
 
 ## Example
 
-See [`examples/operations/route.go`](../../../../examples/operations/route.go)
-for a complete workflow example covering all operations.
+Refer to
+[`examples/operations/route.go`](../../../../examples/operations/route.go) for a
+complete workflow example that uses all the operations.

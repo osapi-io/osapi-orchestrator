@@ -1,6 +1,6 @@
 # NodeLoadGet
 
-Retrieves system load averages for the target node over 1-minute, 5-minute, and
+Gets the system load averages for the target host over 1-minute, 5-minute, and
 15-minute intervals.
 
 ## Usage
@@ -30,14 +30,15 @@ err := results.Decode("node.load.get-1", &result)
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `node:read` permission.
+The token must have the `node:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/node-info.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/node-info.go)
-for a complete working example.
+for a complete example.

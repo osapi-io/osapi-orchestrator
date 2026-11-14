@@ -1,7 +1,7 @@
 # Log management
 
-Query systemd journal logs on target nodes -- query all entries, list log
-sources, and query by unit name.
+Query the systemd journal logs on target hosts. You can query all entries, list
+the log sources, and query by unit name.
 
 ## Operations
 
@@ -19,5 +19,5 @@ sources, and query by unit name.
 
 ## Example
 
-See [`examples/operations/log.go`](../../../../examples/operations/log.go) for a
-complete workflow example covering all operations.
+Refer to [`examples/operations/log.go`](../../../../examples/operations/log.go)
+for a complete workflow example that uses all the operations.

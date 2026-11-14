@@ -1,6 +1,6 @@
 # SysctlList
 
-Lists all managed sysctl parameters on the target node.
+Lists all the managed sysctl parameters on the target host.
 
 ## Usage
 
@@ -21,23 +21,24 @@ var result osapi.SysctlEntryResult
 err := results.Decode("list-sysctl-1", &result)
 ```
 
-| Field      | Type     | Description                                      |
-| ---------- | -------- | ------------------------------------------------ |
-| `Hostname` | `string` | The node's hostname.                             |
-| `Key`      | `string` | Sysctl parameter key.                            |
-| `Value`    | `string` | Current value of the parameter.                  |
-| `Error`    | `string` | Error message if query failed; empty on success. |
+| Field      | Type     | Description                                                  |
+| ---------- | -------- | ------------------------------------------------------------ |
+| `Hostname` | `string` | The hostname of the agent that ran the operation.            |
+| `Key`      | `string` | The key of the sysctl parameter.                             |
+| `Value`    | `string` | The current value of the parameter.                          |
+| `Error`    | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `sysctl:read` permission.
+The token must have the `sysctl:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/sysctl.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/sysctl.go)
-for a complete working example.
+for a complete example.

@@ -1,7 +1,7 @@
 # Group management
 
-Manage local groups on target nodes -- list, get, create, update, and delete
-groups.
+Manage local groups on target hosts. You can list, get, create, update, and
+delete groups.
 
 ## Operations
 
@@ -22,5 +22,6 @@ groups.
 
 ## Example
 
-See [`examples/operations/group.go`](../../../../examples/operations/group.go)
-for a complete workflow example covering group operations.
+Refer to
+[`examples/operations/group.go`](../../../../examples/operations/group.go) for a
+complete workflow example that uses the group operations.

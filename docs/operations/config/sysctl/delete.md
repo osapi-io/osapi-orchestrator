@@ -1,6 +1,6 @@
 # SysctlDelete
 
-Deletes a sysctl parameter from the target node.
+Deletes a sysctl parameter from the target host.
 
 ## Usage
 
@@ -13,7 +13,7 @@ step := o.SysctlDelete("web-01", "net.ipv4.ip_forward")
 | Parameter | Type     | Description                                               |
 | --------- | -------- | --------------------------------------------------------- |
 | `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `key`     | `string` | Sysctl parameter key to delete.                           |
+| `key`     | `string` | The key of the sysctl parameter to delete.                |
 
 ## Result type
 
@@ -22,24 +22,23 @@ var result osapi.SysctlMutationResult
 err := results.Decode("delete-sysctl-1", &result)
 ```
 
-| Field     | Type     | Description                                          |
-| --------- | -------- | ---------------------------------------------------- |
-| `Key`     | `string` | Sysctl parameter key.                                |
-| `Changed` | `bool`   | Whether the parameter was removed or already absent. |
-| `Error`   | `string` | Error message if deletion failed; empty on success.  |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Key`     | `string` | The key of the sysctl parameter.                             |
+| `Changed` | `bool`   | `true` if the operation removed the parameter.               |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Idempotent.** If the parameter does not exist, the operation returns
-`Changed: false`. If the parameter exists and is removed, returns
-`Changed: true`.
+**Idempotent.** If no parameter exists, the operation returns `Changed: false`.
+If the parameter exists, the operation removes it and returns `Changed: true`.
 
 ## Permissions
 
-Requires `sysctl:write` permission.
+The token must have the `sysctl:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/sysctl.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/sysctl.go)
-for a complete working example.
+for a complete example.

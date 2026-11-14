@@ -1,7 +1,7 @@
 # Timezone management
 
-Manage the system timezone on target nodes -- get the current timezone and
-update it.
+Manage the system timezone on target hosts. Get the current timezone and update
+it.
 
 ## Operations
 
@@ -19,6 +19,6 @@ update it.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/timezone.go`](../../../../examples/operations/timezone.go)
 for a complete workflow example.

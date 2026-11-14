@@ -1,9 +1,9 @@
 # AgentList
 
-Lists all active agents registered with the OSAPI server. Returns agent metadata
-including hostname, status, architecture, OS info, memory, load averages,
-labels, and network interfaces. This is a convenience wrapper that uses
-`TaskFunc` to call the agent list API directly.
+Lists all the active agents that are registered with the OSAPI server. The
+result has the metadata of each agent: hostname, status, architecture, OS
+information, memory, load averages, labels, and network interfaces. The
+operation is a wrapper that uses `TaskFunc` to call the agent list API directly.
 
 ## Usage
 
@@ -22,45 +22,46 @@ var result osapi.AgentList
 err := results.Decode("list-agents", &result)
 ```
 
-| Field    | Type            | Description                      |
-| -------- | --------------- | -------------------------------- |
-| `Agents` | `[]AgentResult` | Slice of active agent summaries. |
-| `Total`  | `int`           | Total number of agents.          |
+| Field    | Type            | Description                     |
+| -------- | --------------- | ------------------------------- |
+| `Agents` | `[]AgentResult` | A summary of each active agent. |
+| `Total`  | `int`           | The total number of agents.     |
 
 ### AgentResult
 
-| Field           | Type                | Description                         |
-| --------------- | ------------------- | ----------------------------------- |
-| `Hostname`      | `string`            | Agent hostname.                     |
-| `Status`        | `string`            | Agent status (e.g., `Ready`).       |
-| `Architecture`  | `string`            | CPU architecture (e.g., `amd64`).   |
-| `KernelVersion` | `string`            | Kernel version string.              |
-| `CPUCount`      | `int`               | Number of CPUs.                     |
-| `FQDN`          | `string`            | Fully qualified domain name.        |
-| `ServiceMgr`    | `string`            | Service manager (e.g., `systemd`).  |
-| `PackageMgr`    | `string`            | Package manager (e.g., `apt`).      |
-| `Labels`        | `map[string]string` | Agent labels for targeting.         |
-| `OSInfo`        | `*AgentOSInfo`      | OS distribution and version.        |
-| `Memory`        | `*AgentMemory`      | Memory usage stats.                 |
-| `LoadAverage`   | `*AgentLoadAverage` | System load averages.               |
-| `Interfaces`    | `[]InterfaceResult` | Network interfaces.                 |
-| `Conditions`    | `[]ConditionResult` | Node conditions.                    |
-| `Uptime`        | `string`            | System uptime.                      |
-| `StartedAt`     | `time.Time`         | Timestamp when agent started.       |
-| `RegisteredAt`  | `time.Time`         | Timestamp when agent registered.    |
-| `State`         | `string`            | Agent state (e.g., `active`).       |
-| `Facts`         | `map[string]any`    | Agent facts for template rendering. |
+| Field           | Type                | Description                                     |
+| --------------- | ------------------- | ----------------------------------------------- |
+| `Hostname`      | `string`            | The hostname of the agent.                      |
+| `Status`        | `string`            | The status of the agent (for example, `Ready`). |
+| `Architecture`  | `string`            | The CPU architecture (for example, `amd64`).    |
+| `KernelVersion` | `string`            | The kernel version.                             |
+| `CPUCount`      | `int`               | The number of CPUs.                             |
+| `FQDN`          | `string`            | The fully qualified domain name.                |
+| `ServiceMgr`    | `string`            | The service manager (for example, `systemd`).   |
+| `PackageMgr`    | `string`            | The package manager (for example, `apt`).       |
+| `Labels`        | `map[string]string` | The labels that select the agent as a target.   |
+| `OSInfo`        | `*AgentOSInfo`      | The OS distribution and its version.            |
+| `Memory`        | `*AgentMemory`      | The memory use statistics.                      |
+| `LoadAverage`   | `*AgentLoadAverage` | The system load averages.                       |
+| `Interfaces`    | `[]InterfaceResult` | The network interfaces.                         |
+| `Conditions`    | `[]ConditionResult` | The conditions of the host.                     |
+| `Uptime`        | `string`            | The system uptime.                              |
+| `StartedAt`     | `time.Time`         | The time when the agent started.                |
+| `RegisteredAt`  | `time.Time`         | The time when the agent registered.             |
+| `State`         | `string`            | The state of the agent (for example, `active`). |
+| `Facts`         | `map[string]any`    | The facts of the agent, for templates to use.   |
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `agent:read` permission.
+The token must have the `agent:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/agent-drain.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/agent-drain.go)
-for a complete working example.
+for a complete example.

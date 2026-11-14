@@ -1,6 +1,6 @@
 # ServiceGet
 
-Retrieves a specific service by name from the target node.
+Gets a specific service by name from the target host.
 
 ## Usage
 
@@ -13,7 +13,7 @@ step := o.ServiceGet("web-01", "nginx")
 | Parameter     | Type     | Description                                               |
 | ------------- | -------- | --------------------------------------------------------- |
 | `target`      | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `serviceName` | `string` | Name of the service to retrieve.                          |
+| `serviceName` | `string` | Name of the service to get.                               |
 
 ## Result type
 
@@ -22,22 +22,23 @@ var result osapi.ServiceGetResult
 err := results.Decode("get-service-1", &result)
 ```
 
-| Field      | Type           | Description                                      |
-| ---------- | -------------- | ------------------------------------------------ |
-| `Hostname` | `string`       | The node's hostname.                             |
-| `Service`  | `*ServiceInfo` | Service details (see ServiceList).               |
-| `Error`    | `string`       | Error message if query failed; empty on success. |
+| Field      | Type           | Description                                                  |
+| ---------- | -------------- | ------------------------------------------------------------ |
+| `Hostname` | `string`       | The hostname of the agent that ran the operation.            |
+| `Service`  | `*ServiceInfo` | Service details (refer to ServiceList).                      |
+| `Error`    | `string`       | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `service:read` permission.
+The token must have the `service:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/service.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/service.go)
-for a complete working example.
+for a complete example.

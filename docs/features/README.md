@@ -1,18 +1,17 @@
 # DSL reference
 
-The orchestrator provides a declarative DSL for composing OSAPI operations into
-DAG-based plans with typed results, guards, retry, and discovery.
+The orchestrator has a declarative DSL. You use it to put OSAPI operations into
+DAG plans with typed results, guards, retry, and discovery.
 
 ## How the DAG works
 
-Every operation method (`NodeHostnameGet`, `CommandExec`, etc.) returns a
-`*Step`. Steps are connected into a directed acyclic graph (DAG) using
-`After()`. The orchestrator resolves the DAG into levels and executes each
-level:
+Each operation method (`NodeHostnameGet`, `CommandExec`, and the others) returns
+a `*Step`. `After()` connects steps into a directed acyclic graph (DAG). The
+orchestrator divides the DAG into levels and runs each level:
 
-- Steps with no dependencies run first.
-- Steps at the same level (sharing the same dependencies) run in parallel.
-- Steps with `After()` dependencies wait until those dependencies complete.
+- Steps that have no dependencies run first.
+- Steps at the same level (with the same dependencies) run in parallel.
+- A step with `After()` dependencies waits until those dependencies complete.
 
 ```go
 health := o.HealthCheck()
@@ -28,30 +27,30 @@ o.CommandExec("_any", "whoami").After(hostname)
 
 ## Step chaining
 
-Chain methods on any `*Step` to declare ordering, conditions, and error
+Chain methods on a `*Step` to declare the order, the conditions, and the error
 handling:
 
-| Method                  | What it does                                       | Guide                               |
-| ----------------------- | -------------------------------------------------- | ----------------------------------- |
-| `After`                 | Run after the given steps complete                 | [Basic DAG](basic.md)               |
-| `Retry`                 | Retry on failure with optional exponential backoff | [Retry](retry.md)                   |
-| `OnlyIfChanged`         | Skip unless a dependency reported changes          | [OnlyIfChanged](only-if-changed.md) |
-| `OnlyIfFailed`          | Skip unless at least one dependency failed         | [Error Recovery](error-recovery.md) |
-| `OnlyIfAllChanged`      | Skip unless all dependencies reported changes      |                                     |
-| `OnlyIfAnyHostFailed`   | Skip unless any host in a dependency failed        | [Guards](guards.md)                 |
-| `OnlyIfAllHostsFailed`  | Skip unless all hosts in dependencies failed       |                                     |
-| `OnlyIfAnyHostSkipped`  | Skip unless any host in a dependency was skipped   | [Guards](guards.md)                 |
-| `OnlyIfAnyHostChanged`  | Skip unless any host in a dependency changed       |                                     |
-| `OnlyIfAllHostsChanged` | Skip unless all hosts in dependencies changed      | [Guards](guards.md)                 |
-| `When`                  | Guard -- only run if predicate returns true        | [Guards](guards.md)                 |
-| `WhenFact`              | Guard -- only run if agent fact matches            | [Guards](guards.md)                 |
-| `ContinueOnError`       | Keep running independent tasks on failure          | [Error Recovery](error-recovery.md) |
-| `OnError`               | Set error strategy (`StopAll` or `Continue`)       | [Error Recovery](error-recovery.md) |
-| `Named`                 | Set a custom step name for result decoding         | [Result Decode](result-decode.md)   |
+| Method                  | What it does                                                 | Guide                               |
+| ----------------------- | ------------------------------------------------------------ | ----------------------------------- |
+| `After`                 | Run after the given steps complete                           | [Basic DAG](basic.md)               |
+| `Retry`                 | Retry after a failure, with optional exponential backoff     | [Retry](retry.md)                   |
+| `OnlyIfChanged`         | Skip if no dependency reported a change                      | [OnlyIfChanged](only-if-changed.md) |
+| `OnlyIfFailed`          | Skip if no dependency failed                                 | [Error Recovery](error-recovery.md) |
+| `OnlyIfAllChanged`      | Skip if one or more dependencies reported no change          |                                     |
+| `OnlyIfAnyHostFailed`   | Skip if no host in a dependency failed                       | [Guards](guards.md)                 |
+| `OnlyIfAllHostsFailed`  | Skip if one or more hosts in the dependencies did not fail   |                                     |
+| `OnlyIfAnyHostSkipped`  | Skip if no dependency skipped a host                         | [Guards](guards.md)                 |
+| `OnlyIfAnyHostChanged`  | Skip if no host in a dependency changed                      |                                     |
+| `OnlyIfAllHostsChanged` | Skip if one or more hosts in the dependencies did not change | [Guards](guards.md)                 |
+| `When`                  | Guard. Run only if the predicate returns true                | [Guards](guards.md)                 |
+| `WhenFact`              | Guard. Run only if the agent fact matches                    | [Guards](guards.md)                 |
+| `ContinueOnError`       | Continue to run independent tasks after a failure            | [Error Recovery](error-recovery.md) |
+| `OnError`               | Set the error strategy (`StopAll` or `Continue`)             | [Error Recovery](error-recovery.md) |
+| `Named`                 | Set a custom step name for result decoding                   | [Result Decode](result-decode.md)   |
 
 ## Typed results
 
-Decode step results into typed structs:
+Decode the step results into typed structs:
 
 ```go
 var h osapi.HostnameResult
@@ -78,43 +77,44 @@ fmt.Println(h.Hostname)
 
 ## Predicates
 
-Composable filters passed to `Discover` and `GroupByFact`:
+A predicate is a filter. You give predicates to `Discover` and `GroupByFact`,
+and you can use more than one together:
 
-| Predicate      | What it matches                          |
-| -------------- | ---------------------------------------- |
-| `OS`           | Agent OS distribution (case-insensitive) |
-| `Arch`         | Agent architecture (case-insensitive)    |
-| `MinMemory`    | Minimum total memory                     |
-| `MinCPU`       | Minimum CPU count                        |
-| `HasLabel`     | Label key-value pair                     |
-| `FactEquals`   | Arbitrary fact key-value equality        |
-| `HasCondition` | Agent has active condition of given type |
-| `NoCondition`  | Agent does NOT have active condition     |
-| `Healthy`      | Agent has no active conditions           |
+| Predicate      | What it matches                                                |
+| -------------- | -------------------------------------------------------------- |
+| `OS`           | The OS distribution of the agent (not case-sensitive)          |
+| `Arch`         | The architecture of the agent (not case-sensitive)             |
+| `MinMemory`    | A minimum total memory                                         |
+| `MinCPU`       | A minimum CPU count                                            |
+| `HasLabel`     | A label key-value pair                                         |
+| `FactEquals`   | A fact key and value that are equal to the given key and value |
+| `HasCondition` | An agent that has an active condition of the given type        |
+| `NoCondition`  | An agent that does NOT have the active condition               |
+| `Healthy`      | An agent that has no active conditions                         |
 
 ## Error strategies
 
-| Strategy            | Behavior                                        |
-| ------------------- | ----------------------------------------------- |
-| `StopAll` (default) | Fail fast, cancel everything                    |
-| `Continue`          | Skip dependents, keep running independent tasks |
+| Strategy            | Behavior                                                      |
+| ------------------- | ------------------------------------------------------------- |
+| `StopAll` (default) | Stop at the first failure and cancel all other steps          |
+| `Continue`          | Skip the dependents and continue to run the independent tasks |
 
-Per-step retry is available via `.Retry(n)`.
+`.Retry(n)` sets a retry for each step.
 
 ## Feature guides
 
-| Guide                               | What it covers                                |
-| ----------------------------------- | --------------------------------------------- |
-| [Basic DAG](basic.md)               | Creating a simple DAG plan                    |
-| [Parallel Execution](parallel.md)   | Concurrent tasks at the same DAG level        |
-| [Guards](guards.md)                 | When predicates, OnlyIfChanged, WhenFact      |
-| [OnlyIfChanged](only-if-changed.md) | Skip unless dependency reported changes       |
-| [Retry](retry.md)                   | Retry on failure with configurable attempts   |
-| [Error Recovery](error-recovery.md) | Continue strategy with OnlyIfFailed cleanup   |
-| [Broadcast](broadcast.md)           | Per-host results from `_all`/label targets    |
-| [TaskFunc](task-func.md)            | Custom logic in a plan                        |
-| [Result Decode](result-decode.md)   | Post-execution result decoding and inspection |
-| [File Workflow](file-workflow.md)   | Upload, deploy, verify file lifecycle         |
-| [Discovery](discovery.md)           | Agent discovery, GroupByFact, predicates      |
-| [Verbose Output](verbose.md)        | WithVerbose() debug output                    |
-| [DNS Update](dns-update.md)         | Read-then-write pattern                       |
+| Guide                               | What it covers                                                |
+| ----------------------------------- | ------------------------------------------------------------- |
+| [Basic DAG](basic.md)               | How to make a simple DAG plan                                 |
+| [Parallel Execution](parallel.md)   | Tasks that run at the same time at one DAG level              |
+| [Guards](guards.md)                 | When predicates, OnlyIfChanged, WhenFact                      |
+| [OnlyIfChanged](only-if-changed.md) | Skip if no dependency reported a change                       |
+| [Retry](retry.md)                   | Retry after a failure, with a number of attempts that you set |
+| [Error Recovery](error-recovery.md) | The Continue strategy with OnlyIfFailed cleanup               |
+| [Broadcast](broadcast.md)           | Results for each host from `_all` and label targets           |
+| [TaskFunc](task-func.md)            | Custom logic in a plan                                        |
+| [Result Decode](result-decode.md)   | How to decode and examine results after the plan runs         |
+| [File Workflow](file-workflow.md)   | Upload, deploy, and verify a file                             |
+| [Discovery](discovery.md)           | Agent discovery, GroupByFact, predicates                      |
+| [Verbose Output](verbose.md)        | WithVerbose() debug output                                    |
+| [DNS Update](dns-update.md)         | The pattern that reads, then writes                           |

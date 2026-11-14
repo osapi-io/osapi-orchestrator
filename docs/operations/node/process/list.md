@@ -1,6 +1,6 @@
 # ProcessList
 
-Lists running processes on the target node.
+Lists the processes on the target host.
 
 ## Usage
 
@@ -21,36 +21,37 @@ var result osapi.ProcessInfoResult
 err := results.Decode("list-process-1", &result)
 ```
 
-| Field       | Type            | Description                                      |
-| ----------- | --------------- | ------------------------------------------------ |
-| `Hostname`  | `string`        | The node's hostname.                             |
-| `Processes` | `[]ProcessInfo` | List of running processes.                       |
-| `Error`     | `string`        | Error message if query failed; empty on success. |
+| Field       | Type            | Description                                                  |
+| ----------- | --------------- | ------------------------------------------------------------ |
+| `Hostname`  | `string`        | The hostname of the agent that ran the operation.            |
+| `Processes` | `[]ProcessInfo` | List of processes.                                           |
+| `Error`     | `string`        | The error message if the operation failed. Empty on success. |
 
 ### ProcessInfo
 
-| Field        | Type      | Description                |
-| ------------ | --------- | -------------------------- |
-| `PID`        | `int`     | Process ID.                |
-| `Name`       | `string`  | Process name.              |
-| `User`       | `string`  | User running the process.  |
-| `State`      | `string`  | Process state.             |
-| `CPUPercent` | `float64` | CPU usage percentage.      |
-| `MemPercent` | `float32` | Memory usage percentage.   |
-| `MemRSS`     | `int64`   | Resident set size (bytes). |
-| `Command`    | `string`  | Full command line.         |
-| `StartTime`  | `string`  | Process start time.        |
+| Field        | Type      | Description                 |
+| ------------ | --------- | --------------------------- |
+| `PID`        | `int`     | Process ID.                 |
+| `Name`       | `string`  | Process name.               |
+| `User`       | `string`  | User that runs the process. |
+| `State`      | `string`  | Process state.              |
+| `CPUPercent` | `float64` | CPU usage percentage.       |
+| `MemPercent` | `float32` | Memory usage percentage.    |
+| `MemRSS`     | `int64`   | Resident set size (bytes).  |
+| `Command`    | `string`  | Full command line.          |
+| `StartTime`  | `string`  | Process start time.         |
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `process:read` permission.
+The token must have the `process:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/process.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/process.go)
-for a complete working example.
+for a complete example.

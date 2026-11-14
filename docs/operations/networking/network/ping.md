@@ -1,7 +1,7 @@
 # NetworkPingDo
 
-Pings a host from the target node and returns packet loss statistics. Useful for
-verifying network connectivity between nodes.
+Pings an address from the target host and returns packet loss statistics. Use it
+to make sure that hosts can reach each other on the network.
 
 ## Usage
 
@@ -23,23 +23,24 @@ var result osapi.PingResult
 err := results.Decode("network.ping.do-1", &result)
 ```
 
-| Field             | Type      | Description                                     |
-| ----------------- | --------- | ----------------------------------------------- |
-| `PacketsSent`     | `int`     | Number of ICMP packets sent.                    |
-| `PacketsReceived` | `int`     | Number of ICMP packets received.                |
-| `PacketLoss`      | `float64` | Percentage of packets lost (0-100).             |
-| `Error`           | `string`  | Error message if ping failed; empty on success. |
+| Field             | Type      | Description                                                  |
+| ----------------- | --------- | ------------------------------------------------------------ |
+| `PacketsSent`     | `int`     | Number of ICMP packets sent.                                 |
+| `PacketsReceived` | `int`     | Number of ICMP packets received.                             |
+| `PacketLoss`      | `float64` | Percentage of packets lost (0-100).                          |
+| `Error`           | `string`  | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `network:read` permission.
+The token must have the `network:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/ping.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/ping.go)
-for a complete working example.
+for a complete example.

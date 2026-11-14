@@ -1,6 +1,6 @@
 # NTPGet
 
-Retrieves the NTP status and configuration from the target node.
+Gets the NTP status and configuration from the target host.
 
 ## Usage
 
@@ -21,26 +21,27 @@ var result osapi.NtpStatusResult
 err := results.Decode("get-ntp-1", &result)
 ```
 
-| Field           | Type       | Description                                      |
-| --------------- | ---------- | ------------------------------------------------ |
-| `Hostname`      | `string`   | The node's hostname.                             |
-| `Synchronized`  | `bool`     | Whether NTP is synchronized.                     |
-| `Stratum`       | `int`      | NTP stratum level.                               |
-| `Offset`        | `string`   | Clock offset from the NTP source.                |
-| `CurrentSource` | `string`   | The currently selected NTP source.               |
-| `Servers`       | `[]string` | Configured NTP server addresses.                 |
-| `Error`         | `string`   | Error message if query failed; empty on success. |
+| Field           | Type       | Description                                                  |
+| --------------- | ---------- | ------------------------------------------------------------ |
+| `Hostname`      | `string`   | The hostname of the agent that ran the operation.            |
+| `Synchronized`  | `bool`     | `true` if NTP is synchronized.                               |
+| `Stratum`       | `int`      | The NTP stratum level.                                       |
+| `Offset`        | `string`   | The clock offset from the NTP source.                        |
+| `CurrentSource` | `string`   | The NTP source that is selected now.                         |
+| `Servers`       | `[]string` | The addresses of the configured NTP servers.                 |
+| `Error`         | `string`   | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `ntp:read` permission.
+The token must have the `ntp:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/ntp.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/ntp.go)
-for a complete working example.
+for a complete example.

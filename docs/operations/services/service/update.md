@@ -1,6 +1,6 @@
 # ServiceUpdate
 
-Updates a service unit file on the target node.
+Updates a service unit file on the target host.
 
 ## Usage
 
@@ -16,7 +16,7 @@ step := o.ServiceUpdate("web-01", "myapp", osapi.ServiceUpdateOpts{
 | ------------- | ------------------- | --------------------------------------------------------- |
 | `target`      | `string`            | Target host: `_any`, `_all`, hostname, or label selector. |
 | `serviceName` | `string`            | Name of the service to update.                            |
-| `opts`        | `ServiceUpdateOpts` | Update options (see below).                               |
+| `opts`        | `ServiceUpdateOpts` | Update options (refer to the table below).                |
 
 ### ServiceUpdateOpts
 
@@ -31,23 +31,23 @@ var result osapi.ServiceMutationResult
 err := results.Decode("update-service-1", &result)
 ```
 
-| Field     | Type     | Description                                       |
-| --------- | -------- | ------------------------------------------------- |
-| `Name`    | `string` | Name of the updated service.                      |
-| `Changed` | `bool`   | Whether the unit file was actually modified.      |
-| `Error`   | `string` | Error message if update failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Name`    | `string` | Name of the updated service.                                 |
+| `Changed` | `bool`   | `true` if the operation changed the unit file.               |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Idempotent.** Compares the current unit file against the new content. Returns
-`Changed: true` only if the file was actually modified.
+**Idempotent.** The operation compares the current unit file with the new
+content. It returns `Changed: true` only if it changed the file.
 
 ## Permissions
 
-Requires `service:write` permission.
+The token must have the `service:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/service.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/service.go)
-for a complete working example.
+for a complete example.

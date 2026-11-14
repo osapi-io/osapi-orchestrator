@@ -1,6 +1,6 @@
 # InterfaceCreate
 
-Creates a network interface configuration on the target node via Netplan.
+Creates a network interface configuration on the target host through Netplan.
 
 ## Usage
 
@@ -17,7 +17,7 @@ step := o.InterfaceCreate("web-01", "eth1", osapi.InterfaceConfigOpts{
 | ----------- | --------------------- | --------------------------------------------------------- |
 | `target`    | `string`              | Target host: `_any`, `_all`, hostname, or label selector. |
 | `ifaceName` | `string`              | Name of the network interface to configure.               |
-| `opts`      | `InterfaceConfigOpts` | Configuration options (see below).                        |
+| `opts`      | `InterfaceConfigOpts` | Configuration options (refer to the table below).         |
 
 ### InterfaceConfigOpts
 
@@ -37,23 +37,24 @@ var result osapi.InterfaceMutationResult
 err := results.Decode("create-interface-1", &result)
 ```
 
-| Field     | Type     | Description                                         |
-| --------- | -------- | --------------------------------------------------- |
-| `Name`    | `string` | Interface name.                                     |
-| `Changed` | `bool`   | Whether the configuration was created.              |
-| `Error`   | `string` | Error message if creation failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Name`    | `string` | Interface name.                                              |
+| `Changed` | `bool`   | `true` if the operation created the configuration.           |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Non-idempotent.** Creating an interface configuration that already exists
-returns an error. Use [InterfaceUpdate](update.md) to modify existing configs.
+**Non-idempotent.** If the interface configuration already exists, the operation
+returns an error. Use [InterfaceUpdate](update.md) to change a configuration
+that exists.
 
 ## Permissions
 
-Requires `network:write` permission.
+The token must have the `network:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/interface.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/interface.go)
-for a complete working example.
+for a complete example.

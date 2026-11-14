@@ -1,6 +1,6 @@
 # PackageUpdate
 
-Updates all packages on the target node.
+Updates all packages on the target host.
 
 ## Usage
 
@@ -21,21 +21,22 @@ var result osapi.PackageMutationResult
 err := results.Decode("update-package-1", &result)
 ```
 
-| Field     | Type     | Description                                       |
-| --------- | -------- | ------------------------------------------------- |
-| `Changed` | `bool`   | Whether any packages were updated.                |
-| `Error`   | `string` | Error message if update failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Changed` | `bool`   | `true` if the operation updated one or more packages.        |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Non-idempotent.** Always runs the package update process.
+**Non-idempotent.** The operation runs the package update each time the step
+runs.
 
 ## Permissions
 
-Requires `package:write` permission.
+The token must have the `package:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/package.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/package.go)
-for a complete working example.
+for a complete example.

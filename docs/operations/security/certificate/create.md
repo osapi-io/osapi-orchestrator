@@ -1,8 +1,7 @@
 # CertificateCreate
 
-Creates a CA certificate in the system trust store. The PEM file must be
-uploaded to the NATS Object Store first (see
-[FileUpload](../../files/file/upload.md)).
+Creates a CA certificate in the system trust store. Upload the PEM file to the
+NATS Object Store first. Refer to [FileUpload](../../files/file/upload.md).
 
 ## Usage
 
@@ -18,7 +17,7 @@ step := o.CertificateCreate("web-01", osapi.CertificateCreateOpts{
 | Parameter | Type                    | Description                                               |
 | --------- | ----------------------- | --------------------------------------------------------- |
 | `target`  | `string`                | Target host: `_any`, `_all`, hostname, or label selector. |
-| `opts`    | `CertificateCreateOpts` | Create options (see below).                               |
+| `opts`    | `CertificateCreateOpts` | Create options (refer to the table below).                |
 
 ### CertificateCreateOpts
 
@@ -34,23 +33,23 @@ var result osapi.CertificateCAMutationResult
 err := results.Decode("create-certificate-1", &result)
 ```
 
-| Field     | Type     | Description                                         |
-| --------- | -------- | --------------------------------------------------- |
-| `Name`    | `string` | Certificate name.                                   |
-| `Changed` | `bool`   | Whether the certificate was created.                |
-| `Error`   | `string` | Error message if creation failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Name`    | `string` | Certificate name.                                            |
+| `Changed` | `bool`   | `true` if the operation created the certificate.             |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Non-idempotent.** Creating a certificate that already exists returns an error.
-Use [CertificateUpdate](update.md) to replace existing certificates.
+**Non-idempotent.** If the certificate already exists, the operation returns an
+error. Use [CertificateUpdate](update.md) to replace a certificate that exists.
 
 ## Permissions
 
-Requires `certificate:write` permission.
+The token must have the `certificate:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/certificate.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/certificate.go)
-for a complete working example.
+for a complete example.

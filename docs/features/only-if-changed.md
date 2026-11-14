@@ -1,7 +1,7 @@
 # OnlyIfChanged
 
-Skip a step unless at least one of its dependencies reported a change
-(`Changed: true` in the result).
+Skip a step if none of its dependencies reported a change (`Changed: true` in
+the result).
 
 ## Usage
 
@@ -14,13 +14,13 @@ o.CommandExec("_any", "df", "-h").
     OnlyIfChanged()
 ```
 
-The `run-df` step only executes if the disk query reported changes. Read-only
-operations always return `Changed: false`, so this pattern is most useful with
-write operations or `FileChanged` checks.
+The `run-df` step runs only if the disk query reported a change. A read-only
+operation always returns `Changed: false`. Thus use this pattern with write
+operations or `FileChanged` checks.
 
 ## OnlyIfAllChanged
 
-A stricter variant that requires **all** dependencies to report changes:
+This variant is stricter. **All** dependencies must report a change:
 
 ```go
 step.OnlyIfAllChanged()
@@ -28,8 +28,8 @@ step.OnlyIfAllChanged()
 
 ## Host-level variants
 
-For broadcast operations, two host-level variants inspect per-host `Changed`
-status instead of the task-level `Changed` bool:
+For a broadcast operation, two host-level variants examine the `Changed` value
+of each host. They do not use the task-level `Changed` bool:
 
 ```go
 // Run if any host in the dependency reported changes.
@@ -39,10 +39,10 @@ step.OnlyIfAnyHostChanged()
 step.OnlyIfAllHostsChanged()
 ```
 
-See [Guards: Broadcast Guards](guards.md#broadcast-guards) for details.
+Refer to [Guards: Broadcast Guards](guards.md#broadcast-guards) for the details.
 
 ## Example
 
-See
+Refer to
 [`examples/features/only-if-changed.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/only-if-changed.go)
-for a complete working example.
+for a complete example.

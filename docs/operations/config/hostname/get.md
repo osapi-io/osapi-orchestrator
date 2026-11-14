@@ -1,6 +1,6 @@
 # NodeHostnameGet
 
-Retrieves the hostname and labels of the target node.
+Gets the hostname and the labels of the target host.
 
 ## Usage
 
@@ -21,21 +21,22 @@ var result osapi.HostnameResult
 err := results.Decode("node.hostname.get-1", &result)
 ```
 
-| Field      | Type                | Description                             |
-| ---------- | ------------------- | --------------------------------------- |
-| `Hostname` | `string`            | The node's hostname.                    |
-| `Labels`   | `map[string]string` | Key-value labels assigned to the agent. |
+| Field      | Type                | Description                        |
+| ---------- | ------------------- | ---------------------------------- |
+| `Hostname` | `string`            | The system hostname.               |
+| `Labels`   | `map[string]string` | The key-value labels of the agent. |
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `node:read` permission.
+The token must have the `node:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/node-info.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/node-info.go)
-for a complete working example.
+for a complete example.

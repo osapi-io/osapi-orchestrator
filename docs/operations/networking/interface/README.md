@@ -1,7 +1,7 @@
 # Interface management
 
-Manage network interface configuration via Netplan on target nodes -- list, get,
-create, update, and delete interface configurations.
+Manage the network interface configuration on target hosts through Netplan. You
+can list, get, create, update, and delete interface configurations.
 
 ## Operations
 
@@ -22,6 +22,6 @@ create, update, and delete interface configurations.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/interface.go`](../../../../examples/operations/interface.go)
-for a complete workflow example covering all operations.
+for a complete workflow example that uses all the operations.

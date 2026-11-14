@@ -1,13 +1,13 @@
 # NTP management
 
-Manage NTP server configuration on target nodes -- get status, create, update,
-and delete NTP configuration.
+Manage the NTP server configuration on target hosts. Get the status, and create,
+update, and delete the NTP configuration.
 
 ## Operations
 
 | Method                                 | Description              | Idempotent     |
 | -------------------------------------- | ------------------------ | -------------- |
-| [`NTPGet(target)`](get.md)             | Get NTP status           | Read-only      |
+| [`NTPGet(target)`](get.md)             | Get the NTP status       | Read-only      |
 | [`NTPCreate(target, opts)`](create.md) | Create NTP configuration | Non-idempotent |
 | [`NTPUpdate(target, opts)`](update.md) | Update NTP configuration | Idempotent     |
 | [`NTPDelete(target)`](delete.md)       | Delete NTP configuration | Idempotent     |
@@ -21,5 +21,5 @@ and delete NTP configuration.
 
 ## Example
 
-See [`examples/operations/ntp.go`](../../../../examples/operations/ntp.go) for a
-complete workflow example covering all operations.
+Refer to [`examples/operations/ntp.go`](../../../../examples/operations/ntp.go)
+for a complete workflow example that uses all the operations.

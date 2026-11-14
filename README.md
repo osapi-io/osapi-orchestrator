@@ -26,9 +26,9 @@
 </p>
 
 <p align="center">
-Declare what has to happen and what depends on what, and the orchestrator
-resolves the order, runs independent work in parallel, and gives you one
-result per host rather than one answer for the fleet.
+Declare the work and the dependencies between the steps. The orchestrator
+finds the order and runs independent steps in parallel. It gives one result
+for each host, not one answer for the fleet.
 </p>
 
 ## Install
@@ -37,7 +37,7 @@ result per host rather than one answer for the fleet.
 go install github.com/osapi-io/osapi-orchestrator@latest
 ```
 
-As a library dependency:
+To use it as a library dependency:
 
 ```bash
 go get github.com/osapi-io/osapi-orchestrator
@@ -45,30 +45,30 @@ go get github.com/osapi-io/osapi-orchestrator
 
 ## Features
 
-The orchestrator provides a declarative DSL for composing operations into
+The orchestrator has a declarative DSL. You use it to put operations into
 DAG-based plans with typed results, guards, retry, and discovery.
 
 | Feature                                           | Description                                    |
 | ------------------------------------------------- | ---------------------------------------------- |
-| [Step Chaining](docs/features/basic.md)           | Sequential and parallel DAG execution          |
-| [Guards](docs/features/guards.md)                 | Conditional execution (When, OnlyIfChanged...) |
+| [Step Chaining](docs/features/basic.md)           | Sequential and parallel DAG runs               |
+| [Guards](docs/features/guards.md)                 | Conditional steps (When, OnlyIfChanged...)     |
 | [Error Recovery](docs/features/error-recovery.md) | Continue strategy with OnlyIfFailed cleanup    |
-| [Broadcast](docs/features/broadcast.md)           | Per-host results from `_all`/label targets     |
-| [Host Status](docs/features/guards.md)            | Skipped and failed detection per host          |
+| [Broadcast](docs/features/broadcast.md)           | A result for each host of `_all`/label targets |
+| [Host Status](docs/features/guards.md)            | Skipped and failed status for each host        |
 | [Retry](docs/features/retry.md)                   | Automatic retry with exponential backoff       |
 | [Discovery](docs/features/discovery.md)           | Find agents by OS, arch, labels, conditions    |
-| [File Workflow](docs/features/file-workflow.md)   | Upload, deploy, drift detection, undeploy      |
-| [Result Decode](docs/features/result-decode.md)   | Typed struct decoding from step results        |
-| [TaskFunc](docs/features/task-func.md)            | Custom logic with access to prior results      |
+| [File Workflow](docs/features/file-workflow.md)   | Upload, deploy, drift check, undeploy          |
+| [Result Decode](docs/features/result-decode.md)   | Decode step results into typed structs         |
+| [TaskFunc](docs/features/task-func.md)            | Custom logic that can read earlier results     |
 
-See the [DSL reference](docs/features/README.md) for guards, predicates, error
-strategies, and typed result tables.
+Refer to the [DSL reference](docs/features/README.md) for guards, predicates,
+error strategies, and typed result tables.
 
 ## Examples
 
-Runnable examples in [examples/operations/](examples/operations/) (per-domain
-workflows) and [examples/features/](examples/features/) (DSL features). Run
-with:
+[examples/operations/](examples/operations/) has a runnable workflow for each
+domain. [examples/features/](examples/features/) has runnable examples of the
+DSL features. Run an example with:
 
 ```
 OSAPI_TOKEN="<jwt>" go run examples/features/basic.go
@@ -76,23 +76,23 @@ OSAPI_TOKEN="<jwt>" go run examples/features/basic.go
 
 ## Documentation
 
-- [Package documentation] on pkg.go.dev. API reference.
+- [Package documentation] on pkg.go.dev. The API reference.
 
 ## Targeting
 
-Most operations accept a `target` parameter to control which agents receive the
-request:
+Most operations accept a `target` parameter. It controls which agents receive
+the request:
 
 | Target      | Behavior                                    |
 | ----------- | ------------------------------------------- |
-| `_any`      | Send to any available agent (load balanced) |
+| `_any`      | Send to one available agent (load balanced) |
 | `_all`      | Broadcast to every agent                    |
 | `hostname`  | Send to a specific host                     |
-| `key:value` | Send to agents matching a label             |
+| `key:value` | Send to the agents that have the label      |
 
 ## Operations
 
-101 typed constructors across 23 domains:
+101 typed constructors in 23 domains:
 
 | Domain      | Docs                                                  | Example                                                      |
 | ----------- | ----------------------------------------------------- | ------------------------------------------------------------ |
@@ -122,8 +122,8 @@ request:
 
 ## Contributing
 
-See the [Contributing](CONTRIBUTING.md) guide for prerequisites, setup,
-conventions, and the PR workflow.
+Refer to the [Contributing](CONTRIBUTING.md) guide for the prerequisites, the
+setup, the conventions, and the PR workflow.
 
 ## License
 

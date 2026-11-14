@@ -1,43 +1,43 @@
 # Contributing
 
-Contributions to osapi-orchestrator are very welcome, but we ask that you read
-this document before submitting a PR. It covers everything you need:
-prerequisites, setup, the conventions code follows, how to add an operation, and
-the pull request workflow.
+We welcome contributions to osapi-orchestrator. Read this document before you
+send a PR. It tells the prerequisites, the setup, the conventions that the code
+follows, how to add an operation, and the pull request workflow.
 
 ## Before you start
 
-- Read the [Code of Conduct](CODE_OF_CONDUCT.md). It applies to every
-  interaction in this repo.
+- Read the [Code of Conduct](CODE_OF_CONDUCT.md). It applies to all the work and
+  all the discussion in this repo.
 
-- **Design docs.** How this repository is built is documented in
+- **Design docs.** The design of this repository is in
   [osapi-io/specs](https://github.com/osapi-io/specs) under
-  `components/osapi-orchestrator/`. Read it before changing behaviour, and
-  change it when you do. A design doc kept in this repository goes stale the
-  moment the code moves past it, and nothing catches the drift.
+  `components/osapi-orchestrator/`. Read it before you change the behaviour.
+  When you change the behaviour, change the design doc too. A design doc in this
+  repository becomes old when the code changes, and no check finds the
+  difference.
 
-- **Check existing work.** Is there an existing PR? Are there issues discussing
-  the feature/change you want to make? Please make sure you consider/address
-  these discussions in your work.
+- **Check existing work.** Look for a PR that exists for the change. Look for
+  issues that discuss the feature or the change that you want to make. Make sure
+  that your work agrees with these discussions, or answers them.
 
-- **Backwards compatibility.** Will your change break existing consumers of
-  osapi-orchestrator? It is much more likely that your change will be merged if
-  it is backwards compatible. Is there an approach you can take that maintains
-  this compatibility? If not, consider opening an issue first so that API
-  changes can be discussed before you invest your time into a PR.
+- **Backwards compatibility.** Make sure that your change does not break the
+  code that uses osapi-orchestrator now. A backwards compatible change is much
+  more likely to merge. Look for a method that keeps this compatibility. If you
+  cannot find one, open an issue first. Then we can discuss the API change
+  before you spend time on a PR.
 
 ## Prerequisites
 
-Install tools using [mise]:
+Install the tools with [mise]:
 
 ```bash
 mise install
 ```
 
-- **[Go].** osapi-orchestrator is written in Go. We always support the latest
-  two major Go versions, so make sure your version is recent enough.
-- **[just].** Task runner used for building, testing, formatting, and other
-  development workflows. Install with `brew install just`.
+- **[Go].** osapi-orchestrator is written in Go. We support the two latest major
+  Go versions. Make sure that your version is one of them.
+- **[just].** The task runner. It builds, tests, and formats the code, and runs
+  other development workflows. Install it with `brew install just`.
 
 ### Claude Code
 
@@ -48,17 +48,17 @@ marketplace:
 /plugin install commit-commands@claude-plugins-official
 ```
 
-- **commit-commands.** provides `/commit` and `/commit-push-pr` slash commands
-  that follow the project's commit conventions automatically.
+- **commit-commands.** It gives the `/commit` and `/commit-push-pr` slash
+  commands. These commands follow the commit conventions of the project.
 
-**Design happens in the design docs.** Write or change the page in
-[osapi-io/specs](https://github.com/osapi-io/specs) before building, and correct
-it where building proves it wrong. A design document kept in this repository
-goes stale the moment the code moves past it, and nothing catches the drift.
+**The design is in the design docs.** Write or change the page in
+[osapi-io/specs](https://github.com/osapi-io/specs) before you build. If the
+build shows that the page is wrong, correct the page. A design document in this
+repository becomes old when the code changes, and no check finds the difference.
 
 ## Setup
 
-Fetch shared justfiles and install all dependencies:
+Fetch the shared justfiles and install all the dependencies:
 
 ```bash
 just fetch
@@ -105,20 +105,21 @@ examples/
     host-status.go, guards.go, broadcast.go, ...
 ```
 
-An operation doc sits at `docs/operations/{group}/{operation}.md` where the
-group has no inner domains, and at
-`docs/operations/{group}/{domain}/{operation}.md` where it does. The group
-landing page links whichever of the two it holds.
+If the group has no inner domains, an operation doc is at
+`docs/operations/{group}/{operation}.md`. If the group has inner domains, the
+doc is at `docs/operations/{group}/{domain}/{operation}.md`. The landing page of
+the group links to the docs that it holds.
 
-- **`pkg/orchestrator/`.** User-facing DSL
-  - Typed operation constructors (NodeHostnameGet, CommandExec, etc.)
-  - Uses SDK types directly (`osapi.HostnameResult`, `osapi.Agent`, etc.)
-  - Porcelain over osapi-sdk's orchestrator engine
+- **`pkg/orchestrator/`.** The DSL that users call.
+  - Typed operation constructors (NodeHostnameGet, CommandExec, and more)
+  - It uses the SDK types directly (`osapi.HostnameResult`, `osapi.Agent`, and
+    more)
+  - It is a high-level layer on the orchestrator engine of osapi-sdk
 
 ## Code style
 
-Go code is formatted by [gofumpt] and linted using [golangci-lint], enforced by
-CI.
+[gofumpt] formats the Go code and [golangci-lint] lints it. CI makes these
+checks mandatory.
 
 ```bash
 just go-fmt-check   # Check formatting
@@ -126,15 +127,14 @@ just go-fmt         # Auto-fix formatting
 just go-vet         # Run linter
 ```
 
-The linters that run are declared in `.golangci.yml`. Read them there rather
-than looking for a list here. A copied list goes stale the first time the
-configuration changes. Generated files (`*.gen.go`, `*.pb.go`) are excluded from
-formatting.
+`.golangci.yml` declares the linters that run. Read them there. This page does
+not copy the list, because a copy becomes wrong when the configuration changes.
+The formatter does not format generated files (`*.gen.go`, `*.pb.go`).
 
 ### Documentation
 
-Markdown files are formatted with [mdformat] through `uvx`. This style is
-enforced by CI.
+[mdformat] formats the Markdown files, through `uvx`. CI makes this style
+mandatory.
 
 ```bash
 just md-fmt-check   # Check formatting
@@ -145,8 +145,8 @@ just md-fmt         # Auto-fix formatting
 
 ### Function signatures
 
-Functions with parameters use multi-line format, one parameter per line, with
-the closing parenthesis and the return types on a line of their own:
+A function with parameters uses more than one line. Put one parameter on each
+line. Put the closing parenthesis and the return types on a line of their own:
 
 ```go
 func FunctionName(
@@ -156,46 +156,46 @@ func FunctionName(
 }
 ```
 
-Functions taking no parameters stay on one line:
+A function without parameters stays on one line:
 
 ```go
 func Name() string {
 }
 ```
 
-Adding a parameter then shows as one added line rather than a rewritten
+Then a new parameter shows as one added line in the diff, not as a new
 signature.
 
 ### File naming
 
-Name a file for what it holds. Avoid `helpers.go`, `utils.go`, and names of that
-kind: they describe where code was put rather than what it is, and they
-accumulate whatever has no other home.
+Give a file the name of what it holds. Do not use `helpers.go`, `utils.go`, or
+names of that kind. These names tell where the code is, not what the code is.
+Such files also collect all the code that has no other location.
 
 `types.go` holds only type declarations: structs, interfaces, constants, and
-aliases. A function belongs in a file named for what it does.
+aliases. Put a function in a file with the name of what the function does.
 
-A test file is named for the production file it tests. Where tests grow too
-large to read, split the production file first so each test file keeps a
-counterpart, rather than splitting tests away from the file they cover.
+A test file has the name of the production file that it tests. If the tests
+become too large to read, split the production file first. Then each test file
+keeps one production file. Do not move tests away from the file that they test.
 
 ### Go patterns
 
-- Error wrapping: `fmt.Errorf("context: %w", err)`, so the chain names each
-  layer it passed through and stays inspectable with `errors.Is` and
-  `errors.As`.
-- Early returns rather than nesting the successful path inside conditionals.
-- Unused parameters: rename to `_`.
-- Import order: standard library, third party, then local, separated by blank
-  lines.
+- Wrap errors with `fmt.Errorf("context: %w", err)`. Then the chain names each
+  layer that the error went through. You can also examine the chain with
+  `errors.Is` and `errors.As`.
+- Return early. Do not put the success path inside conditionals.
+- Rename an unused parameter to `_`.
+- Put the imports in this order: standard library, third party, then local. Put
+  a blank line between the groups.
 
 ### Test doubles
 
-A double for an interface this organization defines is generated with `mockgen`
-and committed. Do not write a struct by hand to satisfy one.
+If this organization defines the interface, generate its double with `mockgen`
+and commit it. Do not write a struct by hand for that interface.
 
-Generated mocks live in a `mocks` package beside the code they mock, produced by
-a `generate.go` holding the directive:
+Generated mocks are in a `mocks` package next to the code that they mock. A
+`generate.go` file holds the directive that makes them:
 
 ```go
 package mocks
@@ -203,16 +203,16 @@ package mocks
 //go:generate go tool go.uber.org/mock/mockgen -source=../types.go -destination=types.gen.go -package=mocks
 ```
 
-The generator is resolved through the module's tool dependencies, so every
-checkout runs the version `go.mod` records. Destination files end in `.gen.go`
-and are committed. Do not use `gen/` for mocks. That name is taken by API code
-generation.
+Go finds the generator through the tool dependencies of the module. Thus every
+checkout runs the version that `go.mod` records. The destination files end in
+`.gen.go`, and you commit them. Do not use `gen/` for mocks. The API code
+generator uses that name.
 
-When the interface is **unexported**, a sibling package cannot work: the mock
-has to import the package to name the types in the interface, and the package's
-own tests have to import the mock. Generate it into the package instead, with a
-destination scoped to tests so the mocking library stays out of the dependency
-graph of anything that imports the package:
+If the interface is **unexported**, a sibling package cannot work. The mock must
+import the package to name the types in the interface. The tests of the package
+must import the mock. Thus generate the mock into the package. Use a destination
+that only tests compile. Then the mock library is not in the dependency graph of
+code that imports the package:
 
 ```go
 // generate.go, in the package that declares the interface
@@ -221,31 +221,31 @@ package thispackage
 //go:generate go tool go.uber.org/mock/mockgen -source=thing.go -destination=thing.gen_test.go -package=thispackage
 ```
 
-Either way the directives live in a `generate.go` that holds no code, and the
-generated file carries `.gen` so a reader knows not to edit it.
+In the two cases, the directives are in a `generate.go` that holds no code. The
+generated file name has `.gen`, so a reader knows not to edit it.
 
-Where call sites would otherwise repeat the same expectations, write a
-constructor returning a configured mock rather than introducing a hand-written
-type. The generated mock is still what satisfies the interface.
+If many call sites repeat the same expectations, write a constructor that
+returns a configured mock. Do not add a hand-written type. The generated mock
+still satisfies the interface.
 
-Three doubles are written by hand, because generating them buys nothing:
+Write these three doubles by hand, because a generated double gives no benefit:
 
-- One standing in for a standard library interface: `net.Conn`, `fs.File`,
-  `io.Writer`, `slog.Handler`. Those do not move when our code does.
-- One carrying a real implementation of the behavior under test, such as signing
-  with a genuinely generated key pair.
-- A recorder for a dependency called from a goroutine the test cannot join,
-  where a generated mock would assert a call count at a moment the test cannot
-  establish. State that reason where the recorder is defined.
+- A double for a standard library interface: `net.Conn`, `fs.File`, `io.Writer`,
+  `slog.Handler`. These interfaces do not change when our code changes.
+- A double that holds a real implementation of the behavior under test. An
+  example is a signature with a key pair that a real generator made.
+- A recorder for a dependency that a goroutine calls, if the test cannot join
+  that goroutine. A generated mock would assert a call count at a time that the
+  test cannot know. Write that reason where you define the recorder.
 
-Tests exercise a real HTTP server via `httptest.Server` rather than mocking the
-SDK client.
+Tests use a real HTTP server through `httptest.Server`. They do not mock the SDK
+client.
 
 ### File headers
 
-Every `.go` file MUST start with the MIT license header. See any existing Go
-file in the repo for the exact format. Build-tagged files put `//go:build` on
-line 1, blank line, then the header.
+Every `.go` file MUST start with the MIT license header. Refer to a Go file in
+the repo for the exact format. A file with a build tag puts `//go:build` on line
+1, then a blank line, then the header.
 
 ## Testing
 
@@ -256,42 +256,44 @@ just go-unit-cov   # Generate coverage report
 go test -run TestName -v ./pkg/orchestrator/...  # Run a single test
 ```
 
-Coverage is gated at 100%. `just test` fails if total coverage drops below it,
-so a change that adds untested code fails locally and in CI:
+The coverage gate is 100%. `just test` fails if the total coverage is less than
+100%. Thus a change that adds code without tests fails locally and in CI:
 
 ```bash
 just go-unit-cov-check   # Report coverage and fail below the target
 ```
 
-The target is declared in `.github/codecov.yml` and in the shared `go` justfile
-module. Change both together.
+`.github/codecov.yml` and the shared `go` justfile module declare the target. If
+you change one, change the other.
 
 ### Test file conventions
 
-- Public tests: `*_public_test.go` in the package's `_test` package, exercising
-  the exported surface. This is the default.
-- Internal tests: `*_test.go` in the same package, for what the exported surface
-  cannot reach.
-- Suite naming: `*_public_test.go` → `{Name}PublicTestSuite`, `*_test.go` →
+- Public tests: `*_public_test.go` in the `_test` package of the package. They
+  test the exported API. This is the default.
+- Internal tests: `*_test.go` in the same package. They test what the exported
+  API cannot reach.
+- Suite names: `*_public_test.go` → `{Name}PublicTestSuite`, `*_test.go` →
   `{Name}TestSuite`.
-- `testify/suite` with table-driven cases.
-- One suite method per function under test. Success, errors, and edge cases are
-  rows in one table, not separate methods.
-- `export_test.go` exposes unexported symbols to external tests, by alias or by
-  setter. Do not use an alias to re-cover behavior the caller's own test already
-  reaches; a helper with its own contract is what the pattern is for.
+- Use `testify/suite` with table-driven cases.
+- Write one suite method for each function under test. Success, errors, and edge
+  cases are rows in one table, not different methods.
+- `export_test.go` gives external tests access to unexported symbols, through an
+  alias or a setter. Do not use an alias to test again the behavior that the
+  test of the caller already reaches. The pattern is for a helper with its own
+  contract.
 
-External tests in this repository live in `package orchestrator_test`, and
-tables carry `validateFunc` callbacks.
+External tests in this repository are in `package orchestrator_test`. Their
+tables have `validateFunc` callbacks.
 
 ## Adding a new operation
 
-When adding a new typed constructor (e.g., `NodeRebootDo`), follow these steps
-in order. Every operation must ship with tests, docs, and an example.
+To add a new typed constructor (for example, `NodeRebootDo`), do these steps in
+order. Every operation must have tests, docs, and an example.
 
 ### Step 1: operation constructor
 
-Add the method to `pkg/orchestrator/ops.go`, following the existing pattern:
+Add the method to `pkg/orchestrator/ops.go`. Use the pattern of the other
+methods:
 
 ```go
 // NodeRebootDo creates a step that reboots the target node.
@@ -328,67 +330,68 @@ func (o *Orchestrator) NodeRebootDo(
 }
 ```
 
-Key rules:
+Rules:
 
-- Use `o.nextOpName("verb-noun")` for the step name
-- Always include `Status: r.Status` in the `engine.HostResult` mapper
-- Wrap errors with context: `fmt.Errorf("verb noun: %w", err)`
-- Use `engine.CollectionResult` for node-targeted operations (returns per-host
-  results), `engine.StructToMap` for non-collection responses
-- The `engine` import is `internal/engine`, used only inside
-  `pkg/orchestrator/`, never by external consumers
+- Use `o.nextOpName("verb-noun")` for the step name.
+- Always include `Status: r.Status` in the `engine.HostResult` mapper.
+- Wrap errors with context: `fmt.Errorf("verb noun: %w", err)`.
+- Use `engine.CollectionResult` for operations that target a host. It returns a
+  result for each host. Use `engine.StructToMap` for responses that are not a
+  collection.
+- The `engine` import is `internal/engine`. Use it only in `pkg/orchestrator/`.
+  External code must not use it.
 
 ### Step 2: tests
 
-Two test files must be updated:
+Update these two test files:
 
 **`pkg/orchestrator/ops_test.go`** (internal, httptest pattern) tests the full
 HTTP round-trip with a mock server:
 
-- Create an `httptest.Server` that returns canned JSON
-- Exercise the constructor and verify the result via `report.Decode()`
-- Cover success, error, and edge-case scenarios as table rows
+- Create an `httptest.Server` that returns canned JSON.
+- Call the constructor. Verify the result with `report.Decode()`.
+- Write the success, error, and edge cases as table rows.
 
 **`pkg/orchestrator/ops_public_test.go`** (public, step-creation pattern) tests
 that the constructor creates valid steps:
 
-- Verify the step is non-nil and has the expected task name
-- One suite method per operation, all scenarios as rows
+- Verify that the step is not nil and has the expected task name.
+- Write one suite method for each operation, with all the cases as rows.
 
-Target 100% coverage on both files.
+Get 100% coverage on the two files.
 
 ### Step 3: operation doc
 
-Create the doc beside the others for its domain, at
+Create the doc next to the other docs for its domain. The path is
 `docs/operations/{group}/{operation}.md` or
-`docs/operations/{group}/{domain}/{operation}.md` depending on how that group is
-laid out, and follow the template the neighbouring docs use. Every doc must
-include these sections:
+`docs/operations/{group}/{domain}/{operation}.md`, as the group layout tells.
+Use the template of the docs next to it. Every doc must have these sections:
 
 - **Description** (h1 heading with the method name)
-- **Usage.** minimal Go snippet showing the constructor call
-- **Parameters.** table of all parameters with types and descriptions
-- **Result type.** `Decode()` snippet and field table
-- **Idempotency.** one of: Read-only, Idempotent (Yes), Non-idempotent (No)
-- **Permissions.** required OSAPI permission (e.g., `node:write`)
-- **Example.** link to the example file where this operation is used:
+- **Usage.** A small Go snippet that shows the constructor call.
+- **Parameters.** A table of all the parameters, with types and descriptions.
+- **Result type.** A `Decode()` snippet and a field table.
+- **Idempotency.** One of: Read-only, Idempotent (Yes), Non-idempotent (No).
+- **Permissions.** The OSAPI permission that the token must have (for example,
+  `node:write`).
+- **Example.** A link to the example file that uses this operation:
   ```
-  See
+  Refer to
   [`examples/operations/{domain}.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/{domain}.go)
-  for a complete working example.
+  for a complete example.
   ```
 
 ### Step 4: update the domain landing page and operation index
 
-Add the operation to the table in the landing page of the directory the doc went
-into. Then update `docs/operations/README.md`: both the count on the domain's
-row and the total in the sentence above the group tables. The rows must sum to
-that total.
+Add the operation to the table in the landing page of the directory that holds
+the doc. Then update `docs/operations/README.md`. Change the count in the row of
+the domain, and the total in the sentence above the group tables. The sum of the
+rows must be equal to that total.
 
 ### Step 5: example
 
-Add the operation to an existing workflow example in `examples/operations/` that
-covers the same domain. Domain groupings:
+Add the operation to the workflow example in `examples/operations/` for the same
+domain. The domain groups are:
 
 | Domain      | Example file         |
 | ----------- | -------------------- |
@@ -417,31 +420,32 @@ covers the same domain. Domain groupings:
 | Log         | `log.go`             |
 | Health      | (used as gate)       |
 
-If no domain match exists, create a new `{domain}.go` file. Every operation must
-appear in at least one runnable example.
+If no example has the domain, create a new `{domain}.go` file. Every operation
+must be in one or more runnable examples.
 
 #### Example conventions
 
-- **Self-contained**: cleanup at the start (separate plan with
-  `ContinueOnError()`), execute, verify. Must be repeatable.
-- **One purpose per file**: demonstrate one domain's operations. Don't mix in
+- **Self-contained.** Clean the host at the start (a different plan with
+  `ContinueOnError()`), then do the work, then verify it. The example must give
+  the same result each time it runs.
+- **One purpose in each file.** Show the operations of one domain. Do not add
   other features (parallel, verbose, broadcast).
-- **Cleanup plan pattern**: use a separate `orchestrator.New()` for cleanup with
-  `ContinueOnError()`, then a main plan for the workflow.
-- **Platform safety**: operations that may not work everywhere use
-  `ContinueOnError()` so the example doesn't crash.
-- **Decode and print**: decode at least one result so the example isn't silent.
+- **Cleanup plan pattern.** Use a different `orchestrator.New()` for the
+  cleanup, with `ContinueOnError()`. Then use a main plan for the workflow.
+- **Platform safety.** If an operation does not work on all platforms, use
+  `ContinueOnError()`, so the example does not crash.
+- **Decode and print.** Decode one or more results, so the example shows output.
   Use `report.Decode("step-name", &typedStruct)`.
-- **Keep it short**: under ~100 lines of code (excluding license). If longer,
-  you're demonstrating too much. Split it.
-- **Operation docs link to examples**: every operation doc in
-  `docs/operations/{domain}/` must link to the example file where that operation
-  is demonstrated.
+- **Short.** Less than 100 lines of code (without the license). If it is longer,
+  the example shows too much. Split it.
+- **Operation docs link to examples.** Every operation doc in
+  `docs/operations/{domain}/` must link to the example file that shows that
+  operation.
 
 ### Step 6: update README.md
 
-Update the operation count and tables in the root `README.md` if the total
-number of operations changes.
+If the total number of operations changes, update the operation count and the
+tables in the root `README.md`.
 
 ### Step 7: verify
 
@@ -457,8 +461,8 @@ cd examples/features   && for f in *.go; do go build -o /dev/null "$f"; done
 
 ## Before committing
 
-Run `just ready` before committing to ensure generated code, package docs,
-formatting, and lint are all up to date:
+Run `just ready` before you commit. It makes sure that the generated code, the
+package docs, the format, and the lint are all current:
 
 ```bash
 just ready
@@ -466,9 +470,8 @@ just ready
 
 ## Branching
 
-All changes should be developed on feature branches. Create a branch from `main`
-using the naming convention `type/short-description`, where `type` matches the
-[Conventional Commits] type:
+Make all changes on feature branches. Create a branch from `main` with the name
+`type/short-description`. The `type` is the [Conventional Commits] type:
 
 - `feat/add-retry-logic`
 - `fix/null-pointer-crash`
@@ -476,49 +479,50 @@ using the naming convention `type/short-description`, where `type` matches the
 - `refactor/simplify-handler`
 - `chore/update-dependencies`
 
-When using Claude Code's `/commit` command, a branch will be created
-automatically if you are on `main`.
+If you are on `main`, the `/commit` command of Claude Code creates a branch for
+you.
 
 ## Commit messages
 
 Follow [Conventional Commits] with the 50/72 rule:
 
-- **Subject line**: max 50 characters, imperative mood, capitalized, no period
-- **Body**: wrap at 72 characters, separated from subject by a blank line
-- **Format**: `type(scope): description`
-- **Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
-- Summarize the "what" and "why", not the "how"
+- **Subject line.** No more than 50 characters, imperative mood, capital first
+  letter, no period.
+- **Body.** Wrap at 72 characters. Put a blank line between the subject and the
+  body.
+- **Format.** `type(scope): description`
+- **Types.** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
+- Tell "what" changed and "why", not "how"
 
-Try to write meaningful commit messages and avoid having too many commits on a
-PR. Most PRs should likely have a single commit (although for bigger PRs it may
-be reasonable to split it in a few). Git squash and rebase is your friend!
+Write commit messages that tell the reader something. Do not put too many
+commits on a PR. Most PRs have one commit. A large PR can have a few commits.
+Use git squash and rebase to combine commits.
 
 ## Submitting a PR
 
-- **Describe your changes.** Say what changed and why. A reviewer should not
-  have to read the diff to learn the reason for it.
-- **Issue/PR links.** Link any previous work such as related issues or PRs.
-  Please describe how your changes differ to/extend this work.
-- **Examples.** Add any examples or screenshots that you think are useful to
-  demonstrate the effect of your changes.
-- **Draft PRs.** If your changes are incomplete, but you would like to discuss
-  them, open the PR as a draft and add a comment to start a discussion. Using
-  comments rather than the PR description allows the description to be updated
-  later while preserving any discussions.
+- **Describe your changes.** Tell what changed and why. A reviewer must not have
+  to read the diff to learn the reason for the change.
+- **Issue/PR links.** Link to the related issues or PRs. Tell how your changes
+  are different from that work, or how they add to it.
+- **Examples.** Add examples or screenshots that show the effect of your
+  changes.
+- **Draft PRs.** If your changes are not complete and you want to discuss them,
+  open the PR as a draft. Then add a comment to start a discussion. Use
+  comments, not the PR description, for the discussion. Then you can change the
+  description later, and the discussion stays.
 
 ## AI usage
 
-This repo is written with AI assistance. All contributions are subject to the
-[AI Usage Policy](AI_POLICY.md). Disclose the tool you used, and make sure you
-can explain what your change does without the aid of AI tools.
+We write this repo with help from AI tools. The [AI Usage Policy](AI_POLICY.md)
+applies to all contributions. Tell which tool you used. Make sure that you can
+explain what your change does without help from AI tools.
 
 ## FAQ
 
 > I want to contribute, where do I start?
 
-All kinds of contributions are welcome, whether it's a typo fix or a shiny new
-feature. You can also contribute by upvoting/commenting on issues or helping to
-answer questions.
+We welcome all contributions, from a typo fix to a new feature. You can also
+vote on issues, comment on issues, or help to answer questions.
 
 > I'm stuck, where can I get help?
 

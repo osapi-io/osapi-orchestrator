@@ -1,6 +1,6 @@
 # ServiceRestart
 
-Restarts a service on the target node.
+Restarts a service on the target host.
 
 ## Usage
 
@@ -22,22 +22,23 @@ var result osapi.ServiceMutationResult
 err := results.Decode("restart-service-1", &result)
 ```
 
-| Field     | Type     | Description                                        |
-| --------- | -------- | -------------------------------------------------- |
-| `Name`    | `string` | Name of the restarted service.                     |
-| `Changed` | `bool`   | Whether the service was restarted.                 |
-| `Error`   | `string` | Error message if restart failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Name`    | `string` | Name of the restarted service.                               |
+| `Changed` | `bool`   | `true` if the operation restarted the service.               |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Non-idempotent.** Always restarts the service regardless of current state.
+**Non-idempotent.** The operation restarts the service each time the step runs.
+It does not examine the service state first.
 
 ## Permissions
 
-Requires `service:write` permission.
+The token must have the `service:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/service.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/service.go)
-for a complete working example.
+for a complete example.

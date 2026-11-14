@@ -12,17 +12,17 @@ step := o.DockerImageRemove("_any", "nginx:latest",
 
 ## Parameters
 
-| Parameter   | Type                             | Description                   |
-| ----------- | -------------------------------- | ----------------------------- |
-| `target`    | `string`                         | Target host or routing value. |
-| `imageName` | `string`                         | Image name or ID to remove.   |
-| `params`    | `*osapi.DockerRemoveImageParams` | Optional remove parameters.   |
+| Parameter   | Type                             | Description                                |
+| ----------- | -------------------------------- | ------------------------------------------ |
+| `target`    | `string`                         | The target host or routing value.          |
+| `imageName` | `string`                         | The name or ID of the image to remove.     |
+| `params`    | `*osapi.DockerRemoveImageParams` | The parameters for the removal (optional). |
 
 ### DockerRemoveImageParams
 
-| Field   | Type   | Description                            |
-| ------- | ------ | -------------------------------------- |
-| `Force` | `bool` | Force removal even if image is in use. |
+| Field   | Type   | Description                                    |
+| ------- | ------ | ---------------------------------------------- |
+| `Force` | `bool` | Remove the image, also if a container uses it. |
 
 ## Result type
 
@@ -31,22 +31,22 @@ var result osapi.DockerActionResult
 err := results.Decode("docker-image-remove", &result)
 ```
 
-| Field     | Type     | Description                        |
-| --------- | -------- | ---------------------------------- |
-| `ID`      | `string` | Image name or ID.                  |
-| `Message` | `string` | Status message from the operation. |
-| `Error`   | `string` | Error if removal failed.           |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `ID`      | `string` | The name or ID of the image.                                 |
+| `Message` | `string` | The status message of the operation.                         |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Yes.** Removing an already-absent image is a no-op.
+**Idempotent.** If the image does not exist, the operation does nothing.
 
 ## Permissions
 
-Requires `docker:write` permission.
+The token must have the `docker:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/docker.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/docker.go)
-for a complete working example.
+for a complete example.

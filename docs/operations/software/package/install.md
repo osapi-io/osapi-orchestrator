@@ -1,6 +1,6 @@
 # PackageInstall
 
-Installs a package on the target node.
+Installs a package on the target host.
 
 ## Usage
 
@@ -22,22 +22,23 @@ var result osapi.PackageMutationResult
 err := results.Decode("install-package-1", &result)
 ```
 
-| Field     | Type     | Description                                        |
-| --------- | -------- | -------------------------------------------------- |
-| `Name`    | `string` | Name of the package.                               |
-| `Changed` | `bool`   | Whether the package was installed.                 |
-| `Error`   | `string` | Error message if install failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Name`    | `string` | Name of the package.                                         |
+| `Changed` | `bool`   | `true` if the operation installed the package.               |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Idempotent.** If the package is already installed, returns `Changed: false`.
+**Idempotent.** If the package is already installed, the operation returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `package:write` permission.
+The token must have the `package:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/package.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/package.go)
-for a complete working example.
+for a complete example.

@@ -22,22 +22,24 @@ var result osapi.CertificateCAMutationResult
 err := results.Decode("delete-certificate-1", &result)
 ```
 
-| Field     | Type     | Description                                            |
-| --------- | -------- | ------------------------------------------------------ |
-| `Name`    | `string` | Certificate name.                                      |
-| `Changed` | `bool`   | Whether the certificate was removed or already absent. |
-| `Error`   | `string` | Error message if deletion failed; empty on success.    |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Name`    | `string` | Certificate name.                                            |
+| `Changed` | `bool`   | `true` if the operation removed the certificate.             |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Idempotent.** If the certificate does not exist, returns `Changed: false`.
+**Idempotent.** If the certificate does not exist, the operation returns
+`Changed: false`. If the certificate exists, the operation removes it and
+returns `Changed: true`.
 
 ## Permissions
 
-Requires `certificate:write` permission.
+The token must have the `certificate:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/certificate.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/certificate.go)
-for a complete working example.
+for a complete example.

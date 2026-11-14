@@ -1,7 +1,7 @@
 # AgentUndrain
 
-Undrains an agent, allowing it to accept new jobs again. This reverses the
-effect of [AgentDrain](drain.md).
+Undrains an agent. The agent then accepts new jobs again. This operation
+reverses [AgentDrain](drain.md).
 
 ## Usage
 
@@ -11,9 +11,9 @@ step := o.AgentUndrain("web-01")
 
 ## Parameters
 
-| Parameter  | Type     | Description                       |
-| ---------- | -------- | --------------------------------- |
-| `hostname` | `string` | Hostname of the agent to undrain. |
+| Parameter  | Type     | Description                           |
+| ---------- | -------- | ------------------------------------- |
+| `hostname` | `string` | The hostname of the agent to undrain. |
 
 ## Result type
 
@@ -22,20 +22,20 @@ var result osapi.MessageResponse
 err := results.Decode("undrain-agent-1", &result)
 ```
 
-| Field     | Type     | Description                                    |
-| --------- | -------- | ---------------------------------------------- |
-| `Message` | `string` | Human-readable message describing the outcome. |
+| Field     | Type     | Description                                            |
+| --------- | -------- | ------------------------------------------------------ |
+| `Message` | `string` | A message that tells the result, for a person to read. |
 
 ## Idempotency
 
-**Idempotent.** Undraining an already-active agent is a no-op.
+**Idempotent.** If the agent is already active, the operation does nothing.
 
 ## Permissions
 
-Requires `agent:write` permission.
+The token must have the `agent:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/agent-drain.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/agent-drain.go)
-for a complete working example.
+for a complete example.

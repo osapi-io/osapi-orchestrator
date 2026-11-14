@@ -1,7 +1,7 @@
 # Error recovery
 
-Use `OnError(Continue)` to keep independent tasks running when a step fails, and
-`OnlyIfFailed` to trigger cleanup only on failure.
+Use `OnError(Continue)` to continue to run independent tasks when a step fails.
+Use `OnlyIfFailed` to start a cleanup step only after a failure.
 
 ## Usage
 
@@ -16,21 +16,21 @@ o.CommandExec("_any", "echo", "running-cleanup").
     OnlyIfFailed()
 ```
 
-The `Continue` strategy lets the plan proceed even if some hosts fail. The
-cleanup step only runs when at least one dependency failed.
+With the `Continue` strategy, the plan continues if some hosts fail. The cleanup
+step runs only if one or more dependencies failed.
 
 ## Error strategies
 
-| Strategy   | Behavior                                        |
-| ---------- | ----------------------------------------------- |
-| `StopAll`  | Fail fast, cancel everything (default)          |
-| `Continue` | Skip dependents, keep running independent tasks |
+| Strategy   | Behavior                                                       |
+| ---------- | -------------------------------------------------------------- |
+| `StopAll`  | Stop at the first failure and cancel all other steps (default) |
+| `Continue` | Skip the dependents and continue to run the independent tasks  |
 
 ## Broadcast error recovery
 
-For broadcast operations, `OnlyIfFailed` triggers when the task-level status is
-`Failed`, this happens when any host fails. To make finer-grained decisions
-based on per-host results, use the host-level guards:
+For a broadcast operation, `OnlyIfFailed` triggers when the task-level status is
+`Failed`. The status is `Failed` when one or more hosts fail. To make a decision
+from the result of each host, use the host-level guards:
 
 ```go
 deploy := o.CommandExec("_all", "deploy.sh").
@@ -50,19 +50,19 @@ o.CommandExec("_all", "rollback.sh").
     OnlyIfAllHostsFailed()
 ```
 
-The difference from task-level `OnlyIfFailed`:
+These guards are different from the task-level `OnlyIfFailed`:
 
-- `OnlyIfFailed` checks `Status == Failed`, triggers on any failure
-- `OnlyIfAnyHostFailed` checks `HostResult.Error`, inspects individual hosts
-- `OnlyIfAllHostsFailed` requires every host to have an error
+- `OnlyIfFailed` checks `Status == Failed`. It triggers on each failure.
+- `OnlyIfAnyHostFailed` checks `HostResult.Error`. It examines each host.
+- `OnlyIfAllHostsFailed` triggers only if each host has an error.
 
-See [Guards: Broadcast Guards](guards.md#broadcast-guards) for the full
+Refer to [Guards: Broadcast Guards](guards.md#broadcast-guards) for the full
 reference.
 
 ## Example
 
-See
+Refer to
 [`examples/features/error-recovery.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/error-recovery.go)
 and
 [`examples/features/broadcast-guards.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/broadcast-guards.go)
-for complete working examples.
+for complete examples.
