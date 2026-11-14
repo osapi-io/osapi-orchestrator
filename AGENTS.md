@@ -2,12 +2,16 @@
 
 Test: `just test` | Before you commit: `just ready`
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) first. It tells the prerequisites, the
-setup, the package structure, the code standards, the tests, and how to add an
-operation. All of it applies to agents the same as to people. This file has only
-what is specific to agents.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) first. It gives:
 
-## Running tools
+- the prerequisites and the setup
+- the code style and the test conventions
+- the pull request workflow
+
+These rules apply to agents and to people. This file has only the rules that are
+specific to agents. They apply to each coding agent.
+
+## Run tools
 
 Run tools through `mise`, not from your path:
 
@@ -15,33 +19,30 @@ Run tools through `mise`, not from your path:
 mise exec -- just test
 ```
 
-`mise` is active in a person's shell. It supplies the versions that `.mise.toml`
-declares. An agent's shell does not activate `mise`. Thus a bare `just` runs the
-global installation. That version is usually older.
+`mise` is active in the shell of a person. It supplies the versions that
+`.mise.toml` declares. The shell of an agent does not activate `mise`. Thus a
+bare `just` runs the version that is installed globally. That version is usually
+older.
 
-The symptom is a check that fails here and passes in continuous integration, on
-a file that nobody edited. If this occurs, find which version ran. Do this
-before you accept the failure as real.
+The symptom is a check that fails here but passes in CI, on a file that nobody
+changed. If this occurs, find the version that ran. Do this before you accept
+the failure as real.
 
 ## Where the rules come from
 
-[CONTRIBUTING.md](CONTRIBUTING.md#before-you-start) names the specification. If
-a convention here and the specification disagree, obey the specification. Tell
-the maintainers about the difference. Do not follow the code.
+[CONTRIBUTING.md](CONTRIBUTING.md#before-you-start) names the design pages. If a
+rule here and a design page do not agree, obey the design page. Say that they do
+not agree. Do not use the code to decide.
 
 ## Commit trailer
 
-When you commit with Claude Code, end the message with:
+When an agent writes a commit, end the commit message with a trailer that names
+the agent. Use the trailer that the documentation of the agent gives.
 
-```
-🤖 Generated with [Claude Code](https://claude.ai/code)
+## Design pages
 
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
-
-## Task tracking
-
-**The design is in the design docs.** Write or change the page in
+**The design is in the design pages.** Write or change the page in
 [osapi-io/specs](https://github.com/osapi-io/specs) before you build. If the
-build shows that the page is wrong, correct the page. A design document in this
-repository becomes old when the code changes, and no check finds the difference.
+build shows that the page is wrong, correct the page. A design page in this
+repository becomes incorrect when the code changes. No check finds the
+difference.
