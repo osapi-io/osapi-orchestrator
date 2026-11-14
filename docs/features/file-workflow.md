@@ -1,7 +1,7 @@
 # File workflow
 
-The orchestrator can upload a file, deploy it to agents, and verify it. Use
-these steps to manage files on many agents.
+The orchestrator can upload a file, deploy it to hosts, and verify it. Use these
+steps to manage files on many hosts.
 
 ## Upload and deploy
 

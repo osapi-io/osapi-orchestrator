@@ -35,15 +35,15 @@ step := o.CronCreate("web-01", osapi.CronCreateOpts{
 
 | Field         | Type             | Required | Description                                 |
 | ------------- | ---------------- | -------- | ------------------------------------------- |
-| `Name`        | `string`         | Yes      | Cron entry name.                            |
-| `Object`      | `string`         | Yes      | Object name in the NATS Object Store.       |
-| `Schedule`    | `string`         | No       | Cron expression. Do not use with            |
+| `Name`        | `string`         | Yes      | The cron entry name.                        |
+| `Object`      | `string`         | Yes      | The object name in the NATS Object Store.   |
+| `Schedule`    | `string`         | No       | The cron expression. Do not use with        |
 |               |                  |          | `Interval`.                                 |
-| `Interval`    | `string`         | No       | Periodic interval: `hourly`, `daily`,       |
+| `Interval`    | `string`         | No       | The periodic interval: `hourly`, `daily`,   |
 |               |                  |          | `weekly`, or `monthly`.                     |
-| `User`        | `string`         | No       | User to run the command as.                 |
+| `User`        | `string`         | No       | The user to run the command as.             |
 | `ContentType` | `string`         | No       | `"raw"` or `"template"` (default: `"raw"`). |
-| `Vars`        | `map[string]any` | No       | Template variables when ContentType is      |
+| `Vars`        | `map[string]any` | No       | The template variables when ContentType is  |
 |               |                  |          | `"template"`.                               |
 
 ## Result type
@@ -55,7 +55,7 @@ err := results.Decode("create-cron-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Name of the created cron entry.                              |
+| `Name`    | `string` | The name of the created cron entry.                          |
 | `Changed` | `bool`   | `true` if the operation created the entry.                   |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

@@ -11,10 +11,10 @@ step := o.NetworkDNSDelete("web-01", "eth0")
 
 ## Parameters
 
-| Parameter       | Type     | Description                                               |
-| --------------- | -------- | --------------------------------------------------------- |
-| `target`        | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `interfaceName` | `string` | Network interface to delete DNS configuration from.       |
+| Parameter       | Type     | Description                                                     |
+| --------------- | -------- | --------------------------------------------------------------- |
+| `target`        | `string` | Target host: `_any`, `_all`, hostname, or label selector.       |
+| `interfaceName` | `string` | The network interface that has the DNS configuration to delete. |
 
 ## Result type
 

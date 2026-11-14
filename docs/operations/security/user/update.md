@@ -16,17 +16,17 @@ step := o.UserUpdate("web-01", "deploy", osapi.UserUpdateOpts{
 | Parameter  | Type             | Description                                               |
 | ---------- | ---------------- | --------------------------------------------------------- |
 | `target`   | `string`         | Target host: `_any`, `_all`, hostname, or label selector. |
-| `username` | `string`         | Username to update.                                       |
+| `username` | `string`         | The username to update.                                   |
 | `opts`     | `UserUpdateOpts` | Update options (refer to the table below).                |
 
 ### UserUpdateOpts
 
-| Field    | Type       | Required | Description                                                       |
-| -------- | ---------- | -------- | ----------------------------------------------------------------- |
-| `Shell`  | `string`   | No       | New login shell path.                                             |
-| `Home`   | `string`   | No       | New home directory path.                                          |
-| `Groups` | `[]string` | No       | Supplementary group names. This list replaces the current groups. |
-| `Lock`   | `*bool`    | No       | Lock or unlock the account.                                       |
+| Field    | Type       | Required | Description                                                           |
+| -------- | ---------- | -------- | --------------------------------------------------------------------- |
+| `Shell`  | `string`   | No       | The new login shell path.                                             |
+| `Home`   | `string`   | No       | The new home directory path.                                          |
+| `Groups` | `[]string` | No       | The supplementary group names. This list replaces the current groups. |
+| `Lock`   | `*bool`    | No       | Lock or unlock the account.                                           |
 
 ## Result type
 
@@ -37,7 +37,7 @@ err := results.Decode("update-user-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Username.                                                    |
+| `Name`    | `string` | The username.                                                |
 | `Changed` | `bool`   | `true` if the operation changed the user.                    |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

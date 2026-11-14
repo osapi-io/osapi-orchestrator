@@ -21,10 +21,10 @@ step := o.CertificateCreate("web-01", osapi.CertificateCreateOpts{
 
 ### CertificateCreateOpts
 
-| Field    | Type     | Required | Description                              |
-| -------- | -------- | -------- | ---------------------------------------- |
-| `Name`   | `string` | Yes      | Certificate name.                        |
-| `Object` | `string` | Yes      | Object Store reference for the PEM file. |
+| Field    | Type     | Required | Description                                  |
+| -------- | -------- | -------- | -------------------------------------------- |
+| `Name`   | `string` | Yes      | The certificate name.                        |
+| `Object` | `string` | Yes      | The Object Store reference for the PEM file. |
 
 ## Result type
 
@@ -35,7 +35,7 @@ err := results.Decode("create-certificate-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Certificate name.                                            |
+| `Name`    | `string` | The certificate name.                                        |
 | `Changed` | `bool`   | `true` if the operation created the certificate.             |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

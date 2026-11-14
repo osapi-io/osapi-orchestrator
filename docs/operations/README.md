@@ -2,7 +2,7 @@
 
 The orchestrator has 101 typed constructors, in groups by domain. Each method
 returns a `*Step`. You can chain methods on the step to set the order, the
-conditions, and the error handling.
+conditions, and what to do on an error.
 
 ## Groups
 

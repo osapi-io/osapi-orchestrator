@@ -13,7 +13,7 @@ step := o.ProcessGet("web-01", 1234)
 | Parameter | Type     | Description                                               |
 | --------- | -------- | --------------------------------------------------------- |
 | `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `pid`     | `int`    | Process ID to get.                                        |
+| `pid`     | `int`    | The process ID to get.                                    |
 
 ## Result type
 
@@ -25,7 +25,7 @@ err := results.Decode("get-process-1", &result)
 | Field       | Type            | Description                                                  |
 | ----------- | --------------- | ------------------------------------------------------------ |
 | `Hostname`  | `string`        | The hostname of the agent that ran the operation.            |
-| `Processes` | `[]ProcessInfo` | Process details (one entry).                                 |
+| `Processes` | `[]ProcessInfo` | The process details (one entry).                             |
 | `Error`     | `string`        | The error message if the operation failed. Empty on success. |
 
 ## Idempotency

@@ -14,11 +14,11 @@ step := o.RouteUpdate("web-01", "eth0", osapi.RouteConfigOpts{
 
 ## Parameters
 
-| Parameter       | Type              | Description                                               |
-| --------------- | ----------------- | --------------------------------------------------------- |
-| `target`        | `string`          | Target host: `_any`, `_all`, hostname, or label selector. |
-| `interfaceName` | `string`          | Network interface to update routes for.                   |
-| `opts`          | `RouteConfigOpts` | Route configuration (refer to [RouteCreate](create.md)).  |
+| Parameter       | Type              | Description                                                  |
+| --------------- | ----------------- | ------------------------------------------------------------ |
+| `target`        | `string`          | Target host: `_any`, `_all`, hostname, or label selector.    |
+| `interfaceName` | `string`          | The network interface to update routes for.                  |
+| `opts`          | `RouteConfigOpts` | The route configuration (refer to [RouteCreate](create.md)). |
 
 ## Result type
 
@@ -29,7 +29,7 @@ err := results.Decode("update-route-1", &result)
 
 | Field       | Type     | Description                                                  |
 | ----------- | -------- | ------------------------------------------------------------ |
-| `Interface` | `string` | Interface name.                                              |
+| `Interface` | `string` | The interface name.                                          |
 | `Changed`   | `bool`   | `true` if the operation changed the routes.                  |
 | `Error`     | `string` | The error message if the operation failed. Empty on success. |
 

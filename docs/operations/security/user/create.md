@@ -21,13 +21,13 @@ step := o.UserCreate("web-01", osapi.UserCreateOpts{
 
 ### UserCreateOpts
 
-| Field   | Type     | Required | Description                                                         |
-| ------- | -------- | -------- | ------------------------------------------------------------------- |
-| `Name`  | `string` | Yes      | Username.                                                           |
-| `UID`   | `int`    | No       | Numeric user ID. If zero, the system assigns one.                   |
-| `GID`   | `int`    | No       | Primary group ID. If zero, the system creates a group for the user. |
-| `Home`  | `string` | No       | Home directory path.                                                |
-| `Shell` | `string` | No       | Login shell path.                                                   |
+| Field   | Type     | Required | Description                                                             |
+| ------- | -------- | -------- | ----------------------------------------------------------------------- |
+| `Name`  | `string` | Yes      | The username.                                                           |
+| `UID`   | `int`    | No       | The numeric user ID. If zero, the system assigns one.                   |
+| `GID`   | `int`    | No       | The primary group ID. If zero, the system creates a group for the user. |
+| `Home`  | `string` | No       | The home directory path.                                                |
+| `Shell` | `string` | No       | The login shell path.                                                   |
 
 ## Result type
 
@@ -38,7 +38,7 @@ err := results.Decode("create-user-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Username.                                                    |
+| `Name`    | `string` | The username.                                                |
 | `Changed` | `bool`   | `true` if the operation created the user.                    |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

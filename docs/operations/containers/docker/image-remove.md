@@ -12,11 +12,11 @@ step := o.DockerImageRemove("_any", "nginx:latest",
 
 ## Parameters
 
-| Parameter   | Type                             | Description                                |
-| ----------- | -------------------------------- | ------------------------------------------ |
-| `target`    | `string`                         | The target host or routing value.          |
-| `imageName` | `string`                         | The name or ID of the image to remove.     |
-| `params`    | `*osapi.DockerRemoveImageParams` | The parameters for the removal (optional). |
+| Parameter   | Type                             | Description                                               |
+| ----------- | -------------------------------- | --------------------------------------------------------- |
+| `target`    | `string`                         | Target host: `_any`, `_all`, hostname, or label selector. |
+| `imageName` | `string`                         | The name or ID of the image to remove.                    |
+| `params`    | `*osapi.DockerRemoveImageParams` | The parameters for the removal (optional).                |
 
 ### DockerRemoveImageParams
 

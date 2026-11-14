@@ -13,7 +13,7 @@ step := o.ServiceDelete("web-01", "myapp")
 | Parameter     | Type     | Description                                               |
 | ------------- | -------- | --------------------------------------------------------- |
 | `target`      | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `serviceName` | `string` | Name of the service to delete.                            |
+| `serviceName` | `string` | The name of the service to delete.                        |
 
 ## Result type
 
@@ -24,7 +24,7 @@ err := results.Decode("delete-service-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Name of the deleted service.                                 |
+| `Name`    | `string` | The name of the deleted service.                             |
 | `Changed` | `bool`   | `true` if the operation removed the unit file.               |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

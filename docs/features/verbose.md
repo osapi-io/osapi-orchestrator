@@ -1,7 +1,7 @@
 # Verbose output
 
 Use `WithVerbose()` to get more output. With this option, the renderer shows
-stdout, stderr, and all the response data for each task.
+stdout, stderr, and all the response data for each step.
 
 ## Usage
 

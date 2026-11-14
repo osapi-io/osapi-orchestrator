@@ -16,19 +16,19 @@ step := o.InterfaceCreate("web-01", "eth1", osapi.InterfaceConfigOpts{
 | Parameter   | Type                  | Description                                               |
 | ----------- | --------------------- | --------------------------------------------------------- |
 | `target`    | `string`              | Target host: `_any`, `_all`, hostname, or label selector. |
-| `ifaceName` | `string`              | Name of the network interface to configure.               |
-| `opts`      | `InterfaceConfigOpts` | Configuration options (refer to the table below).         |
+| `ifaceName` | `string`              | The name of the network interface to configure.           |
+| `opts`      | `InterfaceConfigOpts` | The configuration options (refer to the table below).     |
 
 ### InterfaceConfigOpts
 
-| Field       | Type       | Required | Description                    |
-| ----------- | ---------- | -------- | ------------------------------ |
-| `DHCP4`     | `*bool`    | No       | Enable or disable DHCPv4.      |
-| `DHCP6`     | `*bool`    | No       | Enable or disable DHCPv6.      |
-| `Addresses` | `[]string` | No       | IP addresses in CIDR notation. |
-| `Gateway4`  | `string`   | No       | IPv4 gateway address.          |
-| `Gateway6`  | `string`   | No       | IPv6 gateway address.          |
-| `MTU`       | `*int`     | No       | Maximum transmission unit.     |
+| Field       | Type       | Required | Description                        |
+| ----------- | ---------- | -------- | ---------------------------------- |
+| `DHCP4`     | `*bool`    | No       | Enable or disable DHCPv4.          |
+| `DHCP6`     | `*bool`    | No       | Enable or disable DHCPv6.          |
+| `Addresses` | `[]string` | No       | The IP addresses in CIDR notation. |
+| `Gateway4`  | `string`   | No       | The IPv4 gateway address.          |
+| `Gateway6`  | `string`   | No       | The IPv6 gateway address.          |
+| `MTU`       | `*int`     | No       | The maximum transmission unit.     |
 
 ## Result type
 
@@ -39,7 +39,7 @@ err := results.Decode("create-interface-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Interface name.                                              |
+| `Name`    | `string` | The interface name.                                          |
 | `Changed` | `bool`   | `true` if the operation created the configuration.           |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

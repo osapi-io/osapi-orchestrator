@@ -21,10 +21,10 @@ step := o.ServiceCreate("web-01", osapi.ServiceCreateOpts{
 
 ### ServiceCreateOpts
 
-| Field    | Type     | Required | Description                               |
-| -------- | -------- | -------- | ----------------------------------------- |
-| `Name`   | `string` | Yes      | Service unit name.                        |
-| `Object` | `string` | Yes      | Object Store reference for the unit file. |
+| Field    | Type     | Required | Description                                   |
+| -------- | -------- | -------- | --------------------------------------------- |
+| `Name`   | `string` | Yes      | The service unit name.                        |
+| `Object` | `string` | Yes      | The Object Store reference for the unit file. |
 
 ## Result type
 
@@ -35,7 +35,7 @@ err := results.Decode("create-service-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Name of the created service.                                 |
+| `Name`    | `string` | The name of the created service.                             |
 | `Changed` | `bool`   | `true` if the operation created the unit file.               |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

@@ -13,11 +13,11 @@ step := o.InterfaceUpdate("web-01", "eth0", osapi.InterfaceConfigOpts{
 
 ## Parameters
 
-| Parameter   | Type                  | Description                                                    |
-| ----------- | --------------------- | -------------------------------------------------------------- |
-| `target`    | `string`              | Target host: `_any`, `_all`, hostname, or label selector.      |
-| `ifaceName` | `string`              | Name of the network interface to update.                       |
-| `opts`      | `InterfaceConfigOpts` | Configuration options (refer to [InterfaceCreate](create.md)). |
+| Parameter   | Type                  | Description                                                        |
+| ----------- | --------------------- | ------------------------------------------------------------------ |
+| `target`    | `string`              | Target host: `_any`, `_all`, hostname, or label selector.          |
+| `ifaceName` | `string`              | The name of the network interface to update.                       |
+| `opts`      | `InterfaceConfigOpts` | The configuration options (refer to [InterfaceCreate](create.md)). |
 
 ## Result type
 
@@ -28,7 +28,7 @@ err := results.Decode("update-interface-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Interface name.                                              |
+| `Name`    | `string` | The interface name.                                          |
 | `Changed` | `bool`   | `true` if the operation changed the configuration.           |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

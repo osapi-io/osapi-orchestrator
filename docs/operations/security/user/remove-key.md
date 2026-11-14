@@ -13,8 +13,8 @@ step := o.UserRemoveKey("web-01", "deploy", "SHA256:abc123...")
 | Parameter     | Type     | Description                                               |
 | ------------- | -------- | --------------------------------------------------------- |
 | `target`      | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `username`    | `string` | Username to remove the key from.                          |
-| `fingerprint` | `string` | Fingerprint of the key to remove.                         |
+| `username`    | `string` | The username to remove the key from.                      |
+| `fingerprint` | `string` | The fingerprint of the key to remove.                     |
 
 ## Result type
 

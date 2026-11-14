@@ -17,12 +17,12 @@ step := o.NetworkDNSUpdate(
 
 ## Parameters
 
-| Parameter       | Type       | Description                                                    |
-| --------------- | ---------- | -------------------------------------------------------------- |
-| `target`        | `string`   | Target host: `_any`, `_all`, hostname, or label selector.      |
-| `interfaceName` | `string`   | Network interface to configure (for example, `eth0`, `ens33`). |
-| `servers`       | `[]string` | DNS server addresses to set.                                   |
-| `searchDomains` | `[]string` | DNS search domains to set.                                     |
+| Parameter       | Type       | Description                                                        |
+| --------------- | ---------- | ------------------------------------------------------------------ |
+| `target`        | `string`   | Target host: `_any`, `_all`, hostname, or label selector.          |
+| `interfaceName` | `string`   | The network interface to configure (for example, `eth0`, `ens33`). |
+| `servers`       | `[]string` | The DNS server addresses to set.                                   |
+| `searchDomains` | `[]string` | The DNS search domains to set.                                     |
 
 ## Result type
 

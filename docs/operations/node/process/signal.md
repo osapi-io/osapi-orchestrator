@@ -15,14 +15,14 @@ step := o.ProcessSignal("web-01", 1234, osapi.ProcessSignalOpts{
 | Parameter | Type                | Description                                               |
 | --------- | ------------------- | --------------------------------------------------------- |
 | `target`  | `string`            | Target host: `_any`, `_all`, hostname, or label selector. |
-| `pid`     | `int`               | Process ID to signal.                                     |
-| `opts`    | `ProcessSignalOpts` | Signal options (refer to the table below).                |
+| `pid`     | `int`               | The process ID to signal.                                 |
+| `opts`    | `ProcessSignalOpts` | The signal options (refer to the table below).            |
 
 ### ProcessSignalOpts
 
-| Field    | Type     | Required | Description                                       |
-| -------- | -------- | -------- | ------------------------------------------------- |
-| `Signal` | `string` | Yes      | Signal name (for example, `TERM`, `KILL`, `HUP`). |
+| Field    | Type     | Required | Description                                           |
+| -------- | -------- | -------- | ----------------------------------------------------- |
+| `Signal` | `string` | Yes      | The signal name (for example, `TERM`, `KILL`, `HUP`). |
 
 ## Result type
 
@@ -33,8 +33,8 @@ err := results.Decode("signal-process-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `PID`     | `int`    | Process ID that received the signal.                         |
-| `Signal`  | `string` | Signal that the agent sent.                                  |
+| `PID`     | `int`    | The process ID that received the signal.                     |
+| `Signal`  | `string` | The signal that the agent sent.                              |
 | `Changed` | `bool`   | `true` if the operation sent the signal.                     |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

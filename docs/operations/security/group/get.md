@@ -13,7 +13,7 @@ step := o.GroupGet("web-01", "developers")
 | Parameter   | Type     | Description                                               |
 | ----------- | -------- | --------------------------------------------------------- |
 | `target`    | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `groupName` | `string` | Name of the group to get.                                 |
+| `groupName` | `string` | The name of the group to get.                             |
 
 ## Result type
 
@@ -25,7 +25,7 @@ err := results.Decode("get-group-1", &result)
 | Field      | Type          | Description                                                  |
 | ---------- | ------------- | ------------------------------------------------------------ |
 | `Hostname` | `string`      | The hostname of the agent that ran the operation.            |
-| `Groups`   | `[]GroupInfo` | Group details (one entry).                                   |
+| `Groups`   | `[]GroupInfo` | The group details (one entry).                               |
 | `Error`    | `string`      | The error message if the operation failed. Empty on success. |
 
 ## Idempotency

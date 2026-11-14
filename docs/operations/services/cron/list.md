@@ -24,12 +24,12 @@ err := results.Decode("list-cron-1", &result)
 | Field      | Type     | Description                                                  |
 | ---------- | -------- | ------------------------------------------------------------ |
 | `Hostname` | `string` | The hostname of the agent that ran the operation.            |
-| `Name`     | `string` | Cron entry name.                                             |
-| `Object`   | `string` | Object store name of the deployed script.                    |
-| `Schedule` | `string` | Cron expression. Empty if the entry uses an interval.        |
-| `Interval` | `string` | Periodic interval: hourly, daily, weekly, or monthly.        |
-| `Source`   | `string` | Path to the deployed script on the filesystem.               |
-| `User`     | `string` | User the cron job runs as.                                   |
+| `Name`     | `string` | The cron entry name.                                         |
+| `Object`   | `string` | The name of the deployed script in the Object Store.         |
+| `Schedule` | `string` | The cron expression. Empty if the entry uses an interval.    |
+| `Interval` | `string` | The periodic interval: hourly, daily, weekly, or monthly.    |
+| `Source`   | `string` | The path to the deployed script on the filesystem.           |
+| `User`     | `string` | The user that the cron job runs as.                          |
 | `Error`    | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency

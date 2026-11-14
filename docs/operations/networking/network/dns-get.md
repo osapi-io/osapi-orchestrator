@@ -11,10 +11,10 @@ step := o.NetworkDNSGet("web-01", "eth0")
 
 ## Parameters
 
-| Parameter       | Type     | Description                                                |
-| --------------- | -------- | ---------------------------------------------------------- |
-| `target`        | `string` | Target host: `_any`, `_all`, hostname, or label selector.  |
-| `interfaceName` | `string` | Network interface to query (for example, `eth0`, `ens33`). |
+| Parameter       | Type     | Description                                                    |
+| --------------- | -------- | -------------------------------------------------------------- |
+| `target`        | `string` | Target host: `_any`, `_all`, hostname, or label selector.      |
+| `interfaceName` | `string` | The network interface to query (for example, `eth0`, `ens33`). |
 
 ## Result type
 

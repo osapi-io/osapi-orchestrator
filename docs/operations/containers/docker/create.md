@@ -17,10 +17,10 @@ step := o.DockerCreate("_any", osapi.DockerCreateOpts{
 
 ## Parameters
 
-| Parameter | Type                     | Description                        |
-| --------- | ------------------------ | ---------------------------------- |
-| `target`  | `string`                 | The target host or routing value.  |
-| `opts`    | `osapi.DockerCreateOpts` | The options for the new container. |
+| Parameter | Type                     | Description                                               |
+| --------- | ------------------------ | --------------------------------------------------------- |
+| `target`  | `string`                 | Target host: `_any`, `_all`, hostname, or label selector. |
+| `opts`    | `osapi.DockerCreateOpts` | The options for the new container.                        |
 
 ### DockerCreateOpts fields
 

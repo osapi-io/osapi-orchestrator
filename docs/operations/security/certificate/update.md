@@ -15,14 +15,14 @@ step := o.CertificateUpdate("web-01", "internal-ca", osapi.CertificateUpdateOpts
 | Parameter  | Type                    | Description                                               |
 | ---------- | ----------------------- | --------------------------------------------------------- |
 | `target`   | `string`                | Target host: `_any`, `_all`, hostname, or label selector. |
-| `certName` | `string`                | Name of the certificate to update.                        |
+| `certName` | `string`                | The name of the certificate to update.                    |
 | `opts`     | `CertificateUpdateOpts` | Update options (refer to the table below).                |
 
 ### CertificateUpdateOpts
 
-| Field    | Type     | Required | Description                                  |
-| -------- | -------- | -------- | -------------------------------------------- |
-| `Object` | `string` | Yes      | New Object Store reference for the PEM file. |
+| Field    | Type     | Required | Description                                      |
+| -------- | -------- | -------- | ------------------------------------------------ |
+| `Object` | `string` | Yes      | The new Object Store reference for the PEM file. |
 
 ## Result type
 
@@ -33,7 +33,7 @@ err := results.Decode("update-certificate-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Certificate name.                                            |
+| `Name`    | `string` | The certificate name.                                        |
 | `Changed` | `bool`   | `true` if the operation changed the certificate.             |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
