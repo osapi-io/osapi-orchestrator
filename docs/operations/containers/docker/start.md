@@ -10,10 +10,10 @@ step := o.DockerStart("web-01", "c1a2b3d4e5f6")
 
 ## Parameters
 
-| Parameter | Type     | Description                               |
-| --------- | -------- | ----------------------------------------- |
-| `target`  | `string` | The target host or routing value.         |
-| `id`      | `string` | The ID or name of the container to start. |
+| Parameter | Type     | Description                                               |
+| --------- | -------- | --------------------------------------------------------- |
+| `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
+| `id`      | `string` | The ID or name of the container to start.                 |
 
 ## Result type
 
@@ -30,8 +30,8 @@ err := results.Decode("docker-start", &result)
 
 ## Idempotency
 
-**Idempotent.** If the container is already running, the operation does nothing
-and returns `Changed: false`.
+**Idempotent.** If the container is already in the `running` state, the
+operation does nothing and returns `Changed: false`.
 
 ## Permissions
 

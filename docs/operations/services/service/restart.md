@@ -13,7 +13,7 @@ step := o.ServiceRestart("web-01", "nginx")
 | Parameter     | Type     | Description                                               |
 | ------------- | -------- | --------------------------------------------------------- |
 | `target`      | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `serviceName` | `string` | Name of the service to restart.                           |
+| `serviceName` | `string` | The name of the service to restart.                       |
 
 ## Result type
 
@@ -24,7 +24,7 @@ err := results.Decode("restart-service-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Name of the restarted service.                               |
+| `Name`    | `string` | The name of the restarted service.                           |
 | `Changed` | `bool`   | `true` if the operation restarted the service.               |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

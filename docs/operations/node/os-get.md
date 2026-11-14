@@ -25,15 +25,15 @@ err := results.Decode("get-os-1", &result)
 | Field      | Type      | Description                                                  |
 | ---------- | --------- | ------------------------------------------------------------ |
 | `Hostname` | `string`  | The hostname of the agent that ran the operation.            |
-| `OSInfo`   | `*OSInfo` | OS distribution and version (refer to the table below).      |
+| `OSInfo`   | `*OSInfo` | The OS distribution and version (refer to the table below).  |
 | `Error`    | `string`  | The error message if the operation failed. Empty on success. |
 
 ### OSInfo
 
-| Field          | Type     | Description                              |
-| -------------- | -------- | ---------------------------------------- |
-| `Distribution` | `string` | OS distribution (for example, `Ubuntu`). |
-| `Version`      | `string` | OS version (for example, `24.04`).       |
+| Field          | Type     | Description                                  |
+| -------------- | -------- | -------------------------------------------- |
+| `Distribution` | `string` | The OS distribution (for example, `Ubuntu`). |
+| `Version`      | `string` | The OS version (for example, `24.04`).       |
 
 ## Idempotency
 

@@ -29,17 +29,17 @@ err := results.Decode("list-process-1", &result)
 
 ### ProcessInfo
 
-| Field        | Type      | Description                 |
-| ------------ | --------- | --------------------------- |
-| `PID`        | `int`     | Process ID.                 |
-| `Name`       | `string`  | Process name.               |
-| `User`       | `string`  | User that runs the process. |
-| `State`      | `string`  | Process state.              |
-| `CPUPercent` | `float64` | CPU usage percentage.       |
-| `MemPercent` | `float32` | Memory usage percentage.    |
-| `MemRSS`     | `int64`   | Resident set size (bytes).  |
-| `Command`    | `string`  | Full command line.          |
-| `StartTime`  | `string`  | Process start time.         |
+| Field        | Type      | Description                     |
+| ------------ | --------- | ------------------------------- |
+| `PID`        | `int`     | The process ID.                 |
+| `Name`       | `string`  | The process name.               |
+| `User`       | `string`  | The user that runs the process. |
+| `State`      | `string`  | The process state.              |
+| `CPUPercent` | `float64` | The CPU usage percentage.       |
+| `MemPercent` | `float32` | The memory usage percentage.    |
+| `MemRSS`     | `int64`   | The resident set size (bytes).  |
+| `Command`    | `string`  | The full command line.          |
+| `StartTime`  | `string`  | The process start time.         |
 
 ## Idempotency
 

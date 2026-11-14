@@ -13,7 +13,7 @@ step := o.GroupDelete("web-01", "developers")
 | Parameter   | Type     | Description                                               |
 | ----------- | -------- | --------------------------------------------------------- |
 | `target`    | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `groupName` | `string` | Name of the group to delete.                              |
+| `groupName` | `string` | The name of the group to delete.                          |
 
 ## Result type
 
@@ -24,7 +24,7 @@ err := results.Decode("delete-group-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Group name.                                                  |
+| `Name`    | `string` | The group name.                                              |
 | `Changed` | `bool`   | `true` if the operation removed the group.                   |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

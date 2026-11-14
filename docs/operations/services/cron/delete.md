@@ -13,7 +13,7 @@ step := o.CronDelete("web-01", "backup")
 | Parameter   | Type     | Description                                               |
 | ----------- | -------- | --------------------------------------------------------- |
 | `target`    | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `entryName` | `string` | Name of the cron entry to delete.                         |
+| `entryName` | `string` | The name of the cron entry to delete.                     |
 
 ## Result type
 
@@ -24,7 +24,7 @@ err := results.Decode("delete-cron-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Name of the deleted cron entry.                              |
+| `Name`    | `string` | The name of the deleted cron entry.                          |
 | `Changed` | `bool`   | `true` if the operation removed the entry.                   |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

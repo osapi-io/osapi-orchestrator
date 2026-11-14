@@ -13,7 +13,7 @@ step := o.UserListKeys("web-01", "deploy")
 | Parameter  | Type     | Description                                               |
 | ---------- | -------- | --------------------------------------------------------- |
 | `target`   | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `username` | `string` | Username whose SSH keys to list.                          |
+| `username` | `string` | The username whose SSH keys to list.                      |
 
 ## Result type
 
@@ -30,11 +30,11 @@ err := results.Decode("list-ssh-key-1", &result)
 
 ### SSHKeyInfo
 
-| Field         | Type     | Description                            |
-| ------------- | -------- | -------------------------------------- |
-| `Type`        | `string` | Key type (for example, `ssh-ed25519`). |
-| `Fingerprint` | `string` | Key fingerprint.                       |
-| `Comment`     | `string` | Key comment.                           |
+| Field         | Type     | Description                                |
+| ------------- | -------- | ------------------------------------------ |
+| `Type`        | `string` | The key type (for example, `ssh-ed25519`). |
+| `Fingerprint` | `string` | The key fingerprint.                       |
+| `Comment`     | `string` | The key comment.                           |
 
 ## Idempotency
 

@@ -13,7 +13,7 @@ step := o.UserDelete("web-01", "deploy")
 | Parameter  | Type     | Description                                               |
 | ---------- | -------- | --------------------------------------------------------- |
 | `target`   | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `username` | `string` | Username to delete.                                       |
+| `username` | `string` | The username to delete.                                   |
 
 ## Result type
 
@@ -24,7 +24,7 @@ err := results.Decode("delete-user-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Username.                                                    |
+| `Name`    | `string` | The username.                                                |
 | `Changed` | `bool`   | `true` if the operation removed the user.                    |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

@@ -13,7 +13,7 @@ step := o.ServiceDisable("web-01", "nginx")
 | Parameter     | Type     | Description                                               |
 | ------------- | -------- | --------------------------------------------------------- |
 | `target`      | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `serviceName` | `string` | Name of the service to disable.                           |
+| `serviceName` | `string` | The name of the service to disable.                       |
 
 ## Result type
 
@@ -24,7 +24,7 @@ err := results.Decode("disable-service-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Name of the disabled service.                                |
+| `Name`    | `string` | The name of the disabled service.                            |
 | `Changed` | `bool`   | `true` if the operation disabled the service.                |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

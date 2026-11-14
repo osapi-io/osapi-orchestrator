@@ -10,10 +10,10 @@ step := o.DockerInspect("web-01", "c1a2b3d4e5f6")
 
 ## Parameters
 
-| Parameter | Type     | Description                                 |
-| --------- | -------- | ------------------------------------------- |
-| `target`  | `string` | The target host or routing value.           |
-| `id`      | `string` | The ID or name of the container to examine. |
+| Parameter | Type     | Description                                               |
+| --------- | -------- | --------------------------------------------------------- |
+| `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
+| `id`      | `string` | The ID or name of the container to examine.               |
 
 ## Result type
 
@@ -26,9 +26,9 @@ err := results.Decode("docker-inspect", &result)
 | ----------------- | ------------------- | ------------------------------------------------------------ |
 | `ID`              | `string`            | The ID of the container.                                     |
 | `Name`            | `string`            | The name of the container.                                   |
-| `Image`           | `string`            | The image that the container was created from.               |
+| `Image`           | `string`            | The image that Docker used to create the container.          |
 | `State`           | `string`            | The current state of the container.                          |
-| `Created`         | `string`            | The time when the container was created.                     |
+| `Created`         | `string`            | The time when Docker created the container.                  |
 | `Ports`           | `[]string`          | The published port mappings.                                 |
 | `Mounts`          | `[]string`          | The volume mounts.                                           |
 | `Env`             | `[]string`          | The environment variables.                                   |

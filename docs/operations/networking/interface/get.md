@@ -13,7 +13,7 @@ step := o.InterfaceGet("web-01", "eth0")
 | Parameter   | Type     | Description                                               |
 | ----------- | -------- | --------------------------------------------------------- |
 | `target`    | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `ifaceName` | `string` | Name of the network interface.                            |
+| `ifaceName` | `string` | The name of the network interface.                        |
 
 ## Result type
 
@@ -25,7 +25,7 @@ err := results.Decode("get-interface-1", &result)
 | Field       | Type             | Description                                                  |
 | ----------- | ---------------- | ------------------------------------------------------------ |
 | `Hostname`  | `string`         | The hostname of the agent that ran the operation.            |
-| `Interface` | `*InterfaceInfo` | Interface details.                                           |
+| `Interface` | `*InterfaceInfo` | The interface details.                                       |
 | `Error`     | `string`         | The error message if the operation failed. Empty on success. |
 
 ## Idempotency

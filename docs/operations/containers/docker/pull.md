@@ -12,10 +12,10 @@ step := o.DockerPull("_any", osapi.DockerPullOpts{
 
 ## Parameters
 
-| Parameter | Type                   | Description                       |
-| --------- | ---------------------- | --------------------------------- |
-| `target`  | `string`               | The target host or routing value. |
-| `opts`    | `osapi.DockerPullOpts` | The pull options (Image).         |
+| Parameter | Type                   | Description                                               |
+| --------- | ---------------------- | --------------------------------------------------------- |
+| `target`  | `string`               | Target host: `_any`, `_all`, hostname, or label selector. |
+| `opts`    | `osapi.DockerPullOpts` | The pull options (Image).                                 |
 
 ## Result type
 

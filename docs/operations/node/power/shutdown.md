@@ -16,14 +16,14 @@ step := o.PowerShutdown("web-01", osapi.PowerOpts{
 | Parameter | Type        | Description                                               |
 | --------- | ----------- | --------------------------------------------------------- |
 | `target`  | `string`    | Target host: `_any`, `_all`, hostname, or label selector. |
-| `opts`    | `PowerOpts` | Power options (refer to the table below).                 |
+| `opts`    | `PowerOpts` | The power options (refer to the table below).             |
 
 ### PowerOpts
 
-| Field     | Type     | Required | Description                               |
-| --------- | -------- | -------- | ----------------------------------------- |
-| `Delay`   | `int`    | No       | Seconds to wait before the shutdown.      |
-| `Message` | `string` | No       | Message to broadcast before the shutdown. |
+| Field     | Type     | Required | Description                                        |
+| --------- | -------- | -------- | -------------------------------------------------- |
+| `Delay`   | `int`    | No       | The number of seconds to wait before the shutdown. |
+| `Message` | `string` | No       | The message to broadcast before the shutdown.      |
 
 ## Result type
 
@@ -34,8 +34,8 @@ err := results.Decode("shutdown-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Action`  | `string` | Action taken (for example, `shutdown`).                      |
-| `Delay`   | `int`    | Delay in seconds before the shutdown starts.                 |
+| `Action`  | `string` | The action that the agent did (for example, `shutdown`).     |
+| `Delay`   | `int`    | The delay in seconds before the shutdown starts.             |
 | `Changed` | `bool`   | `true` if the operation started the shutdown.                |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

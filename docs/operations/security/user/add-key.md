@@ -15,14 +15,14 @@ step := o.UserAddKey("web-01", "deploy", osapi.SSHKeyAddOpts{
 | Parameter  | Type            | Description                                               |
 | ---------- | --------------- | --------------------------------------------------------- |
 | `target`   | `string`        | Target host: `_any`, `_all`, hostname, or label selector. |
-| `username` | `string`        | Username to add the key for.                              |
+| `username` | `string`        | The username to add the key for.                          |
 | `opts`     | `SSHKeyAddOpts` | Add key options (refer to the table below).               |
 
 ### SSHKeyAddOpts
 
-| Field | Type     | Required | Description               |
-| ----- | -------- | -------- | ------------------------- |
-| `Key` | `string` | Yes      | Full SSH public key line. |
+| Field | Type     | Required | Description                   |
+| ----- | -------- | -------- | ----------------------------- |
+| `Key` | `string` | Yes      | The full SSH public key line. |
 
 ## Result type
 

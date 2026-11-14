@@ -13,7 +13,7 @@ step := o.ServiceStop("web-01", "nginx")
 | Parameter     | Type     | Description                                               |
 | ------------- | -------- | --------------------------------------------------------- |
 | `target`      | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `serviceName` | `string` | Name of the service to stop.                              |
+| `serviceName` | `string` | The name of the service to stop.                          |
 
 ## Result type
 
@@ -24,7 +24,7 @@ err := results.Decode("stop-service-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Name of the stopped service.                                 |
+| `Name`    | `string` | The name of the stopped service.                             |
 | `Changed` | `bool`   | `true` if the operation stopped the service.                 |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

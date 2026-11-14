@@ -17,19 +17,19 @@ step := o.CronUpdate("web-01", "backup", osapi.CronUpdateOpts{
 | Parameter   | Type             | Description                                               |
 | ----------- | ---------------- | --------------------------------------------------------- |
 | `target`    | `string`         | Target host: `_any`, `_all`, hostname, or label selector. |
-| `entryName` | `string`         | Name of the cron entry to update.                         |
+| `entryName` | `string`         | The name of the cron entry to update.                     |
 | `opts`      | `CronUpdateOpts` | Update options (refer to the table below).                |
 
 ### CronUpdateOpts
 
-| Field         | Type             | Required | Description                            |
-| ------------- | ---------------- | -------- | -------------------------------------- |
-| `Object`      | `string`         | No       | New object to deploy.                  |
-| `Schedule`    | `string`         | No       | New cron expression.                   |
-| `User`        | `string`         | No       | New user to run the command as.        |
-| `ContentType` | `string`         | No       | `"raw"` or `"template"`.               |
-| `Vars`        | `map[string]any` | No       | Template variables when ContentType is |
-|               |                  |          | `"template"`.                          |
+| Field         | Type             | Required | Description                                |
+| ------------- | ---------------- | -------- | ------------------------------------------ |
+| `Object`      | `string`         | No       | The new object to deploy.                  |
+| `Schedule`    | `string`         | No       | The new cron expression.                   |
+| `User`        | `string`         | No       | The new user to run the command as.        |
+| `ContentType` | `string`         | No       | `"raw"` or `"template"`.                   |
+| `Vars`        | `map[string]any` | No       | The template variables when ContentType is |
+|               |                  |          | `"template"`.                              |
 
 ## Result type
 
@@ -40,7 +40,7 @@ err := results.Decode("update-cron-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Name of the updated cron entry.                              |
+| `Name`    | `string` | The name of the updated cron entry.                          |
 | `Changed` | `bool`   | `true` if the operation changed the entry.                   |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

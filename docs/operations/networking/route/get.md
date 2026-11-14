@@ -13,7 +13,7 @@ step := o.RouteGet("web-01", "eth0")
 | Parameter       | Type     | Description                                               |
 | --------------- | -------- | --------------------------------------------------------- |
 | `target`        | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `interfaceName` | `string` | Network interface to get routes for.                      |
+| `interfaceName` | `string` | The network interface to get routes for.                  |
 
 ## Result type
 

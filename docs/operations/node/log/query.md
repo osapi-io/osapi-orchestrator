@@ -22,7 +22,7 @@ step := o.LogQuery("web-01", osapi.LogQueryOpts{
 
 | Field      | Type      | Required | Description                                               |
 | ---------- | --------- | -------- | --------------------------------------------------------- |
-| `Lines`    | `*int`    | No       | Maximum number of log lines to return.                    |
+| `Lines`    | `*int`    | No       | The maximum number of log lines to return.                |
 | `Since`    | `*string` | No       | Return only entries since this time (for example, `1h`).  |
 | `Priority` | `*string` | No       | Filter by priority level (for example, `err`, `warning`). |
 
@@ -41,14 +41,14 @@ err := results.Decode("query-log-1", &result)
 
 ### LogEntry
 
-| Field       | Type     | Description         |
-| ----------- | -------- | ------------------- |
-| `Timestamp` | `string` | Entry timestamp.    |
-| `Unit`      | `string` | Systemd unit name.  |
-| `Priority`  | `string` | Log priority level. |
-| `Message`   | `string` | Log message.        |
-| `PID`       | `int`    | Process ID.         |
-| `Hostname`  | `string` | Source hostname.    |
+| Field       | Type     | Description             |
+| ----------- | -------- | ----------------------- |
+| `Timestamp` | `string` | The entry timestamp.    |
+| `Unit`      | `string` | The systemd unit name.  |
+| `Priority`  | `string` | The log priority level. |
+| `Message`   | `string` | The log message.        |
+| `PID`       | `int`    | The process ID.         |
+| `Hostname`  | `string` | The source hostname.    |
 
 ## Idempotency
 

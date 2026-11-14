@@ -1,6 +1,6 @@
 # FileStatusGet
 
-Checks the status of a deployed file on the target agent. The operation compares
+Checks the status of a deployed file on the target host. The operation compares
 the file on disk with the expected state that the agent records. It reports if
 the file is in sync, has drifted, or is missing.
 

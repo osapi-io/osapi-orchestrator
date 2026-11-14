@@ -17,8 +17,8 @@ step := o.RouteCreate("web-01", "eth0", osapi.RouteConfigOpts{
 | Parameter       | Type              | Description                                               |
 | --------------- | ----------------- | --------------------------------------------------------- |
 | `target`        | `string`          | Target host: `_any`, `_all`, hostname, or label selector. |
-| `interfaceName` | `string`          | Network interface to add routes to.                       |
-| `opts`          | `RouteConfigOpts` | Route configuration (refer to the table below).           |
+| `interfaceName` | `string`          | The network interface to add routes to.                   |
+| `opts`          | `RouteConfigOpts` | The route configuration (refer to the table below).       |
 
 ### RouteConfigOpts
 
@@ -28,10 +28,10 @@ step := o.RouteCreate("web-01", "eth0", osapi.RouteConfigOpts{
 
 ### RouteItem
 
-| Field | Type     | Required | Description                   |
-| ----- | -------- | -------- | ----------------------------- |
-| `To`  | `string` | Yes      | Destination in CIDR notation. |
-| `Via` | `string` | Yes      | Gateway IP address.           |
+| Field | Type     | Required | Description                       |
+| ----- | -------- | -------- | --------------------------------- |
+| `To`  | `string` | Yes      | The destination in CIDR notation. |
+| `Via` | `string` | Yes      | The gateway IP address.           |
 
 ## Result type
 
@@ -42,7 +42,7 @@ err := results.Decode("create-route-1", &result)
 
 | Field       | Type     | Description                                                  |
 | ----------- | -------- | ------------------------------------------------------------ |
-| `Interface` | `string` | Interface name.                                              |
+| `Interface` | `string` | The interface name.                                          |
 | `Changed`   | `bool`   | `true` if the operation created the routes.                  |
 | `Error`     | `string` | The error message if the operation failed. Empty on success. |
 

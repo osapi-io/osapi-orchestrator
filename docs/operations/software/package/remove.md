@@ -13,7 +13,7 @@ step := o.PackageRemove("web-01", "nginx")
 | Parameter | Type     | Description                                               |
 | --------- | -------- | --------------------------------------------------------- |
 | `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `pkgName` | `string` | Name of the package to remove.                            |
+| `pkgName` | `string` | The name of the package to remove.                        |
 
 ## Result type
 
@@ -24,7 +24,7 @@ err := results.Decode("remove-package-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Name of the package.                                         |
+| `Name`    | `string` | The name of the package.                                     |
 | `Changed` | `bool`   | `true` if the operation removed the package.                 |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

@@ -13,7 +13,7 @@ step := o.PackageGet("web-01", "nginx")
 | Parameter | Type     | Description                                               |
 | --------- | -------- | --------------------------------------------------------- |
 | `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `pkgName` | `string` | Name of the package to get.                               |
+| `pkgName` | `string` | The name of the package to get.                           |
 
 ## Result type
 
@@ -25,7 +25,7 @@ err := results.Decode("get-package-1", &result)
 | Field      | Type            | Description                                                  |
 | ---------- | --------------- | ------------------------------------------------------------ |
 | `Hostname` | `string`        | The hostname of the agent that ran the operation.            |
-| `Packages` | `[]PackageInfo` | Package details (one entry).                                 |
+| `Packages` | `[]PackageInfo` | The package details (one entry).                             |
 | `Error`    | `string`        | The error message if the operation failed. Empty on success. |
 
 ## Idempotency

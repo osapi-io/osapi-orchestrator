@@ -27,8 +27,8 @@ o.CommandExec("_any", "whoami").After(hostname)
 
 ## Step chaining
 
-Chain methods on a `*Step` to declare the order, the conditions, and the error
-handling:
+Chain methods on a `*Step` to declare the order, the conditions, and what to do
+on an error:
 
 | Method                  | What it does                                                 | Guide                               |
 | ----------------------- | ------------------------------------------------------------ | ----------------------------------- |
@@ -44,7 +44,7 @@ handling:
 | `OnlyIfAllHostsChanged` | Skip if one or more hosts in the dependencies did not change | [Guards](guards.md)                 |
 | `When`                  | Guard. Run only if the predicate returns true                | [Guards](guards.md)                 |
 | `WhenFact`              | Guard. Run only if the agent fact matches                    | [Guards](guards.md)                 |
-| `ContinueOnError`       | Continue to run independent tasks after a failure            | [Error Recovery](error-recovery.md) |
+| `ContinueOnError`       | Continue to run independent steps after a failure            | [Error Recovery](error-recovery.md) |
 | `OnError`               | Set the error strategy (`StopAll` or `Continue`)             | [Error Recovery](error-recovery.md) |
 | `Named`                 | Set a custom step name for result decoding                   | [Result Decode](result-decode.md)   |
 
@@ -97,7 +97,7 @@ and you can use more than one together:
 | Strategy            | Behavior                                                      |
 | ------------------- | ------------------------------------------------------------- |
 | `StopAll` (default) | Stop at the first failure and cancel all other steps          |
-| `Continue`          | Skip the dependents and continue to run the independent tasks |
+| `Continue`          | Skip the dependents and continue to run the independent steps |
 
 `.Retry(n)` sets a retry for each step.
 
@@ -106,7 +106,7 @@ and you can use more than one together:
 | Guide                               | What it covers                                                |
 | ----------------------------------- | ------------------------------------------------------------- |
 | [Basic DAG](basic.md)               | How to make a simple DAG plan                                 |
-| [Parallel Execution](parallel.md)   | Tasks that run at the same time at one DAG level              |
+| [Parallel Execution](parallel.md)   | Steps that run at the same time at one DAG level              |
 | [Guards](guards.md)                 | When predicates, OnlyIfChanged, WhenFact                      |
 | [OnlyIfChanged](only-if-changed.md) | Skip if no dependency reported a change                       |
 | [Retry](retry.md)                   | Retry after a failure, with a number of attempts that you set |

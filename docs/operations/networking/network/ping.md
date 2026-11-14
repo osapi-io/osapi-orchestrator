@@ -14,7 +14,7 @@ step := o.NetworkPingDo("web-01", "8.8.8.8")
 | Parameter | Type     | Description                                               |
 | --------- | -------- | --------------------------------------------------------- |
 | `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `address` | `string` | Hostname or IP address to ping.                           |
+| `address` | `string` | The hostname or IP address to ping.                       |
 
 ## Result type
 
@@ -25,9 +25,9 @@ err := results.Decode("network.ping.do-1", &result)
 
 | Field             | Type      | Description                                                  |
 | ----------------- | --------- | ------------------------------------------------------------ |
-| `PacketsSent`     | `int`     | Number of ICMP packets sent.                                 |
-| `PacketsReceived` | `int`     | Number of ICMP packets received.                             |
-| `PacketLoss`      | `float64` | Percentage of packets lost (0-100).                          |
+| `PacketsSent`     | `int`     | The number of ICMP packets that the host sent.               |
+| `PacketsReceived` | `int`     | The number of ICMP packets that the host received.           |
+| `PacketLoss`      | `float64` | The percentage of packets that the host lost (0-100).        |
 | `Error`           | `string`  | The error message if the operation failed. Empty on success. |
 
 ## Idempotency

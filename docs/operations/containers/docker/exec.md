@@ -1,6 +1,7 @@
 # DockerExec
 
-Runs a command in a running container on the target host.
+Runs a command in a container on the target host. The container must be in the
+`running` state.
 
 ## Usage
 
@@ -12,11 +13,11 @@ step := o.DockerExec("web-01", "c1a2b3d4e5f6", osapi.DockerExecOpts{
 
 ## Parameters
 
-| Parameter | Type                   | Description                                            |
-| --------- | ---------------------- | ------------------------------------------------------ |
-| `target`  | `string`               | The target host or routing value.                      |
-| `id`      | `string`               | The ID or name of the container that runs the command. |
-| `opts`    | `osapi.DockerExecOpts` | The options for the command.                           |
+| Parameter | Type                   | Description                                               |
+| --------- | ---------------------- | --------------------------------------------------------- |
+| `target`  | `string`               | Target host: `_any`, `_all`, hostname, or label selector. |
+| `id`      | `string`               | The ID or name of the container that runs the command.    |
+| `opts`    | `osapi.DockerExecOpts` | The options for the command.                              |
 
 ### DockerExecOpts fields
 

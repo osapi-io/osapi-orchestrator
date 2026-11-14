@@ -1,6 +1,6 @@
 # DockerStop
 
-Stops a running container on the target host.
+Stops a container that is in the `running` state on the target host.
 
 ## Usage
 
@@ -12,11 +12,11 @@ step := o.DockerStop("web-01", "c1a2b3d4e5f6", osapi.DockerStopOpts{
 
 ## Parameters
 
-| Parameter | Type                   | Description                              |
-| --------- | ---------------------- | ---------------------------------------- |
-| `target`  | `string`               | The target host or routing value.        |
-| `id`      | `string`               | The ID or name of the container to stop. |
-| `opts`    | `osapi.DockerStopOpts` | The stop options.                        |
+| Parameter | Type                   | Description                                               |
+| --------- | ---------------------- | --------------------------------------------------------- |
+| `target`  | `string`               | Target host: `_any`, `_all`, hostname, or label selector. |
+| `id`      | `string`               | The ID or name of the container to stop.                  |
+| `opts`    | `osapi.DockerStopOpts` | The stop options.                                         |
 
 ### DockerStopOpts fields
 

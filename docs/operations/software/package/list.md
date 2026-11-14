@@ -29,13 +29,13 @@ err := results.Decode("list-package-1", &result)
 
 ### PackageInfo
 
-| Field         | Type     | Description              |
-| ------------- | -------- | ------------------------ |
-| `Name`        | `string` | Package name.            |
-| `Version`     | `string` | Installed version.       |
-| `Description` | `string` | Package description.     |
-| `Status`      | `string` | Installation status.     |
-| `Size`        | `int64`  | Installed size in bytes. |
+| Field         | Type     | Description                  |
+| ------------- | -------- | ---------------------------- |
+| `Name`        | `string` | The package name.            |
+| `Version`     | `string` | The installed version.       |
+| `Description` | `string` | The package description.     |
+| `Status`      | `string` | The installation status.     |
+| `Size`        | `int64`  | The installed size in bytes. |
 
 ## Idempotency
 

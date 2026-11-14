@@ -13,7 +13,7 @@ step := o.ServiceStart("web-01", "nginx")
 | Parameter     | Type     | Description                                               |
 | ------------- | -------- | --------------------------------------------------------- |
 | `target`      | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `serviceName` | `string` | Name of the service to start.                             |
+| `serviceName` | `string` | The name of the service to start.                         |
 
 ## Result type
 
@@ -24,7 +24,7 @@ err := results.Decode("start-service-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Name of the started service.                                 |
+| `Name`    | `string` | The name of the started service.                             |
 | `Changed` | `bool`   | `true` if the operation started the service.                 |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

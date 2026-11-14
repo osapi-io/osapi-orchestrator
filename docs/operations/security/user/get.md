@@ -13,7 +13,7 @@ step := o.UserGet("web-01", "deploy")
 | Parameter  | Type     | Description                                               |
 | ---------- | -------- | --------------------------------------------------------- |
 | `target`   | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `username` | `string` | Username to get.                                          |
+| `username` | `string` | The username to get.                                      |
 
 ## Result type
 
@@ -25,7 +25,7 @@ err := results.Decode("get-user-1", &result)
 | Field      | Type         | Description                                                  |
 | ---------- | ------------ | ------------------------------------------------------------ |
 | `Hostname` | `string`     | The hostname of the agent that ran the operation.            |
-| `Users`    | `[]UserInfo` | User details (one entry).                                    |
+| `Users`    | `[]UserInfo` | The user details (one entry).                                |
 | `Error`    | `string`     | The error message if the operation failed. Empty on success. |
 
 ## Idempotency

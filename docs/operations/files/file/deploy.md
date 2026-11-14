@@ -1,6 +1,6 @@
 # FileDeploy
 
-Deploys a file from the NATS Object Store to the filesystem of the target agent.
+Deploys a file from the NATS Object Store to the filesystem of the target host.
 Upload the object first (refer to [FileUpload](upload.md)). ContentType selects
 how the agent writes the content. With `raw`, the agent writes the content as it
 is. With `template`, the agent renders the content as a Go template with the

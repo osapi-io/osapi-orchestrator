@@ -29,11 +29,11 @@ err := results.Decode("list-group-1", &result)
 
 ### GroupInfo
 
-| Field     | Type       | Description         |
-| --------- | ---------- | ------------------- |
-| `Name`    | `string`   | Group name.         |
-| `GID`     | `int`      | Numeric group ID.   |
-| `Members` | `[]string` | Group member names. |
+| Field     | Type       | Description             |
+| --------- | ---------- | ----------------------- |
+| `Name`    | `string`   | The group name.         |
+| `GID`     | `int`      | The numeric group ID.   |
+| `Members` | `[]string` | The group member names. |
 
 ## Idempotency
 

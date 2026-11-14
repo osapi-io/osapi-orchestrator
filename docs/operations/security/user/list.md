@@ -31,12 +31,12 @@ err := results.Decode("list-user-1", &result)
 
 | Field    | Type       | Description                      |
 | -------- | ---------- | -------------------------------- |
-| `Name`   | `string`   | Username.                        |
-| `UID`    | `int`      | Numeric user ID.                 |
-| `GID`    | `int`      | Primary group ID.                |
-| `Home`   | `string`   | Home directory path.             |
-| `Shell`  | `string`   | Login shell path.                |
-| `Groups` | `[]string` | Supplementary group names.       |
+| `Name`   | `string`   | The username.                    |
+| `UID`    | `int`      | The numeric user ID.             |
+| `GID`    | `int`      | The primary group ID.            |
+| `Home`   | `string`   | The home directory path.         |
+| `Shell`  | `string`   | The login shell path.            |
+| `Groups` | `[]string` | The supplementary group names.   |
 | `Locked` | `bool`     | `true` if the account is locked. |
 
 ## Idempotency

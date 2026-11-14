@@ -31,7 +31,7 @@ err := results.Decode("list-package-updates-1", &result)
 
 | Field            | Type     | Description                        |
 | ---------------- | -------- | ---------------------------------- |
-| `Name`           | `string` | Package name.                      |
+| `Name`           | `string` | The package name.                  |
 | `CurrentVersion` | `string` | The version that is installed now. |
 
 ## Idempotency

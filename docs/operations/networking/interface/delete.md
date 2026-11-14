@@ -13,7 +13,7 @@ step := o.InterfaceDelete("web-01", "eth1")
 | Parameter   | Type     | Description                                               |
 | ----------- | -------- | --------------------------------------------------------- |
 | `target`    | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `ifaceName` | `string` | Name of the network interface to delete.                  |
+| `ifaceName` | `string` | The name of the network interface to delete.              |
 
 ## Result type
 
@@ -24,7 +24,7 @@ err := results.Decode("delete-interface-1", &result)
 
 | Field     | Type     | Description                                                  |
 | --------- | -------- | ------------------------------------------------------------ |
-| `Name`    | `string` | Interface name.                                              |
+| `Name`    | `string` | The interface name.                                          |
 | `Changed` | `bool`   | `true` if the operation removed the configuration.           |
 | `Error`   | `string` | The error message if the operation failed. Empty on success. |
 

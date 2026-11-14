@@ -13,7 +13,7 @@ step := o.ServiceGet("web-01", "nginx")
 | Parameter     | Type     | Description                                               |
 | ------------- | -------- | --------------------------------------------------------- |
 | `target`      | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `serviceName` | `string` | Name of the service to get.                               |
+| `serviceName` | `string` | The name of the service to get.                           |
 
 ## Result type
 
@@ -25,7 +25,7 @@ err := results.Decode("get-service-1", &result)
 | Field      | Type           | Description                                                  |
 | ---------- | -------------- | ------------------------------------------------------------ |
 | `Hostname` | `string`       | The hostname of the agent that ran the operation.            |
-| `Service`  | `*ServiceInfo` | Service details (refer to ServiceList).                      |
+| `Service`  | `*ServiceInfo` | The service details (refer to ServiceList).                  |
 | `Error`    | `string`       | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
