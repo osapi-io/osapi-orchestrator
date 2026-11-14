@@ -4,10 +4,10 @@ Run any command on target hosts. The command runs directly or through a shell.
 
 ## Operations
 
-| Method                                   | Description                                 | Idempotent     |
-| ---------------------------------------- | ------------------------------------------- | -------------- |
-| [`CommandExec(target, opts)`](exec.md)   | Run a command directly (no shell)           | Non-idempotent |
-| [`CommandShell(target, opts)`](shell.md) | Run through `/bin/sh -c` (pipes, redirects) | Non-idempotent |
+| Method                                             | Description                                 | Idempotent     |
+| -------------------------------------------------- | ------------------------------------------- | -------------- |
+| [`CommandExec(target, command, args...)`](exec.md) | Run a command directly (no shell)           | Non-idempotent |
+| [`CommandShell(target, command)`](shell.md)        | Run through `/bin/sh -c` (pipes, redirects) | Non-idempotent |
 
 ## Permissions
 
