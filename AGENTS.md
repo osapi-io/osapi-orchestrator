@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Test: `just test` | Before committing: `just ready`
+Test: `just test` | Before you commit: `just ready`
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) first. It tells the prerequisites, the
 setup, the package structure, the code standards, the tests, and how to add an
@@ -17,7 +17,7 @@ mise exec -- just test
 
 `mise` is active in a person's shell. It supplies the versions that `.mise.toml`
 declares. An agent's shell does not activate `mise`. Thus a bare `just` runs the
-version that is installed globally, which is usually older.
+global installation. That version is usually older.
 
 The symptom is a check that fails here and passes in continuous integration, on
 a file that nobody edited. If this occurs, find which version ran. Do this

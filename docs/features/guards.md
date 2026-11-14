@@ -128,13 +128,13 @@ o.CommandExec("_all", "verify.sh").
 
 ### Host-level guards (broadcast)
 
-| Method                  | Inspects             | Trigger condition              |
-| ----------------------- | -------------------- | ------------------------------ |
-| `OnlyIfAnyHostFailed`   | `HostResult.Status`  | One or more hosts failed       |
-| `OnlyIfAllHostsFailed`  | `HostResult.Status`  | All hosts failed               |
-| `OnlyIfAnyHostSkipped`  | `HostResult.Status`  | One or more hosts were skipped |
-| `OnlyIfAnyHostChanged`  | `HostResult.Changed` | One or more hosts changed      |
-| `OnlyIfAllHostsChanged` | `HostResult.Changed` | All hosts changed              |
+| Method                  | Inspects             | Trigger condition         |
+| ----------------------- | -------------------- | ------------------------- |
+| `OnlyIfAnyHostFailed`   | `HostResult.Status`  | One or more hosts failed  |
+| `OnlyIfAllHostsFailed`  | `HostResult.Status`  | All hosts failed          |
+| `OnlyIfAnyHostSkipped`  | `HostResult.Status`  | One or more hosts skipped |
+| `OnlyIfAnyHostChanged`  | `HostResult.Changed` | One or more hosts changed |
+| `OnlyIfAllHostsChanged` | `HostResult.Changed` | All hosts changed         |
 
 ## Example
 

@@ -1,9 +1,9 @@
 # AgentList
 
-Lists all the active agents that are registered with the OSAPI server. The
-result has the metadata of each agent: hostname, status, architecture, OS
-information, memory, load averages, labels, and network interfaces. The
-operation is a wrapper that uses `TaskFunc` to call the agent list API directly.
+Lists all the active agents in the registry of the OSAPI server. The result has
+the metadata of each agent: hostname, status, architecture, OS information,
+memory, load averages, labels, and network interfaces. The operation is a
+wrapper that uses `TaskFunc` to call the agent list API directly.
 
 ## Usage
 

@@ -19,7 +19,7 @@ if err := report.Decode("run-uptime", &cmd); err == nil {
 
 ## Status inspection
 
-Find if a step succeeded, failed, or was skipped:
+Find the status of a step: succeeded, failed, or skipped:
 
 ```go
 status := report.Status("step-name")

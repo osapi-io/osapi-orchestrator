@@ -55,10 +55,10 @@ step.When(func(r orchestrator.Results) bool {
 
 ## Partial failure
 
-If some hosts succeed and other hosts fail in a broadcast operation, the task
+If some hosts succeed and other hosts fail in a broadcast operation, the step
 result has these values:
 
-- `Status = Failed`. The orchestrator marks the full task as failed.
+- `Status = Failed`. The orchestrator marks the full step as failed.
 - `Changed = true`. One or more hosts reported a change.
 - `HostResults`. This has the details of each host, with its own `Error` and
   `Changed` fields.

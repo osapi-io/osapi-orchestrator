@@ -1,6 +1,6 @@
 # FileUndeploy
 
-Removes a deployed file from the filesystem of the target agent. Use this
+Removes a deployed file from the filesystem of the target host. Use this
 operation only for a file that [FileDeploy](deploy.md) deployed.
 
 ## Usage

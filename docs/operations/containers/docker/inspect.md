@@ -26,9 +26,9 @@ err := results.Decode("docker-inspect", &result)
 | ----------------- | ------------------- | ------------------------------------------------------------ |
 | `ID`              | `string`            | The ID of the container.                                     |
 | `Name`            | `string`            | The name of the container.                                   |
-| `Image`           | `string`            | The image that the container was created from.               |
+| `Image`           | `string`            | The image that Docker used to create the container.          |
 | `State`           | `string`            | The current state of the container.                          |
-| `Created`         | `string`            | The time when the container was created.                     |
+| `Created`         | `string`            | The time when Docker created the container.                  |
 | `Ports`           | `[]string`          | The published port mappings.                                 |
 | `Mounts`          | `[]string`          | The volume mounts.                                           |
 | `Env`             | `[]string`          | The environment variables.                                   |

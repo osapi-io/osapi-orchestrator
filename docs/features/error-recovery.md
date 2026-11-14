@@ -1,6 +1,6 @@
 # Error recovery
 
-Use `OnError(Continue)` to continue to run independent tasks when a step fails.
+Use `OnError(Continue)` to continue to run independent steps when a step fails.
 Use `OnlyIfFailed` to start a cleanup step only after a failure.
 
 ## Usage
@@ -24,7 +24,7 @@ step runs only if one or more dependencies failed.
 | Strategy   | Behavior                                                       |
 | ---------- | -------------------------------------------------------------- |
 | `StopAll`  | Stop at the first failure and cancel all other steps (default) |
-| `Continue` | Skip the dependents and continue to run the independent tasks  |
+| `Continue` | Skip the dependents and continue to run the independent steps  |
 
 ## Broadcast error recovery
 

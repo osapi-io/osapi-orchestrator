@@ -39,13 +39,13 @@ err := results.Decode("docker-list", &result)
 
 ### DockerSummaryItem fields
 
-| Field     | Type     | Description                              |
-| --------- | -------- | ---------------------------------------- |
-| `ID`      | `string` | The ID of the container.                 |
-| `Name`    | `string` | The name of the container.               |
-| `Image`   | `string` | The image that the container runs.       |
-| `State`   | `string` | The current state of the container.      |
-| `Created` | `string` | The time when the container was created. |
+| Field     | Type     | Description                                 |
+| --------- | -------- | ------------------------------------------- |
+| `ID`      | `string` | The ID of the container.                    |
+| `Name`    | `string` | The name of the container.                  |
+| `Image`   | `string` | The image that the container runs.          |
+| `State`   | `string` | The current state of the container.         |
+| `Created` | `string` | The time when Docker created the container. |
 
 ## Idempotency
 

@@ -27,7 +27,7 @@ err := results.Decode("get-ntp-1", &result)
 | `Synchronized`  | `bool`     | `true` if NTP is synchronized.                               |
 | `Stratum`       | `int`      | The NTP stratum level.                                       |
 | `Offset`        | `string`   | The clock offset from the NTP source.                        |
-| `CurrentSource` | `string`   | The NTP source that is selected now.                         |
+| `CurrentSource` | `string`   | The NTP source that NTP uses now.                            |
 | `Servers`       | `[]string` | The addresses of the configured NTP servers.                 |
 | `Error`         | `string`   | The error message if the operation failed. Empty on success. |
 
