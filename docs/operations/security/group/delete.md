@@ -1,6 +1,6 @@
 # GroupDelete
 
-Deletes a group from the target node.
+Deletes a group from the target host.
 
 ## Usage
 
@@ -22,22 +22,24 @@ var result osapi.GroupMutationResult
 err := results.Decode("delete-group-1", &result)
 ```
 
-| Field     | Type     | Description                                         |
-| --------- | -------- | --------------------------------------------------- |
-| `Name`    | `string` | Group name.                                         |
-| `Changed` | `bool`   | Whether the group was removed or already absent.    |
-| `Error`   | `string` | Error message if deletion failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Name`    | `string` | Group name.                                                  |
+| `Changed` | `bool`   | `true` if the operation removed the group.                   |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Idempotent.** If the group does not exist, returns `Changed: false`.
+**Idempotent.** If the group does not exist, the operation returns
+`Changed: false`. If the group exists, the operation removes it and returns
+`Changed: true`.
 
 ## Permissions
 
-Requires `user:write` permission.
+The token must have the `user:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/user.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/user.go)
-for a complete working example.
+for a complete example.

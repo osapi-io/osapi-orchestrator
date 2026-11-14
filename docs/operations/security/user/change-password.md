@@ -1,6 +1,6 @@
 # UserChangePassword
 
-Changes a user's password on the target node.
+Changes a user's password on the target host.
 
 ## Usage
 
@@ -23,22 +23,23 @@ var result osapi.UserMutationResult
 err := results.Decode("change-password-1", &result)
 ```
 
-| Field     | Type     | Description                                       |
-| --------- | -------- | ------------------------------------------------- |
-| `Name`    | `string` | Username.                                         |
-| `Changed` | `bool`   | Whether the password was changed.                 |
-| `Error`   | `string` | Error message if change failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Name`    | `string` | Username.                                                    |
+| `Changed` | `bool`   | `true` if the operation changed the password.                |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Non-idempotent.** Always sets the password regardless of current state.
+**Non-idempotent.** The operation sets the password each time the step runs. It
+does not examine the current password first.
 
 ## Permissions
 
-Requires `user:write` permission.
+The token must have the `user:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/user.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/user.go)
-for a complete working example.
+for a complete example.

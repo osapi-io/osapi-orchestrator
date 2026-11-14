@@ -1,7 +1,8 @@
 # NetworkDNSUpdate
 
 Updates the DNS configuration for a specific network interface on the target
-node. Sets the DNS servers and search domains to the provided values.
+host. The operation sets the DNS servers and search domains to the values you
+give.
 
 ## Usage
 
@@ -16,12 +17,12 @@ step := o.NetworkDNSUpdate(
 
 ## Parameters
 
-| Parameter       | Type       | Description                                               |
-| --------------- | ---------- | --------------------------------------------------------- |
-| `target`        | `string`   | Target host: `_any`, `_all`, hostname, or label selector. |
-| `interfaceName` | `string`   | Network interface to configure (e.g., `eth0`, `ens33`).   |
-| `servers`       | `[]string` | DNS server addresses to set.                              |
-| `searchDomains` | `[]string` | DNS search domains to set.                                |
+| Parameter       | Type       | Description                                                    |
+| --------------- | ---------- | -------------------------------------------------------------- |
+| `target`        | `string`   | Target host: `_any`, `_all`, hostname, or label selector.      |
+| `interfaceName` | `string`   | Network interface to configure (for example, `eth0`, `ens33`). |
+| `servers`       | `[]string` | DNS server addresses to set.                                   |
+| `searchDomains` | `[]string` | DNS search domains to set.                                     |
 
 ## Result type
 
@@ -30,25 +31,25 @@ var result osapi.DNSUpdateResult
 err := results.Decode("network.dns.update-1", &result)
 ```
 
-| Field     | Type     | Description                                       |
-| --------- | -------- | ------------------------------------------------- |
-| `Success` | `bool`   | Whether the update completed successfully.        |
-| `Message` | `string` | Human-readable message describing the outcome.    |
-| `Error`   | `string` | Error message if update failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Success` | `bool`   | `true` if the update succeeded.                              |
+| `Message` | `string` | A message about the result, for a person to read.            |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Idempotent.** Checks the current DNS configuration before applying changes.
-Returns `Changed: true` only if the servers or search domains were actually
-modified. If the configuration already matches the desired state, the operation
+**Idempotent.** The operation compares the current DNS configuration with the
+configuration you give. It returns `Changed: true` only if it changed the
+servers or search domains. If the configuration already matches, the operation
 returns `Changed: false`.
 
 ## Permissions
 
-Requires `network:write` permission.
+The token must have the `network:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/dns-update.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/dns-update.go)
-for a complete working example.
+for a complete example.

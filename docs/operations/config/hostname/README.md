@@ -1,13 +1,13 @@
 # Hostname
 
-Query and update the system hostname.
+Get and update the system hostname.
 
 ## Operations
 
-| Method                                              | Description                    | Idempotent |
-| --------------------------------------------------- | ------------------------------ | ---------- |
-| [`NodeHostnameGet(target)`](get.md)                 | Get system hostname and labels | Read-only  |
-| [`NodeHostnameUpdate(target, hostname)`](update.md) | Set system hostname            | Idempotent |
+| Method                                              | Description                        | Idempotent |
+| --------------------------------------------------- | ---------------------------------- | ---------- |
+| [`NodeHostnameGet(target)`](get.md)                 | Get the system hostname and labels | Read-only  |
+| [`NodeHostnameUpdate(target, hostname)`](update.md) | Set the system hostname            | Idempotent |
 
 ## Permissions
 
@@ -18,6 +18,6 @@ Query and update the system hostname.
 
 ## Examples
 
-See
+Refer to
 [`examples/operations/hostname-update.go`](../../../../examples/operations/hostname-update.go)
-for a read-then-write hostname workflow with broadcast targeting.
+for a hostname workflow that reads, then writes, and uses a broadcast target.

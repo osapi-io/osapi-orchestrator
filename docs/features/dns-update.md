@@ -1,7 +1,7 @@
 # DNS update
 
-The read-then-write pattern: read current DNS configuration, then update it with
-new servers.
+This page shows the pattern that reads, then writes. Read the current DNS
+configuration. Then update it with new servers.
 
 ## Usage
 
@@ -16,11 +16,11 @@ o.NetworkDNSUpdate(
 ).After(getDNS)
 ```
 
-The update step depends on the read step, ensuring DNS is queried before it is
-modified.
+The update step depends on the read step. Thus the plan reads the DNS
+configuration before it changes it.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/dns-update.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/dns-update.go)
-for a complete working example.
+for a complete example.

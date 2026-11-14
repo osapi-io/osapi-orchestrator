@@ -1,6 +1,6 @@
 # UserRemoveKey
 
-Removes an SSH authorized key from a user on the target node.
+Removes an SSH authorized key from a user on the target host.
 
 ## Usage
 
@@ -23,21 +23,23 @@ var result osapi.SSHKeyMutationResult
 err := results.Decode("remove-ssh-key-1", &result)
 ```
 
-| Field     | Type     | Description                                        |
-| --------- | -------- | -------------------------------------------------- |
-| `Changed` | `bool`   | Whether the key was removed or already absent.     |
-| `Error`   | `string` | Error message if removal failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Changed` | `bool`   | `true` if the operation removed the key.                     |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Idempotent.** If the key does not exist, returns `Changed: false`.
+**Idempotent.** If the key does not exist, the operation returns
+`Changed: false`. If the key exists, the operation removes it and returns
+`Changed: true`.
 
 ## Permissions
 
-Requires `user:write` permission.
+The token must have the `user:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/user.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/user.go)
-for a complete working example.
+for a complete example.

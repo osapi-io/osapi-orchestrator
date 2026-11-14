@@ -1,8 +1,8 @@
 # HealthCheck
 
-Runs a liveness probe against the OSAPI API server. This is a lightweight
-connectivity check that confirms the server is reachable and responding. It does
-not go through the job system -- the probe calls the health endpoint directly.
+Runs a liveness probe on the OSAPI API server. The probe is a small connection
+check. It makes sure that the server is reachable and that it responds. The
+probe does not use the job system. It calls the health endpoint directly.
 
 ## Usage
 
@@ -12,23 +12,24 @@ step := o.HealthCheck()
 
 ## Parameters
 
-None. The health check always targets the configured API server.
+None. The health check always sends the probe to the configured API server.
 
 ## Result type
 
-`HealthCheck` does not return typed result data. The step succeeds if the server
-responds with HTTP 200, and fails otherwise.
+`HealthCheck` does not return typed result data. If the server responds with
+HTTP 200, the step succeeds. If not, the step fails.
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `health:read` permission.
+The token must have the `health:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/features/basic.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/basic.go)
-for a complete working example.
+for a complete example.

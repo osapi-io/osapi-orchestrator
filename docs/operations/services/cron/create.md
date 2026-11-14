@@ -1,7 +1,7 @@
 # CronCreate
 
-Creates a new cron entry on the target node. The script must be uploaded to the
-NATS Object Store first (see [FileUpload](../../files/file/upload.md)).
+Creates a new cron entry on the target host. Upload the script to the NATS
+Object Store first. Refer to [FileUpload](../../files/file/upload.md).
 
 ## Usage
 
@@ -14,7 +14,7 @@ step := o.CronCreate("web-01", osapi.CronCreateOpts{
 })
 ```
 
-With interval-based scheduling:
+To schedule with an interval:
 
 ```go
 step := o.CronCreate("web-01", osapi.CronCreateOpts{
@@ -29,7 +29,7 @@ step := o.CronCreate("web-01", osapi.CronCreateOpts{
 | Parameter | Type             | Description                                               |
 | --------- | ---------------- | --------------------------------------------------------- |
 | `target`  | `string`         | Target host: `_any`, `_all`, hostname, or label selector. |
-| `opts`    | `CronCreateOpts` | Create options (see below).                               |
+| `opts`    | `CronCreateOpts` | Create options (refer to the table below).                |
 
 ### CronCreateOpts
 
@@ -37,8 +37,8 @@ step := o.CronCreate("web-01", osapi.CronCreateOpts{
 | ------------- | ---------------- | -------- | ------------------------------------------- |
 | `Name`        | `string`         | Yes      | Cron entry name.                            |
 | `Object`      | `string`         | Yes      | Object name in the NATS Object Store.       |
-| `Schedule`    | `string`         | No       | Cron expression (mutually exclusive with    |
-|               |                  |          | Interval).                                  |
+| `Schedule`    | `string`         | No       | Cron expression. Do not use with            |
+|               |                  |          | `Interval`.                                 |
 | `Interval`    | `string`         | No       | Periodic interval: `hourly`, `daily`,       |
 |               |                  |          | `weekly`, or `monthly`.                     |
 | `User`        | `string`         | No       | User to run the command as.                 |
@@ -53,23 +53,23 @@ var result osapi.CronMutationResult
 err := results.Decode("create-cron-1", &result)
 ```
 
-| Field     | Type     | Description                                         |
-| --------- | -------- | --------------------------------------------------- |
-| `Name`    | `string` | Name of the created cron entry.                     |
-| `Changed` | `bool`   | Whether the entry was created.                      |
-| `Error`   | `string` | Error message if creation failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Name`    | `string` | Name of the created cron entry.                              |
+| `Changed` | `bool`   | `true` if the operation created the entry.                   |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Non-idempotent.** Creating an entry that already exists returns an error. Use
-[CronUpdate](update.md) to modify existing entries.
+**Non-idempotent.** If the entry already exists, the operation returns an error.
+Use [CronUpdate](update.md) to change an entry that exists.
 
 ## Permissions
 
-Requires `cron:write` permission.
+The token must have the `cron:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/cron.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/cron.go)
-for a complete working example.
+for a complete example.

@@ -1,9 +1,9 @@
 # CommandExec
 
-Executes a command on the target node with explicit argument separation. The
-command and its arguments are passed separately, avoiding shell interpretation.
-This is the preferred method for running commands when shell features (pipes,
-redirects, globbing) are not needed.
+Runs a command on the target host with its arguments kept separate. The
+operation sends the command and each argument as separate values, so no shell
+reads them. Use this operation to run a command when you do not need shell
+features (pipes, redirects, globs).
 
 ## Usage
 
@@ -16,8 +16,8 @@ step := o.CommandExec("web-01", "ls", "-la", "/var/log")
 | Parameter | Type        | Description                                               |
 | --------- | ----------- | --------------------------------------------------------- |
 | `target`  | `string`    | Target host: `_any`, `_all`, hostname, or label selector. |
-| `command` | `string`    | The command to execute.                                   |
-| `args`    | `...string` | Variadic arguments passed to the command.                 |
+| `command` | `string`    | The command to run.                                       |
+| `args`    | `...string` | The arguments to the command, as variadic values.         |
 
 ## Result type
 
@@ -26,19 +26,19 @@ var result osapi.CommandResult
 err := results.Decode("command.exec.execute-1", &result)
 ```
 
-| Field        | Type     | Description                                          |
-| ------------ | -------- | ---------------------------------------------------- |
-| `Stdout`     | `string` | Standard output from the command.                    |
-| `Stderr`     | `string` | Standard error from the command.                     |
-| `ExitCode`   | `int`    | Process exit code (0 = success).                     |
-| `DurationMs` | `int64`  | Execution duration in milliseconds.                  |
-| `Error`      | `string` | Error message if execution failed; empty on success. |
+| Field        | Type     | Description                                                  |
+| ------------ | -------- | ------------------------------------------------------------ |
+| `Stdout`     | `string` | The standard output of the command.                          |
+| `Stderr`     | `string` | The standard error of the command.                           |
+| `ExitCode`   | `int`    | The exit code of the process (0 = success).                  |
+| `DurationMs` | `int64`  | The time that the command ran, in milliseconds.              |
+| `Error`      | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Not idempotent.** The command executes every time the step runs. Always
-returns `Changed: true`. Use `When` or `OnlyIfChanged` guards to control when
-the step runs:
+**Not idempotent.** The command runs each time the step runs. The operation
+always returns `Changed: true`. Use the `When` or `OnlyIfChanged` guards to
+control when the step runs:
 
 ```go
 o.CommandExec("web-01", "systemctl", "restart", "nginx").
@@ -47,10 +47,10 @@ o.CommandExec("web-01", "systemctl", "restart", "nginx").
 
 ## Permissions
 
-Requires `command:execute` permission.
+The token must have the `command:execute` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/command.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/command.go)
-for a complete working example.
+for a complete example.

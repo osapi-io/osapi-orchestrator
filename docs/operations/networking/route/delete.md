@@ -1,6 +1,6 @@
 # RouteDelete
 
-Deletes route configuration for a network interface on the target node.
+Deletes the route configuration for a network interface on the target host.
 
 ## Usage
 
@@ -22,22 +22,24 @@ var result osapi.RouteMutationResult
 err := results.Decode("delete-route-1", &result)
 ```
 
-| Field       | Type     | Description                                         |
-| ----------- | -------- | --------------------------------------------------- |
-| `Interface` | `string` | Interface name.                                     |
-| `Changed`   | `bool`   | Whether the routes were removed or already absent.  |
-| `Error`     | `string` | Error message if deletion failed; empty on success. |
+| Field       | Type     | Description                                                  |
+| ----------- | -------- | ------------------------------------------------------------ |
+| `Interface` | `string` | Interface name.                                              |
+| `Changed`   | `bool`   | `true` if the operation removed the routes.                  |
+| `Error`     | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Idempotent.** If no routes exist for the interface, returns `Changed: false`.
+**Idempotent.** If no routes exist for the interface, the operation returns
+`Changed: false`. If routes exist, the operation removes them and returns
+`Changed: true`.
 
 ## Permissions
 
-Requires `network:write` permission.
+The token must have the `network:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/route.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/route.go)
-for a complete working example.
+for a complete example.

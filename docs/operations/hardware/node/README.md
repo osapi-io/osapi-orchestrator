@@ -1,13 +1,13 @@
 # Hardware
 
-Query hardware resource information -- disk usage and memory statistics.
+Get information about hardware resources: disk use and memory statistics.
 
 ## Operations
 
-| Method                                   | Description               | Idempotent |
-| ---------------------------------------- | ------------------------- | ---------- |
-| [`NodeDiskGet(target)`](disk-get.md)     | Get disk usage statistics | Read-only  |
-| [`NodeMemoryGet(target)`](memory-get.md) | Get memory statistics     | Read-only  |
+| Method                                   | Description                 | Idempotent |
+| ---------------------------------------- | --------------------------- | ---------- |
+| [`NodeDiskGet(target)`](disk-get.md)     | Get the disk use statistics | Read-only  |
+| [`NodeMemoryGet(target)`](memory-get.md) | Get the memory statistics   | Read-only  |
 
 ## Permissions
 
@@ -17,6 +17,6 @@ Query hardware resource information -- disk usage and memory statistics.
 
 ## Examples
 
-See
+Refer to
 [`examples/operations/node-info.go`](../../../../examples/operations/node-info.go)
-for a read-only workflow covering disk and memory queries.
+for a read-only workflow that gets the disk and memory statistics.

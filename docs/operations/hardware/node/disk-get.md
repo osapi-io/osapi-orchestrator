@@ -1,6 +1,6 @@
 # NodeDiskGet
 
-Retrieves disk usage information for all mounted filesystems on the target node.
+Gets the disk use of all the mounted filesystems on the target host.
 
 ## Usage
 
@@ -23,29 +23,30 @@ err := results.Decode("node.disk.get-1", &result)
 
 ### DiskResult
 
-| Field   | Type          | Description                      |
-| ------- | ------------- | -------------------------------- |
-| `Disks` | `[]DiskUsage` | List of mounted disk partitions. |
+| Field   | Type          | Description                  |
+| ------- | ------------- | ---------------------------- |
+| `Disks` | `[]DiskUsage` | The mounted disk partitions. |
 
 ### DiskUsage
 
-| Field   | Type     | Description                 |
-| ------- | -------- | --------------------------- |
-| `Name`  | `string` | Device or mount point name. |
-| `Total` | `uint64` | Total capacity in bytes.    |
-| `Used`  | `uint64` | Used space in bytes.        |
-| `Free`  | `uint64` | Free space in bytes.        |
+| Field   | Type     | Description                            |
+| ------- | -------- | -------------------------------------- |
+| `Name`  | `string` | The name of the device or mount point. |
+| `Total` | `uint64` | The total capacity, in bytes.          |
+| `Used`  | `uint64` | The used space, in bytes.              |
+| `Free`  | `uint64` | The free space, in bytes.              |
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `node:read` permission.
+The token must have the `node:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/node-info.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/node-info.go)
-for a complete working example.
+for a complete example.

@@ -1,12 +1,12 @@
 # Process management
 
-List, inspect, and signal running processes on target nodes.
+List, examine, and send signals to processes on target hosts.
 
 ## Operations
 
 | Method                                          | Description                | Idempotent     |
 | ----------------------------------------------- | -------------------------- | -------------- |
-| [`ProcessList(target)`](list.md)                | List running processes     | Read-only      |
+| [`ProcessList(target)`](list.md)                | List processes             | Read-only      |
 | [`ProcessGet(target, pid)`](get.md)             | Get a specific process     | Read-only      |
 | [`ProcessSignal(target, pid, opts)`](signal.md) | Send a signal to a process | Non-idempotent |
 
@@ -19,6 +19,6 @@ List, inspect, and signal running processes on target nodes.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/process.go`](../../../../examples/operations/process.go)
-for a complete workflow example covering all operations.
+for a complete workflow example that uses all the operations.

@@ -1,6 +1,6 @@
 # LogQuery
 
-Queries journal log entries on the target node.
+Queries journal log entries on the target host.
 
 ## Usage
 
@@ -16,15 +16,15 @@ step := o.LogQuery("web-01", osapi.LogQueryOpts{
 | Parameter | Type           | Description                                               |
 | --------- | -------------- | --------------------------------------------------------- |
 | `target`  | `string`       | Target host: `_any`, `_all`, hostname, or label selector. |
-| `opts`    | `LogQueryOpts` | Query options (see below).                                |
+| `opts`    | `LogQueryOpts` | Query options (refer to the table below).                 |
 
 ### LogQueryOpts
 
-| Field      | Type      | Required | Description                                        |
-| ---------- | --------- | -------- | -------------------------------------------------- |
-| `Lines`    | `*int`    | No       | Maximum number of log lines to return.             |
-| `Since`    | `*string` | No       | Filter entries since this time (e.g., `1h`).       |
-| `Priority` | `*string` | No       | Filter by priority level (e.g., `err`, `warning`). |
+| Field      | Type      | Required | Description                                               |
+| ---------- | --------- | -------- | --------------------------------------------------------- |
+| `Lines`    | `*int`    | No       | Maximum number of log lines to return.                    |
+| `Since`    | `*string` | No       | Return only entries since this time (for example, `1h`).  |
+| `Priority` | `*string` | No       | Filter by priority level (for example, `err`, `warning`). |
 
 ## Result type
 
@@ -33,11 +33,11 @@ var result osapi.LogEntryResult
 err := results.Decode("query-log-1", &result)
 ```
 
-| Field      | Type         | Description                                      |
-| ---------- | ------------ | ------------------------------------------------ |
-| `Hostname` | `string`     | The node's hostname.                             |
-| `Entries`  | `[]LogEntry` | List of journal entries.                         |
-| `Error`    | `string`     | Error message if query failed; empty on success. |
+| Field      | Type         | Description                                                  |
+| ---------- | ------------ | ------------------------------------------------------------ |
+| `Hostname` | `string`     | The hostname of the agent that ran the operation.            |
+| `Entries`  | `[]LogEntry` | List of journal entries.                                     |
+| `Error`    | `string`     | The error message if the operation failed. Empty on success. |
 
 ### LogEntry
 
@@ -52,14 +52,15 @@ err := results.Decode("query-log-1", &result)
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `log:read` permission.
+The token must have the `log:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/log.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/log.go)
-for a complete working example.
+for a complete example.

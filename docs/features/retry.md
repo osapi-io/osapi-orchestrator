@@ -1,13 +1,14 @@
 # Retry
 
-Automatically retry a step on failure up to N times. Retries can be immediate or
-use exponential backoff to avoid overwhelming a recovering service.
+The orchestrator can retry a failed step up to N times. A retry can start
+immediately. It can also use exponential backoff, so that a service that
+recovers does not get too many requests.
 
 ## Usage
 
 ### Immediate retry
 
-Retry up to 3 times with no delay between attempts:
+Retry up to 3 times, with no delay between the attempts:
 
 ```go
 o.TaskFunc("flaky-step", myFunc).
@@ -16,7 +17,8 @@ o.TaskFunc("flaky-step", myFunc).
 
 ### Retry with default exponential backoff
 
-Use `WithExponentialBackoff()` for sensible defaults (1s initial, 30s max):
+Use `WithExponentialBackoff()` to get the default intervals (1s initial, 30s
+maximum):
 
 ```go
 o.TaskFunc("flaky-step", myFunc).
@@ -25,8 +27,8 @@ o.TaskFunc("flaky-step", myFunc).
 
 ### Retry with custom backoff
 
-Use `WithBackoff(initial, max)` for custom intervals. The delay doubles on each
-attempt, clamped to the max interval:
+Use `WithBackoff(initial, max)` to set the intervals. The delay doubles after
+each attempt, but it does not go above the maximum interval:
 
 ```go
 o.TaskFunc("flaky-step", myFunc).
@@ -35,14 +37,14 @@ o.TaskFunc("flaky-step", myFunc).
 
 ## Transient poll errors
 
-Job polling automatically retries transient HTTP errors (404, 500) with
-exponential backoff. This handles the race where the agent hasn't written
-results yet when the SDK first polls. Non-transient errors (401, 403, network
+When the SDK polls for a job result, it retries transient HTTP errors (404, 500)
+with exponential backoff. Sometimes the SDK polls before the agent writes its
+result, and this retry handles that race. Other errors (401, 403, network
 failures) fail immediately.
 
 ## Example
 
-See
+Refer to
 [`examples/features/retry.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/retry.go)
-for a complete working example that simulates transient failures to demonstrate
-all three retry strategies.
+for a complete example. The example simulates transient failures to show the
+three retry strategies.

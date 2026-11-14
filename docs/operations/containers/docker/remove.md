@@ -12,17 +12,17 @@ step := o.DockerRemove("web-01", "c1a2b3d4e5f6", &osapi.DockerRemoveParams{
 
 ## Parameters
 
-| Parameter | Type                        | Description                     |
-| --------- | --------------------------- | ------------------------------- |
-| `target`  | `string`                    | Target host or routing value.   |
-| `id`      | `string`                    | Container ID or name to remove. |
-| `params`  | `*osapi.DockerRemoveParams` | Optional remove parameters.     |
+| Parameter | Type                        | Description                                |
+| --------- | --------------------------- | ------------------------------------------ |
+| `target`  | `string`                    | The target host or routing value.          |
+| `id`      | `string`                    | The ID or name of the container to remove. |
+| `params`  | `*osapi.DockerRemoveParams` | The parameters for the removal (optional). |
 
 ### DockerRemoveParams fields
 
-| Field   | Type   | Description                                              |
-| ------- | ------ | -------------------------------------------------------- |
-| `Force` | `bool` | Force removal of a running container (kill then remove). |
+| Field   | Type   | Description                                           |
+| ------- | ------ | ----------------------------------------------------- |
+| `Force` | `bool` | Remove a running container (kill it, then remove it). |
 
 ## Result type
 
@@ -31,23 +31,24 @@ var result osapi.DockerActionResult
 err := results.Decode("docker-remove", &result)
 ```
 
-| Field     | Type     | Description                        |
-| --------- | -------- | ---------------------------------- |
-| `ID`      | `string` | Container ID.                      |
-| `Message` | `string` | Status message from the operation. |
-| `Error`   | `string` | Error if removal failed.           |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `ID`      | `string` | The ID of the container.                                     |
+| `Message` | `string` | The status message of the operation.                         |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**No.** Returns an error if the container does not exist. Use `OnError` with
-`Continue` for pre-cleanup patterns.
+**Non-idempotent.** If the container does not exist, the operation returns an
+error. To remove a container before a plan starts, use `OnError` with
+`Continue`.
 
 ## Permissions
 
-Requires `docker:write` permission.
+The token must have the `docker:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/docker.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/docker.go)
-for a complete working example.
+for a complete example.

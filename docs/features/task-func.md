@@ -1,9 +1,9 @@
 # TaskFunc
 
-Insert custom logic into a plan with `TaskFunc`. The function receives the OSAPI
-client and accumulated results from prior steps, and returns a typed
-`*orchestrator.Result`. Use this for operations not covered by the typed
-constructors, the client provides full access to the SDK for calling any API
+Use `TaskFunc` to put custom logic into a plan. The function receives the OSAPI
+client and the results of the steps that ran before. It returns a typed
+`*orchestrator.Result`. Use `TaskFunc` for an operation that has no typed
+constructor. The client gives full access to the SDK, so you can call each API
 endpoint.
 
 ## Usage
@@ -24,7 +24,7 @@ o.TaskFunc(
 ).After(hostname)
 ```
 
-The client parameter lets you call any SDK operation directly:
+With the client parameter, you can call an SDK operation directly:
 
 ```go
 o.TaskFunc(
@@ -42,10 +42,10 @@ o.TaskFunc(
 )
 ```
 
-TaskFunc results are available in the report via `report.Decode()`.
+To read a TaskFunc result from the report, use `report.Decode()`.
 
 ## Example
 
-See
+Refer to
 [`examples/features/task-func.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/task-func.go)
-for a complete working example.
+for a complete example.

@@ -1,6 +1,7 @@
 # Basic DAG
 
-The simplest orchestrator pattern: create a plan with ordered steps and run it.
+This is the simplest orchestrator pattern. Make a plan with steps in an order,
+then run the plan.
 
 ## Usage
 
@@ -13,11 +14,11 @@ o.NodeHostnameGet("_any").After(health)
 report, err := o.Run(ctx)
 ```
 
-Steps are connected with `.After()` to form a directed acyclic graph. The
-orchestrator resolves the dependency order and executes steps level by level.
+`.After()` connects the steps into a directed acyclic graph. The orchestrator
+finds the order of the dependencies and runs the steps one level at a time.
 
 ## Example
 
-See
+Refer to
 [`examples/features/basic.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/basic.go)
-for a complete working example.
+for a complete example.

@@ -1,7 +1,6 @@
 # NodeMemoryGet
 
-Retrieves memory statistics for the target node, including total, free, and
-cached memory.
+Gets the memory statistics of the target host: total, free, and cached memory.
 
 ## Usage
 
@@ -22,22 +21,23 @@ var result osapi.MemoryResult
 err := results.Decode("node.memory.get-1", &result)
 ```
 
-| Field    | Type     | Description             |
-| -------- | -------- | ----------------------- |
-| `Total`  | `uint64` | Total memory in bytes.  |
-| `Free`   | `uint64` | Free memory in bytes.   |
-| `Cached` | `uint64` | Cached memory in bytes. |
+| Field    | Type     | Description                  |
+| -------- | -------- | ---------------------------- |
+| `Total`  | `uint64` | The total memory, in bytes.  |
+| `Free`   | `uint64` | The free memory, in bytes.   |
+| `Cached` | `uint64` | The cached memory, in bytes. |
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `node:read` permission.
+The token must have the `node:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/node-info.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/node-info.go)
-for a complete working example.
+for a complete example.

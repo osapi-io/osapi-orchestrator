@@ -1,7 +1,7 @@
 # Parallel execution
 
-Steps at the same DAG level run concurrently. Give multiple steps the same
-dependency to fan out:
+Steps at the same DAG level run at the same time. To run steps in parallel, give
+them the same dependency:
 
 ## Usage
 
@@ -15,11 +15,11 @@ o.NodeLoadGet("_any").After(health)
 o.NodeUptimeGet("_any").After(health)
 ```
 
-All five queries share the same dependency, so the orchestrator schedules them
-concurrently after the health check passes.
+The five queries have the same dependency. Thus the orchestrator runs them at
+the same time after the health check passes.
 
 ## Example
 
-See
+Refer to
 [`examples/features/parallel.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/features/parallel.go)
-for a complete working example.
+for a complete example.

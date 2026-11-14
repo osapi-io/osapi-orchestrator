@@ -1,8 +1,8 @@
 # AgentGet
 
-Retrieves detailed information about a specific agent by hostname. Returns the
-same rich metadata as `AgentList` but for a single agent. This is a convenience
-wrapper that uses `TaskFunc` to call the agent get API directly.
+Gets the details of one agent by its hostname. The result has the same metadata
+as `AgentList`, but for one agent only. The operation is a wrapper that uses
+`TaskFunc` to call the agent get API directly.
 
 ## Usage
 
@@ -12,9 +12,9 @@ step := o.AgentGet("web-01")
 
 ## Parameters
 
-| Parameter  | Type     | Description                        |
-| ---------- | -------- | ---------------------------------- |
-| `hostname` | `string` | Hostname of the agent to retrieve. |
+| Parameter  | Type     | Description                       |
+| ---------- | -------- | --------------------------------- |
+| `hostname` | `string` | The hostname of the agent to get. |
 
 ## Result type
 
@@ -23,18 +23,19 @@ var result osapi.Agent
 err := results.Decode("get-agent", &result)
 ```
 
-See [AgentList](list.md) for the full `AgentResult` field reference.
+Refer to [AgentList](list.md) for all the fields of `AgentResult`.
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `agent:read` permission.
+The token must have the `agent:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/agent-drain.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/agent-drain.go)
-for a complete working example.
+for a complete example.

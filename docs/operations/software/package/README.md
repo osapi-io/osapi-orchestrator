@@ -1,7 +1,8 @@
 # Package management
 
-Manage system packages on target nodes -- list installed packages, get details,
-install, remove, update all, and check for available updates.
+Manage system packages on target hosts. You can list installed packages, get
+details, install, remove, and update all packages. You can also check for
+available updates.
 
 ## Operations
 
@@ -23,6 +24,6 @@ install, remove, update all, and check for available updates.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/package.go`](../../../../examples/operations/package.go)
-for a complete workflow example covering all operations.
+for a complete workflow example that uses all the operations.

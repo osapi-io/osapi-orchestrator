@@ -1,7 +1,8 @@
 # User management
 
-Manage local user accounts and SSH authorized keys on target nodes -- list, get,
-create, update, delete users, and manage their SSH keys and passwords.
+Manage local user accounts and SSH authorized keys on target hosts. You can
+list, get, create, update, and delete users. You can also manage their SSH keys
+and passwords.
 
 ## Operations
 
@@ -26,5 +27,6 @@ create, update, delete users, and manage their SSH keys and passwords.
 
 ## Example
 
-See [`examples/operations/user.go`](../../../../examples/operations/user.go) for
-a complete workflow example covering all operations.
+Refer to
+[`examples/operations/user.go`](../../../../examples/operations/user.go) for a
+complete workflow example that uses all the operations.

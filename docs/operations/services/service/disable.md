@@ -1,6 +1,6 @@
 # ServiceDisable
 
-Disables a service from starting on boot on the target node.
+Disables a service on the target host, so that it does not start at boot.
 
 ## Usage
 
@@ -22,22 +22,23 @@ var result osapi.ServiceMutationResult
 err := results.Decode("disable-service-1", &result)
 ```
 
-| Field     | Type     | Description                                        |
-| --------- | -------- | -------------------------------------------------- |
-| `Name`    | `string` | Name of the disabled service.                      |
-| `Changed` | `bool`   | Whether the service was disabled.                  |
-| `Error`   | `string` | Error message if disable failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Name`    | `string` | Name of the disabled service.                                |
+| `Changed` | `bool`   | `true` if the operation disabled the service.                |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Idempotent.** If the service is already disabled, returns `Changed: false`.
+**Idempotent.** If the service is already disabled, the operation returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `service:write` permission.
+The token must have the `service:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/service.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/service.go)
-for a complete working example.
+for a complete example.

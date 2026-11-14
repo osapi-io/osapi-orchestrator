@@ -1,6 +1,6 @@
 # PowerReboot
 
-Initiates a reboot on the target node.
+Starts a reboot on the target host.
 
 ## Usage
 
@@ -16,13 +16,13 @@ step := o.PowerReboot("web-01", osapi.PowerOpts{
 | Parameter | Type        | Description                                               |
 | --------- | ----------- | --------------------------------------------------------- |
 | `target`  | `string`    | Target host: `_any`, `_all`, hostname, or label selector. |
-| `opts`    | `PowerOpts` | Power options (see below).                                |
+| `opts`    | `PowerOpts` | Power options (refer to the table below).                 |
 
 ### PowerOpts
 
 | Field     | Type     | Required | Description                             |
 | --------- | -------- | -------- | --------------------------------------- |
-| `Delay`   | `int`    | No       | Seconds to wait before rebooting.       |
+| `Delay`   | `int`    | No       | Seconds to wait before the reboot.      |
 | `Message` | `string` | No       | Message to broadcast before the reboot. |
 
 ## Result type
@@ -32,23 +32,23 @@ var result osapi.PowerResult
 err := results.Decode("reboot-1", &result)
 ```
 
-| Field     | Type     | Description                                       |
-| --------- | -------- | ------------------------------------------------- |
-| `Action`  | `string` | Action taken (e.g., `reboot`).                    |
-| `Delay`   | `int`    | Delay in seconds before execution.                |
-| `Changed` | `bool`   | Whether the reboot was initiated.                 |
-| `Error`   | `string` | Error message if reboot failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Action`  | `string` | Action taken (for example, `reboot`).                        |
+| `Delay`   | `int`    | Delay in seconds before the reboot starts.                   |
+| `Changed` | `bool`   | `true` if the operation started the reboot.                  |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Non-idempotent.** Always initiates a reboot.
+**Non-idempotent.** The reboot starts each time the step runs.
 
 ## Permissions
 
-Requires `power:execute` permission.
+The token must have the `power:execute` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/power.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/power.go)
-for a complete working example.
+for a complete example.

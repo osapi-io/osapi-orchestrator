@@ -1,7 +1,8 @@
 # Service management
 
-Manage systemd services on target nodes -- list, inspect, create and update unit
-files, and control service lifecycle (start, stop, restart, enable, disable).
+Manage systemd services on target hosts. You can list and examine services, and
+create and update unit files. You can also start, stop, restart, enable, and
+disable services.
 
 ## Operations
 
@@ -27,6 +28,6 @@ files, and control service lifecycle (start, stop, restart, enable, disable).
 
 ## Example
 
-See
+Refer to
 [`examples/operations/service.go`](../../../../examples/operations/service.go)
-for a complete workflow example covering all operations.
+for a complete workflow example that uses all the operations.

@@ -1,7 +1,8 @@
 # AgentDrain
 
-Drains an agent, preventing it from accepting new jobs. Existing in-flight jobs
-continue to completion. Use [AgentUndrain](undrain.md) to resume.
+Drains an agent. A drained agent does not accept new jobs. The jobs that are in
+progress continue until they complete. Use [AgentUndrain](undrain.md) to accept
+jobs again.
 
 ## Usage
 
@@ -11,9 +12,9 @@ step := o.AgentDrain("web-01")
 
 ## Parameters
 
-| Parameter  | Type     | Description                     |
-| ---------- | -------- | ------------------------------- |
-| `hostname` | `string` | Hostname of the agent to drain. |
+| Parameter  | Type     | Description                         |
+| ---------- | -------- | ----------------------------------- |
+| `hostname` | `string` | The hostname of the agent to drain. |
 
 ## Result type
 
@@ -22,20 +23,20 @@ var result osapi.MessageResponse
 err := results.Decode("drain-agent-1", &result)
 ```
 
-| Field     | Type     | Description                                    |
-| --------- | -------- | ---------------------------------------------- |
-| `Message` | `string` | Human-readable message describing the outcome. |
+| Field     | Type     | Description                                            |
+| --------- | -------- | ------------------------------------------------------ |
+| `Message` | `string` | A message that tells the result, for a person to read. |
 
 ## Idempotency
 
-**Idempotent.** Draining an already-drained agent is a no-op.
+**Idempotent.** If the agent is already drained, the operation does nothing.
 
 ## Permissions
 
-Requires `agent:write` permission.
+The token must have the `agent:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/agent-drain.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/agent-drain.go)
-for a complete working example.
+for a complete example.

@@ -16,7 +16,7 @@ step := o.CertificateUpdate("web-01", "internal-ca", osapi.CertificateUpdateOpts
 | ---------- | ----------------------- | --------------------------------------------------------- |
 | `target`   | `string`                | Target host: `_any`, `_all`, hostname, or label selector. |
 | `certName` | `string`                | Name of the certificate to update.                        |
-| `opts`     | `CertificateUpdateOpts` | Update options (see below).                               |
+| `opts`     | `CertificateUpdateOpts` | Update options (refer to the table below).                |
 
 ### CertificateUpdateOpts
 
@@ -31,23 +31,23 @@ var result osapi.CertificateCAMutationResult
 err := results.Decode("update-certificate-1", &result)
 ```
 
-| Field     | Type     | Description                                       |
-| --------- | -------- | ------------------------------------------------- |
-| `Name`    | `string` | Certificate name.                                 |
-| `Changed` | `bool`   | Whether the certificate was actually modified.    |
-| `Error`   | `string` | Error message if update failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Name`    | `string` | Certificate name.                                            |
+| `Changed` | `bool`   | `true` if the operation changed the certificate.             |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Idempotent.** Compares the current PEM content against the new content.
-Returns `Changed: true` only if the certificate was actually modified.
+**Idempotent.** The operation compares the current PEM content with the new
+content. It returns `Changed: true` only if it changed the certificate.
 
 ## Permissions
 
-Requires `certificate:write` permission.
+The token must have the `certificate:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/certificate.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/certificate.go)
-for a complete working example.
+for a complete example.

@@ -1,9 +1,9 @@
 # FileUpload
 
-Uploads file content to the NATS Object Store via the OSAPI REST API. Returns
-the object name that can be referenced in subsequent [FileDeploy](deploy.md)
-steps. This is a convenience wrapper that uses `TaskFunc` to call the file
-upload API directly.
+Uploads file content to the NATS Object Store through the OSAPI REST API. The
+operation returns the object name. Later [FileDeploy](deploy.md) steps use this
+name. The operation is a wrapper that uses `TaskFunc` to call the file upload
+API directly.
 
 ## Usage
 
@@ -15,7 +15,7 @@ step := o.FileUpload(
 )
 ```
 
-To always upload regardless of content changes:
+To upload each time, also if the content did not change:
 
 ```go
 step := o.FileUpload(
@@ -28,12 +28,12 @@ step := o.FileUpload(
 
 ## Parameters
 
-| Parameter     | Type              | Description                                                  |
-| ------------- | ----------------- | ------------------------------------------------------------ |
-| `name`        | `string`          | Object name to store the file under.                         |
-| `contentType` | `string`          | Content type: `"raw"` or `"template"`.                       |
-| `data`        | `[]byte`          | Raw file content to upload.                                  |
-| `opts`        | `...UploadOption` | Optional. Use `WithForce()` to bypass the SHA-256 pre-check. |
+| Parameter     | Type              | Description                                            |
+| ------------- | ----------------- | ------------------------------------------------------ |
+| `name`        | `string`          | The object name for the stored file.                   |
+| `contentType` | `string`          | The content type: `"raw"` or `"template"`.             |
+| `data`        | `[]byte`          | The raw file content to upload.                        |
+| `opts`        | `...UploadOption` | Optional. Use `WithForce()` to skip the SHA-256 check. |
 
 ## Result type
 
@@ -42,22 +42,22 @@ var result osapi.FileUpload
 err := results.Decode("upload-file", &result)
 ```
 
-| Field         | Type     | Description                           |
-| ------------- | -------- | ------------------------------------- |
-| `Name`        | `string` | Object name in the Object Store.      |
-| `SHA256`      | `string` | SHA-256 hash of the uploaded content. |
-| `Size`        | `int`    | Size of the uploaded content (bytes). |
-| `Changed`     | `bool`   | Whether the upload modified state.    |
-| `ContentType` | `string` | Content type of the uploaded file.    |
+| Field         | Type     | Description                                         |
+| ------------- | -------- | --------------------------------------------------- |
+| `Name`        | `string` | The name of the object in the Object Store.         |
+| `SHA256`      | `string` | The SHA-256 hash of the uploaded content.           |
+| `Size`        | `int`    | The size of the uploaded content (bytes).           |
+| `Changed`     | `bool`   | `true` if the operation changed the stored content. |
+| `ContentType` | `string` | The content type of the uploaded file.              |
 
 ## Idempotency
 
-**Idempotent by default.** The SDK computes SHA-256 locally and compares against
-the stored hash, skipping the upload when content is unchanged. Use
-`WithForce()` to bypass this pre-check and always upload.
+**Idempotent by default.** The SDK calculates the SHA-256 hash locally and
+compares it with the stored hash. If the content did not change, the SDK does
+not upload it. To skip this check and always upload, use `WithForce()`.
 
-You can also use [FileChanged](changed.md) with `OnlyIfChanged` for explicit
-pre-check control:
+To control the check yourself, use [FileChanged](changed.md) with
+`OnlyIfChanged`:
 
 ```go
 check := o.FileChanged("config.yaml", data)
@@ -68,10 +68,10 @@ o.FileUpload("config.yaml", "raw", data).
 
 ## Permissions
 
-Requires `file:write` permission.
+The token must have the `file:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/file-deploy.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/file-deploy.go)
-for a complete working example.
+for a complete example.

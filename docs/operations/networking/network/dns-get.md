@@ -1,7 +1,7 @@
 # NetworkDNSGet
 
-Retrieves the DNS configuration for a specific network interface on the target
-node, including configured DNS servers and search domains.
+Gets the DNS configuration for a specific network interface on the target host.
+The result has the configured DNS servers and search domains.
 
 ## Usage
 
@@ -11,10 +11,10 @@ step := o.NetworkDNSGet("web-01", "eth0")
 
 ## Parameters
 
-| Parameter       | Type     | Description                                               |
-| --------------- | -------- | --------------------------------------------------------- |
-| `target`        | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `interfaceName` | `string` | Network interface to query (e.g., `eth0`, `ens33`).       |
+| Parameter       | Type     | Description                                                |
+| --------------- | -------- | ---------------------------------------------------------- |
+| `target`        | `string` | Target host: `_any`, `_all`, hostname, or label selector.  |
+| `interfaceName` | `string` | Network interface to query (for example, `eth0`, `ens33`). |
 
 ## Result type
 
@@ -30,14 +30,15 @@ err := results.Decode("network.dns.get-1", &result)
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `network:read` permission.
+The token must have the `network:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/dns-update.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/dns-update.go)
-for a complete working example.
+for a complete example.

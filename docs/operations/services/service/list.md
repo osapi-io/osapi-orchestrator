@@ -1,6 +1,6 @@
 # ServiceList
 
-Lists all services on the target node.
+Lists all services on the target host.
 
 ## Usage
 
@@ -21,32 +21,33 @@ var result osapi.ServiceInfoResult
 err := results.Decode("list-service-1", &result)
 ```
 
-| Field      | Type            | Description                                      |
-| ---------- | --------------- | ------------------------------------------------ |
-| `Hostname` | `string`        | The node's hostname.                             |
-| `Services` | `[]ServiceInfo` | List of service entries.                         |
-| `Error`    | `string`        | Error message if query failed; empty on success. |
+| Field      | Type            | Description                                                  |
+| ---------- | --------------- | ------------------------------------------------------------ |
+| `Hostname` | `string`        | The hostname of the agent that ran the operation.            |
+| `Services` | `[]ServiceInfo` | List of service entries.                                     |
+| `Error`    | `string`        | The error message if the operation failed. Empty on success. |
 
 ### ServiceInfo
 
-| Field         | Type     | Description                         |
-| ------------- | -------- | ----------------------------------- |
-| `Name`        | `string` | Service unit name.                  |
-| `Status`      | `string` | Active status of the service.       |
-| `Enabled`     | `bool`   | Whether the service starts on boot. |
-| `Description` | `string` | Service description from unit file. |
-| `PID`         | `int`    | Main process ID of the service.     |
+| Field         | Type     | Description                             |
+| ------------- | -------- | --------------------------------------- |
+| `Name`        | `string` | Service unit name.                      |
+| `Status`      | `string` | Active status of the service.           |
+| `Enabled`     | `bool`   | `true` if the service starts at boot.   |
+| `Description` | `string` | Service description from the unit file. |
+| `PID`         | `int`    | Main process ID of the service.         |
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `service:read` permission.
+The token must have the `service:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/service.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/service.go)
-for a complete working example.
+for a complete example.

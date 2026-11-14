@@ -1,8 +1,9 @@
 # FileChanged
 
-Checks whether local content differs from the version stored in the Object
-Store. Computes SHA-256 locally and compares against the stored hash. Pairs with
-`OnlyIfChanged` to skip uploads or deploys when content is unchanged.
+Checks if the local content is different from the version in the Object Store.
+The operation calculates the SHA-256 hash locally and compares it with the
+stored hash. Use it with `OnlyIfChanged` to skip an upload or a deploy when the
+content did not change.
 
 ## Usage
 
@@ -15,10 +16,10 @@ o.FileUpload("config.yaml", "raw", localContent).
 
 ## Parameters
 
-| Parameter | Type     | Description                      |
-| --------- | -------- | -------------------------------- |
-| `name`    | `string` | Object name in the Object Store. |
-| `data`    | `[]byte` | Local file content to compare.   |
+| Parameter | Type     | Description                                 |
+| --------- | -------- | ------------------------------------------- |
+| `name`    | `string` | The name of the object in the Object Store. |
+| `data`    | `[]byte` | The local file content to compare.          |
 
 ## Result type
 
@@ -27,23 +28,24 @@ var result osapi.FileChanged
 err := results.Decode("check-file", &result)
 ```
 
-| Field     | Type     | Description                                    |
-| --------- | -------- | ---------------------------------------------- |
-| `Name`    | `string` | Object name that was checked.                  |
-| `Changed` | `bool`   | Whether the local content differs from stored. |
-| `SHA256`  | `string` | SHA-256 hash of the local content.             |
+| Field     | Type     | Description                                                       |
+| --------- | -------- | ----------------------------------------------------------------- |
+| `Name`    | `string` | The name of the object that the operation checked.                |
+| `Changed` | `bool`   | `true` if the local content is different from the stored content. |
+| `SHA256`  | `string` | The SHA-256 hash of the local content.                            |
 
 ## Idempotency
 
-**Read-only.** Does not modify any state. Returns `Changed: true` if the file
-does not exist in the Object Store or if the SHA-256 hash differs.
+**Read-only.** The operation does not change the host or the Object Store. It
+returns `Changed: true` if the file is not in the Object Store, or if the
+SHA-256 hash is different.
 
 ## Permissions
 
-Requires `file:read` permission.
+The token must have the `file:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/file-changed.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/file-changed.go)
-for a complete working example.
+for a complete example.

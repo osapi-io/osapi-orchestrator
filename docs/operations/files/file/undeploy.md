@@ -1,7 +1,7 @@
 # FileUndeploy
 
-Removes a previously deployed file from the target agent's filesystem. The file
-must have been deployed via [FileDeploy](deploy.md).
+Removes a deployed file from the filesystem of the target agent. Use this
+operation only for a file that [FileDeploy](deploy.md) deployed.
 
 ## Usage
 
@@ -14,7 +14,7 @@ step := o.FileUndeploy("web-01", "/etc/myapp/config.yaml")
 | Parameter | Type     | Description                                               |
 | --------- | -------- | --------------------------------------------------------- |
 | `target`  | `string` | Target host: `_any`, `_all`, hostname, or label selector. |
-| `path`    | `string` | Path of the deployed file to remove.                      |
+| `path`    | `string` | The path of the deployed file to remove.                  |
 
 ## Result type
 
@@ -23,22 +23,22 @@ var result osapi.FileUndeployResult
 err := results.Decode("undeploy-file-1", &result)
 ```
 
-| Field     | Type     | Description                                        |
-| --------- | -------- | -------------------------------------------------- |
-| `Changed` | `bool`   | Whether the file was removed or already absent.    |
-| `Error`   | `string` | Error message if removal failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Changed` | `bool`   | `true` if the operation removed the file.                    |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Idempotent.** If the file does not exist, the operation returns
-`Changed: false`. If the file exists and is removed, returns `Changed: true`.
+**Idempotent.** If no file exists, the operation returns `Changed: false`. If
+the file exists, the operation removes it and returns `Changed: true`.
 
 ## Permissions
 
-Requires `file:write` permission.
+The token must have the `file:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/file-deploy.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/file-deploy.go)
-for a complete working example.
+for a complete example.

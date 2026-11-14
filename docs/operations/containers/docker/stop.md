@@ -12,17 +12,17 @@ step := o.DockerStop("web-01", "c1a2b3d4e5f6", osapi.DockerStopOpts{
 
 ## Parameters
 
-| Parameter | Type                   | Description                   |
-| --------- | ---------------------- | ----------------------------- |
-| `target`  | `string`               | Target host or routing value. |
-| `id`      | `string`               | Container ID or name to stop. |
-| `opts`    | `osapi.DockerStopOpts` | Stop options.                 |
+| Parameter | Type                   | Description                              |
+| --------- | ---------------------- | ---------------------------------------- |
+| `target`  | `string`               | The target host or routing value.        |
+| `id`      | `string`               | The ID or name of the container to stop. |
+| `opts`    | `osapi.DockerStopOpts` | The stop options.                        |
 
 ### DockerStopOpts fields
 
-| Field     | Type  | Description                                            |
-| --------- | ----- | ------------------------------------------------------ |
-| `Timeout` | `int` | Seconds to wait before killing. Zero uses the default. |
+| Field     | Type  | Description                                                 |
+| --------- | ----- | ----------------------------------------------------------- |
+| `Timeout` | `int` | The seconds to wait before the kill. Zero uses the default. |
 
 ## Result type
 
@@ -31,23 +31,23 @@ var result osapi.DockerActionResult
 err := results.Decode("docker-stop", &result)
 ```
 
-| Field     | Type     | Description                        |
-| --------- | -------- | ---------------------------------- |
-| `ID`      | `string` | Container ID.                      |
-| `Message` | `string` | Status message from the operation. |
-| `Error`   | `string` | Error if the stop failed.          |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `ID`      | `string` | The ID of the container.                                     |
+| `Message` | `string` | The status message of the operation.                         |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Yes.** Stopping an already-stopped container is a no-op and returns
-`Changed: false`.
+**Idempotent.** If the container is already stopped, the operation does nothing
+and returns `Changed: false`.
 
 ## Permissions
 
-Requires `docker:write` permission.
+The token must have the `docker:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/docker.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/docker.go)
-for a complete working example.
+for a complete example.

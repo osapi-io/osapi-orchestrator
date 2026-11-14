@@ -1,14 +1,13 @@
 # Command execution
 
-Execute arbitrary commands on target nodes -- either directly or through a shell
-interpreter.
+Run any command on target hosts. The command runs directly or through a shell.
 
 ## Operations
 
 | Method                                   | Description                                 | Idempotent     |
 | ---------------------------------------- | ------------------------------------------- | -------------- |
-| [`CommandExec(target, opts)`](exec.md)   | Execute a command directly (no shell)       | Non-idempotent |
-| [`CommandShell(target, opts)`](shell.md) | Execute via `/bin/sh -c` (pipes, redirects) | Non-idempotent |
+| [`CommandExec(target, opts)`](exec.md)   | Run a command directly (no shell)           | Non-idempotent |
+| [`CommandShell(target, opts)`](shell.md) | Run through `/bin/sh -c` (pipes, redirects) | Non-idempotent |
 
 ## Permissions
 
@@ -18,12 +17,12 @@ interpreter.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/command.go`](../../../../examples/operations/command.go)
-for a complete workflow example covering both operations.
+for a complete workflow example that uses the two operations.
 
-The example demonstrates:
+The example shows how to:
 
-- Direct command execution with argument lists
-- Shell command execution with pipes and redirects
-- Decoding stdout, stderr, and exit code from results
+- Run a command directly with a list of arguments
+- Run a shell command with pipes and redirects
+- Decode stdout, stderr, and the exit code from the results

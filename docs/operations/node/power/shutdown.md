@@ -1,6 +1,6 @@
 # PowerShutdown
 
-Initiates a shutdown on the target node.
+Starts a shutdown on the target host.
 
 ## Usage
 
@@ -16,13 +16,13 @@ step := o.PowerShutdown("web-01", osapi.PowerOpts{
 | Parameter | Type        | Description                                               |
 | --------- | ----------- | --------------------------------------------------------- |
 | `target`  | `string`    | Target host: `_any`, `_all`, hostname, or label selector. |
-| `opts`    | `PowerOpts` | Power options (see below).                                |
+| `opts`    | `PowerOpts` | Power options (refer to the table below).                 |
 
 ### PowerOpts
 
 | Field     | Type     | Required | Description                               |
 | --------- | -------- | -------- | ----------------------------------------- |
-| `Delay`   | `int`    | No       | Seconds to wait before shutting down.     |
+| `Delay`   | `int`    | No       | Seconds to wait before the shutdown.      |
 | `Message` | `string` | No       | Message to broadcast before the shutdown. |
 
 ## Result type
@@ -32,23 +32,23 @@ var result osapi.PowerResult
 err := results.Decode("shutdown-1", &result)
 ```
 
-| Field     | Type     | Description                                         |
-| --------- | -------- | --------------------------------------------------- |
-| `Action`  | `string` | Action taken (e.g., `shutdown`).                    |
-| `Delay`   | `int`    | Delay in seconds before execution.                  |
-| `Changed` | `bool`   | Whether the shutdown was initiated.                 |
-| `Error`   | `string` | Error message if shutdown failed; empty on success. |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Action`  | `string` | Action taken (for example, `shutdown`).                      |
+| `Delay`   | `int`    | Delay in seconds before the shutdown starts.                 |
+| `Changed` | `bool`   | `true` if the operation started the shutdown.                |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
-**Non-idempotent.** Always initiates a shutdown.
+**Non-idempotent.** The shutdown starts each time the step runs.
 
 ## Permissions
 
-Requires `power:execute` permission.
+The token must have the `power:execute` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/power.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/power.go)
-for a complete working example.
+for a complete example.

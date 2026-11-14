@@ -1,6 +1,6 @@
 # DockerList
 
-Lists containers on the target host, optionally filtered by state.
+Lists the containers on the target host. You can filter the containers by state.
 
 ## Usage
 
@@ -13,17 +13,17 @@ step := o.DockerList("_any", &osapi.DockerListParams{
 
 ## Parameters
 
-| Parameter | Type                      | Description                   |
-| --------- | ------------------------- | ----------------------------- |
-| `target`  | `string`                  | Target host or routing value. |
-| `params`  | `*osapi.DockerListParams` | Optional filter parameters.   |
+| Parameter | Type                      | Description                       |
+| --------- | ------------------------- | --------------------------------- |
+| `target`  | `string`                  | The target host or routing value. |
+| `params`  | `*osapi.DockerListParams` | The filter parameters (optional). |
 
 ### DockerListParams fields
 
-| Field   | Type     | Description                                         |
-| ------- | -------- | --------------------------------------------------- |
-| `State` | `string` | Filter by state: `"running"`, `"stopped"`, `"all"`. |
-| `Limit` | `int`    | Maximum number of containers to return.             |
+| Field   | Type     | Description                                                |
+| ------- | -------- | ---------------------------------------------------------- |
+| `State` | `string` | The state to filter by: `"running"`, `"stopped"`, `"all"`. |
+| `Limit` | `int`    | The maximum number of containers to return.                |
 
 ## Result type
 
@@ -32,31 +32,32 @@ var result osapi.DockerListResult
 err := results.Decode("docker-list", &result)
 ```
 
-| Field        | Type                        | Description                  |
-| ------------ | --------------------------- | ---------------------------- |
-| `Containers` | `[]osapi.DockerSummaryItem` | List of matching containers. |
-| `Error`      | `string`                    | Error if listing failed.     |
+| Field        | Type                        | Description                                                  |
+| ------------ | --------------------------- | ------------------------------------------------------------ |
+| `Containers` | `[]osapi.DockerSummaryItem` | The containers that match.                                   |
+| `Error`      | `string`                    | The error message if the operation failed. Empty on success. |
 
 ### DockerSummaryItem fields
 
-| Field     | Type     | Description                   |
-| --------- | -------- | ----------------------------- |
-| `ID`      | `string` | Container ID.                 |
-| `Name`    | `string` | Container name.               |
-| `Image`   | `string` | Image the container runs.     |
-| `State`   | `string` | Current container state.      |
-| `Created` | `string` | Container creation timestamp. |
+| Field     | Type     | Description                              |
+| --------- | -------- | ---------------------------------------- |
+| `ID`      | `string` | The ID of the container.                 |
+| `Name`    | `string` | The name of the container.               |
+| `Image`   | `string` | The image that the container runs.       |
+| `State`   | `string` | The current state of the container.      |
+| `Created` | `string` | The time when the container was created. |
 
 ## Idempotency
 
-**Read-only.** Never modifies state. Always returns `Changed: false`.
+**Read-only.** The operation does not change the host. It always returns
+`Changed: false`.
 
 ## Permissions
 
-Requires `docker:read` permission.
+The token must have the `docker:read` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/docker.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/docker.go)
-for a complete working example.
+for a complete example.

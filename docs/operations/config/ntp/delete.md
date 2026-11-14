@@ -1,6 +1,6 @@
 # NTPDelete
 
-Deletes the NTP configuration from the target node.
+Deletes the NTP configuration from the target host.
 
 ## Usage
 
@@ -21,23 +21,23 @@ var result osapi.NtpMutationResult
 err := results.Decode("delete-ntp-1", &result)
 ```
 
-| Field     | Type     | Description                                              |
-| --------- | -------- | -------------------------------------------------------- |
-| `Changed` | `bool`   | Whether the configuration was removed or already absent. |
-| `Error`   | `string` | Error message if deletion failed; empty on success.      |
+| Field     | Type     | Description                                                  |
+| --------- | -------- | ------------------------------------------------------------ |
+| `Changed` | `bool`   | `true` if the operation removed the configuration.           |
+| `Error`   | `string` | The error message if the operation failed. Empty on success. |
 
 ## Idempotency
 
 **Idempotent.** If no NTP configuration exists, the operation returns
-`Changed: false`. If configuration exists and is removed, returns
-`Changed: true`.
+`Changed: false`. If the configuration exists, the operation removes it and
+returns `Changed: true`.
 
 ## Permissions
 
-Requires `ntp:write` permission.
+The token must have the `ntp:write` permission.
 
 ## Example
 
-See
+Refer to
 [`examples/operations/ntp.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/ntp.go)
-for a complete working example.
+for a complete example.
