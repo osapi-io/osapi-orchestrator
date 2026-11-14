@@ -37,8 +37,10 @@ A broadcast operation returns a `HostResult` for each agent that responds:
 
 The `Status` field shows the difference between a host that failed and a host
 that the agent skipped. A failed host had an error. A skipped host does not
-support the operation. Guards such as `OnlyIfAnyHostFailed` examine `Status`,
-not `Error`. Thus a skipped host does not trigger a failure guard.
+support the operation. A failure guard such as `OnlyIfAnyHostFailed` counts a
+host as failed if its `Status` is `failed`. It also counts a host as failed if
+its `Error` is not empty and its `Status` is not `skipped`. Thus a skipped host
+does not trigger a failure guard.
 
 Read the result of each host in a `When` guard or after the plan runs:
 
