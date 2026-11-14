@@ -53,8 +53,11 @@ o.CommandExec("_all", "rollback.sh").
 These guards are different from the task-level `OnlyIfFailed`:
 
 - `OnlyIfFailed` checks `Status == Failed`. It triggers on each failure.
-- `OnlyIfAnyHostFailed` checks `HostResult.Error`. It examines each host.
-- `OnlyIfAllHostsFailed` triggers only if each host has an error.
+- `OnlyIfAnyHostFailed` examines each host. It triggers if one or more hosts
+  failed.
+- `OnlyIfAllHostsFailed` triggers only if all hosts failed.
+- A host failed if its `Status` is `failed`, or if its `Error` is not empty and
+  its `Status` is not `skipped`.
 
 Refer to [Guards: Broadcast Guards](guards.md#broadcast-guards) for the full
 reference.
