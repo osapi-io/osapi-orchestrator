@@ -28,7 +28,7 @@ import (
 	"testing"
 	"time"
 
-	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 )

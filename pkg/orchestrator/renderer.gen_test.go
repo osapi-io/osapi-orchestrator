@@ -12,7 +12,7 @@ package orchestrator
 import (
 	reflect "reflect"
 
-	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	gomock "go.uber.org/mock/gomock"
 )
 

@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
-	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 // tagWidth is the visible width of the longest status tag ([unchanged]).

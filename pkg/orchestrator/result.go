@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"time"
 
-	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 // Results provides access to completed step results inside When guards.
