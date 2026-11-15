@@ -23,7 +23,7 @@ package orchestrator
 import (
 	"time"
 
-	engine "github.com/osapi-io/osapi-orchestrator/internal/engine"
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 // Option configures the Orchestrator.
