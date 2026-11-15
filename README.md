@@ -31,7 +31,7 @@ finds the order and runs independent steps in parallel. It gives one result
 for each host, not one answer for the fleet.
 </p>
 
-## Install
+## 📦 Install
 
 ```bash
 go install github.com/osapi-io/osapi-orchestrator@latest
@@ -43,7 +43,7 @@ To use it as a library dependency:
 go get github.com/osapi-io/osapi-orchestrator
 ```
 
-## Features
+## ✨ Features
 
 The orchestrator has a declarative DSL. You use it to put operations into
 DAG-based plans with typed results, guards, retry, and discovery.
@@ -64,7 +64,7 @@ DAG-based plans with typed results, guards, retry, and discovery.
 Refer to the [DSL reference](docs/features/README.md) for guards, predicates,
 error strategies, and typed result tables.
 
-## Examples
+## 🧪 Examples
 
 [examples/operations/](examples/operations/) has a runnable workflow for each
 domain. [examples/features/](examples/features/) has runnable examples of the
@@ -74,11 +74,11 @@ DSL features. Run an example with:
 OSAPI_TOKEN="<jwt>" go run examples/features/basic.go
 ```
 
-## Documentation
+## 📚 Documentation
 
 - [Package documentation] on pkg.go.dev. The API reference.
 
-## Targeting
+## 🎯 Targeting
 
 Most operations accept a `target` parameter. It controls which agents receive
 the request:
@@ -90,7 +90,7 @@ the request:
 | `hostname`  | Send to a specific host                     |
 | `key:value` | Send to the agents that have the label      |
 
-## Operations
+## ⚙️ Operations
 
 101 typed constructors in 23 domains:
 
@@ -120,12 +120,12 @@ the request:
 | Agent       | [4 operations](docs/operations/agent/)                | [agent-drain.go](examples/operations/agent-drain.go)         |
 | Health      | [1 operation](docs/operations/health/)                | [basic.go](examples/features/basic.go)                       |
 
-## Contributing
+## 🤝 Contributing
 
 Refer to the [Contributing](CONTRIBUTING.md) guide for the prerequisites, the
 setup, the conventions, and the PR workflow.
 
-## License
+## 📄 License
 
 The [MIT] License.
 
