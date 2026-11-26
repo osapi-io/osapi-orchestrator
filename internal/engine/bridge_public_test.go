@@ -230,12 +230,39 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				}
 			},
 			validateFunc: func(result *engine.Result, err error) {
-				s.NoError(err)
+				s.EqualError(err, "1 of 1 hosts failed: db-01: timeout")
 				s.Require().NotNil(result)
 				hr := result.HostResults[0]
 				s.Require().NotNil(hr.Data)
 				s.Equal("db-01", hr.Data["hostname"])
 				s.Equal("timeout", hr.Data["error"])
+			},
+		},
+		{
+			name: "a failed host fails the step and keeps the partial result",
+			col: client.Collection[client.HostnameResult]{
+				Results: []client.HostnameResult{
+					{Hostname: "web-01", Changed: true},
+					{Hostname: "web-02", Status: "failed"},
+					{Hostname: "web-03", Status: "skipped", Error: "unsupported"},
+				},
+				JobID: "job-partial",
+			},
+			toHost: func(r client.HostnameResult) engine.HostResult {
+				return engine.HostResult{
+					Hostname: r.Hostname,
+					Status:   r.Status,
+					Changed:  r.Changed,
+					Error:    r.Error,
+				}
+			},
+			validateFunc: func(result *engine.Result, err error) {
+				// A skipped host is not a failure; a failed host with no
+				// error gives its status.
+				s.EqualError(err, "1 of 3 hosts failed: web-02: failed")
+				s.Require().NotNil(result)
+				s.True(result.Changed)
+				s.Len(result.HostResults, 3)
 			},
 		},
 		{

@@ -130,8 +130,12 @@ func (p *Plan) Explain() string {
 				flags = append(flags, "only-if-changed")
 			}
 
-			if t.guard != nil {
+			if len(t.guards) > 0 {
 				flags = append(flags, "when")
+			}
+
+			if t.retry != nil && t.retry.count > 0 {
+				flags = append(flags, t.retry.String())
 			}
 
 			if len(flags) > 0 {

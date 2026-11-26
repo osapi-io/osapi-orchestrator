@@ -57,7 +57,9 @@ func (s *Step) After(
 }
 
 // Retry sets the number of retry attempts on failure. Options
-// configure exponential backoff between attempts.
+// configure exponential backoff between attempts. Retry is separate
+// from OnError: a step can retry, and then continue the plan when its
+// last attempt fails.
 func (s *Step) Retry(
 	n int,
 	opts ...RetryOption,
@@ -75,7 +77,7 @@ func (s *Step) Retry(
 		)
 	}
 
-	s.task.OnError(engine.Retry(n, sdkOpts...))
+	s.task.Retry(engine.Retry(n, sdkOpts...))
 
 	return s
 }
@@ -88,7 +90,10 @@ func (s *Step) OnlyIfChanged() *Step {
 }
 
 // OnlyIfFailed skips this step unless at least one dependency failed.
+// The step runs after a failed dependency, which a step with other
+// guards does not.
 func (s *Step) OnlyIfFailed() *Step {
+	s.task.RunsOnFailure()
 	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
 		for _, dep := range s.task.Dependencies() {
 			if r := sdkResults.Get(dep.Name()); r != nil && r.Status == engine.StatusFailed {
@@ -127,6 +132,7 @@ func (s *Step) OnlyIfAllChanged() *Step {
 // OnlyIfAnyHostFailed skips this step unless any host in any
 // dependency has an error. Only meaningful for broadcast operations.
 func (s *Step) OnlyIfAnyHostFailed() *Step {
+	s.task.RunsOnFailure()
 	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
 		deps := s.task.Dependencies()
 		if len(deps) == 0 {
@@ -140,7 +146,7 @@ func (s *Step) OnlyIfAnyHostFailed() *Step {
 			}
 
 			for _, hr := range r.HostResults {
-				if hr.Status == "failed" || (hr.Error != "" && hr.Status != "skipped") {
+				if engine.HostFailed(hr) {
 					return true
 				}
 			}
@@ -185,6 +191,7 @@ func (s *Step) OnlyIfAnyHostSkipped() *Step {
 // OnlyIfAllHostsFailed skips this step unless every host in every
 // dependency has an error. Only meaningful for broadcast operations.
 func (s *Step) OnlyIfAllHostsFailed() *Step {
+	s.task.RunsOnFailure()
 	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
 		deps := s.task.Dependencies()
 		if len(deps) == 0 {
@@ -198,7 +205,7 @@ func (s *Step) OnlyIfAllHostsFailed() *Step {
 			}
 
 			for _, hr := range r.HostResults {
-				if hr.Status == "skipped" || (hr.Error == "" && hr.Status != "failed") {
+				if !engine.HostFailed(hr) {
 					return false
 				}
 			}
@@ -266,8 +273,10 @@ func (s *Step) OnlyIfAllHostsChanged() *Step {
 	return s
 }
 
-// When adds a guard condition — the step only runs if the predicate
-// returns true.
+// When adds a guard condition: the step only runs if the predicate
+// returns true. Each guard of a step must hold, so When joins the
+// OnlyIf guards with AND. A step with a When guard is skipped after a
+// failed dependency.
 func (s *Step) When(
 	fn func(Results) bool,
 ) *Step {
@@ -279,43 +288,40 @@ func (s *Step) When(
 }
 
 // WhenFact adds a fact-based guard. The step runs only if the
-// predicate returns true for at least one agent. Requires a prior
-// AgentList step referenced by name. The skip reason distinguishes
-// between a missing/mistyped step name and no matching agents.
+// predicate returns true for at least one agent of the given
+// AgentList step. WhenFact makes this step run after that step. The
+// skip reason distinguishes between a decode failure and no matching
+// agents.
 func (s *Step) WhenFact(
-	agentListStep string,
+	agentList *Step,
 	fn Predicate,
 ) *Step {
-	s.task.WhenWithReason(func(sdkResults engine.Results) bool {
+	s.task.DependsOn(agentList.task)
+	s.task.Check(func(sdkResults engine.Results) (bool, string) {
 		r := Results{results: sdkResults}
+		name := agentList.task.Name()
 
 		var list osapi.AgentList
-		if err := r.Decode(agentListStep, &list); err != nil {
-			s.task.SetGuardReason(
-				fmt.Sprintf(
-					"when-fact: step %q not found or decode failed: %v",
-					agentListStep,
-					err,
-				),
+		if err := r.Decode(name, &list); err != nil {
+			return false, fmt.Sprintf(
+				"when-fact: step %q not found or decode failed: %v",
+				name,
+				err,
 			)
-
-			return false
 		}
 
 		if len(list.Agents) == 0 {
-			s.task.SetGuardReason("when-fact: no agents returned")
-
-			return false
+			return false, "when-fact: no agents returned"
 		}
 
 		for _, a := range list.Agents {
 			if fn(a) {
-				return true
+				return true, ""
 			}
 		}
 
-		return false
-	}, "when-fact: no matching agent")
+		return false, "when-fact: no matching agent"
+	})
 
 	return s
 }

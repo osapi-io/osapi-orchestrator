@@ -73,6 +73,8 @@ type TaskResult struct {
 	Duration    time.Duration
 	JobDuration time.Duration
 	Error       error
+	// Reason is why a skipped task did not run.
+	Reason      string
 	Data        map[string]any
 	HostResults []HostResult
 }

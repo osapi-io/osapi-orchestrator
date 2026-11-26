@@ -62,10 +62,10 @@ func main() {
 	health := o.HealthCheck()
 	agents := o.AgentList().After(health)
 
-	// Guard: only run if the target agent is Ubuntu.
+	// Guard: only run if the target agent is Ubuntu. WhenFact makes the
+	// step run after the agent list.
 	o.CommandShell(target, "apt-get update -qq").
-		After(agents).
-		WhenFact("list-agents", func(a osapi.Agent) bool {
+		WhenFact(agents, func(a osapi.Agent) bool {
 			return a.OSInfo != nil &&
 				a.OSInfo.Distribution == "Ubuntu"
 		})

@@ -80,7 +80,7 @@ func (s *StepTestSuite) TestWhen() {
 
 			// Access the SDK task's guard and invoke it to
 			// exercise the wrapper lambda.
-			guard := step.task.Guard()
+			guard := evaluate(step)
 			s.Require().NotNil(guard)
 
 			got := guard(engine.Results{})
@@ -171,7 +171,7 @@ func (s *StepTestSuite) TestOnlyIfFailed() {
 			dep := orch.NodeHostnameGet("_any").Named("dep")
 			step := orch.NodeHostnameGet("_any").After(dep).OnlyIfFailed()
 
-			guard := step.task.Guard()
+			guard := evaluate(step)
 			s.Require().NotNil(guard)
 			s.Equal(tc.expected, guard(tc.results))
 		})
@@ -253,7 +253,7 @@ func (s *StepTestSuite) TestOnlyIfAllChanged() {
 				step = orch.NodeHostnameGet("_any").OnlyIfAllChanged()
 			}
 
-			guard := step.task.Guard()
+			guard := evaluate(step)
 			s.Require().NotNil(guard)
 			s.Equal(tc.expected, guard(tc.results))
 		})
@@ -366,7 +366,7 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 				step = orch.NodeHostnameGet("_any").OnlyIfAnyHostFailed()
 			}
 
-			guard := step.task.Guard()
+			guard := evaluate(step)
 			s.Require().NotNil(guard)
 			s.Equal(tc.expected, guard(tc.results))
 		})
@@ -465,7 +465,7 @@ func (s *StepTestSuite) TestOnlyIfAnyHostSkipped() {
 				step = orch.NodeHostnameGet("_any").OnlyIfAnyHostSkipped()
 			}
 
-			guard := step.task.Guard()
+			guard := evaluate(step)
 			s.Require().NotNil(guard)
 			s.Equal(tc.expected, guard(tc.results))
 		})
@@ -564,7 +564,7 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 				step = orch.NodeHostnameGet("_any").OnlyIfAllHostsFailed()
 			}
 
-			guard := step.task.Guard()
+			guard := evaluate(step)
 			s.Require().NotNil(guard)
 			s.Equal(tc.expected, guard(tc.results))
 		})
@@ -649,7 +649,7 @@ func (s *StepTestSuite) TestOnlyIfAnyHostChanged() {
 				step = orch.NodeHostnameGet("_any").OnlyIfAnyHostChanged()
 			}
 
-			guard := step.task.Guard()
+			guard := evaluate(step)
 			s.Require().NotNil(guard)
 			s.Equal(tc.expected, guard(tc.results))
 		})
@@ -734,7 +734,7 @@ func (s *StepTestSuite) TestOnlyIfAllHostsChanged() {
 				step = orch.NodeHostnameGet("_any").OnlyIfAllHostsChanged()
 			}
 
-			guard := step.task.Guard()
+			guard := evaluate(step)
 			s.Require().NotNil(guard)
 			s.Equal(tc.expected, guard(tc.results))
 		})
@@ -916,10 +916,13 @@ func (s *StepTestSuite) TestWhenFact() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			list := orch.AgentList().Named(tc.stepName)
 			step := orch.NodeHostnameGet(tc.target).
-				WhenFact(tc.stepName, tc.predicate)
+				WhenFact(list, tc.predicate)
 
-			guard := step.task.Guard()
+			s.Contains(step.task.Dependencies(), list.task)
+
+			guard := evaluate(step)
 			s.Require().NotNil(guard)
 			s.Equal(tc.wantResult, guard(tc.results))
 		})
@@ -947,7 +950,7 @@ func (s *StepTestSuite) TestRetry() {
 		expectedRetryCount int
 	}{
 		{
-			name:               "Retry without options (backwards compatible)",
+			name:               "Retry without options",
 			retryCount:         3,
 			opts:               nil,
 			expectedString:     "retry(3)",
@@ -973,11 +976,23 @@ func (s *StepTestSuite) TestRetry() {
 		s.Run(tc.name, func() {
 			step := orch.NodeHostnameGet("_any").Retry(tc.retryCount, tc.opts...)
 
-			strategy := step.task.ErrorStrategy()
-			s.Require().NotNil(strategy)
-			s.Equal(tc.expectedString, strategy.String())
-			s.Equal(tc.expectedRetryCount, strategy.RetryCount())
+			policy := step.task.RetryPolicy()
+			s.Require().NotNil(policy)
+			s.Equal(tc.expectedString, policy.String())
+			s.Equal(tc.expectedRetryCount, policy.Count())
+			s.Nil(step.task.ErrorStrategy())
 		})
+	}
+}
+
+// evaluate returns the guards of a step as one predicate.
+func evaluate(
+	step *Step,
+) func(engine.Results) bool {
+	return func(results engine.Results) bool {
+		run, _ := step.task.Evaluate(results)
+
+		return run
 	}
 }
 

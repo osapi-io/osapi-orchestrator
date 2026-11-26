@@ -44,16 +44,21 @@ type TaskFnWithResults func(
 // GuardFn is a predicate that determines if a task should run.
 type GuardFn func(results Results) bool
 
+// CheckFn is a guard that also gives its skip reason. The reason is
+// used only when run is false.
+type CheckFn func(results Results) (run bool, reason string)
+
 // Task is a unit of work in an orchestration plan.
 type Task struct {
 	name           string
 	fn             TaskFn
 	fnr            TaskFnWithResults
 	deps           []*Task
-	guard          GuardFn
-	guardReason    string
+	guards         []CheckFn
+	runsOnFailure  bool
 	requiresChange bool
 	errorStrategy  *ErrorStrategy
+	retry          *RetryPolicy
 }
 
 // NewTaskFunc creates a functional task with custom logic.
@@ -127,41 +132,71 @@ func (t *Task) RequiresChange() bool {
 	return t.requiresChange
 }
 
-// When sets a custom guard function that determines whether
-// this task should execute.
+// When adds a guard. The task runs only when each of its guards
+// returns true.
 func (t *Task) When(
 	fn GuardFn,
 ) {
-	t.guard = fn
+	t.WhenWithReason(fn, "guard returned false")
 }
 
-// WhenWithReason sets a guard with a custom skip reason shown when
-// the guard returns false.
+// WhenWithReason adds a guard with the skip reason shown when the
+// guard returns false.
 func (t *Task) WhenWithReason(
 	fn GuardFn,
 	reason string,
 ) {
-	t.guard = fn
-	t.guardReason = reason
+	t.Check(func(results Results) (bool, string) {
+		return fn(results), reason
+	})
 }
 
-// Guard returns the guard function, or nil if none is set.
-func (t *Task) Guard() GuardFn {
-	return t.guard
-}
-
-// SetGuardReason updates the skip reason shown when the guard
-// returns false. Use inside a guard function to provide a dynamic
-// reason based on runtime conditions.
-func (t *Task) SetGuardReason(
-	reason string,
+// Check adds a guard that gives its own skip reason.
+func (t *Task) Check(
+	fn CheckFn,
 ) {
-	t.guardReason = reason
+	t.guards = append(t.guards, fn)
 }
 
-// GuardReason returns the current guard reason.
-func (t *Task) GuardReason() string {
-	return t.guardReason
+// HasGuard reports whether the task has one or more guards.
+func (t *Task) HasGuard() bool {
+	return len(t.guards) > 0
+}
+
+// RunsOnFailure marks a task whose guards inspect a failure, such as
+// OnlyIfFailed. Such a task runs after a failed dependency when its
+// guards hold. Each other task is skipped after a failed dependency.
+func (t *Task) RunsOnFailure() {
+	t.runsOnFailure = true
+}
+
+// Evaluate runs the guards of the task in order. It returns false and
+// the skip reason of the first guard that does not hold, or true when
+// each guard holds.
+func (t *Task) Evaluate(
+	results Results,
+) (bool, string) {
+	for _, guard := range t.guards {
+		if run, reason := guard(results); !run {
+			return false, reason
+		}
+	}
+
+	return true, ""
+}
+
+// Retry sets how many times the task runs again when it fails. It
+// overrides the retry policy of the plan.
+func (t *Task) Retry(
+	policy RetryPolicy,
+) {
+	t.retry = &policy
+}
+
+// RetryPolicy returns the per-task retry policy, or nil to use the
+// plan default.
+func (t *Task) RetryPolicy() *RetryPolicy {
+	return t.retry
 }
 
 // OnError sets a per-task error strategy override.

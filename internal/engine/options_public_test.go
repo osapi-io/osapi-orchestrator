@@ -58,13 +58,6 @@ func (s *OptionsPublicTestSuite) TestErrorStrategy() {
 				s.Equal("continue", got)
 			},
 		},
-		{
-			name:     "retry",
-			strategy: engine.Retry(3),
-			validateFunc: func(got string) {
-				s.Equal("retry(3)", got)
-			},
-		},
 	}
 
 	for _, tt := range tests {
@@ -74,38 +67,40 @@ func (s *OptionsPublicTestSuite) TestErrorStrategy() {
 	}
 }
 
-func (s *OptionsPublicTestSuite) TestRetryCount() {
+func (s *OptionsPublicTestSuite) TestRetryPolicy() {
 	tests := []struct {
 		name         string
-		strategy     engine.ErrorStrategy
-		validateFunc func(int)
+		policy       engine.RetryPolicy
+		validateFunc func(engine.RetryPolicy)
 	}{
 		{
-			name:     "stop all has zero retries",
-			strategy: engine.StopAll,
-			validateFunc: func(got int) {
-				s.Equal(0, got)
+			name:   "the zero policy has no retries",
+			policy: engine.RetryPolicy{},
+			validateFunc: func(got engine.RetryPolicy) {
+				s.Equal(0, got.Count())
+				s.Equal("retry(0)", got.String())
 			},
 		},
 		{
-			name:     "continue has zero retries",
-			strategy: engine.Continue,
-			validateFunc: func(got int) {
-				s.Equal(0, got)
+			name:   "retry has n retries",
+			policy: engine.Retry(5),
+			validateFunc: func(got engine.RetryPolicy) {
+				s.Equal(5, got.Count())
+				s.Equal("retry(5)", got.String())
 			},
 		},
 		{
-			name:     "retry has n retries",
-			strategy: engine.Retry(5),
-			validateFunc: func(got int) {
-				s.Equal(5, got)
+			name:   "a negative count is no retry",
+			policy: engine.Retry(-2),
+			validateFunc: func(got engine.RetryPolicy) {
+				s.Equal(0, got.Count())
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			tt.validateFunc(tt.strategy.RetryCount())
+			tt.validateFunc(tt.policy)
 		})
 	}
 }

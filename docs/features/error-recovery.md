@@ -16,8 +16,9 @@ o.CommandExec("_any", "echo", "running-cleanup").
     OnlyIfFailed()
 ```
 
-With the `Continue` strategy, the plan continues if some hosts fail. The cleanup
-step runs only if one or more dependencies failed.
+A broadcast step fails when one or more of its hosts fail. A skipped host is not
+a failure. With the `Continue` strategy, the plan continues if some hosts fail.
+The cleanup step runs only if one or more dependencies failed.
 
 ## Error strategies
 

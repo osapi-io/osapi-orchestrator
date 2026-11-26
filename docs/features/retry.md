@@ -35,6 +35,18 @@ o.TaskFunc("flaky-step", myFunc).
     Retry(5, orchestrator.WithBackoff(500*time.Millisecond, 5*time.Second))
 ```
 
+### Retry, then continue
+
+`Retry` and `ContinueOnError` work together. The step runs again up to N times.
+If the last attempt fails, the plan continues with the steps that do not depend
+on it:
+
+```go
+o.TaskFunc("flaky-step", myFunc).
+    Retry(3).
+    ContinueOnError()
+```
+
 ## Cancellation
 
 A retry stops when the context is cancelled. The step fails with the error of

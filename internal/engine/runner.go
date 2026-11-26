@@ -22,6 +22,7 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -73,6 +74,12 @@ func (r *runner) run(
 		}
 
 		if err != nil {
+			for _, rest := range levels[i+1:] {
+				for _, t := range rest {
+					taskResults = append(taskResults, r.skip(t, start, "plan stopped"))
+				}
+			}
+
 			report := &Report{
 				Tasks:    taskResults,
 				Duration: time.Since(start),
@@ -202,6 +209,30 @@ func (r *runner) callOnSkip(
 	}
 }
 
+// skip records a task as skipped with its reason, and calls the OnSkip
+// and AfterTask hooks.
+func (r *runner) skip(
+	t *Task,
+	start time.Time,
+	reason string,
+) TaskResult {
+	r.mu.Lock()
+	r.results[t.name] = &Result{Status: StatusSkipped}
+	r.mu.Unlock()
+
+	tr := TaskResult{
+		Name:     t.name,
+		Status:   StatusSkipped,
+		Duration: time.Since(start),
+		Reason:   reason,
+	}
+
+	r.callOnSkip(t, reason)
+	r.callAfterTask(t, tr)
+
+	return tr
+}
+
 // effectiveStrategy returns the error strategy for a task,
 // checking the per-task override before falling back to the
 // plan-level default.
@@ -217,7 +248,9 @@ func (r *runner) effectiveStrategy(
 
 // runLevel executes all tasks in a level concurrently. The first task
 // that fails with a strategy other than Continue cancels the context of
-// its siblings, so StopAll stops the tasks that still run.
+// its siblings, so StopAll stops the tasks that still run. The error
+// joins each such failure of the level, with the name of its task. A
+// sibling that only saw that cancel is not in the error.
 func (r *runner) runLevel(
 	ctx context.Context,
 	tasks []*Task,
@@ -228,9 +261,10 @@ func (r *runner) runLevel(
 	defer cancel()
 
 	var (
-		wg      sync.WaitGroup
-		stopMu  sync.Mutex
-		stopErr error
+		wg       sync.WaitGroup
+		stopMu   sync.Mutex
+		stopped  bool
+		stopErrs []error
 	)
 
 	for i, t := range tasks {
@@ -242,21 +276,27 @@ func (r *runner) runLevel(
 			tr := r.safeRunTask(levelCtx, t)
 			results[i] = tr
 
-			if tr.Status == StatusFailed && r.effectiveStrategy(t).kind != "continue" {
-				stopMu.Lock()
-				if stopErr == nil {
-					stopErr = tr.Error
-				}
-				stopMu.Unlock()
-
-				cancel()
+			if tr.Status != StatusFailed || r.effectiveStrategy(t).kind == "continue" {
+				return
 			}
+
+			stopMu.Lock()
+			defer stopMu.Unlock()
+
+			if stopped && ctx.Err() == nil && errors.Is(tr.Error, context.Canceled) {
+				return
+			}
+
+			stopped = true
+			stopErrs = append(stopErrs, fmt.Errorf("step %q: %w", t.name, tr.Error))
+
+			cancel()
 		}()
 	}
 
 	wg.Wait()
 
-	return results, stopErr
+	return results, errors.Join(stopErrs...)
 }
 
 // safeRunTask runs a task and turns a panic in the task, its guard or a
@@ -307,30 +347,27 @@ func (r *runner) runTask(
 ) TaskResult {
 	start := time.Now()
 
-	// Skip if any dependency failed — unless the task has a When guard,
-	// which may intentionally inspect failure status (e.g. alert-on-failure).
-	if t.guard == nil {
+	// Skip if any dependency failed, unless a guard of the task
+	// inspects the failure (RunsOnFailure), such as OnlyIfFailed.
+	if !t.runsOnFailure {
 		r.mu.Lock()
+
+		depFailed := false
 
 		for _, dep := range t.deps {
 			if r.failed[dep.name] {
+				depFailed = true
 				r.failed[t.name] = true
-				r.results[t.name] = &Result{Status: StatusSkipped}
-				r.mu.Unlock()
 
-				tr := TaskResult{
-					Name:     t.name,
-					Status:   StatusSkipped,
-					Duration: time.Since(start),
-				}
-				r.callOnSkip(t, "dependency failed")
-				r.callAfterTask(t, tr)
-
-				return tr
+				break
 			}
 		}
 
 		r.mu.Unlock()
+
+		if depFailed {
+			return r.skip(t, start, "dependency failed")
+		}
 	}
 
 	if t.requiresChange {
@@ -349,56 +386,26 @@ func (r *runner) runTask(
 		r.mu.Unlock()
 
 		if !anyChanged {
-			r.mu.Lock()
-			r.results[t.name] = &Result{Status: StatusSkipped}
-			r.mu.Unlock()
-
-			tr := TaskResult{
-				Name:     t.name,
-				Status:   StatusSkipped,
-				Duration: time.Since(start),
-			}
-
-			r.callOnSkip(t, "no dependencies changed")
-			r.callAfterTask(t, tr)
-
-			return tr
+			return r.skip(t, start, "no dependencies changed")
 		}
 	}
 
-	if t.guard != nil {
-		shouldRun := t.guard(r.snapshot())
-
-		if !shouldRun {
-			r.mu.Lock()
-			r.results[t.name] = &Result{Status: StatusSkipped}
-			r.mu.Unlock()
-
-			tr := TaskResult{
-				Name:     t.name,
-				Status:   StatusSkipped,
-				Duration: time.Since(start),
-			}
-
-			reason := "guard returned false"
-			if t.guardReason != "" {
-				reason = t.guardReason
-			}
-			r.callOnSkip(t, reason)
-			r.callAfterTask(t, tr)
-
-			return tr
+	// Each guard must hold. The first one that does not gives the skip
+	// reason.
+	if len(t.guards) > 0 {
+		if run, reason := t.Evaluate(r.snapshot()); !run {
+			return r.skip(t, start, reason)
 		}
 	}
 
 	r.callBeforeTask(t)
 
-	strategy := r.effectiveStrategy(t)
-	maxAttempts := 1
-
-	if strategy.kind == "retry" {
-		maxAttempts = max(strategy.retryCount, 0) + 1
+	policy := r.plan.config.Retry
+	if t.retry != nil {
+		policy = *t.retry
 	}
+
+	maxAttempts := policy.count + 1
 
 	var result *Result
 	var err error
@@ -436,8 +443,8 @@ retryLoop:
 			r.callOnRetry(t, attempt+1, err)
 
 			// Backoff between retries if configured.
-			if strategy.initialInterval > 0 {
-				delay := strategy.backoffDelay(attempt)
+			if policy.initialInterval > 0 {
+				delay := policy.backoffDelay(attempt)
 
 				select {
 				case <-ctx.Done():

@@ -21,6 +21,8 @@
 package orchestrator_test
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -443,7 +445,7 @@ func (s *StepPublicTestSuite) TestWhenFact() {
 			name: "WhenFact returns same step",
 			chainFn: func() *orchestrator.Step {
 				return s.orch.NodeHostnameGet("_any").
-					WhenFact("list-agents", func(
+					WhenFact(s.orch.AgentList(), func(
 						_ osapi.Agent,
 					) bool {
 						return true
@@ -459,6 +461,100 @@ func (s *StepPublicTestSuite) TestWhenFact() {
 		s.Run(tc.name, func() {
 			tc.validateFunc(tc.chainFn())
 		})
+	}
+}
+
+func (s *StepPublicTestSuite) TestGuardsAndFailures() {
+	unchanged := func(
+		_ context.Context,
+		_ *osapi.Client,
+		_ orchestrator.Results,
+	) (*orchestrator.Result, error) {
+		return &orchestrator.Result{Changed: false}, nil
+	}
+	fails := func(
+		_ context.Context,
+		_ *osapi.Client,
+		_ orchestrator.Results,
+	) (*orchestrator.Result, error) {
+		return nil, errors.New("boom")
+	}
+	always := func(_ orchestrator.Results) bool { return true }
+
+	tests := []struct {
+		name       string
+		setup      func(o *orchestrator.Orchestrator, ran *bool)
+		wantRan    bool
+		wantReason string
+	}{
+		{
+			name: "When does not replace OnlyIfAllChanged",
+			setup: func(o *orchestrator.Orchestrator, ran *bool) {
+				dep := o.TaskFunc("dep", unchanged)
+				o.TaskFunc("step", record(ran)).
+					After(dep).
+					OnlyIfAllChanged().
+					When(always)
+			},
+			wantReason: "only-if-all-changed: not all dependencies changed",
+		},
+		{
+			name: "a step with a When guard is skipped after a failed dependency",
+			setup: func(o *orchestrator.Orchestrator, ran *bool) {
+				dep := o.TaskFunc("dep", fails).ContinueOnError()
+				o.TaskFunc("step", record(ran)).After(dep).When(always)
+			},
+			wantReason: "dependency failed",
+		},
+		{
+			name: "OnlyIfFailed runs after a failed dependency",
+			setup: func(o *orchestrator.Orchestrator, ran *bool) {
+				dep := o.TaskFunc("dep", fails).ContinueOnError()
+				o.TaskFunc("step", record(ran)).After(dep).OnlyIfFailed().When(always)
+			},
+			wantRan: true,
+		},
+		{
+			name: "a step retries and then continues",
+			setup: func(o *orchestrator.Orchestrator, ran *bool) {
+				o.TaskFunc("dep", fails).Retry(1).ContinueOnError()
+				o.TaskFunc("step", record(ran))
+			},
+			wantRan: true,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			o := orchestrator.New(s.server.URL, "test-token")
+			ran := false
+			tt.setup(o, &ran)
+
+			report, err := o.Run(context.Background())
+			s.Require().NoError(err)
+			s.Equal(tt.wantRan, ran)
+
+			for _, tr := range report.Tasks {
+				if tr.Name == "step" {
+					s.Equal(tt.wantReason, tr.Reason)
+				}
+			}
+		})
+	}
+}
+
+// record returns a step function that sets ran.
+func record(
+	ran *bool,
+) func(context.Context, *osapi.Client, orchestrator.Results) (*orchestrator.Result, error) {
+	return func(
+		_ context.Context,
+		_ *osapi.Client,
+		_ orchestrator.Results,
+	) (*orchestrator.Result, error) {
+		*ran = true
+
+		return &orchestrator.Result{Changed: true}, nil
 	}
 }
 
