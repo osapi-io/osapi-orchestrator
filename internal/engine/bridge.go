@@ -23,6 +23,7 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	client "github.com/osapi-io/osapi/pkg/sdk/client"
 )
@@ -61,6 +62,10 @@ func StructToMap(
 // When rawJSON is non-nil, it is unmarshaled into Result.Data to
 // provide the full response for downstream consumers (e.g., guards
 // or Results.Decode). Pass resp.RawJSON() for this, or nil to skip.
+//
+// When one or more hosts failed (HostFailed), the step fails: the
+// result comes back with an error that names each failed host, and
+// the runner keeps the result for the guards that inspect hosts.
 func CollectionResult[T any](
 	col client.Collection[T],
 	rawJSON []byte,
@@ -68,6 +73,8 @@ func CollectionResult[T any](
 ) (*Result, error) {
 	hostResults := make([]HostResult, 0, len(col.Results))
 	changed := false
+
+	var failures []string
 
 	for _, r := range col.Results {
 		hr := toHostResult(r)
@@ -80,6 +87,10 @@ func CollectionResult[T any](
 			changed = true
 		}
 
+		if HostFailed(hr) {
+			failures = append(failures, fmt.Sprintf("%s: %s", hr.Hostname, hostError(hr)))
+		}
+
 		hostResults = append(hostResults, hr)
 	}
 
@@ -90,10 +101,41 @@ func CollectionResult[T any](
 		}
 	}
 
-	return &Result{
+	result := &Result{
 		JobID:       col.JobID,
 		Changed:     changed,
 		Data:        data,
 		HostResults: hostResults,
-	}, nil
+	}
+
+	if len(failures) > 0 {
+		return result, fmt.Errorf(
+			"%d of %d hosts failed: %s",
+			len(failures),
+			len(hostResults),
+			strings.Join(failures, "; "),
+		)
+	}
+
+	return result, nil
+}
+
+// HostFailed reports whether a host failed: its status is failed, or it
+// has an error and was not skipped. A skipped host is not a failure.
+func HostFailed(
+	hr HostResult,
+) bool {
+	return hr.Status == "failed" || (hr.Error != "" && hr.Status != "skipped")
+}
+
+// hostError returns the error of a failed host, or its status when it
+// gave none.
+func hostError(
+	hr HostResult,
+) string {
+	if hr.Error != "" {
+		return hr.Error
+	}
+
+	return hr.Status
 }

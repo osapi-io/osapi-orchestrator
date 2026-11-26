@@ -23,6 +23,7 @@ package engine_test
 import (
 	"context"
 	"fmt"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -603,7 +604,9 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 			validateFunc: func(report *engine.Report, err error, calls int32) {
 				s.ErrorIs(err, context.Canceled)
 				s.Equal(int32(0), calls)
-				s.Len(report.Tasks, 1)
+				s.Require().Len(report.Tasks, 2)
+				s.Equal(engine.StatusSkipped, report.Tasks[1].Status)
+				s.Equal("plan stopped", report.Tasks[1].Reason)
 			},
 		},
 		{
@@ -658,7 +661,9 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 			validateFunc: func(report *engine.Report, err error, _ int32) {
 				// The sibling stops at once: in its wait, or before it
 				// starts when the cancel comes first.
-				s.EqualError(err, "boom")
+				// Only the failure is in the error, not the cancel that
+				// it gave the sibling.
+				s.EqualError(err, `step "fails": boom`)
 				s.Require().Len(report.Tasks, 2)
 				s.Equal(engine.StatusFailed, report.Tasks[1].Status)
 				s.ErrorIs(report.Tasks[1].Error, context.Canceled)
@@ -679,14 +684,14 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 				return plan
 			},
 			validateFunc: func(report *engine.Report, err error, _ int32) {
-				s.EqualError(err, `task "nil" returned no result`)
+				s.EqualError(err, `step "nil": task "nil" returned no result`)
 				s.Equal(engine.StatusFailed, report.Tasks[0].Status)
 			},
 		},
 		{
 			name: "a negative retry count runs the task once",
 			setup: func(_ context.CancelFunc, calls *atomic.Int32) *engine.Plan {
-				plan := engine.NewPlan(nil, engine.OnError(engine.Retry(-1)))
+				plan := engine.NewPlan(nil, engine.WithRetry(engine.Retry(-1)))
 				plan.TaskFunc("once", func(
 					_ context.Context,
 					_ *osapiclient.Client,
@@ -743,7 +748,7 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 		{
 			name: "a retry stops when the context is cancelled",
 			setup: func(cancel context.CancelFunc, calls *atomic.Int32) *engine.Plan {
-				plan := engine.NewPlan(nil, engine.OnError(engine.Retry(5)))
+				plan := engine.NewPlan(nil, engine.WithRetry(engine.Retry(5)))
 				plan.TaskFunc("cancels", func(
 					_ context.Context,
 					_ *osapiclient.Client,
@@ -772,6 +777,155 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 
 			plan := tt.setup(cancel, &calls)
 			report, err := engine.ExportNewRunner(plan).Run(ctx)
+
+			s.Require().NotNil(report)
+			tt.validateFunc(report, err, calls.Load())
+		})
+	}
+}
+
+func (s *RunnerPublicTestSuite) TestRunStrategyAndReport() {
+	ok := func(
+		_ context.Context,
+		_ *osapiclient.Client,
+	) (*engine.Result, error) {
+		return &engine.Result{Changed: true}, nil
+	}
+
+	tests := []struct {
+		name         string
+		setup        func(calls *atomic.Int32) *engine.Plan
+		validateFunc func(report *engine.Report, err error, calls int32)
+	}{
+		{
+			name: "a step retries and then continues the plan",
+			setup: func(calls *atomic.Int32) *engine.Plan {
+				plan := engine.NewPlan(nil)
+				flaky := plan.TaskFunc("flaky", func(
+					_ context.Context,
+					_ *osapiclient.Client,
+				) (*engine.Result, error) {
+					calls.Add(1)
+
+					return nil, fmt.Errorf("boom")
+				})
+				flaky.Retry(engine.Retry(2))
+				flaky.OnError(engine.Continue)
+
+				independent := plan.TaskFunc("first", ok)
+				plan.TaskFunc("later", ok).DependsOn(independent)
+
+				return plan
+			},
+			validateFunc: func(report *engine.Report, err error, calls int32) {
+				s.NoError(err)
+				s.Equal(int32(3), calls)
+				statuses := map[string]engine.Status{}
+				for _, tr := range report.Tasks {
+					statuses[tr.Name] = tr.Status
+				}
+				s.Equal(engine.StatusFailed, statuses["flaky"])
+				s.Equal(engine.StatusChanged, statuses["later"])
+			},
+		},
+		{
+			name: "the error joins each failure of the level, with its step",
+			setup: func(_ *atomic.Int32) *engine.Plan {
+				// Both tasks start before either fails, so that neither
+				// sees the cancel of the other.
+				var started sync.WaitGroup
+				started.Add(2)
+
+				fails := func(msg string) engine.TaskFn {
+					return func(
+						_ context.Context,
+						_ *osapiclient.Client,
+					) (*engine.Result, error) {
+						started.Done()
+						started.Wait()
+
+						return nil, fmt.Errorf("%s", msg)
+					}
+				}
+
+				plan := engine.NewPlan(nil)
+				plan.TaskFunc("a", fails("boom a"))
+				plan.TaskFunc("b", fails("boom b"))
+
+				return plan
+			},
+			validateFunc: func(_ *engine.Report, err error, _ int32) {
+				s.Require().Error(err)
+				s.Contains(err.Error(), `step "a": boom a`)
+				s.Contains(err.Error(), `step "b": boom b`)
+			},
+		},
+		{
+			name: "the steps after a stop are in the report as skipped",
+			setup: func(calls *atomic.Int32) *engine.Plan {
+				plan := engine.NewPlan(nil)
+				fails := plan.TaskFunc("fails", func(
+					_ context.Context,
+					_ *osapiclient.Client,
+				) (*engine.Result, error) {
+					return nil, fmt.Errorf("boom")
+				})
+				next := plan.TaskFunc("next", func(
+					_ context.Context,
+					_ *osapiclient.Client,
+				) (*engine.Result, error) {
+					calls.Add(1)
+
+					return &engine.Result{}, nil
+				})
+				next.DependsOn(fails)
+				plan.TaskFunc("last", ok).DependsOn(next)
+
+				return plan
+			},
+			validateFunc: func(report *engine.Report, err error, calls int32) {
+				s.EqualError(err, `step "fails": boom`)
+				s.Equal(int32(0), calls)
+				s.Require().Len(report.Tasks, 3)
+
+				for _, tr := range report.Tasks[1:] {
+					s.Equal(engine.StatusSkipped, tr.Status)
+					s.Equal("plan stopped", tr.Reason)
+				}
+			},
+		},
+		{
+			name: "a plan-level retry applies to a task with no retry of its own",
+			setup: func(calls *atomic.Int32) *engine.Plan {
+				plan := engine.NewPlan(
+					nil,
+					engine.OnError(engine.Continue),
+					engine.WithRetry(engine.Retry(1)),
+				)
+				plan.TaskFunc("flaky", func(
+					_ context.Context,
+					_ *osapiclient.Client,
+				) (*engine.Result, error) {
+					calls.Add(1)
+
+					return nil, fmt.Errorf("boom")
+				})
+
+				return plan
+			},
+			validateFunc: func(_ *engine.Report, err error, calls int32) {
+				s.NoError(err)
+				s.Equal(int32(2), calls)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			var calls atomic.Int32
+
+			plan := tt.setup(&calls)
+			report, err := engine.ExportNewRunner(plan).Run(context.Background())
 
 			s.Require().NotNil(report)
 			tt.validateFunc(report, err, calls.Load())

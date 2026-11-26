@@ -71,16 +71,15 @@ func (er *ExportRunner) GetResult(
 	return er.r.results.Get(name)
 }
 
-// ExportBackoffDelay exposes the private backoffDelay method on ErrorStrategy
+// ExportBackoffDelay exposes the private backoffDelay method on RetryPolicy
 // for testing.
 func ExportBackoffDelay(
 	initial time.Duration,
 	maxInterval time.Duration,
 	attempt int,
 ) time.Duration {
-	s := ErrorStrategy{
-		kind:            "retry",
-		retryCount:      3,
+	s := RetryPolicy{
+		count:           3,
 		initialInterval: initial,
 		maxInterval:     maxInterval,
 	}

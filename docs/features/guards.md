@@ -3,6 +3,16 @@
 A guard decides if a step runs. It uses conditions that the plan finds when it
 runs.
 
+A step can have more than one guard. The step runs only when each guard returns
+true. The first guard that returns false gives the skip reason. Thus
+`OnlyIfAllChanged().When(...)` needs both conditions, and the second call does
+not replace the first.
+
+After a dependency fails, the plan skips each step that depends on it, also a
+step with guards. The failure guards are the exception: `OnlyIfFailed`,
+`OnlyIfAnyHostFailed` and `OnlyIfAllHostsFailed` run after a failed dependency.
+Their other guards still apply.
+
 ## When
 
 `When` takes a predicate function. The function receives the results of the
@@ -23,12 +33,13 @@ o.CommandExec("_any", "whoami").
 ## WhenFact
 
 `WhenFact` is a special guard. It examines the agent facts from an `AgentList`
-step that ran before:
+step. It takes that step, and makes this step run after it:
 
 ```go
+agents := o.AgentList()
+
 o.CommandShell(target, "apt-get update -qq").
-    After(agents).
-    WhenFact("list-agents", func(a osapi.Agent) bool {
+    WhenFact(agents, func(a osapi.Agent) bool {
         return a.OSInfo != nil &&
             a.OSInfo.Distribution == "Ubuntu"
     })

@@ -57,19 +57,22 @@ func New(
 	}
 }
 
-// Run executes the plan and returns a report.
+// Run executes the plan and returns a report. When a step fails, Run
+// returns the report with the error: the report has each step that
+// ran, and the steps that did not run as skipped. Only a plan that is
+// not valid gives no report.
 func (o *Orchestrator) Run(
 	ctx context.Context,
 ) (*Report, error) {
 	sdkReport, err := o.plan.Run(ctx)
-	if err != nil {
+	if sdkReport == nil {
 		return nil, err
 	}
 
 	return &Report{
 		Tasks:    sdkReport.Tasks,
 		Duration: sdkReport.Duration,
-	}, nil
+	}, err
 }
 
 // TaskFunc creates a custom step that receives the OSAPI client and

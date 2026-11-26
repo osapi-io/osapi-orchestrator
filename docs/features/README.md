@@ -99,7 +99,13 @@ and you can use more than one together:
 | `StopAll` (default) | Stop at the first failure and cancel all other steps          |
 | `Continue`          | Skip the dependents and continue to run the independent steps |
 
-`.Retry(n)` sets a retry for each step.
+`.Retry(n)` sets a retry for each step. A retry is separate from the error
+strategy. Thus `.Retry(3).ContinueOnError()` retries the step, and continues the
+plan if the last attempt fails.
+
+When a step fails, `Run` returns the report with the error. The report has each
+step that ran. The steps that did not run are in it as skipped, with the reason
+`plan stopped`. The error names each step that failed.
 
 ## Feature guides
 

@@ -99,6 +99,8 @@ func (s *TaskPublicTestSuite) TestOnlyIfChanged() {
 
 func (s *TaskPublicTestSuite) TestWhen() {
 	task := engine.NewTaskFunc("t", noop)
+	s.False(task.HasGuard())
+
 	called := false
 	task.When(func(_ engine.Results) bool {
 		called = true
@@ -106,9 +108,11 @@ func (s *TaskPublicTestSuite) TestWhen() {
 		return true
 	})
 
-	guard := task.Guard()
-	s.NotNil(guard)
-	s.True(guard(engine.Results{}))
+	s.True(task.HasGuard())
+
+	run, reason := task.Evaluate(engine.Results{})
+	s.True(run)
+	s.Empty(reason)
 	s.True(called)
 }
 
@@ -152,73 +156,89 @@ func (s *TaskPublicTestSuite) TestSetName() {
 	}
 }
 
-func (s *TaskPublicTestSuite) TestWhenWithReason() {
+func (s *TaskPublicTestSuite) TestEvaluate() {
+	yes := func(_ engine.Results) bool { return true }
+	no := func(_ engine.Results) bool { return false }
+
 	tests := []struct {
-		name         string
-		guardResult  bool
-		reason       string
-		validateFunc func(engine.GuardFn)
+		name       string
+		setup      func(task *engine.Task)
+		wantRun    bool
+		wantReason string
 	}{
 		{
-			name:        "sets guard and reason when guard returns false",
-			guardResult: false,
-			reason:      "host is unreachable",
-			validateFunc: func(guard engine.GuardFn) {
-				s.Require().NotNil(guard)
-				s.False(guard(engine.Results{}))
-			},
+			name:    "a task with no guard runs",
+			setup:   func(_ *engine.Task) {},
+			wantRun: true,
 		},
 		{
-			name:        "sets guard and reason when guard returns true",
-			guardResult: true,
-			reason:      "custom reason",
-			validateFunc: func(guard engine.GuardFn) {
-				s.Require().NotNil(guard)
-				s.True(guard(engine.Results{}))
+			name: "When gives its default reason",
+			setup: func(task *engine.Task) {
+				task.When(no)
 			},
+			wantReason: "guard returned false",
+		},
+		{
+			name: "WhenWithReason gives its reason",
+			setup: func(task *engine.Task) {
+				task.WhenWithReason(no, "host is unreachable")
+			},
+			wantReason: "host is unreachable",
+		},
+		{
+			name: "Check gives its own reason",
+			setup: func(task *engine.Task) {
+				task.Check(func(_ engine.Results) (bool, string) {
+					return false, "dynamic reason"
+				})
+			},
+			wantReason: "dynamic reason",
+		},
+		{
+			name: "guards join with AND: a later guard that fails skips the task",
+			setup: func(task *engine.Task) {
+				task.WhenWithReason(yes, "first")
+				task.WhenWithReason(no, "second")
+			},
+			wantReason: "second",
+		},
+		{
+			name: "the first guard that fails gives the reason",
+			setup: func(task *engine.Task) {
+				task.WhenWithReason(no, "first")
+				task.WhenWithReason(no, "second")
+			},
+			wantReason: "first",
+		},
+		{
+			name: "each guard holds",
+			setup: func(task *engine.Task) {
+				task.WhenWithReason(yes, "first")
+				task.WhenWithReason(yes, "second")
+			},
+			wantRun: true,
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			task := engine.NewTaskFunc("t", noop)
-			task.WhenWithReason(func(_ engine.Results) bool {
-				return tt.guardResult
-			}, tt.reason)
+			tt.setup(task)
 
-			tt.validateFunc(task.Guard())
+			run, reason := task.Evaluate(engine.Results{})
+			s.Equal(tt.wantRun, run)
+			s.Equal(tt.wantReason, reason)
 		})
 	}
 }
 
-func (s *TaskPublicTestSuite) TestSetGuardReason() {
-	tests := []struct {
-		name         string
-		initial      string
-		updated      string
-		validateFunc func(task *engine.Task)
-	}{
-		{
-			name:    "updates reason from initial value",
-			initial: "initial reason",
-			updated: "dynamic reason",
-			validateFunc: func(task *engine.Task) {
-				s.Equal("dynamic reason", task.GuardReason())
-			},
-		},
-	}
+func (s *TaskPublicTestSuite) TestRetry() {
+	task := engine.NewTaskFunc("t", noop)
+	s.Nil(task.RetryPolicy())
 
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			task := engine.NewTaskFunc("t", noop)
-			task.WhenWithReason(func(_ engine.Results) bool {
-				return false
-			}, tt.initial)
-
-			task.SetGuardReason(tt.updated)
-			tt.validateFunc(task)
-		})
-	}
+	task.Retry(engine.Retry(3))
+	s.Require().NotNil(task.RetryPolicy())
+	s.Equal(3, task.RetryPolicy().Count())
 }
 
 func (s *TaskPublicTestSuite) TestOnErrorOverride() {

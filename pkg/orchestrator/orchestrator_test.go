@@ -122,8 +122,13 @@ func (s *OrchestratorTestSuite) TestRun() {
 			report, err := orch.Run(context.Background())
 
 			if tc.expectErr {
+				// Run returns the report with the error, so the caller
+				// sees the step that failed.
 				s.Require().Error(err)
-				s.Nil(report)
+				s.Contains(err.Error(), `step "health-check"`)
+				s.Require().NotNil(report)
+				s.Require().Len(report.Tasks, 1)
+				s.Equal(engine.StatusFailed, report.Tasks[0].Status)
 
 				return
 			}
@@ -133,6 +138,18 @@ func (s *OrchestratorTestSuite) TestRun() {
 			s.Len(report.Tasks, 1)
 		})
 	}
+}
+
+func (s *OrchestratorTestSuite) TestRunInvalidPlan() {
+	orch := New("http://127.0.0.1:0", "test-token")
+	a := orch.HealthCheck().Named("a")
+	b := orch.HealthCheck().Named("b").After(a)
+	a.After(b)
+
+	report, err := orch.Run(context.Background())
+
+	s.Require().ErrorContains(err, "plan validation")
+	s.Nil(report)
 }
 
 func (s *OrchestratorTestSuite) TestRendererHooks() {

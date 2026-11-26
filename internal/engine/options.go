@@ -26,12 +26,12 @@ import (
 	"time"
 )
 
-// ErrorStrategy defines how the runner handles task failures.
+// ErrorStrategy defines what the runner does when a task fails: stop
+// the plan, or continue with the tasks that do not depend on it. A
+// retry is separate (RetryPolicy), so a task can retry and then
+// continue.
 type ErrorStrategy struct {
-	kind            string
-	retryCount      int
-	initialInterval time.Duration
-	maxInterval     time.Duration
+	kind string
 }
 
 // StopAll cancels all remaining tasks on first failure.
@@ -41,8 +41,21 @@ var StopAll = ErrorStrategy{kind: "stop_all"}
 // independent tasks.
 var Continue = ErrorStrategy{kind: "continue"}
 
+// String returns a human-readable representation of the strategy.
+func (e ErrorStrategy) String() string {
+	return e.kind
+}
+
+// RetryPolicy is how many times the runner runs a failed task again,
+// and the wait between the attempts.
+type RetryPolicy struct {
+	count           int
+	initialInterval time.Duration
+	maxInterval     time.Duration
+}
+
 // RetryOption configures retry behavior.
-type RetryOption func(*ErrorStrategy)
+type RetryOption func(*RetryPolicy)
 
 // WithRetryBackoff enables exponential backoff between retry attempts
 // with the given initial and maximum intervals.
@@ -50,53 +63,49 @@ func WithRetryBackoff(
 	initial time.Duration,
 	maxInterval time.Duration,
 ) RetryOption {
-	return func(s *ErrorStrategy) {
-		s.initialInterval = initial
-		s.maxInterval = maxInterval
+	return func(p *RetryPolicy) {
+		p.initialInterval = initial
+		p.maxInterval = maxInterval
 	}
 }
 
-// Retry returns a strategy that retries a failed task n times
-// before failing. Options configure backoff behavior.
+// Retry returns a policy that runs a failed task again n times. A
+// negative n is 0. Options configure backoff behavior.
 func Retry(
 	n int,
 	opts ...RetryOption,
-) ErrorStrategy {
-	s := ErrorStrategy{kind: "retry", retryCount: n}
+) RetryPolicy {
+	p := RetryPolicy{count: max(n, 0)}
 	for _, opt := range opts {
-		opt(&s)
+		opt(&p)
 	}
 
-	return s
+	return p
+}
+
+// Count returns the number of retries of the policy.
+func (p RetryPolicy) Count() int {
+	return p.count
+}
+
+// String returns a human-readable representation of the policy.
+func (p RetryPolicy) String() string {
+	return fmt.Sprintf("retry(%d)", p.count)
 }
 
 // backoffDelay returns the delay for the given attempt using
 // exponential backoff clamped to maxInterval.
-func (e ErrorStrategy) backoffDelay(
+func (p RetryPolicy) backoffDelay(
 	attempt int,
 ) time.Duration {
 	delay := time.Duration(
-		float64(e.initialInterval) * math.Pow(2, float64(attempt)),
+		float64(p.initialInterval) * math.Pow(2, float64(attempt)),
 	)
-	if delay > e.maxInterval {
-		delay = e.maxInterval
+	if delay > p.maxInterval {
+		delay = p.maxInterval
 	}
 
 	return delay
-}
-
-// String returns a human-readable representation of the strategy.
-func (e ErrorStrategy) String() string {
-	if e.kind == "retry" {
-		return fmt.Sprintf("retry(%d)", e.retryCount)
-	}
-
-	return e.kind
-}
-
-// RetryCount returns the number of retries for this strategy.
-func (e ErrorStrategy) RetryCount() int {
-	return e.retryCount
 }
 
 // Hooks provides consumer-controlled callbacks for plan execution
@@ -116,6 +125,7 @@ type Hooks struct {
 // PlanConfig holds plan-level configuration.
 type PlanConfig struct {
 	OnErrorStrategy ErrorStrategy
+	Retry           RetryPolicy
 	Hooks           *Hooks
 }
 
@@ -128,6 +138,15 @@ func OnError(
 ) PlanOption {
 	return func(cfg *PlanConfig) {
 		cfg.OnErrorStrategy = strategy
+	}
+}
+
+// WithRetry returns a PlanOption that sets the default retry policy.
+func WithRetry(
+	policy RetryPolicy,
+) PlanOption {
+	return func(cfg *PlanConfig) {
+		cfg.Retry = policy
 	}
 }
 

@@ -246,33 +246,49 @@ func (s *PlanPublicTestSuite) TestRunGuard() {
 }
 
 func (s *PlanPublicTestSuite) TestRunGuardWithFailedDependency() {
+	failed := func(r engine.Results) bool {
+		res := r.Get("fail")
+
+		return res != nil && res.Status == engine.StatusFailed
+	}
+	changed := func(r engine.Results) bool {
+		res := r.Get("fail")
+
+		return res != nil && res.Status == engine.StatusChanged
+	}
+
 	tests := []struct {
-		name         string
-		guard        func(engine.Results) bool
-		validateFunc func(bool, engine.Status)
+		name          string
+		guard         func(engine.Results) bool
+		runsOnFailure bool
+		validateFunc  func(bool, engine.Status, string)
 	}{
 		{
-			name: "guard runs and returns true when dependency failed",
-			guard: func(r engine.Results) bool {
-				res := r.Get("fail")
-
-				return res != nil && res.Status == engine.StatusFailed
-			},
-			validateFunc: func(ran bool, status engine.Status) {
+			name:          "a guard that inspects the failure runs and returns true",
+			guard:         failed,
+			runsOnFailure: true,
+			validateFunc: func(ran bool, status engine.Status, _ string) {
 				s.True(ran)
 				s.Equal(engine.StatusChanged, status)
 			},
 		},
 		{
-			name: "guard runs and returns false when dependency failed",
-			guard: func(r engine.Results) bool {
-				res := r.Get("fail")
-
-				return res != nil && res.Status == engine.StatusChanged
-			},
-			validateFunc: func(ran bool, status engine.Status) {
+			name:          "a guard that inspects the failure runs and returns false",
+			guard:         changed,
+			runsOnFailure: true,
+			validateFunc: func(ran bool, status engine.Status, reason string) {
 				s.False(ran)
 				s.Equal(engine.StatusSkipped, status)
+				s.Equal("guard returned false", reason)
+			},
+		},
+		{
+			name:  "another guard is skipped after a failed dependency",
+			guard: failed,
+			validateFunc: func(ran bool, status engine.Status, reason string) {
+				s.False(ran)
+				s.Equal(engine.StatusSkipped, status)
+				s.Equal("dependency failed", reason)
 			},
 		},
 	}
@@ -292,10 +308,21 @@ func (s *PlanPublicTestSuite) TestRunGuardWithFailedDependency() {
 			alert.DependsOn(fail)
 			alert.When(tt.guard)
 
+			if tt.runsOnFailure {
+				alert.RunsOnFailure()
+			}
+
 			report, err := plan.Run(context.Background())
 			s.Require().NoError(err)
 
-			tt.validateFunc(ran, statusMap(report)["alert"])
+			reason := ""
+			for _, tr := range report.Tasks {
+				if tr.Name == "alert" {
+					reason = tr.Reason
+				}
+			}
+
+			tt.validateFunc(ran, statusMap(report)["alert"], reason)
 		})
 	}
 }
@@ -391,7 +418,7 @@ func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
 		attempts := 0
 		plan := engine.NewPlan(
 			nil,
-			engine.OnError(engine.Retry(2)),
+			engine.WithRetry(engine.Retry(2)),
 		)
 
 		plan.TaskFunc("flaky", func(
@@ -415,7 +442,7 @@ func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
 	s.Run("retry exhausted returns error", func() {
 		plan := engine.NewPlan(
 			nil,
-			engine.OnError(engine.Retry(1)),
+			engine.WithRetry(engine.Retry(1)),
 		)
 
 		plan.TaskFunc("always-fail", failFunc("permanent failure"))
@@ -439,7 +466,7 @@ func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
 			}
 
 			return &engine.Result{Changed: true}, nil
-		}).OnError(engine.Retry(1))
+		}).Retry(engine.Retry(1))
 
 		report, err := plan.Run(context.Background())
 		s.NoError(err)
@@ -453,7 +480,7 @@ func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
 
 		plan := engine.NewPlan(
 			nil,
-			engine.OnError(engine.Retry(
+			engine.WithRetry(engine.Retry(
 				2,
 				engine.WithRetryBackoff(
 					50*time.Millisecond,
@@ -492,7 +519,7 @@ func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
 
 		plan := engine.NewPlan(
 			nil,
-			engine.OnError(engine.Retry(1)),
+			engine.WithRetry(engine.Retry(1)),
 		)
 
 		plan.TaskFunc("flaky", func(
@@ -527,7 +554,7 @@ func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
 
 		plan := engine.NewPlan(
 			nil,
-			engine.OnError(engine.Retry(
+			engine.WithRetry(engine.Retry(
 				10,
 				engine.WithRetryBackoff(
 					5*time.Second,
@@ -588,7 +615,7 @@ func (s *PlanPublicTestSuite) TestRunHooks() {
 		plan := engine.NewPlan(
 			nil,
 			engine.WithHooks(hooks),
-			engine.OnError(engine.Retry(2)),
+			engine.WithRetry(engine.Retry(2)),
 		)
 
 		plan.TaskFunc("flaky", func(
@@ -697,7 +724,7 @@ func (s *PlanPublicTestSuite) TestRunHooks() {
 		attempts := 0
 		plan := engine.NewPlan(
 			nil,
-			engine.OnError(engine.Retry(1)),
+			engine.WithRetry(engine.Retry(1)),
 		)
 
 		plan.TaskFunc("flaky", func(
@@ -856,14 +883,15 @@ func (s *PlanPublicTestSuite) TestExplain() {
 				b := plan.TaskFunc("b", taskFunc(false, nil))
 				b.DependsOn(a)
 				b.OnlyIfChanged()
+				b.When(func(_ engine.Results) bool { return true })
+				b.Retry(engine.Retry(2))
 			},
 			validateFunc: func(output string) {
 				s.Contains(output, "Plan: 2 tasks, 2 levels")
 				s.Contains(output, "Level 0:")
 				s.Contains(output, "a [fn]")
 				s.Contains(output, "Level 1:")
-				s.Contains(output, "b [fn]")
-				s.Contains(output, "only-if-changed")
+				s.Contains(output, "b [fn] <- a (only-if-changed, when, retry(2))")
 			},
 		},
 		{
