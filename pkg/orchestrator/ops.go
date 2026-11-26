@@ -904,6 +904,10 @@ func (o *Orchestrator) CommandExec(
 		},
 	)
 
+	// A second run is not one run: the runner does not retry it
+	// unless the step asks with RetryUnsafe.
+	task.SetUnsafe()
+
 	return &Step{task: task}
 }
 
@@ -946,6 +950,10 @@ func (o *Orchestrator) CommandShell(
 			)
 		},
 	)
+
+	// A second run is not one run: the runner does not retry it
+	// unless the step asks with RetryUnsafe.
+	task.SetUnsafe()
 
 	return &Step{task: task}
 }
@@ -1229,6 +1237,10 @@ func (o *Orchestrator) DockerCreate(
 		},
 	)
 
+	// A second run is not one run: the runner does not retry it
+	// unless the step asks with RetryUnsafe.
+	task.SetUnsafe()
+
 	return &Step{task: task}
 }
 
@@ -1371,6 +1383,10 @@ func (o *Orchestrator) DockerExec(
 			)
 		},
 	)
+
+	// A second run is not one run: the runner does not retry it
+	// unless the step asks with RetryUnsafe.
+	task.SetUnsafe()
 
 	return &Step{task: task}
 }
@@ -2447,6 +2463,10 @@ func (o *Orchestrator) ServiceRestart(
 		},
 	)
 
+	// A second run is not one run: the runner does not retry it
+	// unless the step asks with RetryUnsafe.
+	task.SetUnsafe()
+
 	return &Step{task: task}
 }
 
@@ -3471,6 +3491,10 @@ func (o *Orchestrator) ProcessSignal(
 		},
 	)
 
+	// A second run is not one run: the runner does not retry it
+	// unless the step asks with RetryUnsafe.
+	task.SetUnsafe()
+
 	return &Step{task: task}
 }
 
@@ -3510,6 +3534,10 @@ func (o *Orchestrator) PowerReboot(
 		},
 	)
 
+	// A second run is not one run: the runner does not retry it
+	// unless the step asks with RetryUnsafe.
+	task.SetUnsafe()
+
 	return &Step{task: task}
 }
 
@@ -3544,6 +3572,10 @@ func (o *Orchestrator) PowerShutdown(
 			)
 		},
 	)
+
+	// A second run is not one run: the runner does not retry it
+	// unless the step asks with RetryUnsafe.
+	task.SetUnsafe()
 
 	return &Step{task: task}
 }

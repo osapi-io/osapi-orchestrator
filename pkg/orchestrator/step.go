@@ -59,7 +59,10 @@ func (s *Step) After(
 // Retry sets the number of retry attempts on failure. Options
 // configure exponential backoff between attempts. Retry is separate
 // from OnError: a step can retry, and then continue the plan when its
-// last attempt fails.
+// last attempt fails. A retry runs only for an error that a retry can
+// fix (see Retryable), and not for an op that is not idempotent, such
+// as CommandExec or PowerReboot, unless the step also calls
+// RetryUnsafe.
 func (s *Step) Retry(
 	n int,
 	opts ...RetryOption,
@@ -78,6 +81,17 @@ func (s *Step) Retry(
 	}
 
 	s.task.Retry(engine.Retry(n, sdkOpts...))
+
+	return s
+}
+
+// RetryUnsafe lets Retry run the step again although its op is not
+// idempotent, such as CommandExec, CommandShell, DockerCreate,
+// DockerExec, ServiceRestart, ProcessSignal, PowerReboot and
+// PowerShutdown. Use it only when running the op twice is safe, such as
+// a command that checks before it changes anything.
+func (s *Step) RetryUnsafe() *Step {
+	s.task.SetRetryUnsafe()
 
 	return s
 }

@@ -1001,3 +1001,42 @@ func TestStepTestSuite(
 ) {
 	suite.Run(t, new(StepTestSuite))
 }
+
+func (s *StepTestSuite) TestUnsafeOps() {
+	orch := New("http://127.0.0.1:1", "token")
+
+	tests := []struct {
+		name string
+		step *Step
+		want bool
+	}{
+		{name: "CommandExec", step: orch.CommandExec("_any", "uptime"), want: true},
+		{name: "CommandShell", step: orch.CommandShell("_any", "uptime"), want: true},
+		{
+			name: "DockerCreate",
+			step: orch.DockerCreate("_any", osapi.DockerCreateOpts{}),
+			want: true,
+		},
+		{
+			name: "DockerExec",
+			step: orch.DockerExec("_any", "web", osapi.DockerExecOpts{}),
+			want: true,
+		},
+		{name: "ServiceRestart", step: orch.ServiceRestart("_any", "nginx"), want: true},
+		{
+			name: "ProcessSignal",
+			step: orch.ProcessSignal("_any", 1, osapi.ProcessSignalOpts{}),
+			want: true,
+		},
+		{name: "PowerReboot", step: orch.PowerReboot("_any", osapi.PowerOpts{}), want: true},
+		{name: "PowerShutdown", step: orch.PowerShutdown("_any", osapi.PowerOpts{}), want: true},
+		{name: "NodeHostnameGet", step: orch.NodeHostnameGet("_any"), want: false},
+		{name: "ServiceStart", step: orch.ServiceStart("_any", "nginx"), want: false},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.Equal(tt.want, tt.step.task.Unsafe())
+		})
+	}
+}

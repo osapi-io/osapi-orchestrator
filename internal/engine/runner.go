@@ -428,7 +428,7 @@ retryLoop:
 		}
 
 		if err == nil && result == nil {
-			err = fmt.Errorf("task %q returned no result", t.name)
+			err = Permanent(fmt.Errorf("task %q returned no result", t.name))
 		}
 
 		if err == nil {
@@ -436,6 +436,12 @@ retryLoop:
 		}
 
 		if ctx.Err() != nil {
+			break
+		}
+
+		// A retry runs only for an error that a retry can fix, and only
+		// for a task that is safe to run again.
+		if !Retryable(err) || (t.unsafe && !t.retryUnsafe) {
 			break
 		}
 
