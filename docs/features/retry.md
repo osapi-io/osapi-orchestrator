@@ -35,6 +35,12 @@ o.TaskFunc("flaky-step", myFunc).
     Retry(5, orchestrator.WithBackoff(500*time.Millisecond, 5*time.Second))
 ```
 
+## Cancellation
+
+A retry stops when the context is cancelled. The step fails with the error of
+its last attempt, and no attempt starts after the cancel. A negative count is
+the same as `Retry(0)`: the step runs one time.
+
 ## Transient poll errors
 
 When the SDK polls for a job result, it retries transient HTTP errors (404, 500)

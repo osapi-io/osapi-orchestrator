@@ -26,6 +26,22 @@ step runs only if one or more dependencies failed.
 | `StopAll`  | Stop at the first failure and cancel all other steps (default) |
 | `Continue` | Skip the dependents and continue to run the independent tasks  |
 
+With `StopAll`, the first failure cancels the context of the other steps in its
+level. A step that waits on its context stops at once, and the plan runs no
+later level.
+
+## Cancellation
+
+When the context of `Run` is cancelled, the steps that run get the cancelled
+context. No later level starts, a step that did not start fails with the context
+error, and `Run` returns that error. A cancelled run does not report a success.
+
+## A step that panics or returns no result
+
+A panic in a step, in its guard or in a hook fails that step. The error names
+the step and the panic value, and the error strategy then applies. A step that
+returns no result and no error also fails.
+
 ## Broadcast error recovery
 
 For a broadcast operation, `OnlyIfFailed` triggers when the task-level status is
