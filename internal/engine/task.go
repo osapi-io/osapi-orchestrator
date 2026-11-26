@@ -59,6 +59,11 @@ type Task struct {
 	requiresChange bool
 	errorStrategy  *ErrorStrategy
 	retry          *RetryPolicy
+	// unsafe is a task whose second run does not do what one run does,
+	// such as a command or a reboot. The runner retries it only when
+	// retryUnsafe is set.
+	unsafe      bool
+	retryUnsafe bool
 }
 
 // NewTaskFunc creates a functional task with custom logic.
@@ -191,6 +196,24 @@ func (t *Task) Retry(
 	policy RetryPolicy,
 ) {
 	t.retry = &policy
+}
+
+// SetUnsafe marks the task as not idempotent: a second run does not do
+// what one run does, such as a command, a reboot or a signal. The
+// runner does not retry it unless SetRetryUnsafe asks for it.
+func (t *Task) SetUnsafe() {
+	t.unsafe = true
+}
+
+// Unsafe reports whether the task is not idempotent.
+func (t *Task) Unsafe() bool {
+	return t.unsafe
+}
+
+// SetRetryUnsafe lets the runner retry the task although it is not
+// idempotent.
+func (t *Task) SetRetryUnsafe() {
+	t.retryUnsafe = true
 }
 
 // RetryPolicy returns the per-task retry policy, or nil to use the

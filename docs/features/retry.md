@@ -47,6 +47,36 @@ o.TaskFunc("flaky-step", myFunc).
     ContinueOnError()
 ```
 
+## What a retry runs again
+
+A retry runs only when another attempt can give a different result:
+
+| The error                                              | Retried |
+| ------------------------------------------------------ | ------- |
+| An API answer of 5xx, 408 or 429                       | Yes     |
+| A lost connection, a timeout, or an error with no type | Yes     |
+| Any other API answer, such as 400, 401, 403, 404, 409  | No      |
+| A cancelled context                                    | No      |
+| An error that `orchestrator.Permanent` wraps           | No      |
+| A `TaskFunc` that returns no result and no error       | No      |
+
+A `TaskFunc` returns `orchestrator.Permanent(err)` for a failure that is the
+same on each attempt, such as a bad input. `orchestrator.Retryable(err)` gives
+the same answer that the runner uses.
+
+Some ops are not idempotent: a second run does not do what one run does. They
+are `CommandExec`, `CommandShell`, `DockerCreate`, `DockerExec`,
+`ServiceRestart`, `ProcessSignal`, `PowerReboot` and `PowerShutdown`. `Retry`
+does not run them again, also for an error that a retry can fix. Add
+`RetryUnsafe` when two runs are safe, such as a command that checks before it
+changes anything:
+
+```go
+o.CommandExec("_all", "/usr/local/bin/converge").
+    Retry(3).
+    RetryUnsafe()
+```
+
 ## Cancellation
 
 A retry stops when the context is cancelled. The step fails with the error of

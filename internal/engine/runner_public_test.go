@@ -932,3 +932,102 @@ func (s *RunnerPublicTestSuite) TestRunStrategyAndReport() {
 		})
 	}
 }
+
+func (s *RunnerPublicTestSuite) TestRunRetryClassification() {
+	apiError := func(code int) error {
+		return &osapiclient.APIError{StatusCode: code, Message: "api"}
+	}
+
+	tests := []struct {
+		name         string
+		err          error
+		noResult     bool
+		unsafe       bool
+		retryUnsafe  bool
+		expectedRuns int32
+	}{
+		{
+			name:         "a 500 is retried",
+			err:          &osapiclient.ServerError{APIError: osapiclient.APIError{StatusCode: 500}},
+			expectedRuns: 3,
+		},
+		{
+			name:         "a 429 is retried",
+			err:          apiError(429),
+			expectedRuns: 3,
+		},
+		{
+			name:         "a lost connection is retried",
+			err:          fmt.Errorf("dial tcp: connection refused"),
+			expectedRuns: 3,
+		},
+		{
+			name: "a 400 is not retried",
+			err: &osapiclient.ValidationError{
+				APIError: osapiclient.APIError{StatusCode: 400},
+			},
+			expectedRuns: 1,
+		},
+		{
+			name: "a wrapped 404 is not retried",
+			err: fmt.Errorf("get: %w", &osapiclient.NotFoundError{
+				APIError: osapiclient.APIError{StatusCode: 404},
+			}),
+			expectedRuns: 1,
+		},
+		{
+			name:         "a permanent error is not retried",
+			err:          engine.Permanent(fmt.Errorf("bad input")),
+			expectedRuns: 1,
+		},
+		{
+			name:         "a task with no result is not retried",
+			noResult:     true,
+			expectedRuns: 1,
+		},
+		{
+			name:         "an unsafe task is not retried",
+			err:          apiError(503),
+			unsafe:       true,
+			expectedRuns: 1,
+		},
+		{
+			name:         "an unsafe task that allows it is retried",
+			err:          apiError(503),
+			unsafe:       true,
+			retryUnsafe:  true,
+			expectedRuns: 3,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			var calls atomic.Int32
+
+			plan := engine.NewPlan(nil, engine.WithRetry(engine.Retry(2)))
+			task := plan.TaskFunc("op", func(
+				_ context.Context,
+				_ *osapiclient.Client,
+			) (*engine.Result, error) {
+				calls.Add(1)
+				if tt.noResult {
+					return nil, nil
+				}
+
+				return nil, tt.err
+			})
+			if tt.unsafe {
+				task.SetUnsafe()
+			}
+			if tt.retryUnsafe {
+				task.SetRetryUnsafe()
+			}
+
+			_, err := engine.ExportNewRunner(plan).Run(context.Background())
+
+			s.Error(err)
+			s.Equal(tt.expectedRuns, calls.Load())
+			s.Equal(tt.unsafe, task.Unsafe())
+		})
+	}
+}
