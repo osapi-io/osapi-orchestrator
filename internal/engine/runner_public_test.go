@@ -23,6 +23,7 @@ package engine_test
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -526,6 +527,254 @@ func (s *RunnerPublicTestSuite) TestRunTaskPreservesResultOnError() {
 			_, _ = er.Run(context.Background())
 
 			tt.validateFunc(er.GetResult(tt.taskName))
+		})
+	}
+}
+
+func (s *RunnerPublicTestSuite) TestRunSafety() {
+	ok := func(
+		_ context.Context,
+		_ *osapiclient.Client,
+	) (*engine.Result, error) {
+		return &engine.Result{Changed: true}, nil
+	}
+
+	tests := []struct {
+		name         string
+		setup        func(cancel context.CancelFunc, calls *atomic.Int32) *engine.Plan
+		validateFunc func(report *engine.Report, err error, calls int32)
+	}{
+		{
+			name: "same-level tasks read the results while siblings write them",
+			setup: func(_ context.CancelFunc, _ *atomic.Int32) *engine.Plan {
+				plan := engine.NewPlan(nil, engine.OnError(engine.Continue))
+				dep := plan.TaskFunc("dep", ok)
+
+				for i := range 8 {
+					plan.TaskFuncWithResults(
+						fmt.Sprintf("reader-%d", i),
+						func(
+							_ context.Context,
+							_ *osapiclient.Client,
+							results engine.Results,
+						) (*engine.Result, error) {
+							for range 50 {
+								for name := range results {
+									_ = results.Get(name)
+								}
+							}
+
+							return &engine.Result{}, nil
+						},
+					).DependsOn(dep)
+					plan.TaskFunc(fmt.Sprintf("writer-%d", i), ok).DependsOn(dep)
+				}
+
+				return plan
+			},
+			validateFunc: func(report *engine.Report, err error, _ int32) {
+				s.NoError(err)
+				s.Len(report.Tasks, 17)
+			},
+		},
+		{
+			name: "a cancelled context stops the plan before the next level",
+			setup: func(cancel context.CancelFunc, calls *atomic.Int32) *engine.Plan {
+				plan := engine.NewPlan(nil, engine.OnError(engine.Continue))
+				a := plan.TaskFunc("a", func(
+					_ context.Context,
+					_ *osapiclient.Client,
+				) (*engine.Result, error) {
+					cancel()
+
+					return &engine.Result{}, nil
+				})
+				plan.TaskFunc("b", func(
+					_ context.Context,
+					_ *osapiclient.Client,
+				) (*engine.Result, error) {
+					calls.Add(1)
+
+					return &engine.Result{}, nil
+				}).DependsOn(a)
+
+				return plan
+			},
+			validateFunc: func(report *engine.Report, err error, calls int32) {
+				s.ErrorIs(err, context.Canceled)
+				s.Equal(int32(0), calls)
+				s.Len(report.Tasks, 1)
+			},
+		},
+		{
+			name: "an already cancelled context runs no task",
+			setup: func(cancel context.CancelFunc, calls *atomic.Int32) *engine.Plan {
+				cancel()
+
+				plan := engine.NewPlan(nil, engine.OnError(engine.Continue))
+				plan.TaskFunc("never", func(
+					_ context.Context,
+					_ *osapiclient.Client,
+				) (*engine.Result, error) {
+					calls.Add(1)
+
+					return &engine.Result{}, nil
+				})
+
+				return plan
+			},
+			validateFunc: func(report *engine.Report, err error, calls int32) {
+				s.ErrorIs(err, context.Canceled)
+				s.Equal(int32(0), calls)
+				s.Equal(engine.StatusFailed, report.Tasks[0].Status)
+			},
+		},
+		{
+			name: "StopAll cancels the tasks beside the failed one",
+			setup: func(_ context.CancelFunc, calls *atomic.Int32) *engine.Plan {
+				plan := engine.NewPlan(nil, engine.OnError(engine.StopAll))
+				plan.TaskFunc("fails", func(
+					_ context.Context,
+					_ *osapiclient.Client,
+				) (*engine.Result, error) {
+					return nil, fmt.Errorf("boom")
+				})
+				plan.TaskFunc("waits", func(
+					ctx context.Context,
+					_ *osapiclient.Client,
+				) (*engine.Result, error) {
+					select {
+					case <-ctx.Done():
+						calls.Add(1)
+
+						return nil, ctx.Err()
+					case <-time.After(5 * time.Second):
+						return &engine.Result{}, nil
+					}
+				})
+
+				return plan
+			},
+			validateFunc: func(report *engine.Report, err error, _ int32) {
+				// The sibling stops at once: in its wait, or before it
+				// starts when the cancel comes first.
+				s.EqualError(err, "boom")
+				s.Require().Len(report.Tasks, 2)
+				s.Equal(engine.StatusFailed, report.Tasks[1].Status)
+				s.ErrorIs(report.Tasks[1].Error, context.Canceled)
+				s.Less(report.Duration, 4*time.Second)
+			},
+		},
+		{
+			name: "a nil result with no error fails the task",
+			setup: func(_ context.CancelFunc, _ *atomic.Int32) *engine.Plan {
+				plan := engine.NewPlan(nil, engine.OnError(engine.StopAll))
+				plan.TaskFunc("nil", func(
+					_ context.Context,
+					_ *osapiclient.Client,
+				) (*engine.Result, error) {
+					return nil, nil
+				})
+
+				return plan
+			},
+			validateFunc: func(report *engine.Report, err error, _ int32) {
+				s.EqualError(err, `task "nil" returned no result`)
+				s.Equal(engine.StatusFailed, report.Tasks[0].Status)
+			},
+		},
+		{
+			name: "a negative retry count runs the task once",
+			setup: func(_ context.CancelFunc, calls *atomic.Int32) *engine.Plan {
+				plan := engine.NewPlan(nil, engine.OnError(engine.Retry(-1)))
+				plan.TaskFunc("once", func(
+					_ context.Context,
+					_ *osapiclient.Client,
+				) (*engine.Result, error) {
+					calls.Add(1)
+
+					return &engine.Result{}, nil
+				})
+
+				return plan
+			},
+			validateFunc: func(_ *engine.Report, err error, calls int32) {
+				s.NoError(err)
+				s.Equal(int32(1), calls)
+			},
+		},
+		{
+			name: "a panic in a task fails the task",
+			setup: func(_ context.CancelFunc, _ *atomic.Int32) *engine.Plan {
+				plan := engine.NewPlan(nil, engine.OnError(engine.Continue))
+				plan.TaskFunc("panics", func(
+					_ context.Context,
+					_ *osapiclient.Client,
+				) (*engine.Result, error) {
+					panic("bad input")
+				})
+
+				return plan
+			},
+			validateFunc: func(report *engine.Report, err error, _ int32) {
+				s.NoError(err)
+				s.Equal(engine.StatusFailed, report.Tasks[0].Status)
+				s.EqualError(report.Tasks[0].Error, `task "panics" panicked: bad input`)
+			},
+		},
+		{
+			name: "a panic in a guard fails the task and frees the lock",
+			setup: func(_ context.CancelFunc, _ *atomic.Int32) *engine.Plan {
+				plan := engine.NewPlan(nil, engine.OnError(engine.Continue))
+				plan.TaskFunc("guarded", ok).When(func(_ engine.Results) bool {
+					panic("bad guard")
+				})
+				plan.TaskFunc("beside", ok)
+
+				return plan
+			},
+			validateFunc: func(report *engine.Report, err error, _ int32) {
+				s.NoError(err)
+				s.Len(report.Tasks, 2)
+				s.Equal(engine.StatusFailed, report.Tasks[0].Status)
+				s.Equal(engine.StatusChanged, report.Tasks[1].Status)
+			},
+		},
+		{
+			name: "a retry stops when the context is cancelled",
+			setup: func(cancel context.CancelFunc, calls *atomic.Int32) *engine.Plan {
+				plan := engine.NewPlan(nil, engine.OnError(engine.Retry(5)))
+				plan.TaskFunc("cancels", func(
+					_ context.Context,
+					_ *osapiclient.Client,
+				) (*engine.Result, error) {
+					calls.Add(1)
+					cancel()
+
+					return nil, fmt.Errorf("boom")
+				})
+
+				return plan
+			},
+			validateFunc: func(_ *engine.Report, err error, calls int32) {
+				s.Error(err)
+				s.Equal(int32(1), calls)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			var calls atomic.Int32
+
+			plan := tt.setup(cancel, &calls)
+			report, err := engine.ExportNewRunner(plan).Run(ctx)
+
+			s.Require().NotNil(report)
+			tt.validateFunc(report, err, calls.Load())
 		})
 	}
 }

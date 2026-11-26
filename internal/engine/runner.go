@@ -22,6 +22,7 @@ package engine
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 )
@@ -64,6 +65,12 @@ func (r *runner) run(
 		taskResults = append(taskResults, results...)
 
 		r.callAfterLevel(i, results)
+
+		// A cancelled context stops the plan after this level, and the
+		// run reports the cancellation, not a success.
+		if err == nil {
+			err = ctx.Err()
+		}
 
 		if err != nil {
 			report := &Report{
@@ -208,14 +215,23 @@ func (r *runner) effectiveStrategy(
 	return r.plan.config.OnErrorStrategy
 }
 
-// runLevel executes all tasks in a level concurrently.
+// runLevel executes all tasks in a level concurrently. The first task
+// that fails with a strategy other than Continue cancels the context of
+// its siblings, so StopAll stops the tasks that still run.
 func (r *runner) runLevel(
 	ctx context.Context,
 	tasks []*Task,
 ) ([]TaskResult, error) {
 	results := make([]TaskResult, len(tasks))
 
-	var wg sync.WaitGroup
+	levelCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	var (
+		wg      sync.WaitGroup
+		stopMu  sync.Mutex
+		stopErr error
+	)
 
 	for i, t := range tasks {
 		wg.Add(1)
@@ -223,22 +239,65 @@ func (r *runner) runLevel(
 		go func() {
 			defer wg.Done()
 
-			results[i] = r.runTask(ctx, t)
+			tr := r.safeRunTask(levelCtx, t)
+			results[i] = tr
+
+			if tr.Status == StatusFailed && r.effectiveStrategy(t).kind != "continue" {
+				stopMu.Lock()
+				if stopErr == nil {
+					stopErr = tr.Error
+				}
+				stopMu.Unlock()
+
+				cancel()
+			}
 		}()
 	}
 
 	wg.Wait()
 
-	for i, tr := range results {
-		if tr.Status == StatusFailed {
-			strategy := r.effectiveStrategy(tasks[i])
-			if strategy.kind != "continue" {
-				return results, tr.Error
+	return results, stopErr
+}
+
+// safeRunTask runs a task and turns a panic in the task, its guard or a
+// hook into a failed result, so that one task cannot stop the process.
+func (r *runner) safeRunTask(
+	ctx context.Context,
+	t *Task,
+) (tr TaskResult) {
+	start := time.Now()
+
+	defer func() {
+		if p := recover(); p != nil {
+			r.mu.Lock()
+			r.failed[t.name] = true
+			r.results[t.name] = &Result{Status: StatusFailed}
+			r.mu.Unlock()
+
+			tr = TaskResult{
+				Name:     t.name,
+				Status:   StatusFailed,
+				Duration: time.Since(start),
+				Error:    fmt.Errorf("task %q panicked: %v", t.name, p),
 			}
 		}
+	}()
+
+	return r.runTask(ctx, t)
+}
+
+// snapshot returns a copy of the results, made under the lock. A task
+// and a guard read the copy, while the tasks beside it write the map.
+func (r *runner) snapshot() Results {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	results := make(Results, len(r.results))
+	for name, res := range r.results {
+		results[name] = res
 	}
 
-	return results, nil
+	return results
 }
 
 // runTask executes a single task with guard checks.
@@ -308,9 +367,7 @@ func (r *runner) runTask(
 	}
 
 	if t.guard != nil {
-		r.mu.Lock()
-		shouldRun := t.guard(r.results)
-		r.mu.Unlock()
+		shouldRun := t.guard(r.snapshot())
 
 		if !shouldRun {
 			r.mu.Lock()
@@ -340,7 +397,7 @@ func (r *runner) runTask(
 	maxAttempts := 1
 
 	if strategy.kind == "retry" {
-		maxAttempts = strategy.retryCount + 1
+		maxAttempts = max(strategy.retryCount, 0) + 1
 	}
 
 	var result *Result
@@ -350,17 +407,28 @@ func (r *runner) runTask(
 
 retryLoop:
 	for attempt := range maxAttempts {
-		if t.fnr != nil {
-			r.mu.Lock()
-			results := r.results
-			r.mu.Unlock()
+		// A cancelled context ends the task; a retry does not run.
+		if err = ctx.Err(); err != nil {
+			result = nil
 
-			result, err = t.fnr(ctx, client, results)
+			break
+		}
+
+		if t.fnr != nil {
+			result, err = t.fnr(ctx, client, r.snapshot())
 		} else {
 			result, err = t.fn(ctx, client)
 		}
 
+		if err == nil && result == nil {
+			err = fmt.Errorf("task %q returned no result", t.name)
+		}
+
 		if err == nil {
+			break
+		}
+
+		if ctx.Err() != nil {
 			break
 		}
 
