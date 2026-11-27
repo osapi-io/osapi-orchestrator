@@ -17,8 +17,8 @@ if err := report.Decode("run-uptime", &cmd); err == nil {
 }
 ```
 
-`Decode` returns an error when the step has no result, or when its result has
-no data, such as a step that was skipped. `Report.Decode` and the `Results.Decode`
+`Decode` returns an error when the step has no result, or when its result has no
+data, such as a step that was skipped. `Report.Decode` and the `Results.Decode`
 that a `TaskFunc` gets act the same, so a step never goes on with zero values
 from a step that did not run.
 
