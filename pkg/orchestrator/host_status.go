@@ -31,4 +31,7 @@ const (
 	HostStatusSkipped = "skipped"
 	// HostStatusFailed indicates the operation failed on the host.
 	HostStatusFailed = "failed"
+	// HostStatusTimeout indicates the host did not answer in time, so
+	// nobody knows whether the operation ran there. It is a failure.
+	HostStatusTimeout = "timeout"
 )

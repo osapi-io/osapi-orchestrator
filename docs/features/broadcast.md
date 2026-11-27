@@ -34,13 +34,18 @@ A broadcast operation returns a `HostResult` for each agent that responds:
 | `ok`      | The operation completed with no error   |
 | `skipped` | The host does not support the operation |
 | `failed`  | The operation failed with an error      |
+| `timeout` | The host did not answer in time         |
 
 The `Status` field shows the difference between a host that failed and a host
 that the agent skipped. A failed host had an error. A skipped host does not
-support the operation. A failure guard such as `OnlyIfAnyHostFailed` counts a
-host as failed if its `Status` is `failed`. It also counts a host as failed if
-its `Error` is not empty and its `Status` is not `skipped`. Thus a skipped host
-does not trigger a failure guard.
+support the operation. A host that timed out did not answer, so nobody knows
+whether the operation ran there. The orchestrator counts it as failed, with the
+error "the host did not answer".
+
+A failure guard such as `OnlyIfAnyHostFailed` counts a host as failed if its
+`Status` is `failed` or `timeout`. It also counts a host as failed if its
+`Error` is not empty and its `Status` is not `skipped`. Thus a skipped host does
+not trigger a failure guard, and a step whose hosts timed out fails.
 
 Read the result of each host in a `When` guard or after the plan runs:
 

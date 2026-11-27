@@ -140,6 +140,35 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 	}
 }
 
+func (s *BridgePublicTestSuite) TestHostFailed() {
+	tests := []struct {
+		name string
+		hr   engine.HostResult
+		want bool
+	}{
+		{name: "ok is not a failure", hr: engine.HostResult{Status: "ok"}, want: false},
+		{name: "failed is a failure", hr: engine.HostResult{Status: "failed"}, want: true},
+		{
+			name: "skipped is not a failure, though it carries an error",
+			hr:   engine.HostResult{Status: "skipped", Error: "unsupported"},
+			want: false,
+		},
+		{name: "timeout is a failure", hr: engine.HostResult{Status: "timeout"}, want: true},
+		{
+			name: "an error with no status is a failure",
+			hr:   engine.HostResult{Error: "boom"},
+			want: true,
+		},
+		{name: "no status and no error is not a failure", hr: engine.HostResult{}, want: false},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.Equal(tc.want, engine.HostFailed(tc.hr))
+		})
+	}
+}
+
 func (s *BridgePublicTestSuite) TestCollectionResult() {
 	mapper := func(r client.HostnameResult) engine.HostResult {
 		return engine.HostResult{
@@ -197,6 +226,31 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				s.Len(result.HostResults, 2)
 				s.False(result.HostResults[0].Changed)
 				s.True(result.HostResults[1].Changed)
+			},
+		},
+		{
+			name: "a host that timed out fails the step, with its reason",
+			col: client.Collection[client.HostnameResult]{
+				Results: []client.HostnameResult{
+					{Hostname: "web-01"},
+					{Hostname: "web-02"},
+				},
+				JobID: "job-timeout",
+			},
+			toHost: func(r client.HostnameResult) engine.HostResult {
+				status := "ok"
+				if r.Hostname == "web-02" {
+					status = "timeout"
+				}
+
+				return engine.HostResult{Hostname: r.Hostname, Status: status}
+			},
+			validateFunc: func(result *engine.Result, err error) {
+				s.Require().Error(err)
+				s.Contains(err.Error(), "1 of 2 hosts failed")
+				s.Contains(err.Error(), "web-02: the host did not answer")
+				s.Require().NotNil(result)
+				s.Len(result.HostResults, 2)
 			},
 		},
 		{

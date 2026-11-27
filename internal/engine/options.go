@@ -94,18 +94,27 @@ func (p RetryPolicy) String() string {
 }
 
 // backoffDelay returns the delay for the given attempt using
-// exponential backoff clamped to maxInterval.
+// exponential backoff clamped to maxInterval. A maxInterval of 0 or less
+// means no cap. The delay is clamped before it becomes a Duration, so a
+// long run of retries cannot overflow it.
 func (p RetryPolicy) backoffDelay(
 	attempt int,
 ) time.Duration {
-	delay := time.Duration(
-		float64(p.initialInterval) * math.Pow(2, float64(attempt)),
-	)
-	if delay > p.maxInterval {
-		delay = p.maxInterval
+	limit := float64(math.MaxInt64)
+	if p.maxInterval > 0 {
+		limit = float64(p.maxInterval)
 	}
 
-	return delay
+	delay := float64(p.initialInterval) * math.Pow(2, float64(attempt))
+	if delay >= limit {
+		if p.maxInterval > 0 {
+			return p.maxInterval
+		}
+
+		return time.Duration(math.MaxInt64)
+	}
+
+	return time.Duration(delay)
 }
 
 // Hooks provides consumer-controlled callbacks for plan execution

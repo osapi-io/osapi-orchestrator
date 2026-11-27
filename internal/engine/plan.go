@@ -172,6 +172,23 @@ func (p *Plan) Validate() error {
 		names[t.name] = true
 	}
 
+	inPlan := make(map[*Task]bool, len(p.tasks))
+	for _, t := range p.tasks {
+		inPlan[t] = true
+	}
+
+	for _, t := range p.tasks {
+		for _, dep := range t.deps {
+			if !inPlan[dep] {
+				return fmt.Errorf(
+					"task %q depends on %q, which is not in the plan",
+					t.name,
+					dep.name,
+				)
+			}
+		}
+	}
+
 	return p.detectCycle()
 }
 

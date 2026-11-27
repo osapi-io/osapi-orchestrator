@@ -29,19 +29,29 @@ The cleanup step runs only if one or more dependencies failed.
 
 With `StopAll`, the first failure cancels the context of the other steps in its
 level. A step that waits on its context stops at once, and the plan runs no
-later level.
+later level. A step that the cancel stopped, and a step that did not start, is
+skipped with the reason "plan stopped". It is not a failure, so the report
+counts only the step that failed.
 
 ## Cancellation
 
 When the context of `Run` is cancelled, the steps that run get the cancelled
-context. No later level starts, a step that did not start fails with the context
-error, and `Run` returns that error. A cancelled run does not report a success.
+context, and a step that ends with that error fails. A step that did not start
+is skipped with the reason "plan stopped", and no later level starts. `Run`
+returns the context error, so a cancelled run does not report a success.
 
 ## A step that panics or returns no result
 
 A panic in a step, in its guard or in a hook fails that step. The error names
-the step and the panic value, and the error strategy then applies. A step that
-returns no result and no error also fails.
+the step and the panic value, and has the stack. The `AfterTask` hook still runs
+for the step, and the error strategy then applies. A step that returns no result
+and no error also fails.
+
+## A dependency that is not in the plan
+
+`Run` refuses a plan in which a step depends on a step of a different plan. The
+error names both steps. A dependency of that kind never runs, so the dependent
+would run without it.
 
 ## Broadcast error recovery
 

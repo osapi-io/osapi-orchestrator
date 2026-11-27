@@ -154,14 +154,14 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			},
 		},
 		{
-			name: "Decodes nil data without error",
+			name: "Returns error for a step with no data, as Report.Decode does",
 			results: engine.Results{
 				"empty-task": &engine.Result{Data: nil},
 			},
 			lookupName: "empty-task",
 			target:     &osapi.HostnameEntry{},
 			validateFunc: func(decodeErr error) {
-				s.NoError(decodeErr)
+				s.EqualError(decodeErr, `no result data for "empty-task"`)
 			},
 		},
 		{

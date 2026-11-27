@@ -120,12 +120,21 @@ func CollectionResult[T any](
 	return result, nil
 }
 
-// HostFailed reports whether a host failed: its status is failed, or it
-// has an error and was not skipped. A skipped host is not a failure.
+// HostFailed reports whether a host failed: its status is failed or
+// timeout, or it has an error and was not skipped. A host that timed out
+// did not answer, so nobody knows whether the operation ran there; it is
+// a failure. A skipped host is not a failure.
 func HostFailed(
 	hr HostResult,
 ) bool {
-	return hr.Status == "failed" || (hr.Error != "" && hr.Status != "skipped")
+	switch hr.Status {
+	case "failed", "timeout":
+		return true
+	case "skipped":
+		return false
+	}
+
+	return hr.Error != ""
 }
 
 // hostError returns the error of a failed host, or its status when it
@@ -135,6 +144,10 @@ func hostError(
 ) string {
 	if hr.Error != "" {
 		return hr.Error
+	}
+
+	if hr.Status == "timeout" {
+		return "the host did not answer"
 	}
 
 	return hr.Status

@@ -607,6 +607,24 @@ func (s *PlanPublicTestSuite) TestRunHooks() {
 		}, events)
 	})
 
+	s.Run("a task that panics still calls AfterTask", func() {
+		var events []string
+
+		hooks := allHooks(&events)
+		plan := engine.NewPlan(nil, engine.WithHooks(hooks), engine.OnError(engine.Continue))
+		plan.TaskFunc("p", func(
+			_ context.Context,
+			_ *osapiclient.Client,
+		) (*engine.Result, error) {
+			panic("boom")
+		})
+
+		_, err := plan.Run(context.Background())
+		s.NoError(err)
+		s.Contains(events, "before-p")
+		s.Contains(events, "after-p")
+	})
+
 	s.Run("retry hook called with correct args", func() {
 		var events []string
 		attempts := 0
@@ -805,6 +823,17 @@ func (s *PlanPublicTestSuite) TestValidate() {
 			validateFunc: func(err error) {
 				s.Error(err)
 				s.Contains(err.Error(), "duplicate task name")
+			},
+		},
+		{
+			name: "a dependency that is not in the plan returns error",
+			setup: func(plan *engine.Plan) {
+				other := engine.NewPlan(nil)
+				outside := other.TaskFunc("outside", taskFunc(false, nil))
+				plan.TaskFunc("a", taskFunc(false, nil)).DependsOn(outside)
+			},
+			validateFunc: func(err error) {
+				s.EqualError(err, `task "a" depends on "outside", which is not in the plan`)
 			},
 		},
 		{
