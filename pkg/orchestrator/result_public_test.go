@@ -730,6 +730,23 @@ func (s *ResultPublicTestSuite) TestReportDecode() {
 			},
 		},
 		{
+			name: "Returns error when more than one host answered",
+			tasks: []engine.TaskResult{
+				{
+					Name:   "run-cmd",
+					Status: engine.StatusChanged,
+					HostResults: []engine.HostResult{
+						{Hostname: "web-01", Data: map[string]any{"stdout": "one"}},
+						{Hostname: "web-02", Data: map[string]any{"stdout": "two"}},
+					},
+				},
+			},
+			lookupName: "run-cmd",
+			validateFunc: func(_ osapi.CommandResult, err error) {
+				s.ErrorContains(err, `"run-cmd" has 2 host results`)
+			},
+		},
+		{
 			name:       "Returns error for missing task",
 			tasks:      []engine.TaskResult{},
 			lookupName: "nonexistent",
@@ -807,4 +824,21 @@ func TestResultPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(ResultPublicTestSuite))
+}
+
+func (s *ResultPublicTestSuite) TestDecodeOfABroadcast() {
+	r := orchestrator.NewResults(engine.Results{
+		"run-uptime": &engine.Result{
+			HostResults: []engine.HostResult{
+				{Hostname: "web-01", Data: map[string]any{"stdout": "one"}},
+				{Hostname: "web-02", Data: map[string]any{"stdout": "two"}},
+			},
+		},
+	})
+
+	var cmd osapi.CommandResult
+	err := r.Decode("run-uptime", &cmd)
+
+	s.ErrorContains(err, `"run-uptime" has 2 host results: read them with HostResults`)
+	s.Empty(cmd.Stdout, "no host's data stands in for the others")
 }

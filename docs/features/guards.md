@@ -81,6 +81,11 @@ o.CommandExec("_any", "cleanup.sh").
     OnlyIfFailed()
 ```
 
+`OnlyIfFailed` reads the status of its direct dependencies only. A dependency
+that the plan skipped, because its own dependency failed, has the status
+`Skipped`, not `Failed`. Thus a cleanup step after it does not run. Put the
+cleanup step after the step that can fail.
+
 ## Broadcast guards
 
 In a broadcast operation (`_all`, label selectors), each host can succeed, fail,

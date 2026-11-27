@@ -153,10 +153,12 @@ func toHostResults(
 // Decode retrieves the result of a named step and decodes it into
 // the given typed struct.
 //
-// For collection-based operations (CommandExec, HostnameGet, etc.)
-// that have host results, Decode unwraps the first host's data
-// automatically. For non-collection operations (TaskFunc, FileChanged,
-// etc.), it decodes from the step's top-level data.
+// For a collection operation (CommandExec, HostnameGet, etc.) with one
+// host result, Decode decodes that host's data. A step with more than
+// one host result, such as a broadcast to _all or a list, is an error:
+// read each one with HostResults and HostResult.Decode. For a
+// non-collection operation (TaskFunc, FileChanged, etc.), it decodes
+// from the step's top-level data.
 func (r Results) Decode(
 	name string,
 	v any,
@@ -166,9 +168,27 @@ func (r Results) Decode(
 		return fmt.Errorf("no result for %q", name)
 	}
 
-	data := result.Data
-	if len(result.HostResults) > 0 {
-		data = result.HostResults[0].Data
+	return decodeData(name, result.Data, result.HostResults, v)
+}
+
+// decodeData decodes the data of a step: the data of its one host
+// result, or its top-level data when it has no host results.
+func decodeData(
+	name string,
+	data map[string]any,
+	hosts []engine.HostResult,
+	v any,
+) error {
+	switch len(hosts) {
+	case 0:
+	case 1:
+		data = hosts[0].Data
+	default:
+		return fmt.Errorf(
+			"%q has %d host results: read them with HostResults",
+			name,
+			len(hosts),
+		)
 	}
 
 	if data == nil {
@@ -205,25 +225,7 @@ func (r *Report) Decode(
 ) error {
 	for _, t := range r.Tasks {
 		if t.Name == name {
-			data := t.Data
-			if len(t.HostResults) > 0 {
-				data = t.HostResults[0].Data
-			}
-
-			if data == nil {
-				return fmt.Errorf("no result data for %q", name)
-			}
-
-			b, err := json.Marshal(data)
-			if err != nil {
-				return fmt.Errorf("marshal result data: %w", err)
-			}
-
-			if err := json.Unmarshal(b, v); err != nil {
-				return fmt.Errorf("decode result data: %w", err)
-			}
-
-			return nil
+			return decodeData(name, t.Data, t.HostResults, v)
 		}
 	}
 

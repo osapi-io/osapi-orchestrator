@@ -23,6 +23,7 @@ package orchestrator
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -303,7 +304,9 @@ func (o *Orchestrator) AgentGet(
 }
 
 // AgentDrain creates a step that drains an agent, so that it takes no
-// new jobs.
+// new jobs. The step is changed when the agent was not draining. An
+// agent that already drains, which osapi answers with 409, is
+// unchanged, so that a retry and a second run succeed.
 func (o *Orchestrator) AgentDrain(
 	hostname string,
 ) *Step {
@@ -316,7 +319,9 @@ func (o *Orchestrator) AgentDrain(
 }
 
 // AgentUndrain creates a step that undrains an agent, so that it takes
-// jobs again.
+// jobs again. The step is changed when the agent was draining or
+// cordoned. An agent that takes jobs already, which osapi answers with
+// 409, is unchanged.
 func (o *Orchestrator) AgentUndrain(
 	hostname string,
 ) *Step {
@@ -329,6 +334,8 @@ func (o *Orchestrator) AgentUndrain(
 }
 
 // agentAction makes the step of an agent call that answers with no data.
+// A success changed the agent's state. A 409 says that the agent is
+// already in that state, so the step is unchanged, not failed.
 func (o *Orchestrator) agentAction(
 	prefix string,
 	hostname string,
@@ -340,11 +347,18 @@ func (o *Orchestrator) agentAction(
 			ctx context.Context,
 			c *osapi.Client,
 		) (*engine.Result, error) {
-			if err := call(ctx, c); err != nil {
+			err := call(ctx, c)
+
+			var conflict *osapi.ConflictError
+			if errors.As(err, &conflict) {
+				return &engine.Result{Changed: false}, nil
+			}
+
+			if err != nil {
 				return nil, fmt.Errorf("%s %s: %w", prefix, hostname, err)
 			}
 
-			return &engine.Result{Changed: false}, nil
+			return &engine.Result{Changed: true}, nil
 		},
 	)
 
