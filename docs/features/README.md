@@ -33,7 +33,7 @@ on an error:
 | Method                  | What it does                                                 | Guide                               |
 | ----------------------- | ------------------------------------------------------------ | ----------------------------------- |
 | `After`                 | Run after the given steps complete                           | [Basic DAG](basic.md)               |
-| `Retry`                 | Retry after a failure, with optional exponential backoff     | [Retry](retry.md)                   |
+| `Retry`                 | Retry after a failure, with exponential backoff              | [Retry](retry.md)                   |
 | `OnlyIfChanged`         | Skip if no dependency reported a change                      | [OnlyIfChanged](only-if-changed.md) |
 | `OnlyIfFailed`          | Skip if no dependency failed                                 | [Error Recovery](error-recovery.md) |
 | `OnlyIfAllChanged`      | Skip if one or more dependencies reported no change          |                                     |

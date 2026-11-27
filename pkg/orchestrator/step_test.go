@@ -957,9 +957,9 @@ func (s *StepTestSuite) TestRetry() {
 			expectedRetryCount: 3,
 		},
 		{
-			name:               "Retry with default exponential backoff",
+			name:               "Retry with a zero backoff",
 			retryCount:         3,
-			opts:               []RetryOption{WithExponentialBackoff()},
+			opts:               []RetryOption{WithBackoff(0, 0)},
 			expectedString:     "retry(3)",
 			expectedRetryCount: 3,
 		},

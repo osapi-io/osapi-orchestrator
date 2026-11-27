@@ -93,25 +93,33 @@ func (p RetryPolicy) String() string {
 	return fmt.Sprintf("retry(%d)", p.count)
 }
 
-// backoffDelay returns the delay for the given attempt using
-// exponential backoff clamped to maxInterval. A maxInterval of 0 or less
-// means no cap. The delay is clamped before it becomes a Duration, so a
-// long run of retries cannot overflow it.
+// Intervals returns the initial and the maximum interval of the
+// backoff between attempts. An initial interval of 0 means no wait.
+func (p RetryPolicy) Intervals() (time.Duration, time.Duration) {
+	return p.initialInterval, p.maxInterval
+}
+
+// defaultMaxInterval caps the backoff of a policy whose maximum
+// interval is 0 or less, so that a long run of retries never waits
+// longer than this between attempts.
+const defaultMaxInterval = 30 * time.Second
+
+// backoffDelay returns the wait before retry attempt+1: the initial
+// interval doubled for each earlier attempt, and never above the cap.
+// The cap is the maximum interval, or defaultMaxInterval when the
+// maximum is 0 or less. An initial interval above defaultMaxInterval is
+// its own cap.
 func (p RetryPolicy) backoffDelay(
 	attempt int,
 ) time.Duration {
-	limit := float64(math.MaxInt64)
-	if p.maxInterval > 0 {
-		limit = float64(p.maxInterval)
+	limit := p.maxInterval
+	if limit <= 0 {
+		limit = max(defaultMaxInterval, p.initialInterval)
 	}
 
 	delay := float64(p.initialInterval) * math.Pow(2, float64(attempt))
-	if delay >= limit {
-		if p.maxInterval > 0 {
-			return p.maxInterval
-		}
-
-		return time.Duration(math.MaxInt64)
+	if delay >= float64(limit) {
+		return limit
 	}
 
 	return time.Duration(delay)

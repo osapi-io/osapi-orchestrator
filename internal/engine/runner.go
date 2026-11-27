@@ -24,6 +24,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand/v2"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -472,7 +473,7 @@ retryLoop:
 
 			// Backoff between retries if configured.
 			if policy.initialInterval > 0 {
-				delay := policy.backoffDelay(attempt)
+				delay := jitter(policy.backoffDelay(attempt))
 
 				select {
 				case <-ctx.Done():
@@ -552,6 +553,21 @@ retryLoop:
 	r.callAfterTask(t, tr)
 
 	return tr
+}
+
+// jitter spreads a backoff delay over its upper half, so that clients
+// that failed at the same time do not retry at the same time. It is a
+// variable so that a test can make it exact.
+var jitter = func(
+	d time.Duration,
+) time.Duration {
+	if d <= 1 {
+		return d
+	}
+
+	half := d / 2
+
+	return half + rand.N(d-half+1)
 }
 
 // levelize groups tasks into levels where all tasks in a level can
