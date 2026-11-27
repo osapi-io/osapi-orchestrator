@@ -22,7 +22,7 @@ disk := o.DiskGet("_any").After(health)
 load := o.LoadGet("_any").After(health)
 
 // This runs after hostname completes.
-o.CommandExec("_any", "whoami").After(hostname)
+o.CommandExec("_any", osapi.CommandExecInput{Command: "whoami"}).After(hostname)
 ```
 
 ## Step chaining

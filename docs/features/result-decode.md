@@ -27,11 +27,32 @@ a step never goes on with zero values from a step that did not run.
 
 ## Status inspection
 
-Find the status of a step: succeeded, failed, or skipped:
+The report has the status of each step: `changed`, `unchanged`, `failed` or
+`skipped`:
 
 ```go
-status := report.Status("step-name")
-// status is one of: "success", "failed", "skipped"
+for _, t := range report.Tasks {
+    fmt.Printf("%s: %s\n", t.Name, t.Status)
+}
+```
+
+A `TaskFunc` and a `When` guard read the status of a step that ran before them
+with `Results.Status`. It returns `TaskStatusChanged`, `TaskStatusUnchanged`,
+`TaskStatusFailed`, `TaskStatusSkipped`, or `TaskStatusUnknown` for a step with
+no result:
+
+```go
+o.TaskFunc("report", func(
+    ctx context.Context,
+    c *osapi.Client,
+    r orchestrator.Results,
+) (*orchestrator.Result, error) {
+    if r.Status("deploy") == orchestrator.TaskStatusFailed {
+        // ...
+    }
+
+    return &orchestrator.Result{}, nil
+}).After(deploy)
 ```
 
 ## Example

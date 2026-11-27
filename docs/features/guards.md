@@ -25,7 +25,7 @@ because its own dependency failed is skipped too.
 steps that ran before. The step runs only if the predicate returns true:
 
 ```go
-o.CommandExec("_any", "whoami").
+o.CommandExec("_any", osapi.CommandExecInput{Command: "whoami"}).
     After(hostname).
     When(func(r orchestrator.Results) bool {
         var h osapi.HostnameEntry
@@ -44,10 +44,9 @@ step. It takes that step, and makes this step run after it:
 ```go
 agents := o.AgentList()
 
-o.CommandShell(target, "apt-get update -qq").
+o.CommandShell(target, osapi.CommandShellInput{Command: "apt-get update -qq"}).
     WhenFact(agents, func(a osapi.AgentInfo) bool {
-        return a.OSInfo != nil &&
-            a.OSInfo.Distribution == "Ubuntu"
+        return a.OSInfo.Distribution == "Ubuntu"
     })
 ```
 
@@ -71,11 +70,11 @@ step.OnlyIfAllChanged()
 Skip the step if no dependency has `Status == Failed`:
 
 ```go
-deploy := o.CommandExec("_all", "deploy.sh").
+deploy := o.CommandExec("_all", osapi.CommandExecInput{Command: "deploy.sh"}).
     Named("deploy").
     OnError(orchestrator.Continue)
 
-o.CommandExec("_any", "cleanup.sh").
+o.CommandExec("_any", osapi.CommandExecInput{Command: "cleanup.sh"}).
     Named("cleanup").
     After(deploy).
     OnlyIfFailed()
@@ -121,18 +120,18 @@ Special cases:
 ### Example
 
 ```go
-deploy := o.CommandExec("_all", "deploy.sh").
+deploy := o.CommandExec("_all", osapi.CommandExecInput{Command: "deploy.sh"}).
     Named("deploy").
     OnError(orchestrator.Continue)
 
 // Run cleanup only if at least one host reported an error.
-o.CommandExec("_any", "cleanup.sh").
+o.CommandExec("_any", osapi.CommandExecInput{Command: "cleanup.sh"}).
     Named("cleanup").
     After(deploy).
     OnlyIfAnyHostFailed()
 
 // Verify only if every host reported a change.
-o.CommandExec("_all", "verify.sh").
+o.CommandExec("_all", osapi.CommandExecInput{Command: "verify.sh"}).
     Named("verify").
     After(deploy).
     OnlyIfAllHostsChanged()

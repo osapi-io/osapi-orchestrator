@@ -8,7 +8,7 @@ the result).
 ```go
 disk := o.DiskGet("_any").After(health)
 
-o.CommandExec("_any", "df", "-h").
+o.CommandExec("_any", osapi.CommandExecInput{Command: "df", Args: []string{"-h"}}).
     Named("run-df").
     After(disk).
     OnlyIfChanged()

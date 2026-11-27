@@ -8,12 +8,11 @@ configuration. Then update it with new servers.
 ```go
 getDNS := o.DNSGet("_any", "eth0").After(health)
 
-o.DNSUpdate(
-    "_any",
-    "eth0",
-    []string{"8.8.8.8", "8.8.4.4"},
-    []string{"example.com"},
-).After(getDNS)
+o.DNSUpdate("_any", osapi.DNSUpdateInput{
+    InterfaceName: "eth0",
+    Servers:       []string{"8.8.8.8", "8.8.4.4"},
+    SearchDomains: []string{"example.com"},
+}).After(getDNS)
 ```
 
 The update step depends on the read step. Thus the plan reads the DNS

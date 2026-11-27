@@ -67,7 +67,7 @@ does not run them again, also for an error that a retry can fix. Add
 changes anything:
 
 ```go
-o.CommandExec("_all", "/usr/local/bin/converge").
+o.CommandExec("_all", osapi.CommandExecInput{Command: "/usr/local/bin/converge"}).
     Retry(3).
     RetryUnsafe()
 ```
