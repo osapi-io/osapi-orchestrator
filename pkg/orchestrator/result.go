@@ -168,6 +168,10 @@ func (r Results) Decode(
 		data = result.HostResults[0].Data
 	}
 
+	if data == nil {
+		return fmt.Errorf("no result data for %q", name)
+	}
+
 	b, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("marshal result data: %w", err)

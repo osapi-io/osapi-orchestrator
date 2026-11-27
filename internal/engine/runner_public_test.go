@@ -23,6 +23,7 @@ package engine_test
 import (
 	"context"
 	"fmt"
+	"math"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -473,6 +474,33 @@ func (s *RunnerPublicTestSuite) TestBackoffDelay() {
 				s.Equal(300*time.Millisecond, got)
 			},
 		},
+		{
+			name:    "a max interval of 0 is no cap",
+			initial: 100 * time.Millisecond,
+			max:     0,
+			attempt: 3,
+			validateFunc: func(got time.Duration) {
+				s.Equal(800*time.Millisecond, got)
+			},
+		},
+		{
+			name:    "a long run of retries with no cap does not overflow",
+			initial: time.Second,
+			max:     0,
+			attempt: 100,
+			validateFunc: func(got time.Duration) {
+				s.Equal(time.Duration(math.MaxInt64), got)
+			},
+		},
+		{
+			name:    "a long run of retries is clamped to the max",
+			initial: time.Second,
+			max:     time.Minute,
+			attempt: 100,
+			validateFunc: func(got time.Duration) {
+				s.Equal(time.Minute, got)
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -629,23 +657,31 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 			validateFunc: func(report *engine.Report, err error, calls int32) {
 				s.ErrorIs(err, context.Canceled)
 				s.Equal(int32(0), calls)
-				s.Equal(engine.StatusFailed, report.Tasks[0].Status)
+				s.Equal(engine.StatusSkipped, report.Tasks[0].Status)
+				s.Equal("plan stopped", report.Tasks[0].Reason)
 			},
 		},
 		{
-			name: "StopAll cancels the tasks beside the failed one",
+			name: "StopAll stops the tasks beside the failed one, which are skipped",
 			setup: func(_ context.CancelFunc, calls *atomic.Int32) *engine.Plan {
+				started := make(chan struct{})
 				plan := engine.NewPlan(nil, engine.OnError(engine.StopAll))
 				plan.TaskFunc("fails", func(
 					_ context.Context,
 					_ *osapiclient.Client,
 				) (*engine.Result, error) {
+					// Fail only once the sibling runs, so the cancel stops
+					// it in its wait.
+					<-started
+
 					return nil, fmt.Errorf("boom")
 				})
 				plan.TaskFunc("waits", func(
 					ctx context.Context,
 					_ *osapiclient.Client,
 				) (*engine.Result, error) {
+					close(started)
+
 					select {
 					case <-ctx.Done():
 						calls.Add(1)
@@ -659,14 +695,14 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 				return plan
 			},
 			validateFunc: func(report *engine.Report, err error, _ int32) {
-				// The sibling stops at once: in its wait, or before it
-				// starts when the cancel comes first.
-				// Only the failure is in the error, not the cancel that
-				// it gave the sibling.
+				// The sibling stops at once in its wait. Only the failure
+				// is in the error; the sibling is skipped, not failed.
 				s.EqualError(err, `step "fails": boom`)
 				s.Require().Len(report.Tasks, 2)
-				s.Equal(engine.StatusFailed, report.Tasks[1].Status)
-				s.ErrorIs(report.Tasks[1].Error, context.Canceled)
+				s.Equal(engine.StatusFailed, report.Tasks[0].Status)
+				s.Equal(engine.StatusSkipped, report.Tasks[1].Status)
+				s.Equal("plan stopped", report.Tasks[1].Reason)
+				s.NoError(report.Tasks[1].Error)
 				s.Less(report.Duration, 4*time.Second)
 			},
 		},
@@ -724,7 +760,8 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 			validateFunc: func(report *engine.Report, err error, _ int32) {
 				s.NoError(err)
 				s.Equal(engine.StatusFailed, report.Tasks[0].Status)
-				s.EqualError(report.Tasks[0].Error, `task "panics" panicked: bad input`)
+				s.ErrorContains(report.Tasks[0].Error, `task "panics" panicked: bad input`)
+				s.ErrorContains(report.Tasks[0].Error, "goroutine", "the error carries the stack")
 			},
 		},
 		{

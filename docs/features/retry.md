@@ -28,7 +28,8 @@ o.TaskFunc("flaky-step", myFunc).
 ### Retry with custom backoff
 
 Use `WithBackoff(initial, max)` to set the intervals. The delay doubles after
-each attempt, but it does not go above the maximum interval:
+each attempt, but it does not go above the maximum interval. A maximum of 0
+means no cap:
 
 ```go
 o.TaskFunc("flaky-step", myFunc).

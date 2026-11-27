@@ -65,6 +65,13 @@ func (s *HostStatusPublicTestSuite) TestHostStatusConstants() {
 				s.Equal("failed", status)
 			},
 		},
+		{
+			name:   "timeout constant",
+			status: orchestrator.HostStatusTimeout,
+			validateFunc: func(status string) {
+				s.Equal("timeout", status)
+			},
+		},
 	}
 
 	for _, tc := range tests {

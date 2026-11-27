@@ -97,7 +97,7 @@ func WithExponentialBackoff() RetryOption {
 
 // WithBackoff sets custom initial and max intervals for exponential
 // backoff between retry attempts. The delay doubles on each attempt,
-// clamped to maxInterval.
+// clamped to maxInterval. A maxInterval of 0 or less means no cap.
 func WithBackoff(
 	initial time.Duration,
 	maxInterval time.Duration,

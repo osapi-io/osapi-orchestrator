@@ -24,6 +24,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime/debug"
 	"sync"
 	"time"
 )
@@ -246,24 +247,38 @@ func (r *runner) effectiveStrategy(
 	return r.plan.config.OnErrorStrategy
 }
 
+// errPlanStopped is the cause of a level's cancel when a task of the
+// level failed with StopAll. A sibling that the cancel stopped is
+// skipped with the reason "plan stopped", not failed.
+var errPlanStopped = errors.New("plan stopped")
+
+// stoppedByLevel reports whether err comes from the level's own cancel,
+// not from the caller's context or from the task itself.
+func stoppedByLevel(
+	ctx context.Context,
+	err error,
+) bool {
+	return errors.Is(err, context.Canceled) &&
+		errors.Is(context.Cause(ctx), errPlanStopped)
+}
+
 // runLevel executes all tasks in a level concurrently. The first task
 // that fails with a strategy other than Continue cancels the context of
-// its siblings, so StopAll stops the tasks that still run. The error
-// joins each such failure of the level, with the name of its task. A
-// sibling that only saw that cancel is not in the error.
+// its siblings, so StopAll stops the tasks that still run; each of those
+// is skipped with the reason "plan stopped". The error joins each real
+// failure of the level, with the name of its task.
 func (r *runner) runLevel(
 	ctx context.Context,
 	tasks []*Task,
 ) ([]TaskResult, error) {
 	results := make([]TaskResult, len(tasks))
 
-	levelCtx, cancel := context.WithCancel(ctx)
-	defer cancel()
+	levelCtx, cancel := context.WithCancelCause(ctx)
+	defer cancel(nil)
 
 	var (
 		wg       sync.WaitGroup
 		stopMu   sync.Mutex
-		stopped  bool
 		stopErrs []error
 	)
 
@@ -283,14 +298,9 @@ func (r *runner) runLevel(
 			stopMu.Lock()
 			defer stopMu.Unlock()
 
-			if stopped && ctx.Err() == nil && errors.Is(tr.Error, context.Canceled) {
-				return
-			}
-
-			stopped = true
 			stopErrs = append(stopErrs, fmt.Errorf("step %q: %w", t.name, tr.Error))
 
-			cancel()
+			cancel(errPlanStopped)
 		}()
 	}
 
@@ -318,12 +328,25 @@ func (r *runner) safeRunTask(
 				Name:     t.name,
 				Status:   StatusFailed,
 				Duration: time.Since(start),
-				Error:    fmt.Errorf("task %q panicked: %v", t.name, p),
+				Error:    fmt.Errorf("task %q panicked: %v\n%s", t.name, p, debug.Stack()),
 			}
+
+			r.safeAfterTask(t, tr)
 		}
 	}()
 
 	return r.runTask(ctx, t)
+}
+
+// safeAfterTask calls the AfterTask hook for a task that panicked. A
+// panic in the hook itself is dropped: the task already failed.
+func (r *runner) safeAfterTask(
+	t *Task,
+	tr TaskResult,
+) {
+	defer func() { _ = recover() }()
+
+	r.callAfterTask(t, tr)
 }
 
 // snapshot returns a copy of the results, made under the lock. A task
@@ -398,6 +421,12 @@ func (r *runner) runTask(
 		}
 	}
 
+	// A task that the plan stopped before it started does not start. A
+	// cancel during a retry ends the task in the loop below.
+	if err := ctx.Err(); err != nil {
+		return r.skip(t, start, "plan stopped")
+	}
+
 	r.callBeforeTask(t)
 
 	policy := r.plan.config.Retry
@@ -414,13 +443,6 @@ func (r *runner) runTask(
 
 retryLoop:
 	for attempt := range maxAttempts {
-		// A cancelled context ends the task; a retry does not run.
-		if err = ctx.Err(); err != nil {
-			result = nil
-
-			break
-		}
-
 		if t.fnr != nil {
 			result, err = t.fnr(ctx, client, r.snapshot())
 		} else {
@@ -464,6 +486,10 @@ retryLoop:
 	}
 
 	elapsed := time.Since(start)
+
+	if err != nil && stoppedByLevel(ctx, err) {
+		return r.skip(t, start, "plan stopped")
+	}
 
 	if err != nil {
 		// Preserve the full result for partial failures (e.g. broadcast
