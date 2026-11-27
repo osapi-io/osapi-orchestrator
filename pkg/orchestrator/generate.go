@@ -21,7 +21,7 @@
 // Mocks for this package are generated here rather than in a sibling mocks
 // package. The interfaces are unexported and their methods take types declared
 // here, so a sibling would import this package while this package's own tests
-// import the sibling — a cycle. Destinations carry the _test.go suffix, so
+// import the sibling, a cycle. Destinations carry the _test.go suffix, so
 // nothing generated ships in the built package.
 
 package orchestrator

@@ -21,11 +21,11 @@
 // Package main demonstrates drift detection with FileChanged.
 //
 // Phase 1: upload known content to establish baseline.
-// Phase 2: FileChanged with same content — no drift (changed=false),
+// Phase 2: FileChanged with same content, no drift (changed=false),
 //
 //	OnlyIfChanged steps are skipped.
 //
-// Phase 3: FileChanged with different content — drift detected
+// Phase 3: FileChanged with different content, drift detected
 //
 //	(changed=true), OnlyIfChanged steps run.
 //
@@ -75,7 +75,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Phase 2: FileChanged with same content — no drift expected.
+	// Phase 2: FileChanged with same content, no drift expected.
 	fmt.Println("\n=== Phase 2: Check with same content (expect no drift) ===")
 
 	o2 := orchestrator.New(url, token)
@@ -101,7 +101,7 @@ func main() {
 			changed2.Name, changed2.Changed, changed2.SHA256[:12])
 	}
 
-	// Phase 3: FileChanged with different content — drift expected.
+	// Phase 3: FileChanged with different content, drift expected.
 	fmt.Println("\n=== Phase 3: Check with different content (expect drift) ===")
 
 	o3 := orchestrator.New(url, token)

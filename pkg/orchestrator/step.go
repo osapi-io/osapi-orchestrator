@@ -162,7 +162,7 @@ func (s *Step) OnlyIfAnyHostFailed() *Step {
 
 // OnlyIfAnyHostSkipped skips this step unless any host in any
 // dependency was skipped (unsupported operation). Only meaningful
-// for broadcast operations. Skipped hosts are NOT errors — they
+// for broadcast operations. Skipped hosts are NOT errors, they
 // indicate the operation is not available on that OS family.
 func (s *Step) OnlyIfAnyHostSkipped() *Step {
 	s.task.WhenWithReason(func(sdkResults engine.Results) bool {

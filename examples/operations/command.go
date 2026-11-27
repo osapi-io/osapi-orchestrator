@@ -20,7 +20,7 @@
 
 // Package main demonstrates command execution and error handling.
 //
-// Phase 1: exec and shell commands run in parallel — both always
+// Phase 1: exec and shell commands run in parallel, both always
 // report changed=true (commands are non-idempotent by design).
 //
 // Phase 2: a command that fails shows how to inspect
@@ -87,7 +87,7 @@ func main() {
 		fmt.Printf("uname stdout:  %s\n", cmd.Stdout)
 	}
 
-	fmt.Println("=== Phase 2: failing command — inspect error and exit code ===")
+	fmt.Println("=== Phase 2: failing command, inspect error and exit code ===")
 
 	o2 := orchestrator.New(url, token)
 

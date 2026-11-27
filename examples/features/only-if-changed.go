@@ -20,7 +20,7 @@
 
 // Package main demonstrates OnlyIfChanged with file operations.
 //
-// Phase 1: cleanup — remove deployed file.
+// Phase 1: cleanup, remove deployed file.
 // Phase 2: deploy file (changed=true) → OnlyIfChanged command runs.
 // Phase 3: deploy same file (changed=false) → OnlyIfChanged command
 //

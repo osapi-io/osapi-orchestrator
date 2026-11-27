@@ -138,7 +138,7 @@ func (s *OptionsPublicTestSuite) TestWithHooks() {
 func (s *OptionsPublicTestSuite) TestHooksDefaults() {
 	h := engine.Hooks{}
 
-	// Nil callbacks should be safe — no panic.
+	// Nil callbacks should be safe, no panic.
 	s.Nil(h.BeforePlan)
 	s.Nil(h.AfterPlan)
 	s.Nil(h.BeforeLevel)
