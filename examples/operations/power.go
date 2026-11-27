@@ -57,14 +57,14 @@ func main() {
 
 	// Schedule a reboot with a 60-second delay.
 	// WARNING: this will reboot the target host.
-	reboot := o.PowerReboot("_any", osapi.PowerOpts{
+	reboot := o.PowerReboot("_any", osapi.PowerRebootInput{
 		Delay:   60,
 		Message: "OSAPI orchestrator example reboot",
 	}).ContinueOnError()
 
 	// Schedule a shutdown (also delayed).
 	// WARNING: this will shut down the target host.
-	o.PowerShutdown("_any", osapi.PowerOpts{
+	o.PowerShutdown("_any", osapi.PowerShutdownInput{
 		Delay:   120,
 		Message: "OSAPI orchestrator example shutdown",
 	}).After(reboot).ContinueOnError()
@@ -75,7 +75,7 @@ func main() {
 	}
 
 	var result osapi.PowerResult
-	if err := report.Decode("reboot", &result); err == nil {
+	if err := report.Decode("reboot-power", &result); err == nil {
 		fmt.Printf("Power %s: delay=%ds, changed=%v\n",
 			result.Action, result.Delay, result.Changed)
 	} else {

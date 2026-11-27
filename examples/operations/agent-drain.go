@@ -66,14 +66,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var agents osapi.AgentList
-	if err := report1.Decode("list-agents", &agents); err != nil || len(agents.Agents) == 0 {
+	var agents osapi.ListAgentsResponse
+	if err := report1.Decode("list-agents", &agents); err != nil || len(agents.Items) == 0 {
 		log.Fatal("no agents registered")
 	}
 
 	host := os.Getenv("OSAPI_HOST")
 	if host == "" {
-		host = agents.Agents[0].Hostname
+		host = agents.Items[0].Hostname
 	}
 
 	fmt.Printf("Target: %s\n\n", host)
@@ -90,7 +90,7 @@ func main() {
 
 	drain := o2.AgentDrain(host).After(inspect)
 
-	maint := o2.CommandExec(host, "echo", "maintenance complete").
+	maint := o2.CommandExec(host, osapi.CommandExecInput{Command: "echo", Args: []string{"maintenance complete"}}).
 		After(drain)
 
 	o2.AgentUndrain(host).After(maint)

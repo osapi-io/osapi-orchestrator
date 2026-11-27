@@ -57,7 +57,7 @@ func main() {
 	contentA := []byte("server:\n  port: 8080\n  debug: false\n")
 	contentB := []byte("server:\n  port: 9090\n  debug: true\n")
 
-	deployOpts := osapi.FileDeployOpts{
+	deployOpts := osapi.NodeFileUpdateInput{
 		ObjectName:  "app-config.yaml",
 		Path:        "/tmp/app-config.yaml",
 		ContentType: "raw",
@@ -86,7 +86,7 @@ func main() {
 		After(check2).
 		OnlyIfChanged()
 
-	o2.FileDeploy("_any", deployOpts).
+	o2.NodeFileUpdate("_any", deployOpts).
 		After(upload2).
 		OnlyIfChanged()
 
@@ -112,7 +112,7 @@ func main() {
 		After(check3).
 		OnlyIfChanged()
 
-	o3.FileDeploy("_any", deployOpts).
+	o3.NodeFileUpdate("_any", deployOpts).
 		After(upload3).
 		OnlyIfChanged()
 

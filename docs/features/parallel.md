@@ -8,11 +8,11 @@ them the same dependency:
 ```go
 health := o.HealthCheck()
 
-o.NodeHostnameGet("_any").After(health)
-o.NodeDiskGet("_any").After(health)
-o.NodeMemoryGet("_any").After(health)
-o.NodeLoadGet("_any").After(health)
-o.NodeUptimeGet("_any").After(health)
+o.HostnameGet("_any").After(health)
+o.DiskGet("_any").After(health)
+o.MemoryGet("_any").After(health)
+o.LoadGet("_any").After(health)
+o.UptimeGet("_any").After(health)
 ```
 
 The five queries have the same dependency. Thus the orchestrator runs them at

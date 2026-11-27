@@ -37,14 +37,14 @@ func (s *PredicatePublicTestSuite) TestOS() {
 	tests := []struct {
 		name         string
 		distribution string
-		agent        osapi.Agent
+		agent        osapi.AgentInfo
 		validateFunc func(bool)
 	}{
 		{
 			name:         "Matches exact distribution",
 			distribution: "ubuntu",
-			agent: osapi.Agent{
-				OSInfo: &osapi.OSInfo{
+			agent: osapi.AgentInfo{
+				OSInfo: osapi.OSInfoResponse{
 					Distribution: "ubuntu",
 				},
 			},
@@ -55,8 +55,8 @@ func (s *PredicatePublicTestSuite) TestOS() {
 		{
 			name:         "Matches case-insensitive distribution",
 			distribution: "Ubuntu",
-			agent: osapi.Agent{
-				OSInfo: &osapi.OSInfo{
+			agent: osapi.AgentInfo{
+				OSInfo: osapi.OSInfoResponse{
 					Distribution: "ubuntu",
 				},
 			},
@@ -67,7 +67,7 @@ func (s *PredicatePublicTestSuite) TestOS() {
 		{
 			name:         "Returns false when OSInfo is nil",
 			distribution: "ubuntu",
-			agent:        osapi.Agent{},
+			agent:        osapi.AgentInfo{},
 			validateFunc: func(matched bool) {
 				s.False(matched)
 			},
@@ -75,8 +75,8 @@ func (s *PredicatePublicTestSuite) TestOS() {
 		{
 			name:         "Returns false for non-matching distribution",
 			distribution: "debian",
-			agent: osapi.Agent{
-				OSInfo: &osapi.OSInfo{
+			agent: osapi.AgentInfo{
+				OSInfo: osapi.OSInfoResponse{
 					Distribution: "ubuntu",
 				},
 			},
@@ -98,13 +98,13 @@ func (s *PredicatePublicTestSuite) TestArch() {
 	tests := []struct {
 		name         string
 		architecture string
-		agent        osapi.Agent
+		agent        osapi.AgentInfo
 		validateFunc func(bool)
 	}{
 		{
 			name:         "Matches architecture",
 			architecture: "x86_64",
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				Architecture: "x86_64",
 			},
 			validateFunc: func(matched bool) {
@@ -114,7 +114,7 @@ func (s *PredicatePublicTestSuite) TestArch() {
 		{
 			name:         "Matches case-insensitive architecture",
 			architecture: "X86_64",
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				Architecture: "x86_64",
 			},
 			validateFunc: func(matched bool) {
@@ -124,7 +124,7 @@ func (s *PredicatePublicTestSuite) TestArch() {
 		{
 			name:         "Returns false for non-matching architecture",
 			architecture: "arm64",
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				Architecture: "x86_64",
 			},
 			validateFunc: func(matched bool) {
@@ -145,14 +145,14 @@ func (s *PredicatePublicTestSuite) TestMinMemory() {
 	tests := []struct {
 		name         string
 		total        int
-		agent        osapi.Agent
+		agent        osapi.AgentInfo
 		validateFunc func(bool)
 	}{
 		{
 			name:  "Matches when memory exceeds minimum",
 			total: 4096,
-			agent: osapi.Agent{
-				Memory: &osapi.Memory{
+			agent: osapi.AgentInfo{
+				Memory: osapi.MemoryResponse{
 					Total: 8192,
 				},
 			},
@@ -163,8 +163,8 @@ func (s *PredicatePublicTestSuite) TestMinMemory() {
 		{
 			name:  "Matches when memory equals minimum",
 			total: 4096,
-			agent: osapi.Agent{
-				Memory: &osapi.Memory{
+			agent: osapi.AgentInfo{
+				Memory: osapi.MemoryResponse{
 					Total: 4096,
 				},
 			},
@@ -175,8 +175,8 @@ func (s *PredicatePublicTestSuite) TestMinMemory() {
 		{
 			name:  "Returns false when memory below minimum",
 			total: 8192,
-			agent: osapi.Agent{
-				Memory: &osapi.Memory{
+			agent: osapi.AgentInfo{
+				Memory: osapi.MemoryResponse{
 					Total: 4096,
 				},
 			},
@@ -187,7 +187,7 @@ func (s *PredicatePublicTestSuite) TestMinMemory() {
 		{
 			name:  "Returns false when Memory is nil",
 			total: 4096,
-			agent: osapi.Agent{},
+			agent: osapi.AgentInfo{},
 			validateFunc: func(matched bool) {
 				s.False(matched)
 			},
@@ -206,13 +206,13 @@ func (s *PredicatePublicTestSuite) TestMinCPU() {
 	tests := []struct {
 		name         string
 		count        int
-		agent        osapi.Agent
+		agent        osapi.AgentInfo
 		validateFunc func(bool)
 	}{
 		{
 			name:  "Matches when CPU count exceeds minimum",
 			count: 2,
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				CPUCount: 4,
 			},
 			validateFunc: func(matched bool) {
@@ -222,7 +222,7 @@ func (s *PredicatePublicTestSuite) TestMinCPU() {
 		{
 			name:  "Matches when CPU count equals minimum",
 			count: 4,
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				CPUCount: 4,
 			},
 			validateFunc: func(matched bool) {
@@ -232,7 +232,7 @@ func (s *PredicatePublicTestSuite) TestMinCPU() {
 		{
 			name:  "Returns false when CPU count below minimum",
 			count: 8,
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				CPUCount: 4,
 			},
 			validateFunc: func(matched bool) {
@@ -254,14 +254,14 @@ func (s *PredicatePublicTestSuite) TestHasLabel() {
 		name         string
 		key          string
 		value        string
-		agent        osapi.Agent
+		agent        osapi.AgentInfo
 		validateFunc func(bool)
 	}{
 		{
 			name:  "Matches label key-value pair",
 			key:   "env",
 			value: "prod",
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				Labels: map[string]string{
 					"env":  "prod",
 					"team": "infra",
@@ -275,7 +275,7 @@ func (s *PredicatePublicTestSuite) TestHasLabel() {
 			name:  "Returns false for wrong value",
 			key:   "env",
 			value: "prod",
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				Labels: map[string]string{
 					"env": "staging",
 				},
@@ -288,7 +288,7 @@ func (s *PredicatePublicTestSuite) TestHasLabel() {
 			name:  "Returns false when labels are nil",
 			key:   "env",
 			value: "prod",
-			agent: osapi.Agent{},
+			agent: osapi.AgentInfo{},
 			validateFunc: func(matched bool) {
 				s.False(matched)
 			},
@@ -308,14 +308,14 @@ func (s *PredicatePublicTestSuite) TestFactEquals() {
 		name         string
 		key          string
 		value        any
-		agent        osapi.Agent
+		agent        osapi.AgentInfo
 		validateFunc func(bool)
 	}{
 		{
 			name:  "Matches string fact",
 			key:   "datacenter",
 			value: "us-east-1",
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				Facts: map[string]any{
 					"datacenter": "us-east-1",
 				},
@@ -328,7 +328,7 @@ func (s *PredicatePublicTestSuite) TestFactEquals() {
 			name:  "Matches numeric fact (float64)",
 			key:   "version",
 			value: float64(3),
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				Facts: map[string]any{
 					"version": float64(3),
 				},
@@ -341,7 +341,7 @@ func (s *PredicatePublicTestSuite) TestFactEquals() {
 			name:  "Returns false for wrong value",
 			key:   "datacenter",
 			value: "us-west-2",
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				Facts: map[string]any{
 					"datacenter": "us-east-1",
 				},
@@ -354,7 +354,7 @@ func (s *PredicatePublicTestSuite) TestFactEquals() {
 			name:  "Returns false when facts are nil",
 			key:   "datacenter",
 			value: "us-east-1",
-			agent: osapi.Agent{},
+			agent: osapi.AgentInfo{},
 			validateFunc: func(matched bool) {
 				s.False(matched)
 			},
@@ -373,15 +373,15 @@ func (s *PredicatePublicTestSuite) TestHasCondition() {
 	tests := []struct {
 		name          string
 		conditionType string
-		agent         osapi.Agent
+		agent         osapi.AgentInfo
 		validateFunc  func(bool)
 	}{
 		{
 			name:          "Matches active condition",
 			conditionType: "DiskPressure",
-			agent: osapi.Agent{
-				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: true},
+			agent: osapi.AgentInfo{
+				Conditions: []osapi.NodeCondition{
+					{Type: "DiskPressure"},
 				},
 			},
 			validateFunc: func(matched bool) {
@@ -389,12 +389,10 @@ func (s *PredicatePublicTestSuite) TestHasCondition() {
 			},
 		},
 		{
-			name:          "No match when condition is inactive",
+			name:          "No match when the condition is not listed",
 			conditionType: "DiskPressure",
-			agent: osapi.Agent{
-				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: false},
-				},
+			agent: osapi.AgentInfo{
+				Conditions: []osapi.NodeCondition{},
 			},
 			validateFunc: func(matched bool) {
 				s.False(matched)
@@ -403,9 +401,9 @@ func (s *PredicatePublicTestSuite) TestHasCondition() {
 		{
 			name:          "No match for wrong type",
 			conditionType: "MemoryPressure",
-			agent: osapi.Agent{
-				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: true},
+			agent: osapi.AgentInfo{
+				Conditions: []osapi.NodeCondition{
+					{Type: "DiskPressure"},
 				},
 			},
 			validateFunc: func(matched bool) {
@@ -415,7 +413,7 @@ func (s *PredicatePublicTestSuite) TestHasCondition() {
 		{
 			name:          "No match when conditions are nil",
 			conditionType: "DiskPressure",
-			agent:         osapi.Agent{},
+			agent:         osapi.AgentInfo{},
 			validateFunc: func(matched bool) {
 				s.False(matched)
 			},
@@ -434,15 +432,15 @@ func (s *PredicatePublicTestSuite) TestNoCondition() {
 	tests := []struct {
 		name          string
 		conditionType string
-		agent         osapi.Agent
+		agent         osapi.AgentInfo
 		validateFunc  func(bool)
 	}{
 		{
 			name:          "No match when condition is active",
 			conditionType: "DiskPressure",
-			agent: osapi.Agent{
-				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: true},
+			agent: osapi.AgentInfo{
+				Conditions: []osapi.NodeCondition{
+					{Type: "DiskPressure"},
 				},
 			},
 			validateFunc: func(matched bool) {
@@ -450,12 +448,10 @@ func (s *PredicatePublicTestSuite) TestNoCondition() {
 			},
 		},
 		{
-			name:          "Matches when condition is inactive",
+			name:          "Matches when condition is not listed",
 			conditionType: "DiskPressure",
-			agent: osapi.Agent{
-				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: false},
-				},
+			agent: osapi.AgentInfo{
+				Conditions: []osapi.NodeCondition{},
 			},
 			validateFunc: func(matched bool) {
 				s.True(matched)
@@ -464,9 +460,9 @@ func (s *PredicatePublicTestSuite) TestNoCondition() {
 		{
 			name:          "Matches when type is missing",
 			conditionType: "MemoryPressure",
-			agent: osapi.Agent{
-				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: true},
+			agent: osapi.AgentInfo{
+				Conditions: []osapi.NodeCondition{
+					{Type: "DiskPressure"},
 				},
 			},
 			validateFunc: func(matched bool) {
@@ -476,7 +472,7 @@ func (s *PredicatePublicTestSuite) TestNoCondition() {
 		{
 			name:          "Matches when conditions are nil",
 			conditionType: "DiskPressure",
-			agent:         osapi.Agent{},
+			agent:         osapi.AgentInfo{},
 			validateFunc: func(matched bool) {
 				s.True(matched)
 			},
@@ -494,23 +490,20 @@ func (s *PredicatePublicTestSuite) TestNoCondition() {
 func (s *PredicatePublicTestSuite) TestHealthy() {
 	tests := []struct {
 		name         string
-		agent        osapi.Agent
+		agent        osapi.AgentInfo
 		validateFunc func(bool)
 	}{
 		{
 			name:  "Matches when no conditions",
-			agent: osapi.Agent{},
+			agent: osapi.AgentInfo{},
 			validateFunc: func(matched bool) {
 				s.True(matched)
 			},
 		},
 		{
-			name: "Matches when all conditions inactive",
-			agent: osapi.Agent{
-				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: false},
-					{Type: "MemoryPressure", Status: false},
-				},
+			name: "Matches when all conditions not listed",
+			agent: osapi.AgentInfo{
+				Conditions: []osapi.NodeCondition{},
 			},
 			validateFunc: func(matched bool) {
 				s.True(matched)
@@ -518,10 +511,9 @@ func (s *PredicatePublicTestSuite) TestHealthy() {
 		},
 		{
 			name: "No match when one condition active",
-			agent: osapi.Agent{
-				Conditions: []osapi.Condition{
-					{Type: "DiskPressure", Status: false},
-					{Type: "MemoryPressure", Status: true},
+			agent: osapi.AgentInfo{
+				Conditions: []osapi.NodeCondition{
+					{Type: "MemoryPressure"},
 				},
 			},
 			validateFunc: func(matched bool) {
@@ -530,8 +522,8 @@ func (s *PredicatePublicTestSuite) TestHealthy() {
 		},
 		{
 			name: "Matches with empty conditions slice",
-			agent: osapi.Agent{
-				Conditions: []osapi.Condition{},
+			agent: osapi.AgentInfo{
+				Conditions: []osapi.NodeCondition{},
 			},
 			validateFunc: func(matched bool) {
 				s.True(matched)
@@ -550,16 +542,16 @@ func (s *PredicatePublicTestSuite) TestHealthy() {
 func (s *PredicatePublicTestSuite) TestMatchAll() {
 	tests := []struct {
 		name         string
-		agent        osapi.Agent
+		agent        osapi.AgentInfo
 		predicates   []orchestrator.Predicate
 		validateFunc func(bool)
 	}{
 		{
 			name: "Returns true when all predicates match",
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				Architecture: "x86_64",
 				CPUCount:     8,
-				OSInfo: &osapi.OSInfo{
+				OSInfo: osapi.OSInfoResponse{
 					Distribution: "ubuntu",
 				},
 			},
@@ -574,10 +566,10 @@ func (s *PredicatePublicTestSuite) TestMatchAll() {
 		},
 		{
 			name: "Returns false when one predicate fails",
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				Architecture: "x86_64",
 				CPUCount:     2,
-				OSInfo: &osapi.OSInfo{
+				OSInfo: osapi.OSInfoResponse{
 					Distribution: "ubuntu",
 				},
 			},
@@ -591,7 +583,7 @@ func (s *PredicatePublicTestSuite) TestMatchAll() {
 		},
 		{
 			name:       "Returns true when no predicates are provided",
-			agent:      osapi.Agent{},
+			agent:      osapi.AgentInfo{},
 			predicates: nil,
 			validateFunc: func(matched bool) {
 				s.True(matched)

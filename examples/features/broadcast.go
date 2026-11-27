@@ -52,7 +52,7 @@ func main() {
 
 	// Target _all: the job is delivered to every registered agent.
 	// The renderer shows per-host results automatically.
-	o.NodeHostnameGet("_all")
+	o.HostnameGet("_all")
 
 	if _, err := o.Run(context.Background()); err != nil {
 		log.Fatal(err)

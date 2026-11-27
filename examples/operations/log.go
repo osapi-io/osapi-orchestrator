@@ -59,33 +59,31 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	query := o.LogQuery("_any", osapi.LogQueryOpts{
-		Lines: &lines,
-	}).ContinueOnError()
+	query := o.LogList("_any", osapi.LogListParams{Lines: lines}).ContinueOnError()
 
-	sources := o.LogSources("_any").After(query).ContinueOnError()
+	sources := o.LogSourceList("_any").After(query).ContinueOnError()
 
-	o.LogQueryUnit("_any", "sshd", osapi.LogQueryOpts{
-		Lines: &lines,
-	}).After(sources).ContinueOnError()
+	o.LogList("_any", osapi.LogListParams{Unit: "sshd", Lines: lines}).
+		After(sources).ContinueOnError()
 
 	report, err := o.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var logs osapi.LogEntryResult
-	if err := report.Decode("query-log", &logs); err == nil {
-		fmt.Printf("Recent log entries: %d\n", len(logs.Entries))
-		for _, e := range logs.Entries {
-			fmt.Printf("  [%s] %s: %s\n", e.Priority, e.Unit, e.Message)
+	if logs := report.HostResults("list-log"); len(logs) > 0 {
+		fmt.Printf("Recent log entries: %d\n", len(logs))
+		for _, hr := range logs {
+			var e osapi.LogEntry
+			if err := hr.Decode(&e); err == nil {
+				fmt.Printf("  [%s] %s: %s\n", e.Priority, e.Unit, e.Message)
+			}
 		}
 	} else {
 		fmt.Println("Log operations require systemd-journald")
 	}
 
-	var src osapi.LogSourceResult
-	if err := report.Decode("list-log-sources", &src); err == nil {
-		fmt.Printf("Log sources: %d units\n", len(src.Sources))
+	if src := report.HostResults("list-log-source"); len(src) > 0 {
+		fmt.Printf("Log sources: %d units\n", len(src))
 	}
 }

@@ -22,7 +22,7 @@ steps that ran before. The step runs only if the predicate returns true:
 o.CommandExec("_any", "whoami").
     After(hostname).
     When(func(r orchestrator.Results) bool {
-        var h osapi.HostnameResult
+        var h osapi.HostnameEntry
         if err := r.Decode("get-hostname", &h); err != nil {
             return false
         }
@@ -39,7 +39,7 @@ step. It takes that step, and makes this step run after it:
 agents := o.AgentList()
 
 o.CommandShell(target, "apt-get update -qq").
-    WhenFact(agents, func(a osapi.Agent) bool {
+    WhenFact(agents, func(a osapi.AgentInfo) bool {
         return a.OSInfo != nil &&
             a.OSInfo.Distribution == "Ubuntu"
     })

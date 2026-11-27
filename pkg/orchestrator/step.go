@@ -315,7 +315,7 @@ func (s *Step) WhenFact(
 		r := Results{results: sdkResults}
 		name := agentList.task.Name()
 
-		var list osapi.AgentList
+		var list osapi.ListAgentsResponse
 		if err := r.Decode(name, &list); err != nil {
 			return false, fmt.Sprintf(
 				"when-fact: step %q not found or decode failed: %v",
@@ -324,11 +324,11 @@ func (s *Step) WhenFact(
 			)
 		}
 
-		if len(list.Agents) == 0 {
+		if len(list.Items) == 0 {
 			return false, "when-fact: no agents returned"
 		}
 
-		for _, a := range list.Agents {
+		for _, a := range list.Items {
 			if fn(a) {
 				return true, ""
 			}

@@ -41,6 +41,7 @@ import (
 	"os"
 
 	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
@@ -68,10 +69,10 @@ func main() {
 
 	upload := o.FileUpload("cleanup.sh", "raw", script, orchestrator.WithForce())
 
-	create := o.ScheduleCreate("_any", osapi.ScheduleCreateOpts{
+	create := o.ScheduleCreate("_any", osapi.ScheduleCreateInput{
 		Name:     "daily-cleanup",
 		Object:   "cleanup.sh",
-		Interval: "daily",
+		Interval: types.IntervalDaily,
 		User:     "root",
 	}).After(upload)
 
@@ -79,7 +80,8 @@ func main() {
 
 	list := o.ScheduleList("_any").After(get)
 
-	update := o.ScheduleUpdate("_any", "daily-cleanup", osapi.ScheduleUpdateOpts{
+	update := o.ScheduleUpdate("_any", osapi.ScheduleUpdateInput{
+		Name:     "daily-cleanup",
 		Schedule: "0 3 * * 0",
 	}).After(list)
 
@@ -90,7 +92,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var entry osapi.ScheduleEntryResult
+	var entry osapi.ScheduleEntry
 	if err := report.Decode("get-schedule", &entry); err == nil {
 		schedule := entry.Interval
 		if schedule == "" {

@@ -68,7 +68,7 @@ func main() {
 
 	// Create a hostname step for each discovered agent.
 	for _, a := range agents {
-		o.NodeHostnameGet(a.Hostname).After(health)
+		o.HostnameGet(a.Hostname).After(health)
 	}
 
 	if _, err := o.Run(context.Background()); err != nil {

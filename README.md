@@ -92,33 +92,44 @@ the request:
 
 ## ⚙️ Operations
 
-101 typed constructors in 23 domains:
+100 typed constructors, in groups by the service of the osapi SDK:
 
-| Domain      | Docs                                                  | Example                                                      |
-| ----------- | ----------------------------------------------------- | ------------------------------------------------------------ |
-| Node        | [4 operations](docs/operations/node/)                 | [node-info.go](examples/operations/node-info.go)             |
-| Hostname    | [2 operations](docs/operations/config/hostname/)      | [hostname-update.go](examples/operations/hostname-update.go) |
-| Hardware    | [2 operations](docs/operations/hardware/node/)        | [node-info.go](examples/operations/node-info.go)             |
-| Network     | [4 operations](docs/operations/networking/network/)   | [dns-update.go](examples/operations/dns-update.go)           |
-| Interface   | [5 operations](docs/operations/networking/interface/) | [interface.go](examples/operations/interface.go)             |
-| Route       | [5 operations](docs/operations/networking/route/)     | [route.go](examples/operations/route.go)                     |
-| Command     | [2 operations](docs/operations/cmd/command/)          | [command.go](examples/operations/command.go)                 |
-| Docker      | [9 operations](docs/operations/containers/docker/)    | [docker.go](examples/operations/docker.go)                   |
-| Cron        | [5 operations](docs/operations/services/cron/)        | [cron.go](examples/operations/cron.go)                       |
-| Sysctl      | [5 operations](docs/operations/config/sysctl/)        | [sysctl.go](examples/operations/sysctl.go)                   |
-| NTP         | [4 operations](docs/operations/config/ntp/)           | [ntp.go](examples/operations/ntp.go)                         |
-| Timezone    | [2 operations](docs/operations/config/timezone/)      | [timezone.go](examples/operations/timezone.go)               |
-| Service     | [10 operations](docs/operations/services/service/)    | [service.go](examples/operations/service.go)                 |
-| Package     | [6 operations](docs/operations/software/package/)     | [package.go](examples/operations/package.go)                 |
-| User        | [9 operations](docs/operations/security/user/)        | [user.go](examples/operations/user.go)                       |
-| Group       | [5 operations](docs/operations/security/group/)       | [group.go](examples/operations/group.go)                     |
-| Certificate | [4 operations](docs/operations/security/certificate/) | [certificate.go](examples/operations/certificate.go)         |
-| Process     | [3 operations](docs/operations/node/process/)         | [process.go](examples/operations/process.go)                 |
-| Power       | [2 operations](docs/operations/node/power/)           | [power.go](examples/operations/power.go)                     |
-| Log         | [3 operations](docs/operations/node/log/)             | [log.go](examples/operations/log.go)                         |
-| File        | [5 operations](docs/operations/files/file/)           | [file-deploy.go](examples/operations/file-deploy.go)         |
-| Agent       | [4 operations](docs/operations/agent/)                | [agent-drain.go](examples/operations/agent-drain.go)         |
-| Health      | [1 operation](docs/operations/health/)                | [basic.go](examples/features/basic.go)                       |
+| Service        | Operations                                       | Example                                                      |
+| -------------- | ------------------------------------------------ | ------------------------------------------------------------ |
+| Agent          | [4 operations](docs/operations/agent/)           | [agent-drain.go](examples/operations/agent-drain.go)         |
+| Certificate    | [5 operations](docs/operations/certificate/)     | [certificate.go](examples/operations/certificate.go)         |
+| Command        | [2 operations](docs/operations/command/)         | [command.go](examples/operations/command.go)                 |
+| Connectivity   | [1 operation](docs/operations/connectivity/)     | [ping.go](examples/operations/ping.go)                       |
+| Disk           | [1 operation](docs/operations/disk/)             | [node-info.go](examples/operations/node-info.go)             |
+| DNS            | [3 operations](docs/operations/dns/)             | [dns-update.go](examples/operations/dns-update.go)           |
+| Docker         | [7 operations](docs/operations/docker/)          | [docker.go](examples/operations/docker.go)                   |
+| File           | [2 operations](docs/operations/files/file/)      | [file-changed.go](examples/operations/file-changed.go)       |
+| Group          | [5 operations](docs/operations/group/)           | [group.go](examples/operations/group.go)                     |
+| Health         | [1 operation](docs/operations/health/)           | [basic.go](examples/features/basic.go)                       |
+| Hostname       | [2 operations](docs/operations/hostname/)        | [hostname-update.go](examples/operations/hostname-update.go) |
+| Image          | [2 operations](docs/operations/image/)           | [docker.go](examples/operations/docker.go)                   |
+| Interface      | [5 operations](docs/operations/interface/)       | [interface.go](examples/operations/interface.go)             |
+| InterfaceRoute | [4 operations](docs/operations/interface-route/) | [route.go](examples/operations/route.go)                     |
+| Load           | [1 operation](docs/operations/load/)             | [node-info.go](examples/operations/node-info.go)             |
+| Log            | [1 operation](docs/operations/log/)              | [log.go](examples/operations/log.go)                         |
+| LogSource      | [1 operation](docs/operations/log-source/)       | [log.go](examples/operations/log.go)                         |
+| Memory         | [1 operation](docs/operations/memory/)           | [node-info.go](examples/operations/node-info.go)             |
+| NodeFile       | [3 operations](docs/operations/node-file/)       | [file-deploy.go](examples/operations/file-deploy.go)         |
+| NTP            | [4 operations](docs/operations/ntp/)             | [ntp.go](examples/operations/ntp.go)                         |
+| OS             | [1 operation](docs/operations/os/)               | [node-info.go](examples/operations/node-info.go)             |
+| Package        | [4 operations](docs/operations/package/)         | [package.go](examples/operations/package.go)                 |
+| PackageUpdates | [2 operations](docs/operations/package-updates/) | [package.go](examples/operations/package.go)                 |
+| Power          | [2 operations](docs/operations/power/)           | [power.go](examples/operations/power.go)                     |
+| Process        | [3 operations](docs/operations/process/)         | [process.go](examples/operations/process.go)                 |
+| Schedule       | [5 operations](docs/operations/schedule/)        | [schedule.go](examples/operations/schedule.go)               |
+| Service        | [10 operations](docs/operations/service/)        | [service.go](examples/operations/service.go)                 |
+| Status         | [1 operation](docs/operations/status/)           | [node-info.go](examples/operations/node-info.go)             |
+| Sysctl         | [5 operations](docs/operations/sysctl/)          | [sysctl.go](examples/operations/sysctl.go)                   |
+| Timezone       | [2 operations](docs/operations/timezone/)        | [timezone.go](examples/operations/timezone.go)               |
+| Uptime         | [1 operation](docs/operations/uptime/)           | [node-info.go](examples/operations/node-info.go)             |
+| User           | [5 operations](docs/operations/user/)            | [user.go](examples/operations/user.go)                       |
+| UserPassword   | [1 operation](docs/operations/user-password/)    | [user.go](examples/operations/user.go)                       |
+| UserSSHKey     | [3 operations](docs/operations/user-ssh-key/)    | [user.go](examples/operations/user.go)                       |
 
 ## 🤝 Contributing
 

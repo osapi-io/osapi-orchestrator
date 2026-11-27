@@ -66,10 +66,10 @@ func main() {
 	get := o.InterfaceGet("_any", iface).After(list).ContinueOnError()
 
 	// Create → update → delete a test interface.
-	create := o.InterfaceCreate("_any", "osapi-test0", osapi.InterfaceConfigOpts{}).
+	create := o.InterfaceCreate("_any", osapi.InterfaceCreateInput{Name: "osapi-test0"}).
 		After(get).ContinueOnError()
 
-	update := o.InterfaceUpdate("_any", "osapi-test0", osapi.InterfaceConfigOpts{}).
+	update := o.InterfaceUpdate("_any", osapi.InterfaceUpdateInput{Name: "osapi-test0"}).
 		After(create).ContinueOnError()
 
 	o.InterfaceDelete("_any", "osapi-test0").After(update).ContinueOnError()
@@ -79,21 +79,21 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var ifaces osapi.InterfaceListResult
-	if err := report.Decode("list-interface", &ifaces); err == nil {
-		fmt.Printf("Network interfaces (%d):\n", len(ifaces.Interfaces))
-		for _, i := range ifaces.Interfaces {
-			fmt.Printf("  %s: ipv4=%s, state=%s\n",
-				i.Name, i.IPv4, i.State)
+	if ifaces := report.HostResults("list-interface"); len(ifaces) > 0 {
+		fmt.Printf("Network interfaces (%d):\n", len(ifaces))
+		for _, hr := range ifaces {
+			var i osapi.InterfaceEntry
+			if err := hr.Decode(&i); err == nil {
+				fmt.Printf("  %s: ipv4=%s, state=%s\n", i.Name, i.IPv4, i.State)
+			}
 		}
 	} else {
 		fmt.Println("Interface management requires Netplan (Debian-family only)")
 	}
 
-	var detail osapi.InterfaceGetResult
-	if err := report.Decode("get-interface", &detail); err == nil && detail.Interface != nil {
-		i := detail.Interface
+	var detail osapi.InterfaceEntry
+	if err := report.Decode("get-interface", &detail); err == nil && detail.Name != "" {
 		fmt.Printf("\nInterface %s: dhcp4=%v, mtu=%d, mac=%s\n",
-			i.Name, i.DHCP4, i.MTU, i.MAC)
+			detail.Name, detail.DHCP4, detail.MTU, detail.MAC)
 	}
 }

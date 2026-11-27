@@ -125,8 +125,16 @@ func (r Results) HostResults(
 		return nil
 	}
 
-	hrs := make([]HostResult, len(result.HostResults))
-	for i, hr := range result.HostResults {
+	return toHostResults(result.HostResults)
+}
+
+// toHostResults converts the engine's host results. A list operation has
+// one host result for each item on each host.
+func toHostResults(
+	in []engine.HostResult,
+) []HostResult {
+	hrs := make([]HostResult, len(in))
+	for i, hr := range in {
 		hrs[i] = HostResult{
 			Hostname: hr.Hostname,
 			Status:   hr.Status,
@@ -142,7 +150,7 @@ func (r Results) HostResults(
 // Decode retrieves the result of a named step and decodes it into
 // the given typed struct.
 //
-// For collection-based operations (CommandExec, NodeHostnameGet, etc.)
+// For collection-based operations (CommandExec, HostnameGet, etc.)
 // that have host results, Decode unwraps the first host's data
 // automatically. For non-collection operations (TaskFunc, FileChanged,
 // etc.), it decodes from the step's top-level data.
@@ -223,4 +231,20 @@ func (r *Report) Summary() string {
 	}
 
 	return sdkReport.Summary()
+}
+
+// HostResults returns the host results of a named task in the report: one
+// for each host, or one for each item on each host for a list operation
+// such as InterfaceList. Returns nil for an unknown name or a task with no
+// host results.
+func (r *Report) HostResults(
+	name string,
+) []HostResult {
+	for _, t := range r.Tasks {
+		if t.Name == name && len(t.HostResults) > 0 {
+			return toHostResults(t.HostResults)
+		}
+	}
+
+	return nil
 }

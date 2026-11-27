@@ -9,7 +9,7 @@ then run the plan.
 o := orchestrator.New(url, token)
 
 health := o.HealthCheck()
-o.NodeHostnameGet("_any").After(health)
+o.HostnameGet("_any").After(health)
 
 report, err := o.Run(ctx)
 ```

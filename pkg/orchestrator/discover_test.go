@@ -37,14 +37,14 @@ type DiscoverTestSuite struct {
 func (s *DiscoverTestSuite) TestFactValue() {
 	tests := []struct {
 		name     string
-		agent    osapi.Agent
+		agent    osapi.AgentInfo
 		key      string
 		expected string
 	}{
 		{
 			name: "os.distribution with OSInfo returns Distribution",
-			agent: osapi.Agent{
-				OSInfo: &osapi.OSInfo{
+			agent: osapi.AgentInfo{
+				OSInfo: osapi.OSInfoResponse{
 					Distribution: "Ubuntu",
 					Version:      "22.04",
 				},
@@ -54,8 +54,8 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		},
 		{
 			name: "os.version with OSInfo returns Version",
-			agent: osapi.Agent{
-				OSInfo: &osapi.OSInfo{
+			agent: osapi.AgentInfo{
+				OSInfo: osapi.OSInfoResponse{
 					Distribution: "Ubuntu",
 					Version:      "22.04",
 				},
@@ -65,7 +65,7 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		},
 		{
 			name: "architecture returns Architecture",
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				Architecture: "amd64",
 			},
 			key:      "architecture",
@@ -73,7 +73,7 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		},
 		{
 			name: "service_manager returns ServiceMgr",
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				ServiceMgr: "systemd",
 			},
 			key:      "service_manager",
@@ -81,7 +81,7 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		},
 		{
 			name: "package_manager returns PackageMgr",
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				PackageMgr: "apt",
 			},
 			key:      "package_manager",
@@ -89,7 +89,7 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		},
 		{
 			name: "kernel_version returns KernelVersion",
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				KernelVersion: "5.15.0",
 			},
 			key:      "kernel_version",
@@ -97,7 +97,7 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		},
 		{
 			name: "Falls back to Facts map for unknown keys",
-			agent: osapi.Agent{
+			agent: osapi.AgentInfo{
 				Facts: map[string]any{
 					"datacenter": "us-east-1",
 				},
@@ -107,19 +107,19 @@ func (s *DiscoverTestSuite) TestFactValue() {
 		},
 		{
 			name:     "Returns empty for nil OSInfo on os.distribution",
-			agent:    osapi.Agent{},
+			agent:    osapi.AgentInfo{},
 			key:      "os.distribution",
 			expected: "",
 		},
 		{
 			name:     "Returns empty for nil OSInfo on os.version",
-			agent:    osapi.Agent{},
+			agent:    osapi.AgentInfo{},
 			key:      "os.version",
 			expected: "",
 		},
 		{
 			name:     "Returns empty for missing fact",
-			agent:    osapi.Agent{},
+			agent:    osapi.AgentInfo{},
 			key:      "nonexistent",
 			expected: "",
 		},
@@ -139,7 +139,7 @@ func (s *DiscoverTestSuite) TestFetchAgents() {
 		handler      http.HandlerFunc
 		setup        func()
 		teardown     func()
-		validateFunc func([]osapi.Agent, error)
+		validateFunc func([]osapi.AgentInfo, error)
 	}{
 		{
 			name: "returns agents on success",
@@ -150,11 +150,11 @@ func (s *DiscoverTestSuite) TestFetchAgents() {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(
-					`{"agents":[{"hostname":"web-01","status":"Ready"}],"total":1}`,
+					`{"items":[{"hostname":"web-01","state": "Ready"}],"total_items":1}`,
 				))
 			}),
 			validateFunc: func(
-				agents []osapi.Agent,
+				agents []osapi.AgentInfo,
 				err error,
 			) {
 				s.NoError(err)
@@ -172,7 +172,7 @@ func (s *DiscoverTestSuite) TestFetchAgents() {
 				_, _ = w.Write([]byte(`{"error":"server error"}`))
 			}),
 			validateFunc: func(
-				agents []osapi.Agent,
+				agents []osapi.AgentInfo,
 				err error,
 			) {
 				s.Error(err)
@@ -189,7 +189,7 @@ func (s *DiscoverTestSuite) TestFetchAgents() {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusOK)
 				_, _ = w.Write([]byte(
-					`{"agents":[{"hostname":"web-01"}],"total":1}`,
+					`{"items":[{"hostname":"web-01"}],"total_items":1}`,
 				))
 			}),
 			setup: func() {
@@ -199,7 +199,7 @@ func (s *DiscoverTestSuite) TestFetchAgents() {
 				fetchAgentsDecodeName = "list-agents"
 			},
 			validateFunc: func(
-				agents []osapi.Agent,
+				agents []osapi.AgentInfo,
 				err error,
 			) {
 				s.Error(err)

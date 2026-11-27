@@ -54,14 +54,14 @@ func (s *ResultPublicTestSuite) TestDecode() {
 							Hostname: "web-01",
 							Data: map[string]any{
 								"hostname": "web-01",
-								"labels":   map[string]any{"env": "prod"},
+								"name":     "web-01.example.com",
 							},
 						},
 					},
 				},
 			},
 			lookupName: "get-hostname",
-			target:     &osapi.HostnameResult{},
+			target:     &osapi.HostnameEntry{},
 			validateFunc: func(decodeErr error) {
 				s.NoError(decodeErr)
 				r := orchestrator.NewResults(engine.Results{
@@ -72,17 +72,17 @@ func (s *ResultPublicTestSuite) TestDecode() {
 								Hostname: "web-01",
 								Data: map[string]any{
 									"hostname": "web-01",
-									"labels":   map[string]any{"env": "prod"},
+									"name":     "web-01.example.com",
 								},
 							},
 						},
 					},
 				})
-				var h osapi.HostnameResult
+				var h osapi.HostnameEntry
 				err := r.Decode("get-hostname", &h)
 				s.Require().NoError(err)
 				s.Equal("web-01", h.Hostname)
-				s.Equal(map[string]string{"env": "prod"}, h.Labels)
+				s.Equal("web-01.example.com", h.Name)
 			},
 		},
 		{
@@ -126,7 +126,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 				s.Require().NoError(err)
 				s.Equal("12:34:56 up 10 days", cmd.Stdout)
 				s.Equal(0, cmd.ExitCode)
-				s.Equal(int64(42), cmd.DurationMs)
+				s.Equal(int64(42), cmd.DurationMS)
 			},
 		},
 		{
@@ -159,7 +159,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 				"empty-task": &engine.Result{Data: nil},
 			},
 			lookupName: "empty-task",
-			target:     &osapi.HostnameResult{},
+			target:     &osapi.HostnameEntry{},
 			validateFunc: func(decodeErr error) {
 				s.NoError(decodeErr)
 			},
@@ -168,7 +168,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			name:       "Returns error for missing result",
 			results:    engine.Results{},
 			lookupName: "nonexistent",
-			target:     &osapi.HostnameResult{},
+			target:     &osapi.HostnameEntry{},
 			validateFunc: func(err error) {
 				s.Require().Error(err)
 				s.Contains(err.Error(), "no result for")
@@ -248,7 +248,7 @@ func (s *ResultPublicTestSuite) TestDecode() {
 				},
 			},
 			lookupName: "bad-marshal",
-			target:     &osapi.HostnameResult{},
+			target:     &osapi.HostnameEntry{},
 			validateFunc: func(err error) {
 				s.Require().Error(err)
 				s.Contains(err.Error(), "marshal result data")
@@ -261,6 +261,54 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			results := orchestrator.NewResults(tc.results)
 
 			tc.validateFunc(results.Decode(tc.lookupName, tc.target))
+		})
+	}
+}
+
+func (s *ResultPublicTestSuite) TestReportHostResults() {
+	report := &orchestrator.Report{
+		Tasks: []engine.TaskResult{
+			{Name: "health-check"},
+			{
+				Name: "list-interface",
+				HostResults: []engine.HostResult{
+					{Hostname: "web-01", Status: "ok", Data: map[string]any{"name": "eth0"}},
+					{Hostname: "web-01", Status: "ok", Data: map[string]any{"name": "lo"}},
+				},
+			},
+		},
+	}
+
+	tests := []struct {
+		name  string
+		task  string
+		names []string
+	}{
+		{
+			name:  "One host result for each item",
+			task:  "list-interface",
+			names: []string{"eth0", "lo"},
+		},
+		{name: "A task with no host results", task: "health-check"},
+		{name: "An unknown task", task: "missing"},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			got := report.HostResults(tc.task)
+			if tc.names == nil {
+				s.Nil(got)
+
+				return
+			}
+
+			s.Require().Len(got, len(tc.names))
+			for i, want := range tc.names {
+				var entry osapi.InterfaceEntry
+				s.Require().NoError(got[i].Decode(&entry))
+				s.Equal(want, entry.Name)
+				s.Equal("web-01", got[i].Hostname)
+			}
 		})
 	}
 }

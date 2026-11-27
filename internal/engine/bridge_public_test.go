@@ -251,7 +251,7 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 			toHost: func(r client.HostnameResult) engine.HostResult {
 				return engine.HostResult{
 					Hostname: r.Hostname,
-					Status:   r.Status,
+					Status:   string(r.Status),
 					Changed:  r.Changed,
 					Error:    r.Error,
 				}

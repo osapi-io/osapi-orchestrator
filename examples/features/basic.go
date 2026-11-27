@@ -57,7 +57,7 @@ func main() {
 	health := o.HealthCheck()
 
 	// Level 1: query hostname from any available agent.
-	o.NodeHostnameGet("_any").After(health)
+	o.HostnameGet("_any").After(health)
 
 	report, err := o.Run(context.Background())
 	if err != nil {

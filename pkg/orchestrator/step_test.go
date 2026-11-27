@@ -75,7 +75,7 @@ func (s *StepTestSuite) TestWhen() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			step := orch.NodeHostnameGet("_any")
+			step := orch.HostnameGet("_any")
 			step.When(tc.guardFunc)
 
 			// Access the SDK task's guard and invoke it to
@@ -120,7 +120,7 @@ func (s *StepTestSuite) TestNamed() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			orch := New(server.URL, "test-token")
-			step := orch.NodeHostnameGet("_any").Named(tc.customName)
+			step := orch.HostnameGet("_any").Named(tc.customName)
 
 			s.Equal(tc.expectedName, step.task.Name())
 		})
@@ -168,8 +168,8 @@ func (s *StepTestSuite) TestOnlyIfFailed() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			dep := orch.NodeHostnameGet("_any").Named("dep")
-			step := orch.NodeHostnameGet("_any").After(dep).OnlyIfFailed()
+			dep := orch.HostnameGet("_any").Named("dep")
+			step := orch.HostnameGet("_any").After(dep).OnlyIfFailed()
 
 			guard := evaluate(step)
 			s.Require().NotNil(guard)
@@ -244,13 +244,13 @@ func (s *StepTestSuite) TestOnlyIfAllChanged() {
 		s.Run(tc.name, func() {
 			var step *Step
 			if tc.hasDeps {
-				depA := orch.NodeHostnameGet("_any").Named("dep-a")
-				depB := orch.NodeHostnameGet("_any").Named("dep-b")
-				step = orch.NodeHostnameGet("_any").
+				depA := orch.HostnameGet("_any").Named("dep-a")
+				depB := orch.HostnameGet("_any").Named("dep-b")
+				step = orch.HostnameGet("_any").
 					After(depA, depB).
 					OnlyIfAllChanged()
 			} else {
-				step = orch.NodeHostnameGet("_any").OnlyIfAllChanged()
+				step = orch.HostnameGet("_any").OnlyIfAllChanged()
 			}
 
 			guard := evaluate(step)
@@ -358,12 +358,12 @@ func (s *StepTestSuite) TestOnlyIfAnyHostFailed() {
 		s.Run(tc.name, func() {
 			var step *Step
 			if tc.hasDeps {
-				dep := orch.NodeHostnameGet("_all").Named("dep")
-				step = orch.NodeHostnameGet("_any").
+				dep := orch.HostnameGet("_all").Named("dep")
+				step = orch.HostnameGet("_any").
 					After(dep).
 					OnlyIfAnyHostFailed()
 			} else {
-				step = orch.NodeHostnameGet("_any").OnlyIfAnyHostFailed()
+				step = orch.HostnameGet("_any").OnlyIfAnyHostFailed()
 			}
 
 			guard := evaluate(step)
@@ -457,12 +457,12 @@ func (s *StepTestSuite) TestOnlyIfAnyHostSkipped() {
 		s.Run(tc.name, func() {
 			var step *Step
 			if tc.hasDeps {
-				dep := orch.NodeHostnameGet("_all").Named("dep")
-				step = orch.NodeHostnameGet("_any").
+				dep := orch.HostnameGet("_all").Named("dep")
+				step = orch.HostnameGet("_any").
 					After(dep).
 					OnlyIfAnyHostSkipped()
 			} else {
-				step = orch.NodeHostnameGet("_any").OnlyIfAnyHostSkipped()
+				step = orch.HostnameGet("_any").OnlyIfAnyHostSkipped()
 			}
 
 			guard := evaluate(step)
@@ -556,12 +556,12 @@ func (s *StepTestSuite) TestOnlyIfAllHostsFailed() {
 		s.Run(tc.name, func() {
 			var step *Step
 			if tc.hasDeps {
-				dep := orch.NodeHostnameGet("_all").Named("dep")
-				step = orch.NodeHostnameGet("_any").
+				dep := orch.HostnameGet("_all").Named("dep")
+				step = orch.HostnameGet("_any").
 					After(dep).
 					OnlyIfAllHostsFailed()
 			} else {
-				step = orch.NodeHostnameGet("_any").OnlyIfAllHostsFailed()
+				step = orch.HostnameGet("_any").OnlyIfAllHostsFailed()
 			}
 
 			guard := evaluate(step)
@@ -641,12 +641,12 @@ func (s *StepTestSuite) TestOnlyIfAnyHostChanged() {
 		s.Run(tc.name, func() {
 			var step *Step
 			if tc.hasDeps {
-				dep := orch.NodeHostnameGet("_all").Named("dep")
-				step = orch.NodeHostnameGet("_any").
+				dep := orch.HostnameGet("_all").Named("dep")
+				step = orch.HostnameGet("_any").
 					After(dep).
 					OnlyIfAnyHostChanged()
 			} else {
-				step = orch.NodeHostnameGet("_any").OnlyIfAnyHostChanged()
+				step = orch.HostnameGet("_any").OnlyIfAnyHostChanged()
 			}
 
 			guard := evaluate(step)
@@ -726,12 +726,12 @@ func (s *StepTestSuite) TestOnlyIfAllHostsChanged() {
 		s.Run(tc.name, func() {
 			var step *Step
 			if tc.hasDeps {
-				dep := orch.NodeHostnameGet("_all").Named("dep")
-				step = orch.NodeHostnameGet("_any").
+				dep := orch.HostnameGet("_all").Named("dep")
+				step = orch.HostnameGet("_any").
 					After(dep).
 					OnlyIfAllHostsChanged()
 			} else {
-				step = orch.NodeHostnameGet("_any").OnlyIfAllHostsChanged()
+				step = orch.HostnameGet("_any").OnlyIfAllHostsChanged()
 			}
 
 			guard := evaluate(step)
@@ -767,7 +767,7 @@ func (s *StepTestSuite) TestWhenFact() {
 			results:  engine.Results{},
 			stepName: "list-agents",
 			target:   "web-01",
-			predicate: func(_ osapi.Agent) bool {
+			predicate: func(_ osapi.AgentInfo) bool {
 				return true
 			},
 			wantResult: false,
@@ -777,7 +777,7 @@ func (s *StepTestSuite) TestWhenFact() {
 			results: engine.Results{
 				"list-agents": &engine.Result{
 					Data: map[string]any{
-						"agents": []any{
+						"items": []any{
 							map[string]any{
 								"hostname": "web-01",
 								"os_info": map[string]any{
@@ -791,8 +791,8 @@ func (s *StepTestSuite) TestWhenFact() {
 			},
 			stepName: "list-agents",
 			target:   "web-01",
-			predicate: func(a osapi.Agent) bool {
-				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
+			predicate: func(a osapi.AgentInfo) bool {
+				return a.OSInfo.Distribution == "Ubuntu"
 			},
 			wantResult: true,
 		},
@@ -801,7 +801,7 @@ func (s *StepTestSuite) TestWhenFact() {
 			results: engine.Results{
 				"list-agents": &engine.Result{
 					Data: map[string]any{
-						"agents": []any{
+						"items": []any{
 							map[string]any{
 								"hostname": "web-01",
 								"os_info": map[string]any{
@@ -815,8 +815,8 @@ func (s *StepTestSuite) TestWhenFact() {
 			},
 			stepName: "list-agents",
 			target:   "web-01",
-			predicate: func(a osapi.Agent) bool {
-				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
+			predicate: func(a osapi.AgentInfo) bool {
+				return a.OSInfo.Distribution == "Ubuntu"
 			},
 			wantResult: false,
 		},
@@ -825,7 +825,7 @@ func (s *StepTestSuite) TestWhenFact() {
 			results: engine.Results{
 				"list-agents": &engine.Result{
 					Data: map[string]any{
-						"agents": []any{
+						"items": []any{
 							map[string]any{
 								"hostname": "web-02",
 							},
@@ -836,7 +836,7 @@ func (s *StepTestSuite) TestWhenFact() {
 			},
 			stepName: "list-agents",
 			target:   "web-01",
-			predicate: func(_ osapi.Agent) bool {
+			predicate: func(_ osapi.AgentInfo) bool {
 				return true
 			},
 			wantResult: true,
@@ -846,7 +846,7 @@ func (s *StepTestSuite) TestWhenFact() {
 			results: engine.Results{
 				"list-agents": &engine.Result{
 					Data: map[string]any{
-						"agents": []any{
+						"items": []any{
 							map[string]any{
 								"hostname": "web-01",
 								"os_info": map[string]any{
@@ -866,8 +866,8 @@ func (s *StepTestSuite) TestWhenFact() {
 			},
 			stepName: "list-agents",
 			target:   "_all",
-			predicate: func(a osapi.Agent) bool {
-				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
+			predicate: func(a osapi.AgentInfo) bool {
+				return a.OSInfo.Distribution == "Ubuntu"
 			},
 			wantResult: true,
 		},
@@ -876,7 +876,7 @@ func (s *StepTestSuite) TestWhenFact() {
 			results: engine.Results{
 				"list-agents": &engine.Result{
 					Data: map[string]any{
-						"agents": []any{
+						"items": []any{
 							map[string]any{
 								"hostname": "web-01",
 								"os_info": map[string]any{
@@ -890,8 +890,8 @@ func (s *StepTestSuite) TestWhenFact() {
 			},
 			stepName: "list-agents",
 			target:   "_all",
-			predicate: func(a osapi.Agent) bool {
-				return a.OSInfo != nil && a.OSInfo.Distribution == "Ubuntu"
+			predicate: func(a osapi.AgentInfo) bool {
+				return a.OSInfo.Distribution == "Ubuntu"
 			},
 			wantResult: false,
 		},
@@ -900,14 +900,14 @@ func (s *StepTestSuite) TestWhenFact() {
 			results: engine.Results{
 				"list-agents": &engine.Result{
 					Data: map[string]any{
-						"agents": []any{},
-						"total":  float64(0),
+						"items": []any{},
+						"total": float64(0),
 					},
 				},
 			},
 			stepName: "list-agents",
 			target:   "_all",
-			predicate: func(_ osapi.Agent) bool {
+			predicate: func(_ osapi.AgentInfo) bool {
 				return true
 			},
 			wantResult: false,
@@ -917,7 +917,7 @@ func (s *StepTestSuite) TestWhenFact() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			list := orch.AgentList().Named(tc.stepName)
-			step := orch.NodeHostnameGet(tc.target).
+			step := orch.HostnameGet(tc.target).
 				WhenFact(list, tc.predicate)
 
 			s.Contains(step.task.Dependencies(), list.task)
@@ -974,7 +974,7 @@ func (s *StepTestSuite) TestRetry() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			step := orch.NodeHostnameGet("_any").Retry(tc.retryCount, tc.opts...)
+			step := orch.HostnameGet("_any").Retry(tc.retryCount, tc.opts...)
 
 			policy := step.task.RetryPolicy()
 			s.Require().NotNil(policy)
@@ -1010,27 +1010,39 @@ func (s *StepTestSuite) TestUnsafeOps() {
 		step *Step
 		want bool
 	}{
-		{name: "CommandExec", step: orch.CommandExec("_any", "uptime"), want: true},
-		{name: "CommandShell", step: orch.CommandShell("_any", "uptime"), want: true},
+		{
+			name: "CommandExec",
+			step: orch.CommandExec("_any", osapi.CommandExecInput{Command: "uptime"}),
+			want: true,
+		},
+		{
+			name: "CommandShell",
+			step: orch.CommandShell("_any", osapi.CommandShellInput{Command: "uptime"}),
+			want: true,
+		},
 		{
 			name: "DockerCreate",
-			step: orch.DockerCreate("_any", osapi.DockerCreateOpts{}),
+			step: orch.DockerCreate("_any", osapi.DockerCreateInput{}),
 			want: true,
 		},
 		{
 			name: "DockerExec",
-			step: orch.DockerExec("_any", "web", osapi.DockerExecOpts{}),
+			step: orch.DockerExec("_any", osapi.DockerExecInput{Name: "web"}),
 			want: true,
 		},
 		{name: "ServiceRestart", step: orch.ServiceRestart("_any", "nginx"), want: true},
 		{
 			name: "ProcessSignal",
-			step: orch.ProcessSignal("_any", 1, osapi.ProcessSignalOpts{}),
+			step: orch.ProcessSignal("_any", osapi.ProcessSignalInput{PID: 1}),
 			want: true,
 		},
-		{name: "PowerReboot", step: orch.PowerReboot("_any", osapi.PowerOpts{}), want: true},
-		{name: "PowerShutdown", step: orch.PowerShutdown("_any", osapi.PowerOpts{}), want: true},
-		{name: "NodeHostnameGet", step: orch.NodeHostnameGet("_any"), want: false},
+		{name: "PowerReboot", step: orch.PowerReboot("_any", osapi.PowerRebootInput{}), want: true},
+		{
+			name: "PowerShutdown",
+			step: orch.PowerShutdown("_any", osapi.PowerShutdownInput{}),
+			want: true,
+		},
+		{name: "HostnameGet", step: orch.HostnameGet("_any"), want: false},
 		{name: "ServiceStart", step: orch.ServiceStart("_any", "nginx"), want: false},
 	}
 

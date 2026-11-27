@@ -1,24 +1,22 @@
-# File management
+# Object Store
 
-Upload, deploy, and manage files on target hosts. The operations find drift with
-SHA-256, render templates, and record the file state idempotently.
+Upload content to the controller's Object Store, and check whether content
+differs from the stored object. To put an object on a host, use
+[NodeFileUpdate](../../node-file/update.md).
 
 ## Operations
 
-| Method                                             | Description                                    | Idempotent |
-| -------------------------------------------------- | ---------------------------------------------- | ---------- |
-| [`FileUpload(name, contentType, data)`](upload.md) | Upload content to the Object Store             | Idempotent |
-| [`FileDeploy(target, opts)`](deploy.md)            | Deploy a file from the Object Store to a host  | Idempotent |
-| [`FileStatusGet(target, path)`](status-get.md)     | Get the status and SHA of a deployed file      | Read-only  |
-| [`FileUndeploy(target, path)`](undeploy.md)        | Remove a deployed file                         | Idempotent |
-| [`FileChanged(name, data)`](changed.md)            | Check if the Object Store content is different | Read-only  |
+| Method                                             | Description                                          |
+| -------------------------------------------------- | ---------------------------------------------------- |
+| [`FileUpload(name, contentType, data)`](upload.md) | Upload content to the Object Store                   |
+| [`FileChanged(name, data)`](changed.md)            | Check whether content differs from the stored object |
 
 ## Permissions
 
-| Operation        | Permission   |
-| ---------------- | ------------ |
-| Read operations  | `file:read`  |
-| Write operations | `file:write` |
+| Operation   | Permission   |
+| ----------- | ------------ |
+| FileChanged | `file:read`  |
+| FileUpload  | `file:write` |
 
 ## Examples
 
@@ -28,4 +26,4 @@ for a complete workflow that uploads, deploys, and verifies a file.
 
 Refer to
 [`examples/operations/file-changed.go`](../../../../examples/operations/file-changed.go)
-for an upload that runs only if the file drifted, with `OnlyIfChanged`.
+for a workflow that skips the upload when the content is unchanged.

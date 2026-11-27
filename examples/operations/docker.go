@@ -53,38 +53,39 @@ func main() {
 
 	// Cleanup: remove leftover container and image.
 	cleanup := orchestrator.New(url, token)
-	cleanup.DockerRemove(target, name, &osapi.DockerRemoveParams{Force: true}).
+	cleanup.DockerDelete(target, name).
 		ContinueOnError()
-	cleanup.DockerImageRemove(target, image, &osapi.DockerRemoveImageParams{Force: true}).
+	cleanup.ImageDelete(target, osapi.ImageDeleteInput{Image: image, Force: true}).
 		ContinueOnError()
 	_, _ = cleanup.Run(context.Background())
 
 	// Main workflow.
 	o := orchestrator.New(url, token)
 
-	pull := o.DockerPull(target, osapi.DockerPullOpts{Image: image})
+	pull := o.ImagePull(target, osapi.ImagePullInput{Image: image})
 
-	create := o.DockerCreate(target, osapi.DockerCreateOpts{
+	create := o.DockerCreate(target, osapi.DockerCreateInput{
 		Image: image,
 		Name:  name,
 	}).After(pull)
 
 	start := o.DockerStart(target, name).After(create)
 
-	exec := o.DockerExec(target, name, osapi.DockerExecOpts{
+	exec := o.DockerExec(target, osapi.DockerExecInput{
+		Name:    name,
 		Command: []string{"nginx", "-v"},
 	}).After(start)
 
-	inspect := o.DockerInspect(target, name).After(start)
-	o.DockerList(target, nil).After(start)
+	inspect := o.DockerGet(target, name).After(start)
+	o.DockerList(target, osapi.DockerListParams{}).After(start)
 
-	stop := o.DockerStop(target, name, osapi.DockerStopOpts{}).
+	stop := o.DockerStop(target, osapi.DockerStopInput{Name: name}).
 		After(exec, inspect)
 
-	remove := o.DockerRemove(target, name, &osapi.DockerRemoveParams{Force: true}).
+	remove := o.DockerDelete(target, name).
 		After(stop)
 
-	o.DockerImageRemove(target, image, &osapi.DockerRemoveImageParams{Force: true}).
+	o.ImageDelete(target, osapi.ImageDeleteInput{Image: image, Force: true}).
 		After(remove)
 
 	if _, err := o.Run(context.Background()); err != nil {

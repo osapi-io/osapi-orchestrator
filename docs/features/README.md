@@ -5,8 +5,8 @@ DAG plans with typed results, guards, retry, and discovery.
 
 ## How the DAG works
 
-Each operation method (`NodeHostnameGet`, `CommandExec`, and the others) returns
-a `*Step`. `After()` connects steps into a directed acyclic graph (DAG). The
+Each operation method (`HostnameGet`, `CommandExec`, and the others) returns a
+`*Step`. `After()` connects steps into a directed acyclic graph (DAG). The
 orchestrator divides the DAG into levels and runs each level:
 
 - Steps that have no dependencies run first.
@@ -17,9 +17,9 @@ orchestrator divides the DAG into levels and runs each level:
 health := o.HealthCheck()
 
 // These three run in parallel — all depend on health.
-hostname := o.NodeHostnameGet("_any").After(health)
-disk := o.NodeDiskGet("_any").After(health)
-load := o.NodeLoadGet("_any").After(health)
+hostname := o.HostnameGet("_any").After(health)
+disk := o.DiskGet("_any").After(health)
+load := o.LoadGet("_any").After(health)
 
 // This runs after hostname completes.
 o.CommandExec("_any", "whoami").After(hostname)
@@ -53,27 +53,33 @@ on an error:
 Decode the step results into typed structs:
 
 ```go
-var h osapi.HostnameResult
-err := results.Decode("node.hostname.get-1", &h)
-fmt.Println(h.Hostname)
+var h osapi.HostnameEntry
+err := results.Decode("get-hostname", &h)
+fmt.Println(h.Name)
 ```
 
-| Struct              | Fields                                                   |
-| ------------------- | -------------------------------------------------------- |
-| `HostnameResult`    | `Hostname`, `Labels`                                     |
-| `DiskResult`        | `Disks` (slice of `DiskUsage`)                           |
-| `MemoryResult`      | `Total`, `Free`, `Cached`                                |
-| `LoadResult`        | `Load1`, `Load5`, `Load15`                               |
-| `CommandResult`     | `Stdout`, `Stderr`, `ExitCode`, `DurationMs`, `Error`    |
-| `PingResult`        | `PacketsSent`, `PacketsReceived`, `PacketLoss`, `Error`  |
-| `DNSConfigResult`   | `DNSServers`, `SearchDomains`                            |
-| `DNSUpdateResult`   | `Success`, `Message`, `Error`                            |
-| `FileDeployResult`  | `Changed`, `SHA256`, `Path`                              |
-| `FileStatusResult`  | `Path`, `Status`, `SHA256`                               |
-| `FileUploadResult`  | `Name`, `SHA256`, `Size`, `Changed`, `ContentType`       |
-| `FileChangedResult` | `Name`, `Changed`, `SHA256`                              |
-| `AgentListResult`   | `Agents` (slice of `AgentResult`), `Total`               |
-| `AgentResult`       | `Hostname`, `Status`, `Architecture`, `OSInfo`, `Memory` |
+A step that targets hosts has one row for each host, and a list has one row for
+each item on each host. `Decode` takes the first row. Use `HostResults` for all
+of them. Each row is the type of its SDK call: the reads answer with an entry
+type, such as `osapi.HostnameEntry`, and the writes with a result type, such as
+`osapi.HostnameResult`, which also has `Changed`. Each operation's page names
+its type and fields.
+
+| Struct                   | Fields                                                   |
+| ------------------------ | -------------------------------------------------------- |
+| `HostnameEntry`          | `Hostname`, `Name`, `Status`, `Error`                    |
+| `DiskEntry`              | `Hostname`, `Disks`, `Status`, `Error`                   |
+| `MemoryEntry`            | `Hostname`, `Memory` (`Total`, `Used`, `Free`), `Status` |
+| `LoadEntry`              | `Hostname`, `LoadAverage` (`Min1`, `Min5`, `Min15`)      |
+| `CommandResult`          | `Stdout`, `Stderr`, `ExitCode`, `DurationMS`, `Error`    |
+| `ConnectivityPingResult` | `PacketsSent`, `PacketsReceived`, `PacketLoss`, `Error`  |
+| `DnsEntry`               | `Servers`, `SearchDomains`                               |
+| `FileUpdateResult`       | `Changed`, `SHA256`, `Path`                              |
+| `FileStatus`             | `Path`, `State`, `SHA256`                                |
+| `FileUploadResponse`     | `Name`, `SHA256`, `Size`, `Changed`, `ContentType`       |
+| `FileChanged`            | `Name`, `Changed`, `SHA256`                              |
+| `ListAgentsResponse`     | `Items` (slice of `AgentInfo`), `TotalItems`             |
+| `AgentInfo`              | `Hostname`, `State`, `Architecture`, `OSInfo`, `Memory`  |
 
 ## Predicates
 

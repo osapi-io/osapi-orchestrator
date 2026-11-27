@@ -7,13 +7,13 @@ steps to manage files on many hosts.
 
 ```go
 upload := o.FileUpload("config.yaml", "raw", data).After(health)
-deploy := o.FileDeploy("_any", osapi.FileDeployOpts{
+deploy := o.NodeFileUpdate("_any", osapi.NodeFileUpdateInput{
     ObjectName:  "config.yaml",
     Path:        "/etc/myapp/config.yaml",
     ContentType: "raw",
     Mode:        "0644",
 }).After(upload)
-o.FileStatusGet("_any", "/etc/myapp/config.yaml").After(deploy)
+o.NodeFileGet("_any", "/etc/myapp/config.yaml").After(deploy)
 ```
 
 ## Conditional upload
@@ -25,7 +25,7 @@ change:
 check := o.FileChanged("config.yaml", data).After(health)
 upload := o.FileUpload("config.yaml", "raw", data).
     After(check).OnlyIfChanged()
-o.FileDeploy("_any", opts).After(upload).OnlyIfChanged()
+o.NodeFileUpdate("_any", opts).After(upload).OnlyIfChanged()
 ```
 
 ## Force upload

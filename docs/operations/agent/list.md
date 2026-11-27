@@ -18,7 +18,7 @@ None.
 ## Result type
 
 ```go
-var result osapi.AgentList
+var result osapi.ListAgentsResponse
 err := results.Decode("list-agents", &result)
 ```
 

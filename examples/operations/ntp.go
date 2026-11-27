@@ -63,13 +63,13 @@ func main() {
 	// Create → get → update → delete.
 	o := orchestrator.New(url, token)
 
-	create := o.NTPCreate("_any", osapi.NtpCreateOpts{
+	create := o.NTPCreate("_any", osapi.NTPCreateInput{
 		Servers: []string{"0.pool.ntp.org", "1.pool.ntp.org"},
 	})
 
 	get := o.NTPGet("_any").After(create)
 
-	update := o.NTPUpdate("_any", osapi.NtpUpdateOpts{
+	update := o.NTPUpdate("_any", osapi.NTPUpdateInput{
 		Servers: []string{"time.google.com", "time.cloudflare.com"},
 	}).After(get)
 
@@ -80,7 +80,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var ntp osapi.NtpStatusResult
+	var ntp osapi.NtpStatus
 	if err := report.Decode("get-ntp", &ntp); err == nil {
 		fmt.Printf("NTP servers: %v (synced: %v)\n", ntp.Servers, ntp.Synchronized)
 	}

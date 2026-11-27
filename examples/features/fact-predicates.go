@@ -79,7 +79,7 @@ func main() {
 	health := o.HealthCheck()
 
 	for _, a := range agents {
-		o.NodeLoadGet(a.Hostname).After(health)
+		o.LoadGet(a.Hostname).After(health)
 	}
 
 	if _, err := o.Run(context.Background()); err != nil {

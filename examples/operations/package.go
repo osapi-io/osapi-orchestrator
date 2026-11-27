@@ -60,7 +60,7 @@ func main() {
 
 	// Cleanup any leftover package from a previous run.
 	oc := orchestrator.New(url, token)
-	oc.PackageRemove("_any", pkg).ContinueOnError()
+	oc.PackageDelete("_any", pkg).ContinueOnError()
 	oc.Run(context.Background()) //nolint:errcheck
 
 	// List → install → get → list updates → update → remove.
@@ -68,25 +68,26 @@ func main() {
 
 	list := o.PackageList("_any").ContinueOnError()
 
-	install := o.PackageInstall("_any", pkg).After(list).ContinueOnError()
+	install := o.PackageCreate("_any", osapi.PackageCreateInput{Name: pkg}).
+		After(list).
+		ContinueOnError()
 
 	get := o.PackageGet("_any", pkg).After(install).ContinueOnError()
 
-	updates := o.PackageListUpdates("_any").After(get).ContinueOnError()
+	updates := o.PackageUpdatesList("_any").After(get).ContinueOnError()
 
-	update := o.PackageUpdate("_any").After(updates).ContinueOnError()
+	update := o.PackageUpdatesUpdate("_any").After(updates).ContinueOnError()
 
-	o.PackageRemove("_any", pkg).After(update).ContinueOnError()
+	o.PackageDelete("_any", pkg).After(update).ContinueOnError()
 
 	report, err := o.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var info osapi.PackageInfoResult
-	if err := report.Decode("get-package", &info); err == nil && len(info.Packages) > 0 {
-		p := info.Packages[0]
-		fmt.Printf("Package %s: version=%s, status=%s\n", p.Name, p.Version, p.Status)
+	var info osapi.PackageInstalled
+	if err := report.Decode("get-package", &info); err == nil && info.Name != "" {
+		fmt.Printf("Package %s: version=%s, status=%s\n", info.Name, info.Version, info.Status)
 	} else {
 		fmt.Println("Package operations require apt/dpkg (Debian-family only)")
 	}

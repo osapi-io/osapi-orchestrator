@@ -19,7 +19,7 @@ step := o.AgentGet("web-01")
 ## Result type
 
 ```go
-var result osapi.Agent
+var result osapi.AgentInfo
 err := results.Decode("get-agent", &result)
 ```
 

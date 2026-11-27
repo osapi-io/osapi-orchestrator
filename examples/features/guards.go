@@ -54,8 +54,8 @@ func main() {
 	fmt.Println("=== Plan 1: Guard should PASS (hostname != \"\") ===")
 	o1 := orchestrator.New(url, token)
 	health1 := o1.HealthCheck()
-	hostname1 := o1.NodeHostnameGet("_any").After(health1)
-	o1.CommandExec("_any", "whoami").
+	hostname1 := o1.HostnameGet("_any").After(health1)
+	o1.CommandExec("_any", osapi.CommandExecInput{Command: "whoami"}).
 		After(hostname1).
 		When(func(r orchestrator.Results) bool {
 			var h osapi.HostnameResult
@@ -74,8 +74,8 @@ func main() {
 	fmt.Println("\n=== Plan 2: Guard should BLOCK (hostname == \"impossible\") ===")
 	o2 := orchestrator.New(url, token)
 	health2 := o2.HealthCheck()
-	hostname2 := o2.NodeHostnameGet("_any").After(health2)
-	o2.CommandExec("_any", "whoami").
+	hostname2 := o2.HostnameGet("_any").After(health2)
+	o2.CommandExec("_any", osapi.CommandExecInput{Command: "whoami"}).
 		After(hostname2).
 		When(func(r orchestrator.Results) bool {
 			var h osapi.HostnameResult

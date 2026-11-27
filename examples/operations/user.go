@@ -62,30 +62,34 @@ func main() {
 
 	userList := o.UserList("_any")
 
-	create := o.UserCreate("_any", osapi.UserCreateOpts{
+	create := o.UserCreate("_any", osapi.UserCreateInput{
 		Name:  username,
 		Shell: "/bin/bash",
 	}).After(userList)
 
 	get := o.UserGet("_any", username).After(create)
 
-	update := o.UserUpdate("_any", username, osapi.UserUpdateOpts{
+	update := o.UserUpdate("_any", osapi.UserUpdateInput{
+		Name:  username,
 		Shell: "/bin/sh",
 	}).After(get).ContinueOnError()
 
-	addKey := o.UserAddKey("_any", username, osapi.SSHKeyAddOpts{
-		Key: sshKey,
+	addKey := o.UserSSHKeyCreate("_any", osapi.UserSSHKeyCreateInput{
+		Name: username,
+		Key:  sshKey,
 	}).After(update)
 
-	listKeys := o.UserListKeys("_any", username).After(addKey)
+	listKeys := o.UserSSHKeyList("_any", username).After(addKey)
 
 	// Use a placeholder fingerprint — in practice you would decode
 	// the key's fingerprint from list-ssh-key results.
-	removeKey := o.UserRemoveKey("_any", username, "SHA256:example").
-		After(listKeys).ContinueOnError()
+	removeKey := o.UserSSHKeyDelete("_any", osapi.UserSSHKeyDeleteInput{Name: username, Fingerprint: "SHA256:example"}).
+		After(listKeys).
+		ContinueOnError()
 
-	chpass := o.UserChangePassword("_any", username, "temp-pass-123").
-		After(removeKey).ContinueOnError()
+	chpass := o.UserPasswordUpdate("_any", osapi.UserPasswordUpdateInput{Name: username, Password: "temp-pass-123"}).
+		After(removeKey).
+		ContinueOnError()
 
 	o.UserDelete("_any", username).After(chpass)
 
@@ -94,10 +98,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var keys osapi.SSHKeyInfoResult
-	if err := report.Decode("list-ssh-key", &keys); err == nil {
-		fmt.Printf("User %q has %d SSH key(s)\n", username, len(keys.Keys))
-		for _, k := range keys.Keys {
+	keys := report.HostResults("list-user-ssh-key")
+	fmt.Printf("User %q has %d SSH key(s)\n", username, len(keys))
+	for _, hr := range keys {
+		var k osapi.UserSshkeyKey
+		if err := hr.Decode(&k); err == nil {
 			fmt.Printf("  %s %s\n", k.Type, k.Fingerprint)
 		}
 	}

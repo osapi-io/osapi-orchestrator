@@ -65,27 +65,26 @@ func main() {
 	health := o.HealthCheck()
 
 	// Read current DNS configuration.
-	getDNS := o.NetworkDNSGet("_any", iface).
+	getDNS := o.DNSGet("_any", iface).
 		After(health).
 		ContinueOnError()
 
 	// Write new DNS servers after reading the current config.
-	updateDNS := o.NetworkDNSUpdate(
-		"_any",
-		iface,
-		[]string{"8.8.8.8", "8.8.4.4"},
-		[]string{"example.com"},
-	).After(getDNS).ContinueOnError()
+	updateDNS := o.DNSUpdate("_any", osapi.DNSUpdateInput{
+		InterfaceName: iface,
+		Servers:       []string{"8.8.8.8", "8.8.4.4"},
+		SearchDomains: []string{"example.com"},
+	}).After(getDNS).ContinueOnError()
 
 	// Delete DNS configuration (cleanup).
-	o.NetworkDNSDelete("_any", iface).After(updateDNS).ContinueOnError()
+	o.DNSDelete("_any", iface).After(updateDNS).ContinueOnError()
 
 	report, err := o.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var dns osapi.DNSConfig
+	var dns osapi.DnsEntry
 	if err := report.Decode("get-dns", &dns); err == nil {
 		fmt.Printf("DNS servers:     %v\n", dns.Servers)
 		fmt.Printf("Search domains:  %v\n", dns.SearchDomains)

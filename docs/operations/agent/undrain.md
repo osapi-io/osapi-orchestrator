@@ -15,16 +15,10 @@ step := o.AgentUndrain("web-01")
 | ---------- | -------- | ------------------------------------- |
 | `hostname` | `string` | The hostname of the agent to undrain. |
 
-## Result type
+## Result
 
-```go
-var result osapi.MessageResponse
-err := results.Decode("undrain-agent-1", &result)
-```
-
-| Field     | Type     | Description                                            |
-| --------- | -------- | ------------------------------------------------------ |
-| `Message` | `string` | A message that tells the result, for a person to read. |
+The controller answers with no data, so the step has no result to decode. A
+refusal fails the step.
 
 ## Idempotency
 

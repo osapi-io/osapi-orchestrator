@@ -57,7 +57,7 @@ func main() {
 
 	get := o.TimezoneGet("_any")
 
-	o.TimezoneUpdate("_any", osapi.TimezoneUpdateOpts{
+	o.TimezoneUpdate("_any", osapi.TimezoneUpdateInput{
 		Timezone: "America/New_York",
 	}).After(get).ContinueOnError()
 
@@ -66,7 +66,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var tz osapi.TimezoneResult
+	var tz osapi.TimezoneEntry
 	if err := report.Decode("get-timezone", &tz); err == nil {
 		fmt.Printf("Timezone: %s (UTC%s)\n", tz.Timezone, tz.UTCOffset)
 	}
