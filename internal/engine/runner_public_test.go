@@ -684,7 +684,7 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 				return plan
 			},
 			validateFunc: func(report *engine.Report, err error, _ int32) {
-				s.NoError(err)
+				s.ErrorContains(err, `task "panics" panicked: bad input`)
 				s.Equal(engine.StatusFailed, report.Tasks[0].Status)
 				s.ErrorContains(report.Tasks[0].Error, `task "panics" panicked: bad input`)
 				s.ErrorContains(report.Tasks[0].Error, "goroutine", "the error carries the stack")
@@ -702,7 +702,7 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 				return plan
 			},
 			validateFunc: func(report *engine.Report, err error, _ int32) {
-				s.NoError(err)
+				s.Error(err)
 				s.Len(report.Tasks, 2)
 				s.Equal(engine.StatusFailed, report.Tasks[0].Status)
 				s.Equal(engine.StatusChanged, report.Tasks[1].Status)
@@ -781,7 +781,7 @@ func (s *RunnerPublicTestSuite) TestRunStrategyAndReport() {
 				return plan
 			},
 			validateFunc: func(report *engine.Report, err error, calls int32) {
-				s.NoError(err)
+				s.Error(err)
 				s.Equal(int32(3), calls)
 				statuses := map[string]engine.Status{}
 				for _, tr := range report.Tasks {
@@ -877,7 +877,7 @@ func (s *RunnerPublicTestSuite) TestRunStrategyAndReport() {
 				return plan
 			},
 			validateFunc: func(_ *engine.Report, err error, calls int32) {
-				s.NoError(err)
+				s.Error(err)
 				s.Equal(int32(2), calls)
 			},
 		},
@@ -993,4 +993,161 @@ func (s *RunnerPublicTestSuite) TestRunRetryClassification() {
 			s.Equal(tt.unsafe, task.Unsafe())
 		})
 	}
+}
+
+func (s *RunnerPublicTestSuite) TestRunReview() {
+	failAfter := func(d time.Duration) engine.TaskFn {
+		return func(
+			_ context.Context,
+			_ *osapiclient.Client,
+		) (*engine.Result, error) {
+			time.Sleep(d)
+
+			return nil, fmt.Errorf("boom")
+		}
+	}
+	ok := func(
+		_ context.Context,
+		_ *osapiclient.Client,
+	) (*engine.Result, error) {
+		return &engine.Result{}, nil
+	}
+
+	tests := []struct {
+		name         string
+		setup        func() *engine.Plan
+		validateFunc func(report *engine.Report, err error)
+	}{
+		{
+			name: "a failed Continue task makes Run return its error",
+			setup: func() *engine.Plan {
+				plan := engine.NewPlan(nil)
+				plan.TaskFunc("a", failAfter(0)).OnError(engine.Continue)
+				plan.TaskFunc("b", ok)
+
+				return plan
+			},
+			validateFunc: func(report *engine.Report, err error) {
+				s.ErrorContains(err, `step "a": boom`)
+				s.Equal(engine.StatusFailed, statusMap(report)["a"])
+				s.Equal(engine.StatusUnchanged, statusMap(report)["b"])
+			},
+		},
+		{
+			name: "a task that the plan never reached has its own short duration",
+			setup: func() *engine.Plan {
+				plan := engine.NewPlan(nil)
+				a := plan.TaskFunc("a", failAfter(200*time.Millisecond))
+				plan.TaskFunc("b", ok).DependsOn(a)
+
+				return plan
+			},
+			validateFunc: func(report *engine.Report, err error) {
+				s.Error(err)
+
+				for _, tr := range report.Tasks {
+					if tr.Name == "b" {
+						s.Equal(engine.StatusSkipped, tr.Status)
+						s.Less(tr.Duration, 100*time.Millisecond)
+					}
+				}
+			},
+		},
+		{
+			name: "a sibling that wraps the cancel with %v is stopped, not failed",
+			setup: func() *engine.Plan {
+				plan := engine.NewPlan(nil)
+				plan.TaskFunc("fail", failAfter(50*time.Millisecond))
+				plan.TaskFunc("sib", func(
+					ctx context.Context,
+					_ *osapiclient.Client,
+				) (*engine.Result, error) {
+					<-ctx.Done()
+
+					return nil, fmt.Errorf("call: %v", ctx.Err())
+				})
+
+				return plan
+			},
+			validateFunc: func(report *engine.Report, err error) {
+				s.ErrorContains(err, `step "fail": boom`)
+				s.NotContains(err.Error(), `step "sib"`)
+
+				for _, tr := range report.Tasks {
+					if tr.Name == "sib" {
+						s.Equal(engine.StatusSkipped, tr.Status)
+						s.Equal("plan stopped", tr.Reason)
+					}
+				}
+			},
+		},
+		{
+			name: "a sibling that fails on its own after the cancel stays failed",
+			setup: func() *engine.Plan {
+				plan := engine.NewPlan(nil)
+				plan.TaskFunc("fail", failAfter(0))
+				plan.TaskFunc("sib", failAfter(50*time.Millisecond))
+
+				return plan
+			},
+			validateFunc: func(report *engine.Report, err error) {
+				s.ErrorContains(err, `step "sib": boom`)
+				s.Equal(engine.StatusFailed, statusMap(report)["sib"])
+			},
+		},
+		{
+			name: "a panic in a plan or level hook does not stop the run",
+			setup: func() *engine.Plan {
+				boom := func() { panic("hook") }
+				plan := engine.NewPlan(nil, engine.WithHooks(engine.Hooks{
+					BeforePlan:  func(engine.PlanSummary) { boom() },
+					BeforeLevel: func(int, []*engine.Task, bool) { boom() },
+					AfterLevel:  func(int, []engine.TaskResult) { boom() },
+					AfterPlan:   func(*engine.Report) { boom() },
+				}))
+				plan.TaskFunc("a", ok)
+
+				return plan
+			},
+			validateFunc: func(report *engine.Report, err error) {
+				s.NoError(err)
+				s.Equal(engine.StatusUnchanged, statusMap(report)["a"])
+			},
+		},
+		{
+			name: "a panic in the skip hook of a task the plan never reached is dropped",
+			setup: func() *engine.Plan {
+				plan := engine.NewPlan(nil, engine.WithHooks(engine.Hooks{
+					OnSkip: func(*engine.Task, string) { panic("hook") },
+				}))
+				a := plan.TaskFunc("a", failAfter(0))
+				plan.TaskFunc("b", ok).DependsOn(a)
+
+				return plan
+			},
+			validateFunc: func(report *engine.Report, err error) {
+				s.ErrorContains(err, `step "a": boom`)
+				s.Equal(engine.StatusSkipped, statusMap(report)["b"])
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			report, err := tt.setup().Run(context.Background())
+
+			s.Require().NotNil(report)
+			tt.validateFunc(report, err)
+		})
+	}
+}
+
+func (s *RunnerPublicTestSuite) TestValidateRejectsTaskWithNoFunction() {
+	plan := engine.NewPlan(nil)
+	plan.TaskFunc("none", nil)
+
+	report, err := plan.Run(context.Background())
+
+	s.Nil(report)
+	s.ErrorContains(err, `task "none" has no function`)
 }

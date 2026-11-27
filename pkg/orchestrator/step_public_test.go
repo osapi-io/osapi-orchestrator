@@ -486,6 +486,9 @@ func (s *StepPublicTestSuite) TestGuardsAndFailures() {
 		setup      func(o *orchestrator.Orchestrator, ran *bool)
 		wantRan    bool
 		wantReason string
+		// wantErr is the error that Run returns: a step that failed with
+		// ContinueOnError lets the plan go on, and Run still reports it.
+		wantErr string
 	}{
 		{
 			name: "When does not replace OnlyIfAllChanged",
@@ -505,6 +508,7 @@ func (s *StepPublicTestSuite) TestGuardsAndFailures() {
 				o.TaskFunc("step", record(ran)).After(dep).When(always)
 			},
 			wantReason: "dependency failed",
+			wantErr:    `step "dep": boom`,
 		},
 		{
 			name: "OnlyIfFailed runs after a failed dependency",
@@ -513,6 +517,7 @@ func (s *StepPublicTestSuite) TestGuardsAndFailures() {
 				o.TaskFunc("step", record(ran)).After(dep).OnlyIfFailed().When(always)
 			},
 			wantRan: true,
+			wantErr: `step "dep": boom`,
 		},
 		{
 			name: "a step retries and then continues",
@@ -521,6 +526,7 @@ func (s *StepPublicTestSuite) TestGuardsAndFailures() {
 				o.TaskFunc("step", record(ran))
 			},
 			wantRan: true,
+			wantErr: `step "dep": boom`,
 		},
 	}
 
@@ -531,7 +537,11 @@ func (s *StepPublicTestSuite) TestGuardsAndFailures() {
 			tt.setup(o, &ran)
 
 			report, err := o.Run(context.Background())
-			s.Require().NoError(err)
+			if tt.wantErr != "" {
+				s.Require().ErrorContains(err, tt.wantErr)
+			} else {
+				s.Require().NoError(err)
+			}
 			s.Equal(tt.wantRan, ran)
 
 			for _, tr := range report.Tasks {

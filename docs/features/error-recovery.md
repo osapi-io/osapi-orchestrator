@@ -20,6 +20,14 @@ A broadcast step fails when one or more of its hosts fail. A skipped host is not
 a failure. With the `Continue` strategy, the plan continues if some hosts fail.
 The cleanup step runs only if one or more dependencies failed.
 
+## What Run returns
+
+`Run` returns an error when a step failed, also with `Continue`. `Continue` lets
+the independent steps run, and it does not hide the failure. The error joins the
+failure of each step that failed, with its name. Thus a program that exits with
+an error code when `Run` returns an error does that also after a cleanup step
+ran. To make a decision from the steps that failed, read the report.
+
 ## Error strategies
 
 | Strategy   | Behavior                                                       |
@@ -31,7 +39,10 @@ With `StopAll`, the first failure cancels the context of the other steps in its
 level. A step that waits on its context stops at once, and the plan runs no
 later level. A step that the cancel stopped, and a step that did not start, is
 skipped with the reason "plan stopped". It is not a failure, so the report
-counts only the step that failed.
+counts only the step that failed. A step that returns the cancel as an error
+with `%v`, not `%w`, is also skipped with that reason. A step that fails for its
+own reason after the cancel stays failed. The duration of a skipped step is the
+time of the skip, not the time of the plan.
 
 ## Cancellation
 
@@ -42,10 +53,17 @@ returns the context error, so a cancelled run does not report a success.
 
 ## A step that panics or returns no result
 
-A panic in a step, in its guard or in a hook fails that step. The error names
-the step and the panic value, and has the stack. The `AfterTask` hook still runs
-for the step, and the error strategy then applies. A step that returns no result
-and no error also fails.
+A panic in a step, in its guard or in a hook of the step fails that step. The
+error names the step and the panic value, and has the stack. The `AfterTask`
+hook still runs for the step, and the error strategy then applies. A step that
+returns no result and no error also fails.
+
+A panic in a hook of the plan or of a level (`BeforePlan`, `AfterPlan`,
+`BeforeLevel`, `AfterLevel`) is dropped, and the plan runs on. These hooks only
+show the run, such as the output of the renderer. A panic in the skip hooks of a
+step that the plan did not reach is also dropped.
+
+`Run` refuses a plan with a step that has no function. The error names the step.
 
 ## A dependency that is not in the plan
 

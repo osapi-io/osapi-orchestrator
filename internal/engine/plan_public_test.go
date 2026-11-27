@@ -313,7 +313,7 @@ func (s *PlanPublicTestSuite) TestRunGuardWithFailedDependency() {
 			}
 
 			report, err := plan.Run(context.Background())
-			s.Require().NoError(err)
+			s.Require().ErrorContains(err, `step "fail": boom`)
 
 			reason := ""
 			for _, tr := range report.Tasks {
@@ -356,7 +356,7 @@ func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
 		}))
 
 		report, err := plan.Run(context.Background())
-		s.NoError(err)
+		s.Error(err, "a task that failed with Continue makes Run fail")
 		s.True(didRun)
 		s.Len(report.Tasks, 2)
 	})
@@ -372,7 +372,7 @@ func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
 		plan.TaskFunc("c", taskFunc(true, nil))
 
 		report, err := plan.Run(context.Background())
-		s.NoError(err)
+		s.Error(err, "a task that failed with Continue makes Run fail")
 		s.Len(report.Tasks, 3)
 		m := statusMap(report)
 		s.Equal(engine.StatusFailed, m["a"])
@@ -393,7 +393,7 @@ func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
 		c.DependsOn(b)
 
 		report, err := plan.Run(context.Background())
-		s.NoError(err)
+		s.Error(err, "a task that failed with Continue makes Run fail")
 		m := statusMap(report)
 		s.Equal(engine.StatusFailed, m["a"])
 		s.Equal(engine.StatusSkipped, m["b"])
@@ -408,7 +408,7 @@ func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
 		plan.TaskFunc("b", taskFunc(true, nil))
 
 		report, err := plan.Run(context.Background())
-		s.NoError(err)
+		s.Error(err, "a task that failed with Continue makes Run fail")
 		m := statusMap(report)
 		s.Equal(engine.StatusFailed, m["a"])
 		s.Equal(engine.StatusChanged, m["b"])
@@ -620,7 +620,7 @@ func (s *PlanPublicTestSuite) TestRunHooks() {
 		})
 
 		_, err := plan.Run(context.Background())
-		s.NoError(err)
+		s.ErrorContains(err, `task "p" panicked`)
 		s.Contains(events, "before-p")
 		s.Contains(events, "after-p")
 	})
@@ -671,7 +671,7 @@ func (s *PlanPublicTestSuite) TestRunHooks() {
 		plan.TaskFunc("b", taskFunc(true, nil)).DependsOn(a)
 
 		_, err := plan.Run(context.Background())
-		s.NoError(err)
+		s.ErrorContains(err, `step "a": a failed`)
 
 		skips := filterPrefix(events, "skip-")
 		s.Len(skips, 1)
@@ -773,7 +773,7 @@ func (s *PlanPublicTestSuite) TestRunHooks() {
 		plan.TaskFunc("b", taskFunc(true, nil)).DependsOn(a)
 
 		report, err := plan.Run(context.Background())
-		s.NoError(err)
+		s.ErrorContains(err, `step "a": a failed`)
 		m := statusMap(report)
 		s.Equal(engine.StatusSkipped, m["b"])
 	})
