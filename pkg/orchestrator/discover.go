@@ -58,13 +58,12 @@ func (o *Orchestrator) Discover(
 	return matched, nil
 }
 
-// fetchAgents creates a temporary plan, runs AgentList, and decodes
-// the result.
+// fetchAgents creates a temporary plan on the orchestrator's client, runs
+// AgentList, and decodes the result.
 func (o *Orchestrator) fetchAgents(
 	ctx context.Context,
 ) ([]osapi.AgentInfo, error) {
-	client := osapi.New(o.url, o.token)
-	plan := engine.NewPlan(client)
+	plan := engine.NewPlan(o.plan.Client())
 
 	plan.TaskFunc(
 		"list-agents",

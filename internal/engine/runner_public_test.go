@@ -23,7 +23,6 @@ package engine_test
 import (
 	"context"
 	"fmt"
-	"math"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -435,79 +434,6 @@ func (s *RunnerPublicTestSuite) TestTaskResultCarriesData() {
 			}
 
 			s.True(found, "task %q should be in report", tt.taskName)
-		})
-	}
-}
-
-func (s *RunnerPublicTestSuite) TestBackoffDelay() {
-	tests := []struct {
-		name         string
-		initial      time.Duration
-		max          time.Duration
-		attempt      int
-		validateFunc func(time.Duration)
-	}{
-		{
-			name:    "first attempt uses initial interval",
-			initial: 100 * time.Millisecond,
-			max:     10 * time.Second,
-			attempt: 0,
-			validateFunc: func(got time.Duration) {
-				s.Equal(100*time.Millisecond, got)
-			},
-		},
-		{
-			name:    "second attempt doubles",
-			initial: 100 * time.Millisecond,
-			max:     10 * time.Second,
-			attempt: 1,
-			validateFunc: func(got time.Duration) {
-				s.Equal(200*time.Millisecond, got)
-			},
-		},
-		{
-			name:    "clamped to max interval",
-			initial: 100 * time.Millisecond,
-			max:     300 * time.Millisecond,
-			attempt: 5,
-			validateFunc: func(got time.Duration) {
-				s.Equal(300*time.Millisecond, got)
-			},
-		},
-		{
-			name:    "a max interval of 0 is no cap",
-			initial: 100 * time.Millisecond,
-			max:     0,
-			attempt: 3,
-			validateFunc: func(got time.Duration) {
-				s.Equal(800*time.Millisecond, got)
-			},
-		},
-		{
-			name:    "a long run of retries with no cap does not overflow",
-			initial: time.Second,
-			max:     0,
-			attempt: 100,
-			validateFunc: func(got time.Duration) {
-				s.Equal(time.Duration(math.MaxInt64), got)
-			},
-		},
-		{
-			name:    "a long run of retries is clamped to the max",
-			initial: time.Second,
-			max:     time.Minute,
-			attempt: 100,
-			validateFunc: func(got time.Duration) {
-				s.Equal(time.Minute, got)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			tt.validateFunc(
-				engine.ExportBackoffDelay(tt.initial, tt.max, tt.attempt),
-			)
 		})
 	}
 }

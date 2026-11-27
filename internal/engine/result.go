@@ -44,7 +44,10 @@ const (
 )
 
 // HostResult represents a single host's response within a broadcast
-// operation.
+// operation. Data is the host's row as the osapi SDK encodes it to JSON,
+// so a field that the SDK tags omitempty is absent when it is zero, such
+// as an exit_code of 0 or an empty stdout. To read a field whatever its
+// value, Decode the row into the SDK's type.
 type HostResult struct {
 	Hostname    string
 	Status      string
