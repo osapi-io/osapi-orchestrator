@@ -63,26 +63,43 @@ func (s *OptionsTestSuite) TestToSDKStrategy() {
 	}
 }
 
-func (s *OptionsTestSuite) TestWithExponentialBackoff() {
+func (s *OptionsTestSuite) TestEnginePolicy() {
 	tests := []struct {
-		name                    string
-		expectedInitialInterval time.Duration
-		expectedMaxInterval     time.Duration
+		name        string
+		opts        []RetryOption
+		wantInitial time.Duration
+		wantMax     time.Duration
 	}{
 		{
-			name:                    "Sets sensible defaults",
-			expectedInitialInterval: 1 * time.Second,
-			expectedMaxInterval:     30 * time.Second,
+			name:        "a Retry with no backoff waits 1s, up to 30s",
+			wantInitial: time.Second,
+			wantMax:     30 * time.Second,
+		},
+		{
+			name:        "a backoff of 0 uses the default initial interval",
+			opts:        []RetryOption{WithBackoff(0, 0)},
+			wantInitial: time.Second,
+			wantMax:     0,
+		},
+		{
+			name:        "WithBackoff sets both intervals",
+			opts:        []RetryOption{WithBackoff(2*time.Second, time.Minute)},
+			wantInitial: 2 * time.Second,
+			wantMax:     time.Minute,
 		},
 	}
 
+	restore := SetRetryDefaultsForTest(time.Second, 30*time.Second)
+	defer restore()
+
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			cfg := &retryConfig{}
-			WithExponentialBackoff()(cfg)
+			policy := enginePolicy(3, tc.opts)
+			initial, maxInterval := policy.Intervals()
 
-			s.Equal(tc.expectedInitialInterval, cfg.initialInterval)
-			s.Equal(tc.expectedMaxInterval, cfg.maxInterval)
+			s.Equal(3, policy.Count())
+			s.Equal(tc.wantInitial, initial)
+			s.Equal(tc.wantMax, maxInterval)
 		})
 	}
 }

@@ -20,14 +20,12 @@
 
 // Package main demonstrates automatic retry on failure. Each TaskFunc
 // simulates transient errors that succeed after a few attempts, showing
-// three retry strategies:
-//   - immediate-retry: fails twice, retries immediately (no backoff)
-//   - default-backoff: fails twice, retries with default exponential backoff
+// two backoffs:
+//   - default-backoff: fails twice, retries with the default backoff
 //   - custom-backoff: fails twice, retries with custom backoff intervals
 //
 // DAG:
 //
-//	immediate-retry  [retry:3, fails 2x]
 //	default-backoff  [retry:3, backoff:1s-30s, fails 2x]
 //	custom-backoff   [retry:5, backoff:500ms-5s, fails 2x]
 //
@@ -67,15 +65,10 @@ func main() {
 	// No server needed — TaskFuncs simulate failures locally.
 	o := orchestrator.New("http://localhost:8080", "unused")
 
-	// Retry up to 3 times immediately (no backoff).
-	// Fails twice, succeeds on the 3rd attempt.
-	o.TaskFunc("immediate-retry", failNTimes(2)).
-		Retry(3)
-
-	// Retry with default exponential backoff (1s initial, 30s max).
+	// Retry up to 3 times with the default backoff (1s initial, 30s max).
 	// Fails twice, succeeds on the 3rd attempt with ~1s, ~2s delays.
 	o.TaskFunc("default-backoff", failNTimes(2)).
-		Retry(3, orchestrator.WithExponentialBackoff())
+		Retry(3)
 
 	// Retry with custom backoff (500ms initial, 5s max).
 	// Fails twice, succeeds on the 3rd attempt with ~500ms, ~1s delays.

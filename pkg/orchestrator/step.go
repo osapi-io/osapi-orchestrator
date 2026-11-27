@@ -56,8 +56,9 @@ func (s *Step) After(
 	return s
 }
 
-// Retry sets the number of retry attempts on failure. Options
-// configure exponential backoff between attempts. Retry is separate
+// Retry sets the number of retry attempts on failure. It waits between
+// attempts: 1s, doubling up to 30s, unless WithBackoff sets other
+// intervals. Retry is separate
 // from OnError: a step can retry, and then continue the plan when its
 // last attempt fails. A retry runs only for an error that a retry can
 // fix (see Retryable), and not for an op that is not idempotent, such
@@ -67,20 +68,7 @@ func (s *Step) Retry(
 	n int,
 	opts ...RetryOption,
 ) *Step {
-	cfg := &retryConfig{}
-	for _, opt := range opts {
-		opt(cfg)
-	}
-
-	var sdkOpts []engine.RetryOption
-	if cfg.initialInterval > 0 {
-		sdkOpts = append(
-			sdkOpts,
-			engine.WithRetryBackoff(cfg.initialInterval, cfg.maxInterval),
-		)
-	}
-
-	s.task.Retry(engine.Retry(n, sdkOpts...))
+	s.task.Retry(enginePolicy(n, opts))
 
 	return s
 }

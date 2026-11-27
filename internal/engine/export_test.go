@@ -86,3 +86,10 @@ func ExportBackoffDelay(
 
 	return s.backoffDelay(attempt)
 }
+
+// ExportJitter exposes the backoff jitter for testing.
+func ExportJitter(
+	d time.Duration,
+) time.Duration {
+	return jitter(d)
+}

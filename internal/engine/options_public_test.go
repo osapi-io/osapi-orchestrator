@@ -22,7 +22,6 @@ package engine_test
 
 import (
 	"context"
-	"math"
 	"testing"
 	"time"
 
@@ -210,7 +209,7 @@ func (s *OptionsPublicTestSuite) TestBackoffDelay() {
 			},
 		},
 		{
-			name:    "a max interval of 0 is no cap",
+			name:    "a max interval of 0 doubles below the default cap",
 			initial: 100 * time.Millisecond,
 			max:     0,
 			attempt: 3,
@@ -219,12 +218,21 @@ func (s *OptionsPublicTestSuite) TestBackoffDelay() {
 			},
 		},
 		{
-			name:    "a long run of retries with no cap does not overflow",
+			name:    "a long run of retries with a max of 0 stops at 30s",
 			initial: time.Second,
 			max:     0,
 			attempt: 100,
 			validateFunc: func(got time.Duration) {
-				s.Equal(time.Duration(math.MaxInt64), got)
+				s.Equal(30*time.Second, got)
+			},
+		},
+		{
+			name:    "an initial interval above the default cap is its own cap",
+			initial: time.Minute,
+			max:     0,
+			attempt: 4,
+			validateFunc: func(got time.Duration) {
+				s.Equal(time.Minute, got)
 			},
 		},
 		{
@@ -245,4 +253,46 @@ func (s *OptionsPublicTestSuite) TestBackoffDelay() {
 			)
 		})
 	}
+}
+
+func (s *OptionsPublicTestSuite) TestJitter() {
+	tests := []struct {
+		name  string
+		delay time.Duration
+		low   time.Duration
+		high  time.Duration
+	}{
+		{
+			name:  "a delay is spread over its upper half",
+			delay: 100 * time.Millisecond,
+			low:   50 * time.Millisecond,
+			high:  100 * time.Millisecond,
+		},
+		{
+			name:  "a delay of 1ns or less is kept",
+			delay: 1,
+			low:   1,
+			high:  1,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			for range 200 {
+				got := engine.ExportJitter(tt.delay)
+				s.GreaterOrEqual(got, tt.low)
+				s.LessOrEqual(got, tt.high)
+			}
+		})
+	}
+}
+
+func (s *OptionsPublicTestSuite) TestIntervals() {
+	initial, maxInterval := engine.Retry(
+		2,
+		engine.WithRetryBackoff(time.Second, time.Minute),
+	).Intervals()
+
+	s.Equal(time.Second, initial)
+	s.Equal(time.Minute, maxInterval)
 }

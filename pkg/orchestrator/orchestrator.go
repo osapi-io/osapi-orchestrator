@@ -46,7 +46,19 @@ func New(
 	client := osapi.New(url, token)
 	r := newLipglossRenderer()
 	r.verbose = cfg.verbose
-	plan := engine.NewPlan(client, engine.WithHooks(rendererHooks(r)))
+	planOpts := []engine.PlanOption{engine.WithHooks(rendererHooks(r))}
+	if cfg.strategy != nil {
+		planOpts = append(planOpts, engine.OnError(toSDKStrategy(*cfg.strategy)))
+	}
+
+	if cfg.retry != nil {
+		planOpts = append(
+			planOpts,
+			engine.WithRetry(enginePolicy(cfg.retry.count, cfg.retry.opts)),
+		)
+	}
+
+	plan := engine.NewPlan(client, planOpts...)
 
 	return &Orchestrator{
 		plan:      plan,

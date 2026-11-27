@@ -507,10 +507,11 @@ func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
 		s.Equal(3, attempts)
 		s.Equal(engine.StatusChanged, report.Tasks[0].Status)
 
-		// Verify delays between attempts (at least initial interval).
+		// Verify delays between attempts: the jitter keeps at least half
+		// of the initial interval.
 		s.Require().Len(timestamps, 3)
 		gap1 := timestamps[1].Sub(timestamps[0])
-		s.GreaterOrEqual(gap1, 40*time.Millisecond)
+		s.GreaterOrEqual(gap1, 20*time.Millisecond)
 	})
 
 	s.Run("retry without backoff retries immediately", func() {

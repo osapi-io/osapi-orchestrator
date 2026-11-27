@@ -25,8 +25,10 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/suite"
 
@@ -132,6 +134,121 @@ func (s *RetryPublicTestSuite) TestRetryable() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			s.Equal(tt.want, orchestrator.Retryable(tt.err))
+		})
+	}
+}
+
+func (s *RetryPublicTestSuite) TestRetryBacksOffByDefault() {
+	restore := orchestrator.SetRetryDefaultsForTest(40*time.Millisecond, time.Second)
+	defer restore()
+
+	var (
+		mu    sync.Mutex
+		times []time.Time
+	)
+
+	server := httptest.NewServer(http.HandlerFunc(func(
+		w http.ResponseWriter,
+		_ *http.Request,
+	) {
+		mu.Lock()
+		times = append(times, time.Now())
+		mu.Unlock()
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusTooManyRequests)
+		_, _ = w.Write([]byte(`{"error":"slow down"}`))
+	}))
+	defer server.Close()
+
+	o := orchestrator.New(server.URL, "token")
+	o.HostnameGet("_any").Retry(2)
+
+	_, err := o.Run(context.Background())
+	s.Require().Error(err)
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	s.Require().Len(times, 3)
+	// The jitter keeps at least half of each delay: 20ms, then 40ms.
+	s.GreaterOrEqual(times[1].Sub(times[0]), 20*time.Millisecond)
+	s.GreaterOrEqual(times[2].Sub(times[1]), 40*time.Millisecond)
+}
+
+func (s *RetryPublicTestSuite) TestPlanOptions() {
+	fails := func(
+		_ context.Context,
+		_ *osapi.Client,
+		_ orchestrator.Results,
+	) (*orchestrator.Result, error) {
+		return nil, errors.New("boom")
+	}
+
+	tests := []struct {
+		name         string
+		opts         []orchestrator.Option
+		build        func(o *orchestrator.Orchestrator, runs *atomic.Int32)
+		validateFunc func(report *orchestrator.Report, err error, runs int32)
+	}{
+		{
+			name: "WithOnError(Continue) lets the independent steps run",
+			opts: []orchestrator.Option{orchestrator.WithOnError(orchestrator.Continue)},
+			build: func(o *orchestrator.Orchestrator, runs *atomic.Int32) {
+				o.TaskFunc("fail", fails)
+				o.TaskFunc("other", func(
+					_ context.Context,
+					_ *osapi.Client,
+					_ orchestrator.Results,
+				) (*orchestrator.Result, error) {
+					runs.Add(1)
+
+					return &orchestrator.Result{}, nil
+				})
+			},
+			validateFunc: func(report *orchestrator.Report, _ error, runs int32) {
+				s.Require().NotNil(report)
+				s.Equal(int32(1), runs)
+
+				for _, tr := range report.Tasks {
+					if tr.Name == "fail" {
+						s.Equal(orchestrator.HostStatusFailed, string(tr.Status))
+					}
+				}
+			},
+		},
+		{
+			name: "WithRetry retries a step that sets no retry of its own",
+			opts: []orchestrator.Option{orchestrator.WithRetry(2)},
+			build: func(o *orchestrator.Orchestrator, runs *atomic.Int32) {
+				o.TaskFunc("flaky", func(
+					_ context.Context,
+					_ *osapi.Client,
+					_ orchestrator.Results,
+				) (*orchestrator.Result, error) {
+					if runs.Add(1) < 3 {
+						return nil, errors.New("not yet")
+					}
+
+					return &orchestrator.Result{Changed: true}, nil
+				})
+			},
+			validateFunc: func(_ *orchestrator.Report, err error, runs int32) {
+				s.NoError(err)
+				s.Equal(int32(3), runs)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			var runs atomic.Int32
+
+			o := orchestrator.New("http://127.0.0.1:0", "token", tt.opts...)
+			tt.build(o, &runs)
+
+			report, err := o.Run(context.Background())
+			tt.validateFunc(report, err, runs.Load())
 		})
 	}
 }

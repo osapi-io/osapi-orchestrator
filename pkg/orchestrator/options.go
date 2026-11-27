@@ -30,7 +30,36 @@ import (
 type Option func(*config)
 
 type config struct {
-	verbose bool
+	verbose  bool
+	strategy *ErrorStrategy
+	retry    *planRetry
+}
+
+// planRetry is the retry that WithRetry sets for each step of the plan.
+type planRetry struct {
+	count int
+	opts  []RetryOption
+}
+
+// WithOnError sets the error strategy of each step that does not set
+// its own with OnError or ContinueOnError. The default is StopAll.
+func WithOnError(
+	strategy ErrorStrategy,
+) Option {
+	return func(c *config) {
+		c.strategy = &strategy
+	}
+}
+
+// WithRetry sets the retry of each step that does not set its own with
+// Retry. It backs off as Retry does.
+func WithRetry(
+	n int,
+	opts ...RetryOption,
+) Option {
+	return func(c *config) {
+		c.retry = &planRetry{count: n, opts: opts}
+	}
 }
 
 // WithVerbose enables verbose output showing stdout, stderr, and
@@ -86,18 +115,21 @@ type retryConfig struct {
 	maxInterval     time.Duration
 }
 
-// WithExponentialBackoff enables exponential backoff between retry
-// attempts with sensible defaults (1s initial, 30s max).
-func WithExponentialBackoff() RetryOption {
-	return func(c *retryConfig) {
-		c.initialInterval = 1 * time.Second
-		c.maxInterval = 30 * time.Second
-	}
-}
+// defaultRetryInitial and defaultRetryMax are the backoff of a Retry
+// with no WithBackoff: 1s, doubling, and never above 30s. They are
+// variables so that a test can make them short.
+var (
+	defaultRetryInitial = time.Second
+	defaultRetryMax     = 30 * time.Second
+)
 
-// WithBackoff sets custom initial and max intervals for exponential
+// WithBackoff sets the initial and max intervals of the exponential
 // backoff between retry attempts. The delay doubles on each attempt,
-// clamped to maxInterval. A maxInterval of 0 or less means no cap.
+// clamped to maxInterval. A maxInterval of 0 or less caps the delay at
+// 30s, or at the initial interval when that is longer. Without
+// WithBackoff, Retry waits 1s, then doubles up to 30s. Each delay is
+// spread over its upper half, so that clients that failed together do
+// not retry together.
 func WithBackoff(
 	initial time.Duration,
 	maxInterval time.Duration,
@@ -106,4 +138,28 @@ func WithBackoff(
 		c.initialInterval = initial
 		c.maxInterval = maxInterval
 	}
+}
+
+// enginePolicy makes the engine's retry policy for n attempts, with the
+// default backoff when no option set one.
+func enginePolicy(
+	n int,
+	opts []RetryOption,
+) engine.RetryPolicy {
+	cfg := &retryConfig{
+		initialInterval: defaultRetryInitial,
+		maxInterval:     defaultRetryMax,
+	}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	if cfg.initialInterval <= 0 {
+		cfg.initialInterval = defaultRetryInitial
+	}
+
+	return engine.Retry(
+		n,
+		engine.WithRetryBackoff(cfg.initialInterval, cfg.maxInterval),
+	)
 }
