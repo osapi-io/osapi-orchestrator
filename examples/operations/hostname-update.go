@@ -64,7 +64,7 @@ func main() {
 	o1 := orchestrator.New(url, token)
 
 	health1 := o1.HealthCheck()
-	o1.NodeHostnameGet("_any").After(health1)
+	o1.HostnameGet("_any").After(health1)
 
 	report1, err := o1.Run(context.Background())
 	if err != nil {
@@ -84,7 +84,7 @@ func main() {
 
 	// Broadcast hostname update to all hosts. Continue allows the
 	// plan to proceed even if some hosts are unsupported (skipped).
-	o2.NodeHostnameUpdate("_all", "new-hostname").
+	o2.HostnameUpdate("_all", osapi.HostnameUpdateInput{Name: "new-hostname"}).
 		After(health2).
 		ContinueOnError()
 

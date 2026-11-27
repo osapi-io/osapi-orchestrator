@@ -65,16 +65,17 @@ func main() {
 	// List → create → get → update → delete.
 	o := orchestrator.New(url, token)
 
-	syslist := o.SysctlList("_any")
+	syslist := o.SysctlList("_any", osapi.SysctlListParams{})
 
-	create := o.SysctlCreate("_any", osapi.SysctlCreateOpts{
+	create := o.SysctlCreate("_any", osapi.SysctlCreateInput{
 		Key:   key,
 		Value: "0",
 	}).After(syslist)
 
 	get := o.SysctlGet("_any", key).After(create)
 
-	update := o.SysctlUpdate("_any", key, osapi.SysctlUpdateOpts{
+	update := o.SysctlUpdate("_any", osapi.SysctlUpdateInput{
+		Key:   key,
 		Value: "1",
 	}).After(get)
 
@@ -85,7 +86,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var entry osapi.SysctlEntryResult
+	var entry osapi.SysctlEntry
 	if err := report.Decode("get-sysctl", &entry); err == nil {
 		fmt.Printf("Sysctl %s = %s\n", entry.Key, entry.Value)
 	}

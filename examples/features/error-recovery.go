@@ -64,7 +64,7 @@ func main() {
 			return nil, fmt.Errorf("simulated deployment failure")
 		},
 	).ContinueOnError()
-	o1.CommandExec("_any", "echo", "running-infra-cleanup").
+	o1.CommandExec("_any", osapi.CommandExecInput{Command: "echo", Args: []string{"running-infra-cleanup"}}).
 		Named("cleanup").
 		After(deploy1).
 		OnlyIfFailed()
@@ -77,10 +77,10 @@ func main() {
 	// so OnlyIfAnyHostFailed works naturally for command steps.
 	fmt.Println("\n=== Plan 2: Command failure (OnlyIfAnyHostFailed) ===")
 	o2 := orchestrator.New(url, token)
-	deploy2 := o2.CommandShell("_any", "cat /nonexistent-file").
+	deploy2 := o2.CommandShell("_any", osapi.CommandShellInput{Command: "cat /nonexistent-file"}).
 		Named("deploy").
 		ContinueOnError()
-	o2.CommandExec("_any", "echo", "running-command-cleanup").
+	o2.CommandExec("_any", osapi.CommandExecInput{Command: "echo", Args: []string{"running-command-cleanup"}}).
 		Named("cleanup").
 		After(deploy2).
 		OnlyIfAnyHostFailed()

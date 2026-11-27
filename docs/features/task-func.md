@@ -12,7 +12,7 @@ endpoint.
 o.TaskFunc(
     "summarize",
     func(_ context.Context, c *osapi.Client, r orchestrator.Results) (*orchestrator.Result, error) {
-        var h osapi.HostnameResult
+        var h osapi.HostnameEntry
         if err := r.Decode("get-hostname", &h); err != nil {
             return &orchestrator.Result{Changed: false}, nil
         }

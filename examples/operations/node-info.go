@@ -65,13 +65,13 @@ func main() {
 	health := o.HealthCheck()
 
 	// All node queries run in parallel after the health check.
-	o.NodeStatusGet("_any").After(health)
-	o.NodeDiskGet("_any").After(health)
-	o.NodeMemoryGet("_any").After(health)
-	o.NodeLoadGet("_any").After(health)
-	o.NodeUptimeGet("_any").After(health)
-	o.NodeOSGet("_any").After(health)
-	o.NodeHostnameGet("_any").After(health)
+	o.StatusGet("_any").After(health)
+	o.DiskGet("_any").After(health)
+	o.MemoryGet("_any").After(health)
+	o.LoadGet("_any").After(health)
+	o.UptimeGet("_any").After(health)
+	o.OSGet("_any").After(health)
+	o.HostnameGet("_any").After(health)
 
 	report, err := o.Run(context.Background())
 	if err != nil {
@@ -79,19 +79,19 @@ func main() {
 	}
 
 	// Decode and display each result.
-	var hostname osapi.HostnameResult
+	var hostname osapi.HostnameEntry
 	if err := report.Decode("get-hostname", &hostname); err == nil {
 		fmt.Printf("Hostname: %s\n", hostname.Hostname)
 	}
 
-	var load osapi.LoadResult
-	if err := report.Decode("get-load", &load); err == nil && load.LoadAverage != nil {
+	var load osapi.LoadEntry
+	if err := report.Decode("get-load", &load); err == nil && load.Hostname != "" {
 		fmt.Printf("Load:     %.2f / %.2f / %.2f\n",
-			load.LoadAverage.OneMin, load.LoadAverage.FiveMin, load.LoadAverage.FifteenMin)
+			load.LoadAverage.Min1, load.LoadAverage.Min5, load.LoadAverage.Min15)
 	}
 
-	var memory osapi.MemoryResult
-	if err := report.Decode("get-memory", &memory); err == nil && memory.Memory != nil {
+	var memory osapi.MemoryEntry
+	if err := report.Decode("get-memory", &memory); err == nil && memory.Memory.Total > 0 {
 		fmt.Printf("Memory:   %d total / %d free\n", memory.Memory.Total, memory.Memory.Free)
 	}
 }

@@ -6,7 +6,7 @@ renderer shows the result of each host.
 ## Usage
 
 ```go
-o.NodeHostnameGet("_all")
+o.HostnameGet("_all")
 ```
 
 To target by label:

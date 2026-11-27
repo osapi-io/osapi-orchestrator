@@ -61,24 +61,24 @@ func main() {
 
 	// Five queries share the same dependency so the orchestrator
 	// schedules them concurrently.
-	o.NodeHostnameGet("_any").After(health)
-	o.NodeDiskGet("_any").After(health)
-	o.NodeMemoryGet("_any").After(health)
-	o.NodeLoadGet("_any").After(health)
-	o.NodeUptimeGet("_any").After(health)
+	o.HostnameGet("_any").After(health)
+	o.DiskGet("_any").After(health)
+	o.MemoryGet("_any").After(health)
+	o.LoadGet("_any").After(health)
+	o.UptimeGet("_any").After(health)
 
 	report, err := o.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var h osapi.HostnameResult
+	var h osapi.HostnameEntry
 	if err := report.Decode("get-hostname", &h); err == nil {
 		fmt.Printf("Hostname: %s\n", h.Hostname)
 	}
 
-	var m osapi.MemoryResult
-	if err := report.Decode("get-memory", &m); err == nil && m.Memory != nil {
+	var m osapi.MemoryEntry
+	if err := report.Decode("get-memory", &m); err == nil && m.Memory.Total > 0 {
 		fmt.Printf("Memory: %.1f GB total\n", float64(m.Memory.Total)/(1024*1024*1024))
 	}
 }

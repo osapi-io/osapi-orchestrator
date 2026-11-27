@@ -71,14 +71,15 @@ func main() {
 	upload := o.FileUpload("osapi-example-ca.pem", "raw", pem,
 		orchestrator.WithForce())
 
-	create := o.CertificateCreate("_any", osapi.CertificateCreateOpts{
+	create := o.CertificateCreate("_any", osapi.CertificateCreateInput{
 		Name:   certName,
 		Object: "osapi-example-ca.pem",
 	}).After(upload)
 
 	list := o.CertificateList("_any").After(create)
 
-	update := o.CertificateUpdate("_any", certName, osapi.CertificateUpdateOpts{
+	update := o.CertificateUpdate("_any", osapi.CertificateUpdateInput{
+		Name:   certName,
 		Object: "osapi-example-ca.pem",
 	}).After(list)
 
@@ -89,10 +90,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var certs osapi.CertificateCAResult
-	if err := report.Decode("list-certificate", &certs); err == nil {
-		fmt.Printf("CA certificates (%d):\n", len(certs.Certificates))
-		for _, c := range certs.Certificates {
+	certs := report.HostResults("list-certificate")
+	fmt.Printf("CA certificates (%d):\n", len(certs))
+	for _, hr := range certs {
+		var c osapi.CertificateEntry
+		if err := hr.Decode(&c); err == nil {
 			fmt.Printf("  %s (source: %s)\n", c.Name, c.Source)
 		}
 	}

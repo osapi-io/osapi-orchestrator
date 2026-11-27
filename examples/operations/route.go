@@ -54,6 +54,13 @@ func main() {
 		url = "http://localhost:8080"
 	}
 
+	// A documentation route (RFC 5737) through a gateway that is not on
+	// the network, so that the example changes no real route.
+	const (
+		testRoute = "198.51.100.0/24"
+		testVia   = "192.0.2.1"
+	)
+
 	iface := os.Getenv("OSAPI_INTERFACE")
 	if iface == "" {
 		iface = "eth0"
@@ -61,30 +68,40 @@ func main() {
 
 	o := orchestrator.New(url, token)
 
-	list := o.RouteList("_any").ContinueOnError()
-
-	get := o.RouteGet("_any", iface).After(list).ContinueOnError()
+	list := o.InterfaceRouteList("_any", iface).ContinueOnError()
 
 	// Create → update → delete a test route.
-	create := o.RouteCreate("_any", iface, osapi.RouteConfigOpts{}).
-		After(get).ContinueOnError()
+	create := o.InterfaceRouteCreate("_any", osapi.InterfaceRouteCreateInput{
+		Name:        iface,
+		Destination: testRoute,
+		Via:         testVia,
+	}).
+		After(list).ContinueOnError()
 
-	update := o.RouteUpdate("_any", iface, osapi.RouteConfigOpts{}).
+	update := o.InterfaceRouteUpdate("_any", osapi.InterfaceRouteUpdateInput{
+		Name:        iface,
+		Destination: testRoute,
+		Via:         testVia,
+		Metric:      200,
+	}).
 		After(create).ContinueOnError()
 
-	o.RouteDelete("_any", iface).After(update).ContinueOnError()
+	o.InterfaceRouteDelete("_any", osapi.InterfaceRouteDeleteInput{Name: iface, Destination: testRoute}).
+		After(update).
+		ContinueOnError()
 
 	report, err := o.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var routes osapi.RouteListResult
-	if err := report.Decode("list-route", &routes); err == nil {
-		fmt.Printf("Routes on %s (%d):\n", iface, len(routes.Routes))
-		for _, r := range routes.Routes {
-			fmt.Printf("  %s via %s (metric: %d)\n",
-				r.Destination, r.Gateway, r.Metric)
+	if routes := report.HostResults("list-interface-route"); len(routes) > 0 {
+		fmt.Printf("Routes on %s (%d):\n", iface, len(routes))
+		for _, hr := range routes {
+			var r osapi.InterfaceRouteEntry
+			if err := hr.Decode(&r); err == nil {
+				fmt.Printf("  %s via %s (metric: %d)\n", r.Destination, r.Gateway, r.Metric)
+			}
 		}
 	} else {
 		fmt.Println("Route management requires Netplan (Debian-family only)")

@@ -54,7 +54,8 @@ just deps
 ```
 pkg/orchestrator/          # User-facing DSL
   orchestrator.go          # New, Run, TaskFunc
-  ops.go                   # Typed operation constructors
+  ops.go                   # The step helpers and the controller operations
+  ops_hosts.go             # One constructor for each SDK call to the hosts
   step.go                  # Step chaining (guards, retry, ordering)
   result.go                # Result types (Results, TaskStatus, Report)
   host_status.go           # HostStatusOk/Skipped/Failed constants
@@ -68,36 +69,26 @@ pkg/orchestrator/          # User-facing DSL
 internal/engine/           # Bridge onto osapi-sdk's orchestrator engine
 docs/
   operations/              # Operation reference (one doc per operation)
-    README.md              # Master index linking to each group
-    health/                # Group whose domain is the group itself
-      README.md            # Landing page — ops table, permissions, example
-      check.md             # Individual operation reference
-    node/                  # Group holding both its own ops and domains
-      README.md
-      status-get.md
-      power/               # Domain subdirectory with its own landing page
-        README.md
-        reboot.md
-    agent/, cmd/, config/, containers/, files/, hardware/,
-    networking/, security/, services/, software/
+    README.md              # Index of every operation
+    {service}/{method}.md  # A host operation: service/start.md, ...
+    agent/, health/, files/file/  # The controller operations
   features/                # Cross-cutting feature guides
     guards.md, broadcast.md, retry.md, ...
 examples/
   operations/              # Runnable workflow examples (one per domain)
-    node-info.go, docker.go, cron.go, ...
+    node-info.go, docker.go, schedule.go, ...
   features/                # Runnable feature examples
     host-status.go, guards.go, broadcast.go, ...
 ```
 
-If the group has no inner domains, an operation doc is at
-`docs/operations/{group}/{operation}.md`. If the group has inner domains, the
-doc is at `docs/operations/{group}/{domain}/{operation}.md`. The landing page of
-the group links to the docs that it holds.
+A host operation has the name and the parameters of its osapi SDK call:
+`ServiceStart` calls `c.Service.Start`, and its doc is at
+`docs/operations/service/start.md`.
 
 - **`pkg/orchestrator/`.** The DSL that users call.
-  - Typed operation constructors (NodeHostnameGet, CommandExec, and more)
-  - It uses the SDK types directly (`osapi.HostnameResult`, `osapi.Agent`, and
-    more)
+  - Typed operation constructors (HostnameGet, CommandExec, and more)
+  - It uses the SDK types directly (`osapi.HostnameEntry`, `osapi.AgentInfo`,
+    `osapi.ServiceCreateInput`, and more)
   - It is a high-level layer on the orchestrator engine of osapi-sdk
 
 ## Code style
@@ -291,168 +282,100 @@ tables have `validateFunc` callbacks.
 
 ## Adding a new operation
 
-To add a new typed constructor (for example, `NodeRebootDo`), do these steps in
-order. Every operation must have tests, docs, and an example.
+A host operation wraps one call of the osapi SDK. When the SDK gains a call, add
+its operation in these steps, in order. Each operation has tests, a doc, and an
+example.
 
 ### Step 1: operation constructor
 
-Add the method to `pkg/orchestrator/ops.go`. Use the pattern of the other
-methods:
+Add the method to `pkg/orchestrator/ops_hosts.go`, next to the other methods of
+its SDK service. Give it the name of the service and the method, and the SDK's
+own parameters after `target`:
 
 ```go
-// NodeRebootDo creates a step that reboots the target node.
-func (o *Orchestrator) NodeRebootDo(
+// ServiceStart creates a step that runs Service.Start on the target: start a
+// service.
+func (o *Orchestrator) ServiceStart(
     target string,
+    name string,
 ) *Step {
-    name := o.nextOpName("reboot-node")
-
-    task := o.plan.TaskFunc(
-        name,
+    return collectionStep(
+        o, "start-service", false,
         func(
             ctx context.Context,
             c *osapi.Client,
-        ) (*engine.Result, error) {
-            resp, err := c.Node.Reboot(ctx, target)
-            if err != nil {
-                return nil, fmt.Errorf("reboot node: %w", err)
-            }
-
-            return engine.CollectionResult(resp.Data, resp.RawJSON(),
-                func(r osapi.RebootResult) engine.HostResult {
-                    return engine.HostResult{
-                        Hostname: r.Hostname,
-                        Status:   r.Status,
-                        Changed:  r.Changed,
-                        Error:    r.Error,
-                    }
-                },
-            )
+        ) (*osapi.Response[osapi.Collection[osapi.ServiceResult]], error) {
+            return c.Service.Start(ctx, target, name)
         },
     )
-
-    return &Step{task: task}
 }
 ```
 
 Rules:
 
-- Use `o.nextOpName("verb-noun")` for the step name.
-- Always include `Status: r.Status` in the `engine.HostResult` mapper.
-- Wrap errors with context: `fmt.Errorf("verb noun: %w", err)`.
-- Use `engine.CollectionResult` for operations that target a host. It returns a
-  result for each host. Use `engine.StructToMap` for responses that are not a
-  collection.
-- The `engine` import is `internal/engine`. Use it only in `pkg/orchestrator/`.
-  External code must not use it.
+- The step name is the method and the service in kebab case, such as
+  `start-service` or `create-interface-route`.
+- `collectionStep` reads the hostname, status, changed and error fields of each
+  row through its JSON. A row that needs more, such as the exit code of a
+  command, uses `rowStep` with its own mapper.
+- Pass `true` for an operation that is not idempotent, such as a restart or a
+  reboot. `Retry` then does not run it again unless the step adds `RetryUnsafe`.
 
 ### Step 2: tests
 
-Update these two test files:
-
-**`pkg/orchestrator/ops_test.go`** (internal, httptest pattern) tests the full
-HTTP round-trip with a mock server:
-
-- Create an `httptest.Server` that returns canned JSON.
-- Call the constructor. Verify the result with `report.Decode()`.
-- Write the success, error, and edge cases as table rows.
-
-**`pkg/orchestrator/ops_public_test.go`** (public, step-creation pattern) tests
-that the constructor creates valid steps:
-
-- Verify that the step is not nil and has the expected task name.
-- Write one suite method for each operation, with all the cases as rows.
-
-Get 100% coverage on the two files.
+Add a row for the operation to `TestHostOps` in
+`pkg/orchestrator/ops_public_test.go`. The row gives the constructor, the HTTP
+method that the SDK sends, the step name, and whether the row type has
+`Changed`. The test runs the step against a fake controller and checks the
+request and the report. Keep 100% coverage.
 
 ### Step 3: operation doc
 
-Create the doc next to the other docs for its domain. The path is
-`docs/operations/{group}/{operation}.md` or
-`docs/operations/{group}/{domain}/{operation}.md`, as the layout of the group
-shows. Use the template of the docs next to it. Every doc must have these
-sections:
+Write `docs/operations/{service}/{method}.md` in the form of the docs next to
+it:
 
-- **Description** (h1 heading with the method name)
-- **Usage.** A small Go snippet that shows the constructor call.
-- **Parameters.** A table of all the parameters, with types and descriptions.
-- **Result type.** A `Decode()` snippet and a field table.
-- **Idempotency.** One of: Read-only, Idempotent (Yes), Non-idempotent (No).
-- **Permissions.** The OSAPI permission that the token must have (for example,
-  `node:write`).
-- **Example.** A link to the example file that uses this operation:
-  ```
-  Refer to
-  [`examples/operations/{domain}.go`](https://github.com/osapi-io/osapi-orchestrator/blob/main/examples/operations/{domain}.go)
-  for a complete example.
-  ```
+- **The name** as the h1, then what the call does on each OS family. Take this
+  from the doc comment of the SDK method.
+- **Usage.** The constructor call.
+- **Parameters.** `target`, then each parameter of the SDK call, with a field
+  table for an input or a params type.
+- **Result.** The row type, a `Decode()` snippet with the step name, and a field
+  table.
+- **Retries.** For an operation that is not idempotent.
+- **Permissions.** The permission and the route, from the SDK's doc comment.
+- **Example.** A link to the example that uses the operation.
 
-### Step 4: update the domain landing page and operation index
+Then add the operation to `docs/operations/README.md`, and change the count in
+the sentence at the top.
 
-Add the operation to the table in the landing page of the directory that holds
-the doc. Then update `docs/operations/README.md`. Change the count in the row of
-the domain, and the total in the sentence above the group tables. The sum of the
-rows must be equal to that total.
+### Step 4: example
 
-### Step 5: example
-
-Add the operation to the workflow example in `examples/operations/` for the same
-domain. The domain groups are:
-
-| Domain      | Example file         |
-| ----------- | -------------------- |
-| Node        | `node-info.go`       |
-| Node        | `hostname-update.go` |
-| Network     | `dns-update.go`      |
-| Network     | `ping.go`            |
-| Interface   | `interface.go`       |
-| Route       | `route.go`           |
-| Command     | `command.go`         |
-| File        | `file-deploy.go`     |
-| File        | `file-changed.go`    |
-| Agent       | `agent-drain.go`     |
-| Docker      | `docker.go`          |
-| Cron        | `cron.go`            |
-| Sysctl      | `sysctl.go`          |
-| NTP         | `ntp.go`             |
-| Timezone    | `timezone.go`        |
-| Service     | `service.go`         |
-| Package     | `package.go`         |
-| User        | `user.go`            |
-| Group       | `group.go`           |
-| Certificate | `certificate.go`     |
-| Process     | `process.go`         |
-| Power       | `power.go`           |
-| Log         | `log.go`             |
-| Health      | (used as gate)       |
-
-If no example has the domain, create a new `{domain}.go` file. Every operation
-must be in one or more runnable examples.
+Add the operation to the workflow example in `examples/operations/` for its
+service, or make a new `{service}.go`. Every operation must be in one or more
+runnable examples.
 
 #### Example conventions
 
 - **Self-contained.** Clean the host at the start, with a different plan that
   has `ContinueOnError()`. Then do the work. Then verify it. The example must
   give the same result each time it runs.
-- **One purpose in each file.** Show the operations of one domain. Do not add
+- **One purpose in each file.** Show the operations of one service. Do not add
   other features (parallel, verbose, broadcast).
 - **Cleanup plan pattern.** Use a different `orchestrator.New()` for the
   cleanup, with `ContinueOnError()`. Then use a main plan for the workflow.
 - **Platform safety.** If an operation does not work on all platforms, use
   `ContinueOnError()`, so the example does not crash.
 - **Decode and print.** Decode one or more results, so the example shows output.
-  Use `report.Decode("step-name", &typedStruct)`.
+  Use `report.Decode("step-name", &row)` for one row, and
+  `report.HostResults("step-name")` for each row of a list.
 - **Short.** Less than 100 lines of code (without the license). If it is longer,
   the example shows too much. Split it.
-- **Operation docs link to examples.** Every operation doc in
-  `docs/operations/{domain}/` must link to the example file that shows that
-  operation.
 
-### Step 6: update README.md
+### Step 5: update README.md
 
-If the total number of operations changes, update the operation count and the
-tables in the root `README.md`.
+Update the operation count and the table of services in the root `README.md`.
 
-### Step 7: verify
+### Step 6: verify
 
 ```bash
 go build ./...                                       # compiles

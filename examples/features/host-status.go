@@ -42,6 +42,8 @@ import (
 	"log"
 	"os"
 
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
+
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
@@ -60,17 +62,17 @@ func main() {
 
 	// Hostname update is unsupported on macOS/containers, so those
 	// hosts report "skipped" while supported hosts succeed or fail.
-	update := o.NodeHostnameUpdate("_all", "test-hostname").
+	update := o.HostnameUpdate("_all", osapi.HostnameUpdateInput{Name: "test-hostname"}).
 		ContinueOnError()
 
 	// Runs only if at least one host was skipped (unsupported platform).
-	o.CommandExec("_any", "echo", "some-hosts-were-skipped").
+	o.CommandExec("_any", osapi.CommandExecInput{Command: "echo", Args: []string{"some-hosts-were-skipped"}}).
 		Named("notify-skipped").
 		After(update).
 		OnlyIfAnyHostSkipped()
 
 	// Runs only if at least one host reported an error.
-	o.CommandExec("_any", "echo", "running-recovery").
+	o.CommandExec("_any", osapi.CommandExecInput{Command: "echo", Args: []string{"running-recovery"}}).
 		Named("recover-failed").
 		After(update).
 		OnlyIfAnyHostFailed()

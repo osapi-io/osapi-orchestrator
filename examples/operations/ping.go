@@ -58,7 +58,7 @@ func main() {
 
 	health := o.HealthCheck()
 
-	o.NetworkPingDo("_any", "8.8.8.8").
+	o.ConnectivityPing("_any", osapi.ConnectivityPingInput{Address: "8.8.8.8"}).
 		After(health).
 		ContinueOnError()
 
@@ -67,8 +67,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var ping osapi.PingResult
-	if err := report.Decode("ping", &ping); err == nil {
+	var ping osapi.ConnectivityPingResult
+	if err := report.Decode("ping-connectivity", &ping); err == nil {
 		fmt.Printf("Ping 8.8.8.8: %d/%d packets, %.0f%% loss\n",
 			ping.PacketsReceived, ping.PacketsSent, ping.PacketLoss)
 	} else {

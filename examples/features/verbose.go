@@ -53,7 +53,7 @@ func main() {
 	o := orchestrator.New(url, token, orchestrator.WithVerbose())
 
 	health := o.HealthCheck()
-	o.NodeHostnameGet("_any").After(health)
+	o.HostnameGet("_any").After(health)
 
 	if _, err := o.Run(context.Background()); err != nil {
 		log.Fatal(err)

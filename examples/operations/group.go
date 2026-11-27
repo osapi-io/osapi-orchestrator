@@ -58,13 +58,13 @@ func main() {
 
 	list := o.GroupList("_any")
 
-	create := o.GroupCreate("_any", osapi.GroupCreateOpts{
+	create := o.GroupCreate("_any", osapi.GroupCreateInput{
 		Name: groupName,
 	}).After(list)
 
 	get := o.GroupGet("_any", groupName).After(create)
 
-	update := o.GroupUpdate("_any", groupName, osapi.GroupUpdateOpts{}).
+	update := o.GroupUpdate("_any", osapi.GroupUpdateInput{Name: groupName}).
 		After(get).ContinueOnError()
 
 	o.GroupDelete("_any", groupName).After(update)
@@ -74,9 +74,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var info osapi.GroupInfoResult
-	if err := report.Decode("get-group", &info); err == nil && len(info.Groups) > 0 {
-		g := info.Groups[0]
-		fmt.Printf("Group %q: gid=%d\n", g.Name, g.GID)
+	var info osapi.GroupAccount
+	if err := report.Decode("get-group", &info); err == nil && info.Name != "" {
+		fmt.Printf("Group %q: gid=%d\n", info.Name, info.GID)
 	}
 }

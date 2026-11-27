@@ -53,7 +53,7 @@ func (s *RetryPublicTestSuite) TestRetryOfAnUnsafeOp() {
 			name:   "a command that fails with a 503 does not run again",
 			status: http.StatusServiceUnavailable,
 			build: func(o *orchestrator.Orchestrator) {
-				o.CommandExec("_any", "uptime").Retry(2)
+				o.CommandExec("_any", osapi.CommandExecInput{Command: "uptime"}).Retry(2)
 			},
 			expectedRuns: 1,
 		},
@@ -61,7 +61,9 @@ func (s *RetryPublicTestSuite) TestRetryOfAnUnsafeOp() {
 			name:   "a command that allows it runs again",
 			status: http.StatusServiceUnavailable,
 			build: func(o *orchestrator.Orchestrator) {
-				o.CommandExec("_any", "uptime").Retry(2).RetryUnsafe()
+				o.CommandExec("_any", osapi.CommandExecInput{Command: "uptime"}).
+					Retry(2).
+					RetryUnsafe()
 			},
 			expectedRuns: 3,
 		},
@@ -69,7 +71,7 @@ func (s *RetryPublicTestSuite) TestRetryOfAnUnsafeOp() {
 			name:   "a reboot that fails does not run again",
 			status: http.StatusServiceUnavailable,
 			build: func(o *orchestrator.Orchestrator) {
-				o.PowerReboot("_any", osapi.PowerOpts{}).Retry(2)
+				o.PowerReboot("_any", osapi.PowerRebootInput{}).Retry(2)
 			},
 			expectedRuns: 1,
 		},
@@ -77,7 +79,7 @@ func (s *RetryPublicTestSuite) TestRetryOfAnUnsafeOp() {
 			name:   "a read that fails with a 503 runs again",
 			status: http.StatusServiceUnavailable,
 			build: func(o *orchestrator.Orchestrator) {
-				o.NodeHostnameGet("_any").Retry(2)
+				o.HostnameGet("_any").Retry(2)
 			},
 			expectedRuns: 3,
 		},
@@ -85,7 +87,7 @@ func (s *RetryPublicTestSuite) TestRetryOfAnUnsafeOp() {
 			name:   "a read that fails with a 400 does not run again",
 			status: http.StatusBadRequest,
 			build: func(o *orchestrator.Orchestrator) {
-				o.NodeHostnameGet("_any").Retry(2)
+				o.HostnameGet("_any").Retry(2)
 			},
 			expectedRuns: 1,
 		},

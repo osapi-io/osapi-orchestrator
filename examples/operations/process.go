@@ -34,8 +34,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
+	"github.com/osapi-io/osapi/pkg/sdk/types"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
@@ -58,23 +60,24 @@ func main() {
 	get := o.ProcessGet("_any", 1).After(list)
 
 	// Send SIGCONT to PID 1 (harmless no-op for init).
-	o.ProcessSignal("_any", 1, osapi.ProcessSignalOpts{
-		Signal: "SIGCONT",
-	}).After(get).ContinueOnError()
+	// Signal a process only when OSAPI_PID names one: there is no signal that
+	// is safe to send to an arbitrary process, such as PID 1.
+	if pid, err := strconv.Atoi(os.Getenv("OSAPI_PID")); err == nil {
+		o.ProcessSignal("_any", osapi.ProcessSignalInput{PID: pid, Signal: types.SignalUsr1}).
+			After(get).ContinueOnError()
+	}
 
 	report, err := o.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var procs osapi.ProcessInfoResult
-	if err := report.Decode("list-process", &procs); err == nil {
-		fmt.Printf("Running processes: %d\n", len(procs.Processes))
+	if procs := report.HostResults("list-process"); len(procs) > 0 {
+		fmt.Printf("Running processes: %d\n", len(procs))
 	}
 
-	var init osapi.ProcessInfoResult
-	if err := report.Decode("get-process", &init); err == nil && len(init.Processes) > 0 {
-		p := init.Processes[0]
-		fmt.Printf("PID 1: %s (user: %s, state: %s)\n", p.Name, p.User, p.State)
+	var init osapi.ProcessEntry
+	if err := report.Decode("get-process", &init); err == nil && init.Name != "" {
+		fmt.Printf("PID 1: %s (user: %s, state: %s)\n", init.Name, init.User, init.State)
 	}
 }

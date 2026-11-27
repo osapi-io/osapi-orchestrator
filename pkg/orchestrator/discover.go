@@ -38,7 +38,7 @@ var fetchAgentsDecodeName = "list-agents"
 func (o *Orchestrator) Discover(
 	ctx context.Context,
 	predicates ...Predicate,
-) ([]osapi.Agent, error) {
+) ([]osapi.AgentInfo, error) {
 	agents, err := o.fetchAgents(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("discover: %w", err)
@@ -48,7 +48,7 @@ func (o *Orchestrator) Discover(
 		return agents, nil
 	}
 
-	matched := make([]osapi.Agent, 0, len(agents))
+	matched := make([]osapi.AgentInfo, 0, len(agents))
 	for _, a := range agents {
 		if MatchAll(a, predicates...) {
 			matched = append(matched, a)
@@ -62,7 +62,7 @@ func (o *Orchestrator) Discover(
 // the result.
 func (o *Orchestrator) fetchAgents(
 	ctx context.Context,
-) ([]osapi.Agent, error) {
+) ([]osapi.AgentInfo, error) {
 	client := osapi.New(o.url, o.token)
 	plan := engine.NewPlan(client)
 
@@ -91,12 +91,12 @@ func (o *Orchestrator) fetchAgents(
 
 	report := &Report{Tasks: sdkReport.Tasks, Duration: sdkReport.Duration}
 
-	var list osapi.AgentList
+	var list osapi.ListAgentsResponse
 	if err := report.Decode(fetchAgentsDecodeName, &list); err != nil {
 		return nil, fmt.Errorf("decode agent list: %w", err)
 	}
 
-	return list.Agents, nil
+	return list.Items, nil
 }
 
 // GroupByFact queries agents, optionally filters by predicates,
@@ -105,13 +105,13 @@ func (o *Orchestrator) GroupByFact(
 	ctx context.Context,
 	key string,
 	predicates ...Predicate,
-) (map[string][]osapi.Agent, error) {
+) (map[string][]osapi.AgentInfo, error) {
 	agents, err := o.Discover(ctx, predicates...)
 	if err != nil {
 		return nil, fmt.Errorf("group by fact: %w", err)
 	}
 
-	groups := make(map[string][]osapi.Agent)
+	groups := make(map[string][]osapi.AgentInfo)
 	for _, a := range agents {
 		v := factValue(a, key)
 		if v == "" {
@@ -126,21 +126,13 @@ func (o *Orchestrator) GroupByFact(
 
 // factValue extracts a string value from an agent for grouping.
 func factValue(
-	a osapi.Agent,
+	a osapi.AgentInfo,
 	key string,
 ) string {
 	switch key {
 	case "os.distribution":
-		if a.OSInfo == nil {
-			return ""
-		}
-
 		return a.OSInfo.Distribution
 	case "os.version":
-		if a.OSInfo == nil {
-			return ""
-		}
-
 		return a.OSInfo.Version
 	case "architecture":
 		return a.Architecture
@@ -151,10 +143,6 @@ func factValue(
 	case "kernel_version":
 		return a.KernelVersion
 	default:
-		if a.Facts == nil {
-			return ""
-		}
-
 		v, _ := a.Facts[key].(string)
 
 		return v

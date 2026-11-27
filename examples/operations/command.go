@@ -68,10 +68,10 @@ func main() {
 	health := o.HealthCheck()
 
 	// Direct execution: runs the binary with args.
-	o.CommandExec("_any", "uptime").After(health)
+	o.CommandExec("_any", osapi.CommandExecInput{Command: "uptime"}).After(health)
 
 	// Shell execution: interpreted by /bin/sh, supports pipes.
-	o.CommandShell("_any", "uname -a").After(health)
+	o.CommandShell("_any", osapi.CommandShellInput{Command: "uname -a"}).After(health)
 
 	report, err := o.Run(context.Background())
 	if err != nil {
@@ -91,7 +91,7 @@ func main() {
 
 	o2 := orchestrator.New(url, token)
 
-	o2.CommandExec("_any", "ls", "/nonexistent").
+	o2.CommandExec("_any", osapi.CommandExecInput{Command: "ls", Args: []string{"/nonexistent"}}).
 		ContinueOnError()
 
 	report2, err := o2.Run(context.Background())

@@ -42,6 +42,8 @@ import (
 	"log"
 	"os"
 
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
+
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
@@ -60,18 +62,18 @@ func main() {
 
 	// Broadcast deploy to all hosts. Continue allows the plan to
 	// proceed even if some hosts fail.
-	deploy := o.CommandShell("_all", "cat /nonexistent-file").
+	deploy := o.CommandShell("_all", osapi.CommandShellInput{Command: "cat /nonexistent-file"}).
 		Named("deploy").
 		ContinueOnError()
 
 	// Cleanup runs only if at least one host reported an error.
-	o.CommandExec("_any", "echo", "running-cleanup").
+	o.CommandExec("_any", osapi.CommandExecInput{Command: "echo", Args: []string{"running-cleanup"}}).
 		Named("cleanup").
 		After(deploy).
 		OnlyIfAnyHostFailed()
 
 	// Verification runs only if every host reported a change.
-	o.CommandExec("_all", "echo", "verifying").
+	o.CommandExec("_all", osapi.CommandExecInput{Command: "echo", Args: []string{"verifying"}}).
 		Named("verify").
 		After(deploy).
 		OnlyIfAllHostsChanged()

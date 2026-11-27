@@ -67,7 +67,7 @@ func (s *StepPublicTestSuite) TestAfter() {
 			name: "After returns same step",
 			chainFn: func() *orchestrator.Step {
 				health := s.orch.HealthCheck()
-				step := s.orch.NodeHostnameGet("_any")
+				step := s.orch.HostnameGet("_any")
 
 				return step.After(health)
 			},
@@ -79,8 +79,8 @@ func (s *StepPublicTestSuite) TestAfter() {
 			name: "After with multiple dependencies",
 			chainFn: func() *orchestrator.Step {
 				health := s.orch.HealthCheck()
-				disk := s.orch.NodeDiskGet("_any")
-				step := s.orch.NodeHostnameGet("_any")
+				disk := s.orch.DiskGet("_any")
+				step := s.orch.HostnameGet("_any")
 
 				return step.After(health, disk)
 			},
@@ -93,7 +93,7 @@ func (s *StepPublicTestSuite) TestAfter() {
 			chainFn: func() *orchestrator.Step {
 				health := s.orch.HealthCheck()
 
-				return s.orch.NodeHostnameGet("_any").
+				return s.orch.HostnameGet("_any").
 					After(health).
 					Retry(2).
 					OnlyIfChanged().
@@ -126,7 +126,7 @@ func (s *StepPublicTestSuite) TestRetry() {
 		{
 			name: "Retry returns same step",
 			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").Retry(3)
+				return s.orch.HostnameGet("_any").Retry(3)
 			},
 			validateFunc: func(step *orchestrator.Step) {
 				s.NotNil(step)
@@ -150,7 +150,7 @@ func (s *StepPublicTestSuite) TestOnlyIfChanged() {
 		{
 			name: "OnlyIfChanged returns same step",
 			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").OnlyIfChanged()
+				return s.orch.HostnameGet("_any").OnlyIfChanged()
 			},
 			validateFunc: func(step *orchestrator.Step) {
 				s.NotNil(step)
@@ -174,7 +174,7 @@ func (s *StepPublicTestSuite) TestWhen() {
 		{
 			name: "When returns same step",
 			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").When(func(
+				return s.orch.HostnameGet("_any").When(func(
 					_ orchestrator.Results,
 				) bool {
 					return true
@@ -202,7 +202,7 @@ func (s *StepPublicTestSuite) TestOnError() {
 		{
 			name: "OnError with Continue returns same step",
 			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").
+				return s.orch.HostnameGet("_any").
 					OnError(orchestrator.Continue)
 			},
 			validateFunc: func(step *orchestrator.Step) {
@@ -212,7 +212,7 @@ func (s *StepPublicTestSuite) TestOnError() {
 		{
 			name: "OnError with StopAll returns same step",
 			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").
+				return s.orch.HostnameGet("_any").
 					OnError(orchestrator.StopAll)
 			},
 			validateFunc: func(step *orchestrator.Step) {
@@ -222,7 +222,7 @@ func (s *StepPublicTestSuite) TestOnError() {
 		{
 			name: "ContinueOnError returns same step",
 			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").
+				return s.orch.HostnameGet("_any").
 					ContinueOnError()
 			},
 			validateFunc: func(step *orchestrator.Step) {
@@ -247,7 +247,7 @@ func (s *StepPublicTestSuite) TestOnlyIfFailed() {
 		{
 			name: "OnlyIfFailed returns non-nil step",
 			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").OnlyIfFailed()
+				return s.orch.HostnameGet("_any").OnlyIfFailed()
 			},
 			validateFunc: func(step *orchestrator.Step) {
 				s.NotNil(step)
@@ -271,7 +271,7 @@ func (s *StepPublicTestSuite) TestOnlyIfAllChanged() {
 		{
 			name: "OnlyIfAllChanged returns non-nil step",
 			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").OnlyIfAllChanged()
+				return s.orch.HostnameGet("_any").OnlyIfAllChanged()
 			},
 			validateFunc: func(step *orchestrator.Step) {
 				s.NotNil(step)
@@ -295,7 +295,7 @@ func (s *StepPublicTestSuite) TestOnlyIfAnyHostFailed() {
 		{
 			name: "OnlyIfAnyHostFailed returns non-nil step",
 			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").
+				return s.orch.HostnameGet("_any").
 					OnlyIfAnyHostFailed()
 			},
 			validateFunc: func(step *orchestrator.Step) {
@@ -320,7 +320,7 @@ func (s *StepPublicTestSuite) TestOnlyIfAllHostsFailed() {
 		{
 			name: "OnlyIfAllHostsFailed returns non-nil step",
 			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").
+				return s.orch.HostnameGet("_any").
 					OnlyIfAllHostsFailed()
 			},
 			validateFunc: func(step *orchestrator.Step) {
@@ -345,7 +345,7 @@ func (s *StepPublicTestSuite) TestOnlyIfAnyHostSkipped() {
 		{
 			name: "OnlyIfAnyHostSkipped returns non-nil step",
 			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").
+				return s.orch.HostnameGet("_any").
 					OnlyIfAnyHostSkipped()
 			},
 			validateFunc: func(step *orchestrator.Step) {
@@ -370,7 +370,7 @@ func (s *StepPublicTestSuite) TestOnlyIfAnyHostChanged() {
 		{
 			name: "OnlyIfAnyHostChanged returns non-nil step",
 			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").
+				return s.orch.HostnameGet("_any").
 					OnlyIfAnyHostChanged()
 			},
 			validateFunc: func(step *orchestrator.Step) {
@@ -395,7 +395,7 @@ func (s *StepPublicTestSuite) TestOnlyIfAllHostsChanged() {
 		{
 			name: "OnlyIfAllHostsChanged returns non-nil step",
 			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").
+				return s.orch.HostnameGet("_any").
 					OnlyIfAllHostsChanged()
 			},
 			validateFunc: func(step *orchestrator.Step) {
@@ -420,7 +420,7 @@ func (s *StepPublicTestSuite) TestNamed() {
 		{
 			name: "Named returns same step",
 			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").Named("custom")
+				return s.orch.HostnameGet("_any").Named("custom")
 			},
 			validateFunc: func(step *orchestrator.Step) {
 				s.NotNil(step)
@@ -444,9 +444,9 @@ func (s *StepPublicTestSuite) TestWhenFact() {
 		{
 			name: "WhenFact returns same step",
 			chainFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any").
+				return s.orch.HostnameGet("_any").
 					WhenFact(s.orch.AgentList(), func(
-						_ osapi.Agent,
+						_ osapi.AgentInfo,
 					) bool {
 						return true
 					})

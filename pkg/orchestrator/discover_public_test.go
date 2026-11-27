@@ -33,36 +33,36 @@ import (
 )
 
 const agentListJSON = `{
-	"agents": [
+	"items": [
 		{
 			"hostname": "web-01",
-			"status": "Ready",
+			"state": "Ready",
 			"architecture": "amd64",
 			"cpu_count": 8,
 			"os_info": {"distribution": "Ubuntu", "version": "22.04"},
-			"memory": {"total": 16000, "used": 8000, "free": 8000},
+			"memory": {"total_items": 16000, "used": 8000, "free": 8000},
 			"facts": {"env": "prod"}
 		},
 		{
 			"hostname": "web-02",
-			"status": "Ready",
+			"state": "Ready",
 			"architecture": "arm64",
 			"cpu_count": 4,
 			"os_info": {"distribution": "Debian", "version": "12"},
-			"memory": {"total": 8000, "used": 4000, "free": 4000},
+			"memory": {"total_items": 8000, "used": 4000, "free": 4000},
 			"facts": {"env": "staging"}
 		},
 		{
 			"hostname": "web-03",
-			"status": "Ready",
+			"state": "Ready",
 			"architecture": "amd64",
 			"cpu_count": 2,
 			"os_info": {"distribution": "Ubuntu", "version": "20.04"},
-			"memory": {"total": 4000, "used": 2000, "free": 2000},
+			"memory": {"total_items": 4000, "used": 2000, "free": 2000},
 			"facts": {"env": "prod"}
 		}
 	],
-	"total": 3
+	"total_items": 3
 }`
 
 type DiscoverPublicTestSuite struct {
@@ -97,12 +97,12 @@ func (s *DiscoverPublicTestSuite) TestDiscover() {
 		name         string
 		predicates   []orchestrator.Predicate
 		setupServer  func() *httptest.Server
-		validateFunc func([]osapi.Agent, error)
+		validateFunc func([]osapi.AgentInfo, error)
 	}{
 		{
 			name:       "No predicates returns all agents",
 			predicates: nil,
-			validateFunc: func(agents []osapi.Agent, err error) {
+			validateFunc: func(agents []osapi.AgentInfo, err error) {
 				s.Require().NoError(err)
 				s.Equal([]string{"web-01", "web-02", "web-03"}, s.hostnames(agents))
 			},
@@ -112,7 +112,7 @@ func (s *DiscoverPublicTestSuite) TestDiscover() {
 			predicates: []orchestrator.Predicate{
 				orchestrator.OS("Ubuntu"),
 			},
-			validateFunc: func(agents []osapi.Agent, err error) {
+			validateFunc: func(agents []osapi.AgentInfo, err error) {
 				s.Require().NoError(err)
 				s.Equal([]string{"web-01", "web-03"}, s.hostnames(agents))
 			},
@@ -123,7 +123,7 @@ func (s *DiscoverPublicTestSuite) TestDiscover() {
 				orchestrator.OS("Debian"),
 				orchestrator.Arch("arm64"),
 			},
-			validateFunc: func(agents []osapi.Agent, err error) {
+			validateFunc: func(agents []osapi.AgentInfo, err error) {
 				s.Require().NoError(err)
 				s.Equal([]string{"web-02"}, s.hostnames(agents))
 			},
@@ -134,7 +134,7 @@ func (s *DiscoverPublicTestSuite) TestDiscover() {
 				orchestrator.OS("Ubuntu"),
 				orchestrator.MinCPU(4),
 			},
-			validateFunc: func(agents []osapi.Agent, err error) {
+			validateFunc: func(agents []osapi.AgentInfo, err error) {
 				s.Require().NoError(err)
 				s.Equal([]string{"web-01"}, s.hostnames(agents))
 			},
@@ -144,14 +144,14 @@ func (s *DiscoverPublicTestSuite) TestDiscover() {
 			predicates: []orchestrator.Predicate{
 				orchestrator.OS("Fedora"),
 			},
-			validateFunc: func(agents []osapi.Agent, err error) {
+			validateFunc: func(agents []osapi.AgentInfo, err error) {
 				s.Require().NoError(err)
 				s.Equal([]string{}, s.hostnames(agents))
 			},
 		},
 		{
 			name: "Returns error when server returns unauthorized",
-			validateFunc: func(agents []osapi.Agent, err error) {
+			validateFunc: func(agents []osapi.AgentInfo, err error) {
 				s.Require().Error(err)
 				s.Contains(err.Error(), "discover")
 				s.Nil(agents)
@@ -192,12 +192,12 @@ func (s *DiscoverPublicTestSuite) TestGroupByFact() {
 		key          string
 		predicates   []orchestrator.Predicate
 		setupServer  func() *httptest.Server
-		validateFunc func(map[string][]osapi.Agent, error)
+		validateFunc func(map[string][]osapi.AgentInfo, error)
 	}{
 		{
 			name: "Group by os.distribution",
 			key:  "os.distribution",
-			validateFunc: func(groups map[string][]osapi.Agent, err error) {
+			validateFunc: func(groups map[string][]osapi.AgentInfo, err error) {
 				s.Require().NoError(err)
 				s.Equal(map[string][]string{
 					"Ubuntu": {"web-01", "web-03"},
@@ -208,7 +208,7 @@ func (s *DiscoverPublicTestSuite) TestGroupByFact() {
 		{
 			name: "Group by architecture",
 			key:  "architecture",
-			validateFunc: func(groups map[string][]osapi.Agent, err error) {
+			validateFunc: func(groups map[string][]osapi.AgentInfo, err error) {
 				s.Require().NoError(err)
 				s.Equal(map[string][]string{
 					"amd64": {"web-01", "web-03"},
@@ -228,16 +228,16 @@ func (s *DiscoverPublicTestSuite) TestGroupByFact() {
 						w.Header().Set("Content-Type", "application/json")
 						w.WriteHeader(http.StatusOK)
 						_, _ = w.Write([]byte(`{
-							"agents": [
+							"items": [
 								{"hostname":"web-01","os_info":{"distribution":"Ubuntu"}},
 								{"hostname":"web-02"}
 							],
-							"total": 2
+							"total_items": 2
 						}`))
 					}),
 				)
 			},
-			validateFunc: func(groups map[string][]osapi.Agent, err error) {
+			validateFunc: func(groups map[string][]osapi.AgentInfo, err error) {
 				s.Require().NoError(err)
 				s.Equal(map[string][]string{
 					"Ubuntu": {"web-01"},
@@ -250,7 +250,7 @@ func (s *DiscoverPublicTestSuite) TestGroupByFact() {
 			predicates: []orchestrator.Predicate{
 				orchestrator.OS("Ubuntu"),
 			},
-			validateFunc: func(groups map[string][]osapi.Agent, err error) {
+			validateFunc: func(groups map[string][]osapi.AgentInfo, err error) {
 				s.Require().NoError(err)
 				s.Equal(map[string][]string{
 					"Ubuntu": {"web-01", "web-03"},
@@ -260,7 +260,7 @@ func (s *DiscoverPublicTestSuite) TestGroupByFact() {
 		{
 			name: "Returns error when discover fails",
 			key:  "os.distribution",
-			validateFunc: func(groups map[string][]osapi.Agent, err error) {
+			validateFunc: func(groups map[string][]osapi.AgentInfo, err error) {
 				s.Require().Error(err)
 				s.Contains(err.Error(), "group by fact")
 				s.Nil(groups)
@@ -295,7 +295,7 @@ func (s *DiscoverPublicTestSuite) TestGroupByFact() {
 
 // hostnames reduces agents to the field the discovery cases assert on.
 func (s *DiscoverPublicTestSuite) hostnames(
-	agents []osapi.Agent,
+	agents []osapi.AgentInfo,
 ) []string {
 	out := make([]string, 0, len(agents))
 	for _, a := range agents {
@@ -308,7 +308,7 @@ func (s *DiscoverPublicTestSuite) hostnames(
 // groupHostnames applies hostnames to every group, so a case states the
 // grouping it expects as plain data.
 func (s *DiscoverPublicTestSuite) groupHostnames(
-	groups map[string][]osapi.Agent,
+	groups map[string][]osapi.AgentInfo,
 ) map[string][]string {
 	out := make(map[string][]string, len(groups))
 	for key, agents := range groups {

@@ -56,7 +56,7 @@ func main() {
 	o := orchestrator.New(url, token)
 
 	health := o.HealthCheck()
-	hostname := o.NodeHostnameGet("_any").After(health)
+	hostname := o.HostnameGet("_any").After(health)
 
 	// TaskFunc receives Results from prior steps.
 	o.TaskFunc(

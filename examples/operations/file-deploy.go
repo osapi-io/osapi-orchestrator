@@ -54,7 +54,7 @@ func main() {
 
 	configData := []byte("server:\n  port: 8080\n  debug: false\n")
 
-	deployOpts := osapi.FileDeployOpts{
+	deployOpts := osapi.NodeFileUpdateInput{
 		ObjectName:  "app-config.yaml",
 		Path:        "/tmp/app-config.yaml",
 		ContentType: "raw",
@@ -67,7 +67,8 @@ func main() {
 	fmt.Println("=== Phase 1: Cleanup ===")
 
 	o1 := newOrchestrator(url, token)
-	o1.CommandShell("_any", "rm -f /tmp/app-config.yaml").ContinueOnError()
+	o1.CommandShell("_any", osapi.CommandShellInput{Command: "rm -f /tmp/app-config.yaml"}).
+		ContinueOnError()
 	//nolint:errcheck
 	o1.Run(context.Background()) //nolint:errcheck
 
@@ -76,16 +77,16 @@ func main() {
 
 	o2 := newOrchestrator(url, token)
 	upload2 := o2.FileUpload("app-config.yaml", "raw", configData, orchestrator.WithForce())
-	deploy2 := o2.FileDeploy("_any", deployOpts).After(upload2)
-	o2.FileStatusGet("_any", "/tmp/app-config.yaml").After(deploy2)
+	deploy2 := o2.NodeFileUpdate("_any", deployOpts).After(upload2)
+	o2.NodeFileGet("_any", "/tmp/app-config.yaml").After(deploy2)
 
 	report2, err := o2.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var status2 osapi.FileStatusResult
-	if err := report2.Decode("file-status", &status2); err == nil {
+	var status2 osapi.FileStatus
+	if err := report2.Decode("get-node-file", &status2); err == nil {
 		fmt.Printf("File %s status: %s\n", status2.Path, status2.Status)
 	}
 
@@ -94,16 +95,16 @@ func main() {
 
 	o3 := newOrchestrator(url, token)
 	upload3 := o3.FileUpload("app-config.yaml", "raw", configData)
-	deploy3 := o3.FileDeploy("_any", deployOpts).After(upload3)
-	o3.FileStatusGet("_any", "/tmp/app-config.yaml").After(deploy3)
+	deploy3 := o3.NodeFileUpdate("_any", deployOpts).After(upload3)
+	o3.NodeFileGet("_any", "/tmp/app-config.yaml").After(deploy3)
 
 	report3, err := o3.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var status3 osapi.FileStatusResult
-	if err := report3.Decode("file-status", &status3); err == nil {
+	var status3 osapi.FileStatus
+	if err := report3.Decode("get-node-file", &status3); err == nil {
 		fmt.Printf("File %s status: %s\n", status3.Path, status3.Status)
 	}
 
@@ -111,15 +112,15 @@ func main() {
 	fmt.Println("\n=== Phase 4: Undeploy ===")
 
 	o4 := newOrchestrator(url, token)
-	o4.FileUndeploy("_any", "/tmp/app-config.yaml")
+	o4.NodeFileDelete("_any", osapi.NodeFileDeleteInput{Path: "/tmp/app-config.yaml"})
 
 	report4, err := o4.Run(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var undeploy osapi.FileUndeployResult
-	if err := report4.Decode("undeploy-file", &undeploy); err == nil {
+	var undeploy osapi.FileDeleteResult
+	if err := report4.Decode("delete-node-file", &undeploy); err == nil {
 		fmt.Printf("File undeployed, changed: %v\n", undeploy.Changed)
 	}
 }

@@ -1,9 +1,9 @@
 # FileUpload
 
 Uploads file content to the NATS Object Store through the OSAPI REST API. The
-operation returns the object name. Later [FileDeploy](deploy.md) steps use this
-name. The operation is a wrapper that uses `TaskFunc` to call the file upload
-API directly.
+operation returns the object name. Later
+[NodeFileUpdate](../../node-file/update.md) steps use this name. The operation
+is a wrapper that uses `TaskFunc` to call the file upload API directly.
 
 ## Usage
 
@@ -28,17 +28,17 @@ step := o.FileUpload(
 
 ## Parameters
 
-| Parameter     | Type              | Description                                            |
-| ------------- | ----------------- | ------------------------------------------------------ |
-| `name`        | `string`          | The object name for the stored file.                   |
-| `contentType` | `string`          | The content type: `"raw"` or `"template"`.             |
-| `data`        | `[]byte`          | The raw file content to upload.                        |
-| `opts`        | `...UploadOption` | Optional. Use `WithForce()` to skip the SHA-256 check. |
+| Parameter     | Type                | Description                                            |
+| ------------- | ------------------- | ------------------------------------------------------ |
+| `name`        | `string`            | The object name for the stored file.                   |
+| `contentType` | `types.ContentType` | The content type: `"raw"` or `"template"`.             |
+| `data`        | `[]byte`            | The raw file content to upload.                        |
+| `opts`        | `...UploadOption`   | Optional. Use `WithForce()` to skip the SHA-256 check. |
 
 ## Result type
 
 ```go
-var result osapi.FileUpload
+var result osapi.FileUploadResponse
 err := results.Decode("upload-file", &result)
 ```
 

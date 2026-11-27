@@ -36,6 +36,8 @@ import (
 	"log"
 	"os"
 
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
+
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
@@ -80,7 +82,7 @@ func main() {
 		fmt.Printf("Group %s (%d hosts): %s\n", distro, len(agents), cmd)
 
 		for _, a := range agents {
-			o.CommandShell(a.Hostname, cmd).
+			o.CommandShell(a.Hostname, osapi.CommandShellInput{Command: cmd}).
 				After(health).
 				ContinueOnError()
 		}

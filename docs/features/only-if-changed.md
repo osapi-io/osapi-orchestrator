@@ -6,7 +6,7 @@ the result).
 ## Usage
 
 ```go
-disk := o.NodeDiskGet("_any").After(health)
+disk := o.DiskGet("_any").After(health)
 
 o.CommandExec("_any", "df", "-h").
     Named("run-df").

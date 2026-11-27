@@ -73,7 +73,7 @@ WantedBy=multi-user.target
 	upload := o.FileUpload("osapi-example.service", "raw", unitFile,
 		orchestrator.WithForce())
 
-	create := o.ServiceCreate("_any", osapi.ServiceCreateOpts{
+	create := o.ServiceCreate("_any", osapi.ServiceCreateInput{
 		Name:   svcName,
 		Object: "osapi-example.service",
 	}).After(upload)
@@ -84,7 +84,8 @@ WantedBy=multi-user.target
 
 	get := o.ServiceGet("_any", svcName).After(enable)
 
-	update := o.ServiceUpdate("_any", svcName, osapi.ServiceUpdateOpts{
+	update := o.ServiceUpdate("_any", osapi.ServiceUpdateInput{
+		Name:   svcName,
 		Object: "osapi-example.service",
 	}).After(get)
 
@@ -103,9 +104,8 @@ WantedBy=multi-user.target
 		log.Fatal(err)
 	}
 
-	var svc osapi.ServiceGetResult
-	if err := report.Decode("get-service", &svc); err == nil && svc.Service != nil {
-		fmt.Printf("Service %q: status=%s, enabled=%v\n",
-			svc.Service.Name, svc.Service.Status, svc.Service.Enabled)
+	var svc osapi.ServiceEntry
+	if err := report.Decode("get-service", &svc); err == nil && svc.Name != "" {
+		fmt.Printf("Service %q: state=%s, enabled=%v\n", svc.Name, svc.State, svc.Enabled)
 	}
 }

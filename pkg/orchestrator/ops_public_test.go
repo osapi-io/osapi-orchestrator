@@ -21,8 +21,12 @@
 package orchestrator_test
 
 import (
+	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
@@ -31,2511 +35,1088 @@ import (
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
+// hostRow is the answer of the fake controller for a host op: one host
+// that changed, and a job.
+const hostRow = `{"results":[{"hostname":"web-01","status":"ok","changed":true}],"job_id":"job-1"}`
+
 type OpsPublicTestSuite struct {
 	suite.Suite
-
-	server *httptest.Server
-	orch   *orchestrator.Orchestrator
 }
 
-func (s *OpsPublicTestSuite) SetupTest() {
-	s.server = httptest.NewServer(
-		http.HandlerFunc(func(
-			w http.ResponseWriter,
-			_ *http.Request,
-		) {
-			w.WriteHeader(http.StatusOK)
-		}),
-	)
-
-	s.orch = orchestrator.New(s.server.URL, "test-token")
+// request is what the fake controller received.
+type request struct {
+	method string
+	path   string
+	body   string
 }
 
-func (s *OpsPublicTestSuite) TearDownTest() {
-	s.server.Close()
+// serve starts a fake controller that answers each request with status
+// and body, and records the requests.
+func (s *OpsPublicTestSuite) serve(
+	status int,
+	body string,
+) (*httptest.Server, *[]request) {
+	var got []request
+
+	server := httptest.NewServer(http.HandlerFunc(func(
+		w http.ResponseWriter,
+		r *http.Request,
+	) {
+		b, _ := io.ReadAll(r.Body)
+		got = append(got, request{method: r.Method, path: r.URL.Path, body: string(b)})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(status)
+		_, _ = w.Write([]byte(body))
+	}))
+	s.T().Cleanup(server.Close)
+
+	return server, &got
 }
 
-func (s *OpsPublicTestSuite) TestHealthCheck() {
+// run builds one step on an orchestrator that talks to server, and runs
+// the plan.
+func (s *OpsPublicTestSuite) run(
+	server *httptest.Server,
+	build func(*orchestrator.Orchestrator) *orchestrator.Step,
+) (*orchestrator.Report, error) {
+	o := orchestrator.New(server.URL, "test-token")
+	build(o)
+
+	return o.Run(context.Background())
+}
+
+// TestHostOps runs each op that targets hosts against a fake controller:
+// the request has the op's method and the host's path, and the report
+// has the host, the job, the step's name and whether the host changed.
+func (s *OpsPublicTestSuite) TestHostOps() {
 	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
+		name    string
+		build   func(*orchestrator.Orchestrator) *orchestrator.Step
+		method  string
+		step    string
+		changed bool
 	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.HealthCheck()
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:    "HostnameGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.HostnameGet("web-01") },
+			method:  http.MethodGet,
+			step:    "get-hostname",
+			changed: false,
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNodeHostnameUpdate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameUpdate("_any", "new-hostname")
+			name: "HostnameUpdate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.HostnameUpdate("web-01", osapi.HostnameUpdateInput{})
 			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			method:  http.MethodPut,
+			step:    "update-hostname",
+			changed: true,
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNodeOSGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NodeOSGet("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:    "StatusGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.StatusGet("web-01") },
+			method:  http.MethodGet,
+			step:    "get-status",
+			changed: false,
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNodeHostnameGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NodeHostnameGet("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:    "UptimeGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.UptimeGet("web-01") },
+			method:  http.MethodGet,
+			step:    "get-uptime",
+			changed: false,
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNodeStatusGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NodeStatusGet("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:    "DiskGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.DiskGet("web-01") },
+			method:  http.MethodGet,
+			step:    "get-disk",
+			changed: false,
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNodeUptimeGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NodeUptimeGet("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:    "MemoryGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.MemoryGet("web-01") },
+			method:  http.MethodGet,
+			step:    "get-memory",
+			changed: false,
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNodeDiskGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NodeDiskGet("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:    "LoadGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.LoadGet("web-01") },
+			method:  http.MethodGet,
+			step:    "get-load",
+			changed: false,
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNodeMemoryGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NodeMemoryGet("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:    "OSGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.OSGet("web-01") },
+			method:  http.MethodGet,
+			step:    "get-os",
+			changed: false,
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNodeLoadGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NodeLoadGet("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:    "DNSGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.DNSGet("web-01", "") },
+			method:  http.MethodGet,
+			step:    "get-dns",
+			changed: false,
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNetworkDNSGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NetworkDNSGet("_any", "eth0")
+			name: "DNSUpdate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.DNSUpdate("web-01", osapi.DNSUpdateInput{})
 			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			method:  http.MethodPut,
+			step:    "update-dns",
+			changed: true,
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNetworkDNSUpdate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NetworkDNSUpdate(
-					"_any",
-					"eth0",
-					[]string{"8.8.8.8"},
-					[]string{"example.com"},
+			name:    "DNSDelete",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.DNSDelete("web-01", "") },
+			method:  http.MethodDelete,
+			step:    "delete-dns",
+			changed: true,
+		},
+		{
+			name: "ConnectivityPing",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.ConnectivityPing("web-01", osapi.ConnectivityPingInput{})
+			},
+			method:  http.MethodPost,
+			step:    "ping-connectivity",
+			changed: true,
+		},
+		{
+			name:    "InterfaceList",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.InterfaceList("web-01") },
+			method:  http.MethodGet,
+			step:    "list-interface",
+			changed: false,
+		},
+		{
+			name:    "InterfaceGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.InterfaceGet("web-01", "") },
+			method:  http.MethodGet,
+			step:    "get-interface",
+			changed: false,
+		},
+		{
+			name: "InterfaceCreate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.InterfaceCreate("web-01", osapi.InterfaceCreateInput{})
+			},
+			method:  http.MethodPost,
+			step:    "create-interface",
+			changed: true,
+		},
+		{
+			name: "InterfaceUpdate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.InterfaceUpdate("web-01", osapi.InterfaceUpdateInput{})
+			},
+			method:  http.MethodPut,
+			step:    "update-interface",
+			changed: true,
+		},
+		{
+			name:    "InterfaceDelete",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.InterfaceDelete("web-01", "") },
+			method:  http.MethodDelete,
+			step:    "delete-interface",
+			changed: true,
+		},
+		{
+			name:    "InterfaceRouteList",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.InterfaceRouteList("web-01", "") },
+			method:  http.MethodGet,
+			step:    "list-interface-route",
+			changed: false,
+		},
+		{
+			name: "InterfaceRouteCreate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.InterfaceRouteCreate("web-01", osapi.InterfaceRouteCreateInput{})
+			},
+			method:  http.MethodPost,
+			step:    "create-interface-route",
+			changed: true,
+		},
+		{
+			name: "InterfaceRouteUpdate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.InterfaceRouteUpdate("web-01", osapi.InterfaceRouteUpdateInput{})
+			},
+			method:  http.MethodPut,
+			step:    "update-interface-route",
+			changed: true,
+		},
+		{
+			name: "InterfaceRouteDelete",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.InterfaceRouteDelete("web-01", osapi.InterfaceRouteDeleteInput{})
+			},
+			method:  http.MethodDelete,
+			step:    "delete-interface-route",
+			changed: true,
+		},
+		{
+			name:    "NodeFileGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.NodeFileGet("web-01", "") },
+			method:  http.MethodGet,
+			step:    "get-node-file",
+			changed: false,
+		},
+		{
+			name: "NodeFileUpdate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.NodeFileUpdate("web-01", osapi.NodeFileUpdateInput{})
+			},
+			method:  http.MethodPut,
+			step:    "update-node-file",
+			changed: true,
+		},
+		{
+			name: "NodeFileDelete",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.NodeFileDelete("web-01", osapi.NodeFileDeleteInput{})
+			},
+			method:  http.MethodDelete,
+			step:    "delete-node-file",
+			changed: true,
+		},
+		{
+			name: "DockerList",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.DockerList("web-01", osapi.DockerListParams{})
+			},
+			method:  http.MethodGet,
+			step:    "list-docker",
+			changed: false,
+		},
+		{
+			name:    "DockerGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.DockerGet("web-01", "") },
+			method:  http.MethodGet,
+			step:    "get-docker",
+			changed: false,
+		},
+		{
+			name: "DockerCreate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.DockerCreate("web-01", osapi.DockerCreateInput{})
+			},
+			method:  http.MethodPost,
+			step:    "create-docker",
+			changed: true,
+		},
+		{
+			name:    "DockerStart",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.DockerStart("web-01", "") },
+			method:  http.MethodPost,
+			step:    "start-docker",
+			changed: true,
+		},
+		{
+			name: "DockerStop",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.DockerStop("web-01", osapi.DockerStopInput{})
+			},
+			method:  http.MethodPost,
+			step:    "stop-docker",
+			changed: true,
+		},
+		{
+			name: "DockerExec",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.DockerExec("web-01", osapi.DockerExecInput{})
+			},
+			method:  http.MethodPost,
+			step:    "exec-docker",
+			changed: true,
+		},
+		{
+			name:    "DockerDelete",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.DockerDelete("web-01", "") },
+			method:  http.MethodDelete,
+			step:    "delete-docker",
+			changed: true,
+		},
+		{
+			name: "ImagePull",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.ImagePull("web-01", osapi.ImagePullInput{})
+			},
+			method:  http.MethodPost,
+			step:    "pull-image",
+			changed: true,
+		},
+		{
+			name: "ImageDelete",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.ImageDelete("web-01", osapi.ImageDeleteInput{})
+			},
+			method:  http.MethodDelete,
+			step:    "delete-image",
+			changed: true,
+		},
+		{
+			name:    "ScheduleList",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.ScheduleList("web-01") },
+			method:  http.MethodGet,
+			step:    "list-schedule",
+			changed: false,
+		},
+		{
+			name:    "ScheduleGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.ScheduleGet("web-01", "") },
+			method:  http.MethodGet,
+			step:    "get-schedule",
+			changed: false,
+		},
+		{
+			name: "ScheduleCreate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.ScheduleCreate("web-01", osapi.ScheduleCreateInput{})
+			},
+			method:  http.MethodPost,
+			step:    "create-schedule",
+			changed: true,
+		},
+		{
+			name: "ScheduleUpdate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.ScheduleUpdate("web-01", osapi.ScheduleUpdateInput{})
+			},
+			method:  http.MethodPut,
+			step:    "update-schedule",
+			changed: true,
+		},
+		{
+			name:    "ScheduleDelete",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.ScheduleDelete("web-01", "") },
+			method:  http.MethodDelete,
+			step:    "delete-schedule",
+			changed: true,
+		},
+		{
+			name: "SysctlList",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.SysctlList("web-01", osapi.SysctlListParams{})
+			},
+			method:  http.MethodGet,
+			step:    "list-sysctl",
+			changed: false,
+		},
+		{
+			name:    "SysctlGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.SysctlGet("web-01", "") },
+			method:  http.MethodGet,
+			step:    "get-sysctl",
+			changed: false,
+		},
+		{
+			name: "SysctlCreate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.SysctlCreate("web-01", osapi.SysctlCreateInput{})
+			},
+			method:  http.MethodPost,
+			step:    "create-sysctl",
+			changed: true,
+		},
+		{
+			name: "SysctlUpdate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.SysctlUpdate("web-01", osapi.SysctlUpdateInput{})
+			},
+			method:  http.MethodPut,
+			step:    "update-sysctl",
+			changed: true,
+		},
+		{
+			name:    "SysctlDelete",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.SysctlDelete("web-01", "") },
+			method:  http.MethodDelete,
+			step:    "delete-sysctl",
+			changed: true,
+		},
+		{
+			name:    "NTPGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.NTPGet("web-01") },
+			method:  http.MethodGet,
+			step:    "get-ntp",
+			changed: false,
+		},
+		{
+			name: "NTPCreate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.NTPCreate("web-01", osapi.NTPCreateInput{})
+			},
+			method:  http.MethodPost,
+			step:    "create-ntp",
+			changed: true,
+		},
+		{
+			name: "NTPUpdate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.NTPUpdate("web-01", osapi.NTPUpdateInput{})
+			},
+			method:  http.MethodPut,
+			step:    "update-ntp",
+			changed: true,
+		},
+		{
+			name:    "NTPDelete",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.NTPDelete("web-01") },
+			method:  http.MethodDelete,
+			step:    "delete-ntp",
+			changed: true,
+		},
+		{
+			name:    "TimezoneGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.TimezoneGet("web-01") },
+			method:  http.MethodGet,
+			step:    "get-timezone",
+			changed: false,
+		},
+		{
+			name: "TimezoneUpdate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.TimezoneUpdate("web-01", osapi.TimezoneUpdateInput{})
+			},
+			method:  http.MethodPut,
+			step:    "update-timezone",
+			changed: true,
+		},
+		{
+			name:    "ServiceList",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.ServiceList("web-01") },
+			method:  http.MethodGet,
+			step:    "list-service",
+			changed: false,
+		},
+		{
+			name:    "ServiceGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.ServiceGet("web-01", "") },
+			method:  http.MethodGet,
+			step:    "get-service",
+			changed: false,
+		},
+		{
+			name: "ServiceCreate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.ServiceCreate("web-01", osapi.ServiceCreateInput{})
+			},
+			method:  http.MethodPost,
+			step:    "create-service",
+			changed: true,
+		},
+		{
+			name: "ServiceUpdate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.ServiceUpdate("web-01", osapi.ServiceUpdateInput{})
+			},
+			method:  http.MethodPut,
+			step:    "update-service",
+			changed: true,
+		},
+		{
+			name:    "ServiceDelete",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.ServiceDelete("web-01", "") },
+			method:  http.MethodDelete,
+			step:    "delete-service",
+			changed: true,
+		},
+		{
+			name:    "ServiceStart",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.ServiceStart("web-01", "") },
+			method:  http.MethodPost,
+			step:    "start-service",
+			changed: true,
+		},
+		{
+			name:    "ServiceStop",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.ServiceStop("web-01", "") },
+			method:  http.MethodPost,
+			step:    "stop-service",
+			changed: true,
+		},
+		{
+			name:    "ServiceRestart",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.ServiceRestart("web-01", "") },
+			method:  http.MethodPost,
+			step:    "restart-service",
+			changed: true,
+		},
+		{
+			name:    "ServiceEnable",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.ServiceEnable("web-01", "") },
+			method:  http.MethodPost,
+			step:    "enable-service",
+			changed: true,
+		},
+		{
+			name:    "ServiceDisable",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.ServiceDisable("web-01", "") },
+			method:  http.MethodPost,
+			step:    "disable-service",
+			changed: true,
+		},
+		{
+			name:    "PackageList",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.PackageList("web-01") },
+			method:  http.MethodGet,
+			step:    "list-package",
+			changed: false,
+		},
+		{
+			name:    "PackageGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.PackageGet("web-01", "") },
+			method:  http.MethodGet,
+			step:    "get-package",
+			changed: false,
+		},
+		{
+			name: "PackageCreate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.PackageCreate("web-01", osapi.PackageCreateInput{})
+			},
+			method:  http.MethodPost,
+			step:    "create-package",
+			changed: true,
+		},
+		{
+			name:    "PackageDelete",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.PackageDelete("web-01", "") },
+			method:  http.MethodDelete,
+			step:    "delete-package",
+			changed: true,
+		},
+		{
+			name:    "PackageUpdatesList",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.PackageUpdatesList("web-01") },
+			method:  http.MethodGet,
+			step:    "list-package-updates",
+			changed: false,
+		},
+		{
+			name:    "PackageUpdatesUpdate",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.PackageUpdatesUpdate("web-01") },
+			method:  http.MethodPut,
+			step:    "update-package-updates",
+			changed: true,
+		},
+		{
+			name:    "UserList",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.UserList("web-01") },
+			method:  http.MethodGet,
+			step:    "list-user",
+			changed: false,
+		},
+		{
+			name:    "UserGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.UserGet("web-01", "") },
+			method:  http.MethodGet,
+			step:    "get-user",
+			changed: false,
+		},
+		{
+			name: "UserCreate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.UserCreate("web-01", osapi.UserCreateInput{})
+			},
+			method:  http.MethodPost,
+			step:    "create-user",
+			changed: true,
+		},
+		{
+			name: "UserUpdate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.UserUpdate("web-01", osapi.UserUpdateInput{})
+			},
+			method:  http.MethodPut,
+			step:    "update-user",
+			changed: true,
+		},
+		{
+			name:    "UserDelete",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.UserDelete("web-01", "") },
+			method:  http.MethodDelete,
+			step:    "delete-user",
+			changed: true,
+		},
+		{
+			name: "UserPasswordUpdate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.UserPasswordUpdate("web-01", osapi.UserPasswordUpdateInput{})
+			},
+			method:  http.MethodPut,
+			step:    "update-user-password",
+			changed: true,
+		},
+		{
+			name:    "UserSSHKeyList",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.UserSSHKeyList("web-01", "") },
+			method:  http.MethodGet,
+			step:    "list-user-ssh-key",
+			changed: false,
+		},
+		{
+			name: "UserSSHKeyCreate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.UserSSHKeyCreate("web-01", osapi.UserSSHKeyCreateInput{})
+			},
+			method:  http.MethodPost,
+			step:    "create-user-ssh-key",
+			changed: true,
+		},
+		{
+			name: "UserSSHKeyDelete",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.UserSSHKeyDelete("web-01", osapi.UserSSHKeyDeleteInput{})
+			},
+			method:  http.MethodDelete,
+			step:    "delete-user-ssh-key",
+			changed: true,
+		},
+		{
+			name:    "GroupList",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.GroupList("web-01") },
+			method:  http.MethodGet,
+			step:    "list-group",
+			changed: false,
+		},
+		{
+			name:    "GroupGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.GroupGet("web-01", "") },
+			method:  http.MethodGet,
+			step:    "get-group",
+			changed: false,
+		},
+		{
+			name: "GroupCreate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.GroupCreate("web-01", osapi.GroupCreateInput{})
+			},
+			method:  http.MethodPost,
+			step:    "create-group",
+			changed: true,
+		},
+		{
+			name: "GroupUpdate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.GroupUpdate("web-01", osapi.GroupUpdateInput{})
+			},
+			method:  http.MethodPut,
+			step:    "update-group",
+			changed: true,
+		},
+		{
+			name:    "GroupDelete",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.GroupDelete("web-01", "") },
+			method:  http.MethodDelete,
+			step:    "delete-group",
+			changed: true,
+		},
+		{
+			name:    "CertificateList",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.CertificateList("web-01") },
+			method:  http.MethodGet,
+			step:    "list-certificate",
+			changed: false,
+		},
+		{
+			name:    "CertificateGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.CertificateGet("web-01", "") },
+			method:  http.MethodGet,
+			step:    "get-certificate",
+			changed: false,
+		},
+		{
+			name: "CertificateCreate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.CertificateCreate("web-01", osapi.CertificateCreateInput{})
+			},
+			method:  http.MethodPost,
+			step:    "create-certificate",
+			changed: true,
+		},
+		{
+			name: "CertificateUpdate",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.CertificateUpdate("web-01", osapi.CertificateUpdateInput{})
+			},
+			method:  http.MethodPut,
+			step:    "update-certificate",
+			changed: true,
+		},
+		{
+			name:    "CertificateDelete",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.CertificateDelete("web-01", "") },
+			method:  http.MethodDelete,
+			step:    "delete-certificate",
+			changed: true,
+		},
+		{
+			name:    "ProcessList",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.ProcessList("web-01") },
+			method:  http.MethodGet,
+			step:    "list-process",
+			changed: false,
+		},
+		{
+			name:    "ProcessGet",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.ProcessGet("web-01", 0) },
+			method:  http.MethodGet,
+			step:    "get-process",
+			changed: false,
+		},
+		{
+			name: "ProcessSignal",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.ProcessSignal("web-01", osapi.ProcessSignalInput{})
+			},
+			method:  http.MethodPost,
+			step:    "signal-process",
+			changed: true,
+		},
+		{
+			name: "PowerReboot",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.PowerReboot("web-01", osapi.PowerRebootInput{})
+			},
+			method:  http.MethodPost,
+			step:    "reboot-power",
+			changed: true,
+		},
+		{
+			name: "PowerShutdown",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.PowerShutdown("web-01", osapi.PowerShutdownInput{})
+			},
+			method:  http.MethodPost,
+			step:    "shutdown-power",
+			changed: true,
+		},
+		{
+			name: "LogList",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.LogList("web-01", osapi.LogListParams{})
+			},
+			method:  http.MethodGet,
+			step:    "list-log",
+			changed: false,
+		},
+		{
+			name:    "LogSourceList",
+			build:   func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.LogSourceList("web-01") },
+			method:  http.MethodGet,
+			step:    "list-log-source",
+			changed: false,
+		},
+		{
+			name: "CommandExec",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.CommandExec("web-01", osapi.CommandExecInput{Command: "/usr/bin/uptime"})
+			},
+			method:  http.MethodPost,
+			step:    "run-uptime",
+			changed: true,
+		},
+		{
+			name: "CommandShell",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.CommandShell(
+					"web-01",
+					osapi.CommandShellInput{Command: "/bin/echo hi | wc"},
 				)
 			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			method:  http.MethodPost,
+			step:    "shell-echo",
+			changed: true,
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNetworkPingDo() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NetworkPingDo("_any", "8.8.8.8")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
+			name: "CommandShell with no words",
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.CommandShell("web-01", osapi.CommandShellInput{})
 			},
+			method:  http.MethodPost,
+			step:    "shell-shell",
+			changed: true,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
+			server, got := s.serve(http.StatusOK, hostRow)
 
-func (s *OpsPublicTestSuite) TestCommandExec() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.CommandExec("_any", "uptime", "-s")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
+			report, err := s.run(server, tc.build)
+			s.Require().NoError(err)
+			s.Require().Len(*got, 1)
+			s.Equal(tc.method, (*got)[0].method)
+			s.True(
+				strings.HasPrefix((*got)[0].path, "/api/node/web-01/"),
+				"path %s", (*got)[0].path,
+			)
 
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
+			s.Require().Len(report.Tasks, 1)
+			task := report.Tasks[0]
+			s.Equal(tc.step, task.Name)
+			s.Equal("job-1", task.JobID)
+			s.Equal(tc.changed, task.Changed)
+			s.Require().Len(task.HostResults, 1)
+			s.Equal("web-01", task.HostResults[0].Hostname)
+			s.Equal("ok", task.HostResults[0].Status)
+			s.Equal(tc.changed, task.HostResults[0].Changed)
+			s.Equal("web-01", task.HostResults[0].Data["hostname"])
 		})
 	}
 }
 
-func (s *OpsPublicTestSuite) TestCommandShell() {
+// TestHostOpRefusals covers what a host op does with an answer that is
+// not a success.
+func (s *OpsPublicTestSuite) TestHostOpRefusals() {
 	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
+		name      string
+		status    int
+		body      string
+		build     func(*orchestrator.Orchestrator) *orchestrator.Step
+		errSubstr string
+		hostError string
 	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.CommandShell("_any", "echo hello")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:      "The controller refuses the call",
+			status:    http.StatusUnauthorized,
+			body:      `{"error":"unauthorized"}`,
+			build:     func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.HostnameGet("web-01") },
+			errSubstr: "get-hostname",
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestAgentList() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.AgentList()
+			name:   "A host fails",
+			status: http.StatusOK,
+			body:   `{"results":[{"hostname":"web-01","status":"failed","error":"no such unit"}],"job_id":"j"}`,
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.ServiceStart("web-01", "nginx")
 			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			errSubstr: "no such unit",
+			hostError: "no such unit",
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestAgentGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.AgentGet("server1")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
+			name:   "A command exits non-zero",
+			status: http.StatusOK,
+			body:   `{"results":[{"hostname":"web-01","status":"ok","exit_code":3}],"job_id":"j"}`,
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.CommandExec("web-01", osapi.CommandExecInput{Command: "false"})
 			},
+			errSubstr: "exit code 3",
+			hostError: "exit code 3",
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestAgentDrain() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.AgentDrain("server1")
+			name:   "A command's error takes precedence over its exit code",
+			status: http.StatusOK,
+			body:   `{"results":[{"hostname":"web-01","status":"failed","exit_code":3,"error":"timed out"}],"job_id":"j"}`,
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.CommandShell("web-01", osapi.CommandShellInput{Command: "sleep 9"})
 			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			errSubstr: "timed out",
+			hostError: "timed out",
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
+			server, _ := s.serve(tc.status, tc.body)
 
-func (s *OpsPublicTestSuite) TestAgentUndrain() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.AgentUndrain("server1")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
+			report, err := s.run(server, tc.build)
+			s.Require().Error(err)
+			s.Contains(err.Error(), tc.errSubstr)
 
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
+			if tc.hostError != "" {
+				s.Require().Len(report.Tasks, 1)
+				s.Require().Len(report.Tasks[0].HostResults, 1)
+				s.Equal(tc.hostError, report.Tasks[0].HostResults[0].Error)
+			}
 		})
 	}
 }
 
-func (s *OpsPublicTestSuite) TestFileDeploy() {
+// TestControllerOps runs the ops that call the controller itself: health,
+// the Object Store and the agents.
+func (s *OpsPublicTestSuite) TestControllerOps() {
 	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
+		name      string
+		status    int
+		body      string
+		build     func(*orchestrator.Orchestrator) *orchestrator.Step
+		method    string
+		path      string
+		step      string
+		changed   bool
+		data      string
+		errSubstr string
 	}{
-		{
-			name: "Returns non-nil step with raw content type",
-			newFn: func() *orchestrator.Step {
-				return s.orch.FileDeploy("_any", osapi.FileDeployOpts{
-					ObjectName:  "config.yaml",
-					Path:        "/etc/app/config.yaml",
-					ContentType: "raw",
-					Mode:        "0644",
-					Owner:       "root",
-					Group:       "root",
-				})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
 		{
-			name: "Returns non-nil step with template content type and vars",
-			newFn: func() *orchestrator.Step {
-				return s.orch.FileDeploy("_any", osapi.FileDeployOpts{
-					ObjectName:  "config.tmpl",
-					Path:        "/etc/app/config.yaml",
-					ContentType: "template",
-					Vars:        map[string]any{"env": "prod"},
-				})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:   "HealthCheck",
+			status: http.StatusOK,
+			body:   `{"status":"ok"}`,
+			build:  func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.HealthCheck() },
+			method: http.MethodGet,
+			path:   "/api/health",
+			step:   "health-check",
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestFileStatusGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.FileStatusGet("_any", "/etc/app/config.yaml")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:      "HealthCheck refused",
+			status:    http.StatusServiceUnavailable,
+			body:      `{"error":"down"}`,
+			build:     func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.HealthCheck() },
+			errSubstr: "health check",
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestFileUndeploy() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.FileUndeploy("_any", "/etc/app/config.yaml")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
+			name:   "FileUpload with force replaces the object",
+			status: http.StatusOK,
+			body:   `{"name":"app.conf","changed":true}`,
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.FileUpload("app.conf", "raw", []byte("x"), orchestrator.WithForce())
 			},
+			method:  http.MethodPut,
+			path:    "/api/file/app.conf",
+			step:    "upload-file",
+			changed: true,
+			data:    "app.conf",
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestFileUpload() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.FileUpload("test.txt", "raw", []byte("hello"))
+			name:   "FileUpload refused",
+			status: http.StatusForbidden,
+			body:   `{"error":"forbidden"}`,
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.FileUpload("app.conf", "raw", []byte("x"), orchestrator.WithForce())
 			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			errSubstr: "upload file app.conf",
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestFileChanged() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.FileChanged("test.txt", []byte("hello"))
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
+			name:   "FileChanged",
+			status: http.StatusOK,
+			body:   `{"name":"app.conf","changed":true}`,
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.FileChanged("app.conf", []byte("x"))
 			},
+			method:  http.MethodGet,
+			path:    "/api/file/app.conf",
+			step:    "check-file",
+			changed: true,
+			data:    "app.conf",
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestDockerPull() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.DockerPull("_any", osapi.DockerPullOpts{
-					Image: "nginx:latest",
-				})
+			name:   "FileChanged refused",
+			status: http.StatusForbidden,
+			body:   `{"error":"forbidden"}`,
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.FileChanged("app.conf", []byte("x"))
 			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			errSubstr: "check file app.conf",
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestDockerCreate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.DockerCreate("_any", osapi.DockerCreateOpts{
-					Image: "nginx",
-					Name:  "web",
-				})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:   "AgentList",
+			status: http.StatusOK,
+			body:   `{"items":[{"hostname":"web-01"}],"total_items":1}`,
+			build:  func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.AgentList() },
+			method: http.MethodGet,
+			path:   "/api/agent",
+			step:   "list-agents",
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestDockerStart() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.DockerStart("_any", "c1")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:      "AgentList refused",
+			status:    http.StatusForbidden,
+			body:      `{"error":"forbidden"}`,
+			build:     func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.AgentList() },
+			errSubstr: "list agents",
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestDockerStop() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.DockerStop("_any", "c1", osapi.DockerStopOpts{
-					Timeout: 10,
-				})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:   "AgentGet",
+			status: http.StatusOK,
+			body:   `{"hostname":"web-01"}`,
+			build:  func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.AgentGet("web-01") },
+			method: http.MethodGet,
+			path:   "/api/agent/web-01",
+			step:   "get-agent",
+			data:   "web-01",
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestDockerRemove() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.DockerRemove(
-					"_any",
-					"c1",
-					&osapi.DockerRemoveParams{Force: true},
-				)
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:      "AgentGet refused",
+			status:    http.StatusNotFound,
+			body:      `{"error":"no agent"}`,
+			build:     func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.AgentGet("web-01") },
+			errSubstr: "get agent web-01",
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestDockerExec() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.DockerExec(
-					"_any",
-					"c1",
-					osapi.DockerExecOpts{
-						Command: []string{"echo", "hello"},
-					},
-				)
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:   "AgentDrain",
+			status: http.StatusNoContent,
+			build:  func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.AgentDrain("web-01") },
+			method: http.MethodPost,
+			path:   "/api/agent/web-01/drain",
+			step:   "drain-agent",
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestDockerInspect() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.DockerInspect("_any", "c1")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:   "AgentUndrain",
+			status: http.StatusNoContent,
+			build:  func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.AgentUndrain("web-01") },
+			method: http.MethodPost,
+			path:   "/api/agent/web-01/undrain",
+			step:   "undrain-agent",
 		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestDockerList() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
 		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.DockerList("_any", &osapi.DockerListParams{
-					State: "running",
-				})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
+			name:      "AgentDrain refused",
+			status:    http.StatusNotFound,
+			body:      `{"error":"no agent"}`,
+			build:     func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.AgentDrain("web-01") },
+			errSubstr: "drain-agent web-01",
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
+			server, got := s.serve(tc.status, tc.body)
 
-func (s *OpsPublicTestSuite) TestDockerImageRemove() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.DockerImageRemove(
-					"_any",
-					"nginx:latest",
-					&osapi.DockerRemoveImageParams{Force: true},
-				)
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
+			report, err := s.run(server, tc.build)
+			if tc.errSubstr != "" {
+				s.Require().Error(err)
+				s.Contains(err.Error(), tc.errSubstr)
 
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
+				return
+			}
 
-func (s *OpsPublicTestSuite) TestScheduleList() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ScheduleList("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
+			s.Require().NoError(err)
+			last := (*got)[len(*got)-1]
+			s.Equal(tc.method, last.method)
+			s.Equal(tc.path, last.path)
+			s.Require().Len(report.Tasks, 1)
+			s.Equal(tc.step, report.Tasks[0].Name)
+			s.Equal(tc.changed, report.Tasks[0].Changed)
 
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
+			if tc.data != "" {
+				raw, _ := json.Marshal(report.Tasks[0].Data)
+				s.Contains(string(raw), tc.data)
+			}
 		})
 	}
 }
 
-func (s *OpsPublicTestSuite) TestScheduleGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ScheduleGet("_any", "backup")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
+// TestFileUploadSkipsTheSameContent covers the upload with no force: the
+// SDK reads the stored object first, and a matching digest uploads nothing.
+func (s *OpsPublicTestSuite) TestFileUploadSkipsTheSameContent() {
+	// The SHA-256 of "x".
+	const sum = "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881"
 
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
+	server, got := s.serve(http.StatusOK, `{"name":"app.conf","sha256":"`+sum+`"}`)
 
-func (s *OpsPublicTestSuite) TestScheduleCreate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ScheduleCreate("_any", osapi.ScheduleCreateOpts{
-					Name:     "backup",
-					Object:   "backup.sh",
-					Schedule: "0 2 * * *",
-				})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestScheduleUpdate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ScheduleUpdate("_any", "backup", osapi.ScheduleUpdateOpts{
-					Schedule: "0 3 * * *",
-				})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestScheduleDelete() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ScheduleDelete("_any", "backup")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNetworkDNSDelete() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NetworkDNSDelete("_any", "eth0")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestInterfaceList() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.InterfaceList("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestInterfaceGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.InterfaceGet("_any", "eth0")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestInterfaceCreate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.InterfaceCreate("_any", "eth0", osapi.InterfaceConfigOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestInterfaceUpdate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.InterfaceUpdate("_any", "eth0", osapi.InterfaceConfigOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestInterfaceDelete() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.InterfaceDelete("_any", "eth0")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestRouteList() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.RouteList("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestRouteGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.RouteGet("_any", "eth0")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestRouteCreate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.RouteCreate("_any", "eth0", osapi.RouteConfigOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestRouteUpdate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.RouteUpdate("_any", "eth0", osapi.RouteConfigOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestRouteDelete() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.RouteDelete("_any", "eth0")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestSysctlList() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.SysctlList("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestSysctlGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.SysctlGet("_any", "net.ipv4.ip_forward")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestSysctlCreate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.SysctlCreate("_any", osapi.SysctlCreateOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestSysctlUpdate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.SysctlUpdate("_any", "net.ipv4.ip_forward", osapi.SysctlUpdateOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestSysctlDelete() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.SysctlDelete("_any", "net.ipv4.ip_forward")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNTPGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NTPGet("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNTPCreate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NTPCreate("_any", osapi.NtpCreateOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNTPUpdate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NTPUpdate("_any", osapi.NtpUpdateOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestNTPDelete() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.NTPDelete("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestTimezoneGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.TimezoneGet("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestTimezoneUpdate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.TimezoneUpdate("_any", osapi.TimezoneUpdateOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestServiceList() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceList("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestServiceGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceGet("_any", "nginx")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestServiceCreate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceCreate("_any", osapi.ServiceCreateOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestServiceUpdate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceUpdate("_any", "nginx", osapi.ServiceUpdateOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestServiceDelete() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceDelete("_any", "nginx")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestServiceStart() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceStart("_any", "nginx")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestServiceStop() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceStop("_any", "nginx")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestServiceRestart() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceRestart("_any", "nginx")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestServiceEnable() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceEnable("_any", "nginx")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestServiceDisable() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ServiceDisable("_any", "nginx")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestPackageList() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.PackageList("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestPackageGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.PackageGet("_any", "nginx")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestPackageInstall() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.PackageInstall("_any", "nginx")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestPackageRemove() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.PackageRemove("_any", "nginx")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestPackageUpdate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.PackageUpdate("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestPackageListUpdates() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.PackageListUpdates("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestUserList() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.UserList("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestUserGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.UserGet("_any", "admin")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestUserCreate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.UserCreate("_any", osapi.UserCreateOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestUserUpdate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.UserUpdate("_any", "admin", osapi.UserUpdateOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestUserDelete() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.UserDelete("_any", "admin")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestUserListKeys() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.UserListKeys("_any", "admin")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestUserAddKey() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.UserAddKey("_any", "admin", osapi.SSHKeyAddOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestUserRemoveKey() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.UserRemoveKey("_any", "admin", "SHA256:abc123")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestUserChangePassword() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.UserChangePassword("_any", "admin", "newpass")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestGroupList() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.GroupList("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestGroupGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.GroupGet("_any", "admins")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestGroupCreate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.GroupCreate("_any", osapi.GroupCreateOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestGroupUpdate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.GroupUpdate("_any", "admins", osapi.GroupUpdateOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestGroupDelete() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.GroupDelete("_any", "admins")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestCertificateList() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.CertificateList("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestCertificateCreate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.CertificateCreate("_any", osapi.CertificateCreateOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestCertificateUpdate() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.CertificateUpdate("_any", "my-ca", osapi.CertificateUpdateOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestCertificateDelete() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.CertificateDelete("_any", "my-ca")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestProcessList() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ProcessList("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestProcessGet() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ProcessGet("_any", 1234)
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestProcessSignal() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.ProcessSignal("_any", 1234, osapi.ProcessSignalOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestPowerReboot() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.PowerReboot("_any", osapi.PowerOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestPowerShutdown() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.PowerShutdown("_any", osapi.PowerOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestLogQuery() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.LogQuery("_any", osapi.LogQueryOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestLogSources() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.LogSources("_any")
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
-}
-
-func (s *OpsPublicTestSuite) TestLogQueryUnit() {
-	tests := []struct {
-		name         string
-		newFn        func() *orchestrator.Step
-		validateFunc func(*orchestrator.Step)
-	}{
-		{
-			name: "Returns non-nil step",
-			newFn: func() *orchestrator.Step {
-				return s.orch.LogQueryUnit("_any", "nginx.service", osapi.LogQueryOpts{})
-			},
-			validateFunc: func(step *orchestrator.Step) {
-				s.NotNil(step)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			tc.validateFunc(tc.newFn())
-		})
-	}
+	report, err := s.run(server, func(o *orchestrator.Orchestrator) *orchestrator.Step {
+		return o.FileUpload("app.conf", "raw", []byte("x"))
+	})
+	s.Require().NoError(err)
+	s.Require().Len(*got, 1, "only the read of the stored object")
+	s.Equal(http.MethodGet, (*got)[0].method)
+	s.False(report.Tasks[0].Changed)
 }
 
-func TestOpsPublicTestSuite(
-	t *testing.T,
-) {
+func TestOpsPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(OpsPublicTestSuite))
 }

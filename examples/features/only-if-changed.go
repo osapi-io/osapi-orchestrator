@@ -58,7 +58,7 @@ func main() {
 	// Phase 1: Cleanup
 	fmt.Println("=== Phase 1: Cleanup ===")
 	o1 := orchestrator.New(url, token)
-	o1.CommandShell("_any", "rm -f /tmp/only-if-changed.txt").
+	o1.CommandShell("_any", osapi.CommandShellInput{Command: "rm -f /tmp/only-if-changed.txt"}).
 		ContinueOnError()
 	o1.Run(context.Background()) //nolint:errcheck
 
@@ -66,13 +66,13 @@ func main() {
 	fmt.Println("\n=== Phase 2: Deploy file (expect changed, post-deploy runs) ===")
 	o2 := orchestrator.New(url, token)
 	upload2 := o2.FileUpload("only-if-changed.txt", "raw", content, orchestrator.WithForce())
-	deploy2 := o2.FileDeploy("_any", osapi.FileDeployOpts{
+	deploy2 := o2.NodeFileUpdate("_any", osapi.NodeFileUpdateInput{
 		ObjectName:  "only-if-changed.txt",
 		Path:        "/tmp/only-if-changed.txt",
 		ContentType: "raw",
 		Mode:        "0644",
 	}).After(upload2)
-	o2.CommandExec("_any", "echo", "post-deploy-hook").
+	o2.CommandExec("_any", osapi.CommandExecInput{Command: "echo", Args: []string{"post-deploy-hook"}}).
 		Named("post-deploy").
 		After(deploy2).
 		OnlyIfChanged()
@@ -84,13 +84,13 @@ func main() {
 	fmt.Println("\n=== Phase 3: Same deploy (expect unchanged, post-deploy skipped) ===")
 	o3 := orchestrator.New(url, token)
 	upload3 := o3.FileUpload("only-if-changed.txt", "raw", content)
-	deploy3 := o3.FileDeploy("_any", osapi.FileDeployOpts{
+	deploy3 := o3.NodeFileUpdate("_any", osapi.NodeFileUpdateInput{
 		ObjectName:  "only-if-changed.txt",
 		Path:        "/tmp/only-if-changed.txt",
 		ContentType: "raw",
 		Mode:        "0644",
 	}).After(upload3)
-	o3.CommandExec("_any", "echo", "post-deploy-hook").
+	o3.CommandExec("_any", osapi.CommandExecInput{Command: "echo", Args: []string{"post-deploy-hook"}}).
 		Named("post-deploy").
 		After(deploy3).
 		OnlyIfChanged()
@@ -101,7 +101,7 @@ func main() {
 	// Phase 4: Cleanup
 	fmt.Println("\n=== Phase 4: Cleanup ===")
 	o4 := orchestrator.New(url, token)
-	o4.CommandShell("_any", "rm -f /tmp/only-if-changed.txt").
+	o4.CommandShell("_any", osapi.CommandShellInput{Command: "rm -f /tmp/only-if-changed.txt"}).
 		ContinueOnError()
 	o4.Run(context.Background()) //nolint:errcheck
 }

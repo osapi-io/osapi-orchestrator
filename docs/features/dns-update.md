@@ -6,9 +6,9 @@ configuration. Then update it with new servers.
 ## Usage
 
 ```go
-getDNS := o.NetworkDNSGet("_any", "eth0").After(health)
+getDNS := o.DNSGet("_any", "eth0").After(health)
 
-o.NetworkDNSUpdate(
+o.DNSUpdate(
     "_any",
     "eth0",
     []string{"8.8.8.8", "8.8.4.4"},
