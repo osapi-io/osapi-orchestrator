@@ -6,11 +6,11 @@ Use `OnlyIfFailed` to start a cleanup step only after a failure.
 ## Usage
 
 ```go
-deploy := o.CommandExec("_all", "echo", "deploying").
+deploy := o.CommandExec("_all", osapi.CommandExecInput{Command: "echo", Args: []string{"deploying"}}).
     Named("deploy").
     OnError(orchestrator.Continue)
 
-o.CommandExec("_any", "echo", "running-cleanup").
+o.CommandExec("_any", osapi.CommandExecInput{Command: "echo", Args: []string{"running-cleanup"}}).
     Named("cleanup").
     After(deploy).
     OnlyIfFailed()
@@ -78,18 +78,18 @@ For a broadcast operation, `OnlyIfFailed` triggers when the task-level status is
 from the result of each host, use the host-level guards:
 
 ```go
-deploy := o.CommandExec("_all", "deploy.sh").
+deploy := o.CommandExec("_all", osapi.CommandExecInput{Command: "deploy.sh"}).
     Named("deploy").
     OnError(orchestrator.Continue)
 
 // Run cleanup when at least one host failed (not all).
-o.CommandExec("_any", "partial-cleanup.sh").
+o.CommandExec("_any", osapi.CommandExecInput{Command: "partial-cleanup.sh"}).
     Named("partial-cleanup").
     After(deploy).
     OnlyIfAnyHostFailed()
 
 // Run full rollback only when every host failed.
-o.CommandExec("_all", "rollback.sh").
+o.CommandExec("_all", osapi.CommandExecInput{Command: "rollback.sh"}).
     Named("full-rollback").
     After(deploy).
     OnlyIfAllHostsFailed()

@@ -30,7 +30,7 @@ With the client parameter, you can call an SDK operation directly:
 o.TaskFunc(
     "custom-check",
     func(ctx context.Context, c *osapi.Client, _ orchestrator.Results) (*orchestrator.Result, error) {
-        resp, err := c.Health.GetStatus(ctx)
+        resp, err := c.Health.Status(ctx, osapi.HealthStatusParams{})
         if err != nil {
             return nil, err
         }

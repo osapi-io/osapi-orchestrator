@@ -12,7 +12,7 @@ o.HostnameGet("_all")
 To target by label:
 
 ```go
-o.CommandExec("group:web", "uptime")
+o.CommandExec("group:web", osapi.CommandExecInput{Command: "uptime"})
 ```
 
 ## Per-host results
