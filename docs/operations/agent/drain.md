@@ -18,12 +18,15 @@ step := o.AgentDrain("web-01")
 
 ## Result
 
-The controller answers with no data, so the step has no result to decode. A
-refusal fails the step.
+The controller answers with no data, so the step has no result to decode. The
+step is changed when the agent drains. A refusal fails the step.
 
 ## Idempotency
 
-**Idempotent.** If the agent is already drained, the operation does nothing.
+**Idempotent.** If the agent is already drained, the controller answers with
+409, and the step is unchanged, not failed. Thus a retry and a second run of the
+plan succeed, and an `OnlyIfChanged` step after it runs only when the state
+changed.
 
 ## Permissions
 
