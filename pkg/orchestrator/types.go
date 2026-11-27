@@ -37,8 +37,6 @@ var StructToMap = engine.StructToMap
 // Orchestrator is the top-level entry point for building and running
 // infrastructure plans.
 type Orchestrator struct {
-	url       string
-	token     string
 	plan      *engine.Plan
 	nameCount map[string]int
 	renderer  renderer

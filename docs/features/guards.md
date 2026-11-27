@@ -13,6 +13,12 @@ step with guards. The failure guards are the exception: `OnlyIfFailed`,
 `OnlyIfAnyHostFailed` and `OnlyIfAllHostsFailed` run after a failed dependency.
 Their other guards still apply.
 
+A step that a guard skipped is not a failure. So a step that depends on it still
+runs. The skipped step only gave it no result: its `Changed` is false and
+`Decode` of it returns an error. To run a step only when its dependency did
+work, give the step `OnlyIfChanged`. A step that depends on a step skipped
+because its own dependency failed is skipped too.
+
 ## When
 
 `When` takes a predicate function. The function receives the results of the

@@ -27,6 +27,17 @@ A broadcast operation returns a `HostResult` for each agent that responds:
 | `Error`    | `string`         | The error message if the operation failed. Empty on success. |
 | `Data`     | `map[string]any` | The response data from this host                             |
 
+`Data` is the host's row as the osapi SDK encodes it to JSON. The SDK leaves out
+a field that is zero, so an `exit_code` of 0 or an empty `stdout` is not in the
+map. To read each field, use `Decode` into the SDK's type:
+
+```go
+var cmd osapi.CommandResult
+if err := hr.Decode(&cmd); err == nil {
+    fmt.Println(cmd.ExitCode) // 0 is here
+}
+```
+
 ### Host status values
 
 | Value     | Meaning                                 |
