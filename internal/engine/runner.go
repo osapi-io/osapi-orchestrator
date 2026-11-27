@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"runtime/debug"
+	"strings"
 	"sync"
 	"time"
 )
@@ -58,13 +59,17 @@ func (r *runner) run(
 
 	r.callBeforePlan(buildPlanSummary(r.plan.tasks, levels))
 
-	var taskResults []TaskResult
+	var (
+		taskResults  []TaskResult
+		continueErrs []error
+	)
 
 	for i, level := range levels {
 		r.callBeforeLevel(i, level, len(level) > 1)
 
-		results, err := r.runLevel(ctx, level)
+		results, continued, err := r.runLevel(ctx, level)
 		taskResults = append(taskResults, results...)
+		continueErrs = append(continueErrs, continued...)
 
 		r.callAfterLevel(i, results)
 
@@ -77,7 +82,7 @@ func (r *runner) run(
 		if err != nil {
 			for _, rest := range levels[i+1:] {
 				for _, t := range rest {
-					taskResults = append(taskResults, r.skip(t, start, "plan stopped"))
+					taskResults = append(taskResults, r.skipStopped(t))
 				}
 			}
 
@@ -88,7 +93,7 @@ func (r *runner) run(
 
 			r.callAfterPlan(report)
 
-			return report, err
+			return report, errors.Join(append([]error{err}, continueErrs...)...)
 		}
 	}
 
@@ -99,7 +104,9 @@ func (r *runner) run(
 
 	r.callAfterPlan(report)
 
-	return report, nil
+	// A step that failed with Continue let the plan go on, and the run
+	// still reports its failure.
+	return report, errors.Join(continueErrs...)
 }
 
 // hook returns the plan's hooks or nil.
@@ -112,8 +119,17 @@ func (r *runner) callBeforePlan(
 	summary PlanSummary,
 ) {
 	if h := r.hook(); h != nil && h.BeforePlan != nil {
+		defer recoverHook()
+
 		h.BeforePlan(summary)
 	}
+}
+
+// recoverHook drops a panic in a plan or level hook. A hook only
+// observes the run, so a panic in it must not stop the plan or the
+// process.
+func recoverHook() {
+	_ = recover()
 }
 
 // buildPlanSummary creates a PlanSummary from tasks and levels.
@@ -145,6 +161,8 @@ func (r *runner) callAfterPlan(
 	report *Report,
 ) {
 	if h := r.hook(); h != nil && h.AfterPlan != nil {
+		defer recoverHook()
+
 		h.AfterPlan(report)
 	}
 }
@@ -156,6 +174,8 @@ func (r *runner) callBeforeLevel(
 	parallel bool,
 ) {
 	if h := r.hook(); h != nil && h.BeforeLevel != nil {
+		defer recoverHook()
+
 		h.BeforeLevel(level, tasks, parallel)
 	}
 }
@@ -166,6 +186,8 @@ func (r *runner) callAfterLevel(
 	results []TaskResult,
 ) {
 	if h := r.hook(); h != nil && h.AfterLevel != nil {
+		defer recoverHook()
+
 		h.AfterLevel(level, results)
 	}
 }
@@ -234,6 +256,28 @@ func (r *runner) skip(
 	return tr
 }
 
+// skipStopped skips a task of a level that the plan did not reach. It
+// runs outside safeRunTask, so a panic in its OnSkip or AfterTask hook
+// is dropped, and the plan still returns its report.
+func (r *runner) skipStopped(
+	t *Task,
+) (tr TaskResult) {
+	start := time.Now()
+
+	defer func() {
+		if recover() != nil {
+			tr = TaskResult{
+				Name:     t.name,
+				Status:   StatusSkipped,
+				Duration: time.Since(start),
+				Reason:   "plan stopped",
+			}
+		}
+	}()
+
+	return r.skip(t, start, "plan stopped")
+}
+
 // effectiveStrategy returns the error strategy for a task,
 // checking the per-task override before falling back to the
 // plan-level default.
@@ -253,33 +297,41 @@ func (r *runner) effectiveStrategy(
 var errPlanStopped = errors.New("plan stopped")
 
 // stoppedByLevel reports whether err comes from the level's own cancel,
-// not from the caller's context or from the task itself.
+// not from the caller's context or from the task itself. A TaskFunc
+// that wraps ctx.Err() with %v, not %w, loses the error chain, so the
+// text of context.Canceled also counts once the level was stopped.
 func stoppedByLevel(
 	ctx context.Context,
 	err error,
 ) bool {
-	return errors.Is(err, context.Canceled) &&
-		errors.Is(context.Cause(ctx), errPlanStopped)
+	if err == nil || !errors.Is(context.Cause(ctx), errPlanStopped) {
+		return false
+	}
+
+	return errors.Is(err, context.Canceled) ||
+		strings.Contains(err.Error(), context.Canceled.Error())
 }
 
 // runLevel executes all tasks in a level concurrently. The first task
 // that fails with a strategy other than Continue cancels the context of
 // its siblings, so StopAll stops the tasks that still run; each of those
 // is skipped with the reason "plan stopped". The error joins each real
-// failure of the level, with the name of its task.
+// failure of the level that stops the plan, with the name of its task.
+// The second value has each failure of a task with Continue.
 func (r *runner) runLevel(
 	ctx context.Context,
 	tasks []*Task,
-) ([]TaskResult, error) {
+) ([]TaskResult, []error, error) {
 	results := make([]TaskResult, len(tasks))
 
 	levelCtx, cancel := context.WithCancelCause(ctx)
 	defer cancel(nil)
 
 	var (
-		wg       sync.WaitGroup
-		stopMu   sync.Mutex
-		stopErrs []error
+		wg           sync.WaitGroup
+		stopMu       sync.Mutex
+		stopErrs     []error
+		continueErrs []error
 	)
 
 	for i, t := range tasks {
@@ -291,12 +343,18 @@ func (r *runner) runLevel(
 			tr := r.safeRunTask(levelCtx, t)
 			results[i] = tr
 
-			if tr.Status != StatusFailed || r.effectiveStrategy(t).kind == "continue" {
+			if tr.Status != StatusFailed {
 				return
 			}
 
 			stopMu.Lock()
 			defer stopMu.Unlock()
+
+			if r.effectiveStrategy(t).kind == "continue" {
+				continueErrs = append(continueErrs, fmt.Errorf("step %q: %w", t.name, tr.Error))
+
+				return
+			}
 
 			stopErrs = append(stopErrs, fmt.Errorf("step %q: %w", t.name, tr.Error))
 
@@ -306,7 +364,7 @@ func (r *runner) runLevel(
 
 	wg.Wait()
 
-	return results, errors.Join(stopErrs...)
+	return results, continueErrs, errors.Join(stopErrs...)
 }
 
 // safeRunTask runs a task and turns a panic in the task, its guard or a

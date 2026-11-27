@@ -170,6 +170,10 @@ func (p *Plan) Validate() error {
 		}
 
 		names[t.name] = true
+
+		if !t.IsFunc() {
+			return fmt.Errorf("task %q has no function", t.name)
+		}
 	}
 
 	inPlan := make(map[*Task]bool, len(p.tasks))
