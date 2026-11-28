@@ -351,6 +351,71 @@ func (s *PredicatePublicTestSuite) TestFactEquals() {
 			},
 		},
 		{
+			name:  "Matches an int against the float64 of a JSON fact",
+			key:   "cpu_count",
+			value: 4,
+			agent: osapi.AgentInfo{
+				Facts: map[string]any{
+					"cpu_count": float64(4),
+				},
+			},
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
+		},
+		{
+			name:  "Returns false for a different number",
+			key:   "cpu_count",
+			value: 8,
+			agent: osapi.AgentInfo{
+				Facts: map[string]any{
+					"cpu_count": float64(4),
+				},
+			},
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
+		},
+		{
+			name:  "Matches a slice fact without a panic",
+			key:   "tags",
+			value: []string{"a", "b"},
+			agent: osapi.AgentInfo{
+				Facts: map[string]any{
+					"tags": []any{"a", "b"},
+				},
+			},
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
+		},
+		{
+			name:  "Matches a map fact without a panic",
+			key:   "disk",
+			value: map[string]any{"total": 100},
+			agent: osapi.AgentInfo{
+				Facts: map[string]any{
+					"disk": map[string]any{"total": float64(100)},
+				},
+			},
+			validateFunc: func(matched bool) {
+				s.True(matched)
+			},
+		},
+		{
+			name:  "Returns false for a value with no JSON form",
+			key:   "datacenter",
+			value: func() {},
+			agent: osapi.AgentInfo{
+				Facts: map[string]any{
+					"datacenter": "us-east-1",
+				},
+			},
+			validateFunc: func(matched bool) {
+				s.False(matched)
+			},
+		},
+		{
 			name:  "Returns false when facts are nil",
 			key:   "datacenter",
 			value: "us-east-1",
