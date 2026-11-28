@@ -28,10 +28,10 @@ import (
 	"testing"
 	"time"
 
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi-orchestrator/internal/engine"
-	osapiclient "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 type RunnerPublicTestSuite struct {
@@ -45,7 +45,7 @@ func TestRunnerPublicTestSuite(t *testing.T) {
 func (s *RunnerPublicTestSuite) TestLevelize() {
 	noop := func(
 		_ context.Context,
-		_ *osapiclient.Client,
+		_ *osapi.Client,
 	) (*engine.Result, error) {
 		return &engine.Result{}, nil
 	}
@@ -122,14 +122,14 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				dep := plan.TaskFunc("dep", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					return &engine.Result{Changed: false}, nil
 				})
 
 				child := plan.TaskFunc("child", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					return &engine.Result{Changed: true}, nil
 				})
@@ -151,7 +151,7 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				plan.TaskFunc("failing", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					return nil, fmt.Errorf("deliberate error")
 				})
@@ -171,7 +171,7 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				plan.TaskFunc("guarded", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					return &engine.Result{Changed: true}, nil
 				}).When(func(_ engine.Results) bool {
@@ -193,14 +193,14 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				dep := plan.TaskFunc("dep", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					return nil, fmt.Errorf("deliberate error")
 				})
 
 				child := plan.TaskFunc("child", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					return &engine.Result{Changed: true}, nil
 				})
@@ -221,7 +221,7 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				plan.TaskFunc("ok", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					return &engine.Result{Changed: true}, nil
 				})
@@ -241,7 +241,7 @@ func (s *RunnerPublicTestSuite) TestRunTaskStoresResultForAllPaths() {
 
 				plan.TaskFunc("ok", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					return &engine.Result{Changed: false}, nil
 				})
@@ -282,7 +282,7 @@ func (s *RunnerPublicTestSuite) TestDownstreamGuardInspectsSkippedStatus() {
 
 				guarded := plan.TaskFunc("guarded", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					return &engine.Result{Changed: true}, nil
 				})
@@ -292,7 +292,7 @@ func (s *RunnerPublicTestSuite) TestDownstreamGuardInspectsSkippedStatus() {
 
 				observer := plan.TaskFunc("observer", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					return &engine.Result{Changed: false}, nil
 				})
@@ -341,7 +341,7 @@ func (s *RunnerPublicTestSuite) TestTaskFuncWithResultsReceivesResults() {
 
 				a := plan.TaskFunc("a", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					return &engine.Result{
 						Changed: true,
@@ -351,7 +351,7 @@ func (s *RunnerPublicTestSuite) TestTaskFuncWithResultsReceivesResults() {
 
 				b := plan.TaskFuncWithResults("b", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 					results engine.Results,
 				) (*engine.Result, error) {
 					r := results.Get("a")
@@ -399,7 +399,7 @@ func (s *RunnerPublicTestSuite) TestTaskResultCarriesData() {
 
 				plan.TaskFunc("a", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					return &engine.Result{
 						Changed: true,
@@ -452,7 +452,7 @@ func (s *RunnerPublicTestSuite) TestRunTaskPreservesResultOnError() {
 
 				plan.TaskFunc("failing", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					return &engine.Result{
 						Changed: true,
@@ -489,7 +489,7 @@ func (s *RunnerPublicTestSuite) TestRunTaskPreservesResultOnError() {
 func (s *RunnerPublicTestSuite) TestRunSafety() {
 	ok := func(
 		_ context.Context,
-		_ *osapiclient.Client,
+		_ *osapi.Client,
 	) (*engine.Result, error) {
 		return &engine.Result{Changed: true}, nil
 	}
@@ -510,7 +510,7 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 						fmt.Sprintf("reader-%d", i),
 						func(
 							_ context.Context,
-							_ *osapiclient.Client,
+							_ *osapi.Client,
 							results engine.Results,
 						) (*engine.Result, error) {
 							for range 50 {
@@ -538,7 +538,7 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 				plan := engine.NewPlan(nil, engine.OnError(engine.Continue))
 				a := plan.TaskFunc("a", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					cancel()
 
@@ -546,7 +546,7 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 				})
 				plan.TaskFunc("b", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					calls.Add(1)
 
@@ -571,7 +571,7 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 				plan := engine.NewPlan(nil, engine.OnError(engine.Continue))
 				plan.TaskFunc("never", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					calls.Add(1)
 
@@ -594,7 +594,7 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 				plan := engine.NewPlan(nil, engine.OnError(engine.StopAll))
 				plan.TaskFunc("fails", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					// Fail only once the sibling runs, so the cancel stops
 					// it in its wait.
@@ -604,7 +604,7 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 				})
 				plan.TaskFunc("waits", func(
 					ctx context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					close(started)
 
@@ -638,7 +638,7 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 				plan := engine.NewPlan(nil, engine.OnError(engine.StopAll))
 				plan.TaskFunc("nil", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					return nil, nil
 				})
@@ -656,7 +656,7 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 				plan := engine.NewPlan(nil, engine.WithRetry(engine.Retry(-1)))
 				plan.TaskFunc("once", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					calls.Add(1)
 
@@ -676,7 +676,7 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 				plan := engine.NewPlan(nil, engine.OnError(engine.Continue))
 				plan.TaskFunc("panics", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					panic("bad input")
 				})
@@ -714,7 +714,7 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 				plan := engine.NewPlan(nil, engine.WithRetry(engine.Retry(5)))
 				plan.TaskFunc("cancels", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					calls.Add(1)
 					cancel()
@@ -750,7 +750,7 @@ func (s *RunnerPublicTestSuite) TestRunSafety() {
 func (s *RunnerPublicTestSuite) TestRunStrategyAndReport() {
 	ok := func(
 		_ context.Context,
-		_ *osapiclient.Client,
+		_ *osapi.Client,
 	) (*engine.Result, error) {
 		return &engine.Result{Changed: true}, nil
 	}
@@ -766,7 +766,7 @@ func (s *RunnerPublicTestSuite) TestRunStrategyAndReport() {
 				plan := engine.NewPlan(nil)
 				flaky := plan.TaskFunc("flaky", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					calls.Add(1)
 
@@ -802,7 +802,7 @@ func (s *RunnerPublicTestSuite) TestRunStrategyAndReport() {
 				fails := func(msg string) engine.TaskFn {
 					return func(
 						_ context.Context,
-						_ *osapiclient.Client,
+						_ *osapi.Client,
 					) (*engine.Result, error) {
 						started.Done()
 						started.Wait()
@@ -829,13 +829,13 @@ func (s *RunnerPublicTestSuite) TestRunStrategyAndReport() {
 				plan := engine.NewPlan(nil)
 				fails := plan.TaskFunc("fails", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					return nil, fmt.Errorf("boom")
 				})
 				next := plan.TaskFunc("next", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					calls.Add(1)
 
@@ -867,7 +867,7 @@ func (s *RunnerPublicTestSuite) TestRunStrategyAndReport() {
 				)
 				plan.TaskFunc("flaky", func(
 					_ context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					calls.Add(1)
 
@@ -898,7 +898,7 @@ func (s *RunnerPublicTestSuite) TestRunStrategyAndReport() {
 
 func (s *RunnerPublicTestSuite) TestRunRetryClassification() {
 	apiError := func(code int) error {
-		return &osapiclient.APIError{StatusCode: code, Message: "api"}
+		return &osapi.APIError{StatusCode: code, Message: "api"}
 	}
 
 	tests := []struct {
@@ -911,7 +911,7 @@ func (s *RunnerPublicTestSuite) TestRunRetryClassification() {
 	}{
 		{
 			name:         "a 500 is retried",
-			err:          &osapiclient.ServerError{APIError: osapiclient.APIError{StatusCode: 500}},
+			err:          &osapi.ServerError{APIError: osapi.APIError{StatusCode: 500}},
 			expectedRuns: 3,
 		},
 		{
@@ -926,15 +926,15 @@ func (s *RunnerPublicTestSuite) TestRunRetryClassification() {
 		},
 		{
 			name: "a 400 is not retried",
-			err: &osapiclient.ValidationError{
-				APIError: osapiclient.APIError{StatusCode: 400},
+			err: &osapi.ValidationError{
+				APIError: osapi.APIError{StatusCode: 400},
 			},
 			expectedRuns: 1,
 		},
 		{
 			name: "a wrapped 404 is not retried",
-			err: fmt.Errorf("get: %w", &osapiclient.NotFoundError{
-				APIError: osapiclient.APIError{StatusCode: 404},
+			err: fmt.Errorf("get: %w", &osapi.NotFoundError{
+				APIError: osapi.APIError{StatusCode: 404},
 			}),
 			expectedRuns: 1,
 		},
@@ -970,7 +970,7 @@ func (s *RunnerPublicTestSuite) TestRunRetryClassification() {
 			plan := engine.NewPlan(nil, engine.WithRetry(engine.Retry(2)))
 			task := plan.TaskFunc("op", func(
 				_ context.Context,
-				_ *osapiclient.Client,
+				_ *osapi.Client,
 			) (*engine.Result, error) {
 				calls.Add(1)
 				if tt.noResult {
@@ -999,7 +999,7 @@ func (s *RunnerPublicTestSuite) TestRunReview() {
 	failAfter := func(d time.Duration) engine.TaskFn {
 		return func(
 			_ context.Context,
-			_ *osapiclient.Client,
+			_ *osapi.Client,
 		) (*engine.Result, error) {
 			time.Sleep(d)
 
@@ -1008,7 +1008,7 @@ func (s *RunnerPublicTestSuite) TestRunReview() {
 	}
 	ok := func(
 		_ context.Context,
-		_ *osapiclient.Client,
+		_ *osapi.Client,
 	) (*engine.Result, error) {
 		return &engine.Result{}, nil
 	}
@@ -1060,7 +1060,7 @@ func (s *RunnerPublicTestSuite) TestRunReview() {
 				plan.TaskFunc("fail", failAfter(50*time.Millisecond))
 				plan.TaskFunc("sib", func(
 					ctx context.Context,
-					_ *osapiclient.Client,
+					_ *osapi.Client,
 				) (*engine.Result, error) {
 					<-ctx.Done()
 
@@ -1140,14 +1140,4 @@ func (s *RunnerPublicTestSuite) TestRunReview() {
 			tt.validateFunc(report, err)
 		})
 	}
-}
-
-func (s *RunnerPublicTestSuite) TestValidateRejectsTaskWithNoFunction() {
-	plan := engine.NewPlan(nil)
-	plan.TaskFunc("none", nil)
-
-	report, err := plan.Run(context.Background())
-
-	s.Nil(report)
-	s.ErrorContains(err, `task "none" has no function`)
 }

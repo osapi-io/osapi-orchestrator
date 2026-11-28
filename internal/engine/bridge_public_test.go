@@ -24,10 +24,10 @@ import (
 	"fmt"
 	"testing"
 
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi-orchestrator/internal/engine"
-	client "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 type BridgePublicTestSuite struct {
@@ -90,7 +90,7 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 		},
 		{
 			name: "converts SDK type with json tags",
-			input: client.HostnameResult{
+			input: osapi.HostnameResult{
 				Hostname: "web-01",
 				Changed:  true,
 			},
@@ -170,7 +170,7 @@ func (s *BridgePublicTestSuite) TestHostFailed() {
 }
 
 func (s *BridgePublicTestSuite) TestCollectionResult() {
-	mapper := func(r client.HostnameResult) engine.HostResult {
+	mapper := func(r osapi.HostnameResult) engine.HostResult {
 		return engine.HostResult{
 			Hostname: r.Hostname,
 			Changed:  r.Changed,
@@ -180,15 +180,15 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 
 	tests := []struct {
 		name         string
-		col          client.Collection[client.HostnameResult]
+		col          osapi.Collection[osapi.HostnameResult]
 		rawJSON      []byte
-		toHost       func(client.HostnameResult) engine.HostResult
+		toHost       func(osapi.HostnameResult) engine.HostResult
 		validateFunc func(*engine.Result, error)
 	}{
 		{
 			name: "single result with auto-populated data",
-			col: client.Collection[client.HostnameResult]{
-				Results: []client.HostnameResult{
+			col: osapi.Collection[osapi.HostnameResult]{
+				Results: []osapi.HostnameResult{
 					{Hostname: "web-01", Changed: false},
 				},
 				JobID: "job-123",
@@ -210,8 +210,8 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 		},
 		{
 			name: "multiple results with changed true when any host changed",
-			col: client.Collection[client.HostnameResult]{
-				Results: []client.HostnameResult{
+			col: osapi.Collection[osapi.HostnameResult]{
+				Results: []osapi.HostnameResult{
 					{Hostname: "web-01", Changed: false},
 					{Hostname: "web-02", Changed: true},
 				},
@@ -230,14 +230,14 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 		},
 		{
 			name: "a host that timed out fails the step, with its reason",
-			col: client.Collection[client.HostnameResult]{
-				Results: []client.HostnameResult{
+			col: osapi.Collection[osapi.HostnameResult]{
+				Results: []osapi.HostnameResult{
 					{Hostname: "web-01"},
 					{Hostname: "web-02"},
 				},
 				JobID: "job-timeout",
 			},
-			toHost: func(r client.HostnameResult) engine.HostResult {
+			toHost: func(r osapi.HostnameResult) engine.HostResult {
 				status := "ok"
 				if r.Hostname == "web-02" {
 					status = "timeout"
@@ -255,8 +255,8 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 		},
 		{
 			name: "empty results returns result with empty host results",
-			col: client.Collection[client.HostnameResult]{
-				Results: []client.HostnameResult{},
+			col: osapi.Collection[osapi.HostnameResult]{
+				Results: []osapi.HostnameResult{},
 				JobID:   "job-789",
 			},
 			toHost: mapper,
@@ -270,13 +270,13 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 		},
 		{
 			name: "data auto-populated via StructToMap when mapper leaves it nil",
-			col: client.Collection[client.HostnameResult]{
-				Results: []client.HostnameResult{
+			col: osapi.Collection[osapi.HostnameResult]{
+				Results: []osapi.HostnameResult{
 					{Hostname: "db-01", Changed: false, Error: "timeout"},
 				},
 				JobID: "job-auto",
 			},
-			toHost: func(r client.HostnameResult) engine.HostResult {
+			toHost: func(r osapi.HostnameResult) engine.HostResult {
 				return engine.HostResult{
 					Hostname: r.Hostname,
 					Changed:  r.Changed,
@@ -294,15 +294,15 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 		},
 		{
 			name: "a failed host fails the step and keeps the partial result",
-			col: client.Collection[client.HostnameResult]{
-				Results: []client.HostnameResult{
+			col: osapi.Collection[osapi.HostnameResult]{
+				Results: []osapi.HostnameResult{
 					{Hostname: "web-01", Changed: true},
 					{Hostname: "web-02", Status: "failed"},
 					{Hostname: "web-03", Status: "skipped", Error: "unsupported"},
 				},
 				JobID: "job-partial",
 			},
-			toHost: func(r client.HostnameResult) engine.HostResult {
+			toHost: func(r osapi.HostnameResult) engine.HostResult {
 				return engine.HostResult{
 					Hostname: r.Hostname,
 					Status:   string(r.Status),
@@ -321,13 +321,13 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 		},
 		{
 			name: "data preserved when mapper sets it explicitly",
-			col: client.Collection[client.HostnameResult]{
-				Results: []client.HostnameResult{
+			col: osapi.Collection[osapi.HostnameResult]{
+				Results: []osapi.HostnameResult{
 					{Hostname: "app-01", Changed: true},
 				},
 				JobID: "job-explicit",
 			},
-			toHost: func(r client.HostnameResult) engine.HostResult {
+			toHost: func(r osapi.HostnameResult) engine.HostResult {
 				return engine.HostResult{
 					Hostname: r.Hostname,
 					Changed:  r.Changed,
@@ -346,8 +346,8 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 		},
 		{
 			name: "rawJSON populates Result.Data",
-			col: client.Collection[client.HostnameResult]{
-				Results: []client.HostnameResult{
+			col: osapi.Collection[osapi.HostnameResult]{
+				Results: []osapi.HostnameResult{
 					{Hostname: "web-01"},
 				},
 				JobID: "job-raw",
@@ -363,8 +363,8 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 		},
 		{
 			name: "nil rawJSON leaves Result.Data nil",
-			col: client.Collection[client.HostnameResult]{
-				Results: []client.HostnameResult{
+			col: osapi.Collection[osapi.HostnameResult]{
+				Results: []osapi.HostnameResult{
 					{Hostname: "web-01"},
 				},
 				JobID: "job-nil",
@@ -379,8 +379,8 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 		},
 		{
 			name: "invalid rawJSON returns error",
-			col: client.Collection[client.HostnameResult]{
-				Results: []client.HostnameResult{
+			col: osapi.Collection[osapi.HostnameResult]{
+				Results: []osapi.HostnameResult{
 					{Hostname: "web-01"},
 				},
 				JobID: "job-bad",

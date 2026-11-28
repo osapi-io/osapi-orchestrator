@@ -26,10 +26,10 @@ import (
 	"fmt"
 	"testing"
 
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi-orchestrator/internal/engine"
-	osapiclient "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 type RetryablePublicTestSuite struct {
@@ -42,7 +42,7 @@ func TestRetryablePublicTestSuite(t *testing.T) {
 
 func (s *RetryablePublicTestSuite) TestRetryable() {
 	api := func(code int) error {
-		return &osapiclient.APIError{StatusCode: code}
+		return &osapi.APIError{StatusCode: code}
 	}
 
 	tests := []struct {
@@ -57,12 +57,12 @@ func (s *RetryablePublicTestSuite) TestRetryable() {
 		{name: "a 400", err: api(400), want: false},
 		{
 			name: "a 401 auth error",
-			err:  &osapiclient.AuthError{APIError: osapiclient.APIError{StatusCode: 401}},
+			err:  &osapi.AuthError{APIError: osapi.APIError{StatusCode: 401}},
 			want: false,
 		},
 		{
 			name: "a 409 conflict",
-			err:  &osapiclient.ConflictError{APIError: osapiclient.APIError{StatusCode: 409}},
+			err:  &osapi.ConflictError{APIError: osapi.APIError{StatusCode: 409}},
 			want: false,
 		},
 		{name: "a cancelled context", err: fmt.Errorf("call: %w", context.Canceled), want: false},
@@ -97,7 +97,7 @@ func (s *RetryablePublicTestSuite) TestPermanent() {
 			validateFunc: func(err error) {
 				s.EqualError(err, api404().Error())
 
-				var nf *osapiclient.NotFoundError
+				var nf *osapi.NotFoundError
 				s.True(errors.As(err, &nf))
 			},
 		},
@@ -111,7 +111,7 @@ func (s *RetryablePublicTestSuite) TestPermanent() {
 }
 
 func api404() error {
-	return &osapiclient.NotFoundError{
-		APIError: osapiclient.APIError{StatusCode: 404, Message: "gone"},
+	return &osapi.NotFoundError{
+		APIError: osapi.APIError{StatusCode: 404, Message: "gone"},
 	}
 }

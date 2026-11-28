@@ -26,10 +26,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 

@@ -16,7 +16,7 @@ orchestrator divides the DAG into levels and runs each level:
 ```go
 health := o.HealthCheck()
 
-// These three run in parallel — all depend on health.
+// These three depend on health, and run in parallel.
 hostname := o.HostnameGet("_any").After(health)
 disk := o.DiskGet("_any").After(health)
 load := o.LoadGet("_any").After(health)

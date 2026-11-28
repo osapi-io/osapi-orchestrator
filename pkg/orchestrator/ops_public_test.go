@@ -96,6 +96,7 @@ func (s *OpsPublicTestSuite) TestControllerOps() {
 		step      string
 		changed   bool
 		data      string
+		calls     int
 		errSubstr string
 	}{
 		{
@@ -234,6 +235,18 @@ func (s *OpsPublicTestSuite) TestControllerOps() {
 			build:     func(o *orchestrator.Orchestrator) *orchestrator.Step { return o.AgentDrain("web-01") },
 			errSubstr: "drain-agent web-01",
 		},
+		{
+			name:   "FileUpload of the content already stored only reads it",
+			status: http.StatusOK,
+			body:   `{"name":"app.conf","sha256":"` + sumOfX + `"}`,
+			build: func(o *orchestrator.Orchestrator) *orchestrator.Step {
+				return o.FileUpload("app.conf", "raw", []byte("x"))
+			},
+			method:  http.MethodGet,
+			step:    "upload-file",
+			changed: false,
+			calls:   1,
+		},
 	}
 
 	for _, tc := range tests {
@@ -249,9 +262,14 @@ func (s *OpsPublicTestSuite) TestControllerOps() {
 			}
 
 			s.Require().NoError(err)
+			if tc.calls > 0 {
+				s.Require().Len(*got, tc.calls)
+			}
 			last := (*got)[len(*got)-1]
 			s.Equal(tc.method, last.method)
-			s.Equal(tc.path, last.path)
+			if tc.path != "" {
+				s.Equal(tc.path, last.path)
+			}
 			s.Require().Len(report.Tasks, 1)
 			s.Equal(tc.step, report.Tasks[0].Name)
 			s.Equal(tc.changed, report.Tasks[0].Changed)
@@ -266,21 +284,9 @@ func (s *OpsPublicTestSuite) TestControllerOps() {
 
 // TestFileUploadSkipsTheSameContent covers the upload with no force: the
 // SDK reads the stored object first, and a matching digest uploads nothing.
-func (s *OpsPublicTestSuite) TestFileUploadSkipsTheSameContent() {
-	// The SHA-256 of "x".
-	const sum = "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881"
-
-	server, got := s.serve(http.StatusOK, `{"name":"app.conf","sha256":"`+sum+`"}`)
-
-	report, err := s.run(server, func(o *orchestrator.Orchestrator) *orchestrator.Step {
-		return o.FileUpload("app.conf", "raw", []byte("x"))
-	})
-	s.Require().NoError(err)
-	s.Require().Len(*got, 1, "only the read of the stored object")
-	s.Equal(http.MethodGet, (*got)[0].method)
-	s.False(report.Tasks[0].Changed)
-}
-
 func TestOpsPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(OpsPublicTestSuite))
 }
+
+// sumOfX is the SHA-256 of "x".
+const sumOfX = "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881"

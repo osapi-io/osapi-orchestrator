@@ -24,10 +24,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
 )
 
@@ -36,6 +36,8 @@ type ResultPublicTestSuite struct {
 }
 
 func (s *ResultPublicTestSuite) TestDecode() {
+	var broadcast osapi.CommandResult
+
 	tests := []struct {
 		name         string
 		results      engine.Results
@@ -252,6 +254,23 @@ func (s *ResultPublicTestSuite) TestDecode() {
 			validateFunc: func(err error) {
 				s.Require().Error(err)
 				s.Contains(err.Error(), "marshal result data")
+			},
+		},
+		{
+			name: "a result with two hosts is refused, and no host stands in for the others",
+			results: engine.Results{
+				"run-uptime": &engine.Result{
+					HostResults: []engine.HostResult{
+						{Hostname: "web-01", Data: map[string]any{"stdout": "one"}},
+						{Hostname: "web-02", Data: map[string]any{"stdout": "two"}},
+					},
+				},
+			},
+			lookupName: "run-uptime",
+			target:     &broadcast,
+			validateFunc: func(err error) {
+				s.ErrorContains(err, `"run-uptime" has 2 host results: read them with HostResults`)
+				s.Empty(broadcast.Stdout)
 			},
 		},
 	}
@@ -824,21 +843,4 @@ func TestResultPublicTestSuite(
 	t *testing.T,
 ) {
 	suite.Run(t, new(ResultPublicTestSuite))
-}
-
-func (s *ResultPublicTestSuite) TestDecodeOfABroadcast() {
-	r := orchestrator.NewResults(engine.Results{
-		"run-uptime": &engine.Result{
-			HostResults: []engine.HostResult{
-				{Hostname: "web-01", Data: map[string]any{"stdout": "one"}},
-				{Hostname: "web-02", Data: map[string]any{"stdout": "two"}},
-			},
-		},
-	})
-
-	var cmd osapi.CommandResult
-	err := r.Decode("run-uptime", &cmd)
-
-	s.ErrorContains(err, `"run-uptime" has 2 host results: read them with HostResults`)
-	s.Empty(cmd.Stdout, "no host's data stands in for the others")
 }

@@ -30,10 +30,10 @@ import (
 	"testing"
 	"time"
 
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
-	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 type RetryPublicTestSuite struct {
@@ -44,12 +44,16 @@ func TestRetryPublicTestSuite(t *testing.T) {
 	suite.Run(t, new(RetryPublicTestSuite))
 }
 
-func (s *RetryPublicTestSuite) TestRetryOfAnUnsafeOp() {
+func (s *RetryPublicTestSuite) TestRetry() {
 	tests := []struct {
 		name         string
 		status       int
 		build        func(o *orchestrator.Orchestrator)
 		expectedRuns int32
+		// defaults, when set, are the backoff defaults for the row.
+		defaults [2]time.Duration
+		// minGaps are the least waits between the calls.
+		minGaps []time.Duration
 	}{
 		{
 			name:   "a command that fails with a 503 does not run again",
@@ -93,16 +97,37 @@ func (s *RetryPublicTestSuite) TestRetryOfAnUnsafeOp() {
 			},
 			expectedRuns: 1,
 		},
+		{
+			name:         "Retry waits between attempts with no backoff set",
+			status:       http.StatusTooManyRequests,
+			build:        func(o *orchestrator.Orchestrator) { o.HostnameGet("_any").Retry(2) },
+			expectedRuns: 3,
+			defaults:     [2]time.Duration{40 * time.Millisecond, time.Second},
+			// The jitter keeps at least half of each delay: 20ms, then 40ms.
+			minGaps: []time.Duration{20 * time.Millisecond, 40 * time.Millisecond},
+		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			var calls atomic.Int32
+			if tt.defaults[0] > 0 {
+				restore := orchestrator.SetRetryDefaultsForTest(tt.defaults[0], tt.defaults[1])
+				defer restore()
+			}
+
+			var (
+				calls atomic.Int32
+				mu    sync.Mutex
+				times []time.Time
+			)
 			server := httptest.NewServer(http.HandlerFunc(func(
 				w http.ResponseWriter,
 				_ *http.Request,
 			) {
 				calls.Add(1)
+				mu.Lock()
+				times = append(times, time.Now())
+				mu.Unlock()
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(tt.status)
 				_, _ = w.Write([]byte(`{"error":"no"}`))
@@ -116,6 +141,12 @@ func (s *RetryPublicTestSuite) TestRetryOfAnUnsafeOp() {
 
 			s.Error(err)
 			s.Equal(tt.expectedRuns, calls.Load())
+
+			mu.Lock()
+			defer mu.Unlock()
+			for i, gap := range tt.minGaps {
+				s.GreaterOrEqual(times[i+1].Sub(times[i]), gap)
+			}
 		})
 	}
 }
@@ -136,44 +167,6 @@ func (s *RetryPublicTestSuite) TestRetryable() {
 			s.Equal(tt.want, orchestrator.Retryable(tt.err))
 		})
 	}
-}
-
-func (s *RetryPublicTestSuite) TestRetryBacksOffByDefault() {
-	restore := orchestrator.SetRetryDefaultsForTest(40*time.Millisecond, time.Second)
-	defer restore()
-
-	var (
-		mu    sync.Mutex
-		times []time.Time
-	)
-
-	server := httptest.NewServer(http.HandlerFunc(func(
-		w http.ResponseWriter,
-		_ *http.Request,
-	) {
-		mu.Lock()
-		times = append(times, time.Now())
-		mu.Unlock()
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusTooManyRequests)
-		_, _ = w.Write([]byte(`{"error":"slow down"}`))
-	}))
-	defer server.Close()
-
-	o := orchestrator.New(server.URL, "token")
-	o.HostnameGet("_any").Retry(2)
-
-	_, err := o.Run(context.Background())
-	s.Require().Error(err)
-
-	mu.Lock()
-	defer mu.Unlock()
-
-	s.Require().Len(times, 3)
-	// The jitter keeps at least half of each delay: 20ms, then 40ms.
-	s.GreaterOrEqual(times[1].Sub(times[0]), 20*time.Millisecond)
-	s.GreaterOrEqual(times[2].Sub(times[1]), 40*time.Millisecond)
 }
 
 func (s *RetryPublicTestSuite) TestPlanOptions() {

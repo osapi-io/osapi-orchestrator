@@ -25,19 +25,19 @@ import (
 	"fmt"
 	"strings"
 
-	osapiclient "github.com/osapi-io/osapi/pkg/sdk/client"
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // Plan is a DAG of tasks with dependency edges.
 type Plan struct {
-	client *osapiclient.Client
+	client *osapi.Client
 	tasks  []*Task
 	config PlanConfig
 }
 
 // NewPlan creates a new plan bound to an OSAPI client.
 func NewPlan(
-	client *osapiclient.Client,
+	client *osapi.Client,
 	opts ...PlanOption,
 ) *Plan {
 	cfg := PlanConfig{
@@ -55,7 +55,7 @@ func NewPlan(
 }
 
 // Client returns the OSAPI client bound to this plan.
-func (p *Plan) Client() *osapiclient.Client {
+func (p *Plan) Client() *osapi.Client {
 	return p.client
 }
 

@@ -26,10 +26,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi-orchestrator/pkg/orchestrator"
-	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 const agentListJSON = `{

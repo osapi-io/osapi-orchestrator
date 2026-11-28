@@ -12,8 +12,9 @@ package orchestrator
 import (
 	reflect "reflect"
 
-	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	gomock "go.uber.org/mock/gomock"
+
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 // Mockrenderer is a mock of renderer interface.

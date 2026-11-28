@@ -239,6 +239,9 @@ func (s *StepPublicTestSuite) TestOnError() {
 }
 
 func (s *StepPublicTestSuite) TestOnlyIfFailed() {
+	var plan *orchestrator.Orchestrator
+	ran := false
+
 	tests := []struct {
 		name         string
 		chainFn      func() *orchestrator.Step
@@ -251,6 +254,33 @@ func (s *StepPublicTestSuite) TestOnlyIfFailed() {
 			},
 			validateFunc: func(step *orchestrator.Step) {
 				s.NotNil(step)
+			},
+		},
+		{
+			name: "a cleanup after a skipped step does not run, because only direct dependencies count",
+			chainFn: func() *orchestrator.Step {
+				plan = orchestrator.New(s.server.URL, "test-token")
+				fails := plan.TaskFunc("fails", func(
+					_ context.Context,
+					_ *osapi.Client,
+					_ orchestrator.Results,
+				) (*orchestrator.Result, error) {
+					return nil, errors.New("boom")
+				}).ContinueOnError()
+				middle := plan.TaskFunc("middle", record(new(bool))).After(fails)
+
+				return plan.TaskFunc("cleanup", record(&ran)).After(middle).OnlyIfFailed()
+			},
+			validateFunc: func(_ *orchestrator.Step) {
+				report, _ := plan.Run(context.Background())
+
+				s.False(ran)
+				s.Require().NotNil(report)
+				for _, tr := range report.Tasks {
+					if tr.Name == "middle" || tr.Name == "cleanup" {
+						s.Equal("skipped", string(tr.Status), tr.Name)
+					}
+				}
 			},
 		},
 	}
@@ -577,27 +607,3 @@ func TestStepPublicTestSuite(
 // TestOnlyIfFailedReadsItsDirectDependencies pins the documented rule: a
 // dependency that the plan skipped because its own dependency failed is
 // Skipped, not Failed, so an OnlyIfFailed step after it does not run.
-func (s *StepPublicTestSuite) TestOnlyIfFailedReadsItsDirectDependencies() {
-	o := orchestrator.New(s.server.URL, "test-token")
-	ran := false
-
-	fails := o.TaskFunc("fails", func(
-		_ context.Context,
-		_ *osapi.Client,
-		_ orchestrator.Results,
-	) (*orchestrator.Result, error) {
-		return nil, errors.New("boom")
-	}).ContinueOnError()
-	middle := o.TaskFunc("middle", record(new(bool))).After(fails)
-	o.TaskFunc("cleanup", record(&ran)).After(middle).OnlyIfFailed()
-
-	report, _ := o.Run(context.Background())
-
-	s.False(ran)
-	s.Require().NotNil(report)
-	for _, tr := range report.Tasks {
-		if tr.Name == "middle" || tr.Name == "cleanup" {
-			s.Equal("skipped", string(tr.Status), tr.Name)
-		}
-	}
-}

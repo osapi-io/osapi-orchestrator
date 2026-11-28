@@ -25,7 +25,7 @@ import (
 	"fmt"
 	"strings"
 
-	client "github.com/osapi-io/osapi/pkg/sdk/client"
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // jsonUnmarshalFn is the JSON unmarshal function (injectable for testing).
@@ -67,7 +67,7 @@ func StructToMap(
 // result comes back with an error that names each failed host, and
 // the runner keeps the result for the guards that inspect hosts.
 func CollectionResult[T any](
-	col client.Collection[T],
+	col osapi.Collection[T],
 	rawJSON []byte,
 	toHostResult func(T) HostResult,
 ) (*Result, error) {

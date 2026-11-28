@@ -23,21 +23,21 @@ package engine
 import (
 	"context"
 
-	osapiclient "github.com/osapi-io/osapi/pkg/sdk/client"
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // TaskFn is the signature for functional tasks. The client
 // parameter provides access to the OSAPI SDK for making API calls.
 type TaskFn func(
 	ctx context.Context,
-	client *osapiclient.Client,
+	client *osapi.Client,
 ) (*Result, error)
 
 // TaskFnWithResults is like TaskFn but receives completed task results
 // for inter-task data access.
 type TaskFnWithResults func(
 	ctx context.Context,
-	client *osapiclient.Client,
+	client *osapi.Client,
 	results Results,
 ) (*Result, error)
 

@@ -21,14 +21,12 @@
 package engine_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi-orchestrator/internal/engine"
-	osapiclient "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 type OptionsPublicTestSuite struct {
@@ -97,6 +95,15 @@ func (s *OptionsPublicTestSuite) TestRetryPolicy() {
 				s.Equal(0, got.Count())
 			},
 		},
+		{
+			name:   "with a backoff returns its intervals",
+			policy: engine.Retry(2, engine.WithRetryBackoff(time.Second, time.Minute)),
+			validateFunc: func(got engine.RetryPolicy) {
+				initial, maxInterval := got.Intervals()
+				s.Equal(time.Second, initial)
+				s.Equal(time.Minute, maxInterval)
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -108,45 +115,48 @@ func (s *OptionsPublicTestSuite) TestRetryPolicy() {
 
 func (s *OptionsPublicTestSuite) TestWithHooks() {
 	called := false
-	hooks := engine.Hooks{
-		BeforeTask: func(_ *engine.Task) {
-			called = true
+	beforeTask := func(_ *engine.Task) { called = true }
+
+	tests := []struct {
+		name         string
+		hooks        engine.Hooks
+		validateFunc func(engine.PlanConfig)
+	}{
+		{
+			name:  "sets the hooks, and the plan calls them",
+			hooks: engine.Hooks{BeforeTask: beforeTask},
+			validateFunc: func(cfg engine.PlanConfig) {
+				s.Require().NotNil(cfg.Hooks)
+				s.Require().NotNil(cfg.Hooks.BeforeTask)
+
+				cfg.Hooks.BeforeTask(engine.NewTaskFunc("test", noop))
+				s.True(called)
+			},
+		},
+		{
+			name:  "a zero Hooks has no callbacks",
+			hooks: engine.Hooks{},
+			validateFunc: func(cfg engine.PlanConfig) {
+				s.Require().NotNil(cfg.Hooks)
+				s.Nil(cfg.Hooks.BeforePlan)
+				s.Nil(cfg.Hooks.AfterPlan)
+				s.Nil(cfg.Hooks.BeforeLevel)
+				s.Nil(cfg.Hooks.AfterLevel)
+				s.Nil(cfg.Hooks.BeforeTask)
+				s.Nil(cfg.Hooks.AfterTask)
+				s.Nil(cfg.Hooks.OnRetry)
+				s.Nil(cfg.Hooks.OnSkip)
+			},
 		},
 	}
 
-	cfg := engine.PlanConfig{}
-	opt := engine.WithHooks(hooks)
-	opt(&cfg)
-
-	s.NotNil(cfg.Hooks)
-	s.NotNil(cfg.Hooks.BeforeTask)
-
-	// Create a task to pass to the callback.
-	t := engine.NewTaskFunc(
-		"test",
-		func(
-			_ context.Context,
-			_ *osapiclient.Client,
-		) (*engine.Result, error) {
-			return &engine.Result{}, nil
-		},
-	)
-	cfg.Hooks.BeforeTask(t)
-	s.True(called)
-}
-
-func (s *OptionsPublicTestSuite) TestHooksDefaults() {
-	h := engine.Hooks{}
-
-	// Nil callbacks should be safe, no panic.
-	s.Nil(h.BeforePlan)
-	s.Nil(h.AfterPlan)
-	s.Nil(h.BeforeLevel)
-	s.Nil(h.AfterLevel)
-	s.Nil(h.BeforeTask)
-	s.Nil(h.AfterTask)
-	s.Nil(h.OnRetry)
-	s.Nil(h.OnSkip)
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			cfg := engine.PlanConfig{}
+			engine.WithHooks(tt.hooks)(&cfg)
+			tt.validateFunc(cfg)
+		})
+	}
 }
 
 func (s *OptionsPublicTestSuite) TestPlanOption() {
@@ -285,14 +295,4 @@ func (s *OptionsPublicTestSuite) TestJitter() {
 			}
 		})
 	}
-}
-
-func (s *OptionsPublicTestSuite) TestIntervals() {
-	initial, maxInterval := engine.Retry(
-		2,
-		engine.WithRetryBackoff(time.Second, time.Minute),
-	).Intervals()
-
-	s.Equal(time.Second, initial)
-	s.Equal(time.Minute, maxInterval)
 }

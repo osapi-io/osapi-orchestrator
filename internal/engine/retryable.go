@@ -25,7 +25,7 @@ import (
 	"errors"
 	"net/http"
 
-	osapiclient "github.com/osapi-io/osapi/pkg/sdk/client"
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 // permanentError is an error that a retry cannot fix.
@@ -69,7 +69,7 @@ func Retryable(
 		return false
 	}
 
-	var api *osapiclient.APIError
+	var api *osapi.APIError
 	if errors.As(err, &api) {
 		return api.StatusCode >= http.StatusInternalServerError ||
 			api.StatusCode == http.StatusRequestTimeout ||

@@ -24,8 +24,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 type OptionsTestSuite struct {
