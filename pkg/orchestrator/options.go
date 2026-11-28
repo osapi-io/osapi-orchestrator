@@ -79,7 +79,7 @@ type uploadConfig struct {
 
 // WithForce makes FileUpload bypass the SHA-256 pre-check and always
 // upload regardless of whether the content has changed. Without this
-// option FileUpload is idempotent — the SDK compares digests and
+// option FileUpload is idempotent, the SDK compares digests and
 // skips the upload when content is unchanged.
 func WithForce() UploadOption {
 	return func(c *uploadConfig) { c.force = true }

@@ -20,7 +20,7 @@
 
 // Package main demonstrates fleet discovery with AgentList and AgentGet.
 // Lists all registered agents, then retrieves comprehensive facts for the
-// first agent — OS info, load averages, memory stats, network interfaces,
+// first agent, OS info, load averages, memory stats, network interfaces,
 // labels, and lifecycle timestamps.
 //
 // DAG:

@@ -63,7 +63,7 @@ func main() {
 		Group:       "root",
 	}
 
-	// Phase 1: cleanup — remove any previously deployed file.
+	// Phase 1: cleanup, remove any previously deployed file.
 	fmt.Println("=== Phase 1: Cleanup ===")
 
 	o1 := newOrchestrator(url, token)
@@ -72,7 +72,7 @@ func main() {
 	//nolint:errcheck
 	o1.Run(context.Background()) //nolint:errcheck
 
-	// Phase 2: first deploy — upload + deploy + verify (expect changed).
+	// Phase 2: first deploy, upload + deploy + verify (expect changed).
 	fmt.Println("\n=== Phase 2: First deploy (expect changed) ===")
 
 	o2 := newOrchestrator(url, token)
@@ -90,7 +90,7 @@ func main() {
 		fmt.Printf("File %s status: %s\n", status2.Path, status2.Status)
 	}
 
-	// Phase 3: idempotency — same upload + deploy + verify (expect unchanged).
+	// Phase 3: idempotency, same upload + deploy + verify (expect unchanged).
 	fmt.Println("\n=== Phase 3: Idempotency check (expect unchanged) ===")
 
 	o3 := newOrchestrator(url, token)
@@ -108,7 +108,7 @@ func main() {
 		fmt.Printf("File %s status: %s\n", status3.Path, status3.Status)
 	}
 
-	// Phase 4: undeploy — remove the deployed file using FileUndeploy.
+	// Phase 4: undeploy, remove the deployed file using FileUndeploy.
 	fmt.Println("\n=== Phase 4: Undeploy ===")
 
 	o4 := newOrchestrator(url, token)

@@ -193,7 +193,7 @@ func (r *lipglossRenderer) TaskStart(
 func (r *lipglossRenderer) TaskDone(
 	result engine.TaskResult,
 ) {
-	// Suppress the [skipped] line — the [skip] line from OnSkip
+	// Suppress the [skipped] line, the [skip] line from OnSkip
 	// already shows the reason and is more useful.
 	if result.Status == engine.StatusSkipped {
 		return
@@ -255,7 +255,7 @@ func (r *lipglossRenderer) TaskDone(
 	}
 
 	// Verbose mode: show response data on success.
-	// Skip when per-host results are shown — the aggregated data
+	// Skip when per-host results are shown, the aggregated data
 	// is redundant with the per-host breakdown.
 	if r.verbose && result.Data != nil && !hasBroadcast {
 		r.printResultData(result.Data)
@@ -430,7 +430,7 @@ func (r *lipglossRenderer) TaskSkip(
 }
 
 // printf writes formatted output to the renderer's writer.
-// Write errors are intentionally discarded — there is no meaningful recovery
+// Write errors are intentionally discarded, there is no meaningful recovery
 // for a broken terminal.
 func (r *lipglossRenderer) printf(
 	format string,

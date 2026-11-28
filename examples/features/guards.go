@@ -18,11 +18,11 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-// Package main demonstrates When guards — conditional execution
+// Package main demonstrates When guards, conditional execution
 // based on prior step results.
 //
-// Plan 1: guard passes — whoami runs because hostname is non-empty.
-// Plan 2: guard blocks — whoami is skipped because hostname doesn't
+// Plan 1: guard passes, whoami runs because hostname is non-empty.
+// Plan 2: guard blocks, whoami is skipped because hostname doesn't
 // match "impossible".
 //
 // Run with: OSAPI_TOKEN="<jwt>" go run guards.go

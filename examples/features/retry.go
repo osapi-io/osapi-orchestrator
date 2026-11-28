@@ -62,7 +62,7 @@ func failNTimes(
 }
 
 func main() {
-	// No server needed — TaskFuncs simulate failures locally.
+	// No server needed, TaskFuncs simulate failures locally.
 	o := orchestrator.New("http://localhost:8080", "unused")
 
 	// Retry up to 3 times with the default backoff (1s initial, 30s max).

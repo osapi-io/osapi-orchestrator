@@ -14,10 +14,11 @@ Thank you for your contribution to osapi-orchestrator.
   check finds the difference.
 - **Examine the work that exists.** Look for a pull request or an issue about
   the change. If you find one, use what it says in your work.
-- **Backward compatibility.** Make sure that your change does not stop a program
-  that uses osapi-orchestrator. A change that keeps compatibility is more likely
-  to merge. If your change cannot keep it, open an issue first. Then the
-  maintainers can discuss the API change before you do the work.
+- **No backward compatibility.** When a change makes something old or
+  inconsistent, change it or delete it everywhere, in the same change. Do not
+  add a deprecated flag, a field for old callers, or a shim for an old setup.
+  For a change to the API, open an issue first. Then the maintainers can discuss
+  it before you do the work.
 
 ## Prerequisites
 
@@ -51,45 +52,39 @@ just deps
 
 ## Project structure
 
-```
-pkg/orchestrator/          # User-facing DSL
-  orchestrator.go          # New, Run, TaskFunc
-  ops.go                   # The step helpers and the controller operations
-  ops_hosts.go             # One constructor for each SDK call to the hosts
-  step.go                  # Step chaining (guards, retry, ordering)
-  result.go                # Result types (Results, TaskStatus, Report)
-  host_status.go           # HostStatusOk/Skipped/Failed constants
-  discover.go              # Discover and GroupByFact
-  predicate.go             # Agent predicates (OS, Arch, HasLabel, ...)
-  renderer.go              # The renderer interface
-  renderer_lipgloss.go     # Terminal output renderer
-  generate.go              # mockgen directive, no code
-  options.go               # Option types (verbose, upload, retry)
-  types.go                 # Orchestrator struct, aliases onto the engine
-internal/engine/           # Bridge onto osapi-sdk's orchestrator engine
-docs/
-  operations/              # Operation reference (one doc per operation)
-    README.md              # Index of every operation
-    {service}/{method}.md  # A host operation: service/start.md, ...
-    agent/, health/, files/file/  # The controller operations
-  features/                # Cross-cutting feature guides
-    guards.md, broadcast.md, retry.md, ...
-examples/
-  operations/              # Runnable workflow examples (one per domain)
-    node-info.go, docker.go, schedule.go, ...
-  features/                # Runnable feature examples
-    host-status.go, guards.go, broadcast.go, ...
-```
+- **`pkg/orchestrator/`.** The DSL that users call. It has a typed constructor
+  for each operation, such as `HostnameGet` and `CommandExec`, and uses the SDK
+  types directly, such as `osapi.HostnameEntry` and `osapi.AgentInfo`.
+  - `orchestrator.go`. `New`, `Run`, `TaskFunc`.
+  - `ops.go`. The step helpers and the controller operations.
+  - `ops_hosts.go`. One constructor for each SDK call to the hosts.
+  - `step.go`. Step chaining: guards, retry and ordering.
+  - `result.go`. The result types: `Results`, `TaskStatus`, `Report`.
+  - `host_status.go`. The `HostStatusOk`, `Skipped` and `Failed` constants.
+  - `discover.go`. `Discover` and `GroupByFact`.
+  - `predicate.go`. The agent predicates: OS, Arch, HasLabel and more.
+  - `renderer.go`. The renderer interface.
+  - `renderer_lipgloss.go`. The terminal output renderer.
+  - `generate.go`. The mockgen directive, with no code.
+  - `options.go`. The option types: verbose, upload and retry.
+  - `types.go`. The `Orchestrator` struct, and aliases onto the engine.
+- **`internal/engine/`.** The engine that runs a plan.
+- **`docs/`.**
+  - `operations/`. The operation reference, one doc for each operation.
+    `README.md` is the index. A host operation is `{service}/{method}.md`, such
+    as `service/start.md`. `agent/`, `health/` and `files/file/` are the
+    controller operations.
+  - `features/`. The feature guides, such as `guards.md`, `broadcast.md` and
+    `retry.md`.
+- **`examples/`.**
+  - `operations/`. A runnable workflow example for each domain, such as
+    `node-info.go`, `docker.go` and `schedule.go`.
+  - `features/`. A runnable example for each feature, such as `host-status.go`,
+    `guards.go` and `broadcast.go`.
 
 A host operation has the name and the parameters of its osapi SDK call:
 `ServiceStart` calls `c.Service.Start`, and its doc is at
 `docs/operations/service/start.md`.
-
-- **`pkg/orchestrator/`.** The DSL that users call.
-  - Typed operation constructors (HostnameGet, CommandExec, and more)
-  - It uses the SDK types directly (`osapi.HostnameEntry`, `osapi.AgentInfo`,
-    `osapi.ServiceCreateInput`, and more)
-  - It is a high-level layer on the orchestrator engine of osapi-sdk
 
 ## Code style
 
@@ -109,6 +104,9 @@ not apply to generated files (`*.gen.go`, `*.pb.go`).
 Do not write `//nolint:revive`. It hides a problem and does not fix it. Fix the
 name or the code. When a name must be different in an API, give it an explicit
 name, such as a struct tag.
+
+Do not write an em dash, in a page or in a Go comment. The generated docs come
+from the comments, so a comment is a page too.
 
 ### Documentation
 
@@ -140,6 +138,10 @@ func FunctionName(
 }
 ```
 
+A test entry point, such as `func TestServerPublicTestSuite(t *testing.T)`, is
+the one exception. Write it on one line, as `go test` shows it. Each other
+function with parameters has the signature on more than one line.
+
 Write a function that has no parameters on one line:
 
 ```go
@@ -159,12 +161,25 @@ code that has no other place.
 `types.go` holds only type declarations: structs, interfaces, constants and
 aliases. Put a function in a file that has the name of what the function does.
 
-A test file has the name of the production file that it tests. If a test file
-becomes too large to read, split the production file first. Then each test file
-keeps its production file.
+A test file has the name of the production file that it tests: `foo.go` has
+`foo_public_test.go` and `foo_test.go`. `export_test.go` is the exception. If a
+test file becomes too large to read, split the production file first. Then each
+test file keeps its production file. `just go-test-name-check` fails a test file
+that has no production file of the same name in its directory.
 
 ### Go patterns
 
+- Do not call `panic` in code that is not a test. Return an error, also for a
+  registration error or a programming error. `main` reports the error and exits
+  with a code that is not zero. A `recover` that stops a panic from a dependency
+  is permitted. The `forbidigo` linter fails a `panic` outside a test.
+- Read and write files through [avfs], so that a test can use a file system in
+  memory. This applies to tools that run at build time too: generators,
+  scaffolders and the tools that write docs.
+- Use NATS through [nats-client](https://github.com/osapi-io/nats-client). A
+  package may import `nats.go` or `jetstream` for their types. A call that
+  connects, creates a stream, a KV bucket or an object store, publishes or
+  subscribes goes through nats-client. nats-client itself is the exception.
 - Wrap errors with `fmt.Errorf("context: %w", err)`. Then the chain names each
   layer. `errors.Is` and `errors.As` can examine the chain.
 - Return early. Do not put the successful path inside conditions.
@@ -260,14 +275,19 @@ just go-unit-cov-check   # Report coverage and fail below the target
 ```
 
 `.github/codecov.yml` and the shared `go` justfile module both declare the
-target. Change the two together.
+target. Change the two together. Put the Codecov settings only in
+`.github/codecov.yml`. A `codecov.yml` at the root replaces it, and nothing
+fails. The `threshold` of `.github/codecov.yml` absorbs the rounding of Codecov
+only. `just go-unit-cov-check` is the exact gate at the target.
 
 ### Test file conventions
 
-- Public tests: `*_public_test.go`, in the `_test` package of the package. They
-  test the exported API. Write this type of test first.
-- Internal tests: `*_test.go`, in the same package. Use them only for what the
+- Public tests: `*_public_test.go`, in package `<name>_test`. They test the
+  exported API. Write this type of test first.
+- Internal tests: `*_test.go`, in package `<name>`. Use them only for what the
   exported API cannot reach.
+- A test in package `<name>_test` has a name that ends in `_public_test.go`. A
+  `*_test.go` file is always an internal test.
 - Suite names: `*_public_test.go` has `{Name}PublicTestSuite`, and `*_test.go`
   has `{Name}TestSuite`.
 - Use `testify/suite` with table-driven cases.
@@ -455,6 +475,7 @@ vote or comment on issues, or help answer questions.
 
 Open a [Discussion] on GitHub.
 
+[avfs]: https://github.com/avfs/avfs
 [conventional commits]: https://www.conventionalcommits.org
 [discussion]: https://github.com/osapi-io/osapi-orchestrator/discussions
 [go]: https://go.dev

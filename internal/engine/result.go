@@ -34,7 +34,7 @@ type Status string
 const (
 	// StatusPending and StatusRunning are reserved for future
 	// streaming status support. The runner does not currently
-	// assign these — tasks go directly to a terminal status.
+	// assign these, tasks go directly to a terminal status.
 	StatusPending   Status = "pending"
 	StatusRunning   Status = "running"
 	StatusChanged   Status = "changed"

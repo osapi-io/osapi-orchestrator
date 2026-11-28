@@ -126,7 +126,7 @@ func (p RetryPolicy) backoffDelay(
 }
 
 // Hooks provides consumer-controlled callbacks for plan execution
-// events. All fields are optional — nil callbacks are skipped.
+// events. All fields are optional, nil callbacks are skipped.
 // The SDK performs no logging; hooks are the only output mechanism.
 type Hooks struct {
 	BeforePlan  func(summary PlanSummary)

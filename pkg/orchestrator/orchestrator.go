@@ -87,7 +87,7 @@ func (o *Orchestrator) Run(
 
 // TaskFunc creates a custom step that receives the OSAPI client and
 // completed results from prior steps. Use this for operations not
-// covered by the typed constructors — the client provides full access
+// covered by the typed constructors, the client provides full access
 // to the SDK for calling any API endpoint.
 func (o *Orchestrator) TaskFunc(
 	name string,

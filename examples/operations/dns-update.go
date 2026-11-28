@@ -21,7 +21,7 @@
 // Package main demonstrates the read-then-write DNS pattern.
 //
 // Reads current DNS config, then updates with new servers. All steps
-// use OnError(Continue) so the example runs on any platform — on
+// use OnError(Continue) so the example runs on any platform, on
 // containers or macOS the DNS steps may be skipped or fail gracefully.
 //
 // DAG:

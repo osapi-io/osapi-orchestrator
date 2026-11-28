@@ -20,12 +20,12 @@
 
 // Package main demonstrates error recovery at two levels.
 //
-// Plan 1: Infrastructure failure — TaskFunc returns an error.
+// Plan 1: Infrastructure failure, TaskFunc returns an error.
 //
 //	OnlyIfFailed cleanup runs because the step failed at the
 //	SDK level.
 //
-// Plan 2: Command failure — a command exits non-zero.
+// Plan 2: Command failure, a command exits non-zero.
 //
 //	OnlyIfAnyHostFailed cleanup runs because non-zero exit codes
 //	are treated as host errors by the orchestrator.

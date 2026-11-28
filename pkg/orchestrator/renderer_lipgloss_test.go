@@ -593,7 +593,7 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 			},
 			notContains: []string{
 				// Inline data is suppressed when per-host results
-				// are present — the per-host section already shows it.
+				// are present, the per-host section already shows it.
 				"             hostname: nerd\n             hostname: nerd",
 			},
 		},

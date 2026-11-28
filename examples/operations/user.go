@@ -81,7 +81,7 @@ func main() {
 
 	listKeys := o.UserSSHKeyList("_any", username).After(addKey)
 
-	// Use a placeholder fingerprint — in practice you would decode
+	// Use a placeholder fingerprint, in practice you would decode
 	// the key's fingerprint from list-ssh-key results.
 	removeKey := o.UserSSHKeyDelete("_any", osapi.UserSSHKeyDeleteInput{Name: username, Fingerprint: "SHA256:example"}).
 		After(listKeys).
