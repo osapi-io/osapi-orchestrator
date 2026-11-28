@@ -23,7 +23,9 @@ package orchestrator
 import (
 	"fmt"
 	"io"
+	"maps"
 	"os"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -316,20 +318,7 @@ func (r *lipglossRenderer) printHostResults(
 		)
 
 		if r.verbose && hr.Data != nil {
-			for key, v := range hr.Data {
-				if skipKeys[key] {
-					continue
-				}
-
-				str := formatValue(v)
-				if str != "" {
-					r.printf(
-						"%s%s\n",
-						dataIndent,
-						r.dim.Render(fmt.Sprintf("%s: %s", key, str)),
-					)
-				}
-			}
+			r.printData(dataIndent, hr.Data)
 		}
 	}
 }
@@ -345,14 +334,21 @@ var skipKeys = map[string]bool{
 func (r *lipglossRenderer) printResultData(
 	data map[string]any,
 ) {
-	indent := strings.Repeat(" ", tagWidth+2)
+	r.printData(strings.Repeat(" ", tagWidth+2), data)
+}
 
-	for key, v := range data {
+// printData renders the fields of data as lines with indent, in the order
+// of their keys, so that each run prints them the same way.
+func (r *lipglossRenderer) printData(
+	indent string,
+	data map[string]any,
+) {
+	for _, key := range slices.Sorted(maps.Keys(data)) {
 		if skipKeys[key] {
 			continue
 		}
 
-		str := formatValue(v)
+		str := formatValue(data[key])
 		if str != "" {
 			r.printf(
 				"%s%s\n",
@@ -383,8 +379,8 @@ func formatValue(
 		return fmt.Sprintf("[%d items]", len(val))
 	case map[string]any:
 		parts := make([]string, 0, len(val))
-		for k, inner := range val {
-			parts = append(parts, fmt.Sprintf("%s=%v", k, inner))
+		for _, k := range slices.Sorted(maps.Keys(val)) {
+			parts = append(parts, fmt.Sprintf("%s=%v", k, val[k]))
 		}
 
 		return strings.Join(parts, " ")

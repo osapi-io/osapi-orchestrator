@@ -328,6 +328,9 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 		result      engine.TaskResult
 		contains    []string
 		notContains []string
+		// inOrder are strings that the output has, each after the one
+		// before it.
+		inOrder     []string
 		expectEmpty bool
 	}{
 		{
@@ -698,6 +701,43 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 			},
 		},
 		{
+			name:    "Verbose prints the data in the order of its keys",
+			verbose: true,
+			result: engine.TaskResult{
+				Name:     "run-cmd",
+				Status:   engine.StatusChanged,
+				Changed:  true,
+				Duration: 100 * time.Millisecond,
+				Data: map[string]any{
+					"charlie": "3",
+					"alpha":   "1",
+					"delta":   "4",
+					"bravo":   "2",
+				},
+			},
+			inOrder: []string{"alpha: 1", "bravo: 2", "charlie: 3", "delta: 4"},
+		},
+		{
+			name:    "Verbose prints the data of each host in the order of its keys",
+			verbose: true,
+			result: engine.TaskResult{
+				Name:     "get-all",
+				Status:   engine.StatusUnchanged,
+				Duration: 100 * time.Millisecond,
+				HostResults: []engine.HostResult{
+					{
+						Hostname: "web-01",
+						Data: map[string]any{
+							"zone":   "b",
+							"arch":   "arm64",
+							"kernel": "6.8",
+						},
+					},
+				},
+			},
+			inOrder: []string{"arch: arm64", "kernel: 6.8", "zone: b"},
+		},
+		{
 			name:    "Verbose hides job ID when empty",
 			verbose: true,
 			result: engine.TaskResult{
@@ -731,6 +771,12 @@ func (s *RendererLipglossTestSuite) TestTaskDone() {
 			}
 			for _, c := range tc.notContains {
 				s.NotContains(output, c)
+			}
+			rest := output
+			for _, c := range tc.inOrder {
+				i := strings.Index(rest, c)
+				s.Require().GreaterOrEqual(i, 0, "%q is not in order", c)
+				rest = rest[i+len(c):]
 			}
 		})
 	}
@@ -786,6 +832,11 @@ func (s *RendererLipglossTestSuite) TestFormatValue() {
 			name:     "Map shows key=value pairs",
 			input:    map[string]any{"env": "prod"},
 			expected: "env=prod",
+		},
+		{
+			name:     "Map shows key=value pairs in the order of their keys",
+			input:    map[string]any{"zone": "b", "arch": "arm64", "kernel": "6.8"},
+			expected: "arch=arm64 kernel=6.8 zone=b",
 		},
 		{
 			name:     "Default type uses Sprintf",

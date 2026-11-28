@@ -59,7 +59,7 @@ func rowStep[T any](
 	prefix string,
 	unsafe bool,
 	call hostCall[T],
-	toHost func(T) engine.HostResult,
+	toHost func(T) (engine.HostResult, error),
 ) *Step {
 	name := o.nextOpName(prefix)
 
@@ -89,15 +89,33 @@ func rowStep[T any](
 // that each row of the SDK has, through its JSON.
 func hostResultOf[T any](
 	r T,
-) engine.HostResult {
-	data := engine.StructToMap(r)
+) (engine.HostResult, error) {
+	data, err := engine.StructToMap(r)
+	if err != nil {
+		return engine.HostResult{}, err
+	}
+
 	hr := engine.HostResult{Data: data}
 	hr.Hostname, _ = data["hostname"].(string)
 	hr.Status, _ = data["status"].(string)
 	hr.Changed, _ = data["changed"].(bool)
 	hr.Error, _ = data["error"].(string)
 
-	return hr
+	return hr, nil
+}
+
+// dataResult is a Result with changed and the fields of v as its data,
+// for a step that does not run on hosts.
+func dataResult(
+	changed bool,
+	v any,
+) (*engine.Result, error) {
+	data, err := engine.StructToMap(v)
+	if err != nil {
+		return nil, fmt.Errorf("result data: %w", err)
+	}
+
+	return &engine.Result{Changed: changed, Data: data}, nil
 }
 
 // commandHostResult is hostResultOf for a command, where a non-zero exit
@@ -105,13 +123,13 @@ func hostResultOf[T any](
 // command steps. An error from the server takes precedence.
 func commandHostResult(
 	r osapi.CommandResult,
-) engine.HostResult {
-	hr := hostResultOf(r)
-	if hr.Error == "" && r.ExitCode != 0 {
+) (engine.HostResult, error) {
+	hr, err := hostResultOf(r)
+	if err == nil && hr.Error == "" && r.ExitCode != 0 {
 		hr.Error = fmt.Sprintf("exit code %d", r.ExitCode)
 	}
 
-	return hr
+	return hr, err
 }
 
 // ---------------------------------------------------------------------------
@@ -220,10 +238,7 @@ func (o *Orchestrator) FileUpload(
 				return nil, fmt.Errorf("upload file %s: %w", name, err)
 			}
 
-			return &engine.Result{
-				Changed: resp.Data.Changed,
-				Data:    engine.StructToMap(resp.Data),
-			}, nil
+			return dataResult(resp.Data.Changed, resp.Data)
 		},
 	)
 
@@ -248,10 +263,7 @@ func (o *Orchestrator) FileChanged(
 				return nil, fmt.Errorf("check file %s: %w", name, err)
 			}
 
-			return &engine.Result{
-				Changed: resp.Data.Changed,
-				Data:    engine.StructToMap(resp.Data),
-			}, nil
+			return dataResult(resp.Data.Changed, resp.Data)
 		},
 	)
 
@@ -275,7 +287,7 @@ func (o *Orchestrator) AgentList() *Step {
 				return nil, fmt.Errorf("list agents: %w", err)
 			}
 
-			return &engine.Result{Data: engine.StructToMap(resp.Data)}, nil
+			return dataResult(false, resp.Data)
 		},
 	)
 
@@ -297,7 +309,7 @@ func (o *Orchestrator) AgentGet(
 				return nil, fmt.Errorf("get agent %s: %w", hostname, err)
 			}
 
-			return &engine.Result{Data: engine.StructToMap(resp.Data)}, nil
+			return dataResult(false, resp.Data)
 		},
 	)
 

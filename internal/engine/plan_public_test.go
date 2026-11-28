@@ -674,6 +674,112 @@ func (s *PlanPublicTestSuite) TestRun() {
 				s.Equal(engine.StatusSkipped, m["b"])
 			},
 		},
+		{
+			name: "skips an OnlyIfChanged task when no dependency changed",
+			validateFunc: func() {
+				plan := engine.NewPlan(nil)
+				ran := false
+
+				dep := plan.TaskFunc("dep", taskFunc(false, nil))
+				plan.TaskFunc("conditional", taskFunc(false, func() {
+					ran = true
+				})).DependsOn(dep).OnlyIfChanged()
+
+				report, err := plan.Run(context.Background())
+				s.Require().NoError(err)
+				s.False(ran)
+				s.Contains(report.Summary(), "skipped")
+			},
+		},
+		{
+			name: "runs an OnlyIfChanged task when a dependency changed",
+			validateFunc: func() {
+				plan := engine.NewPlan(nil)
+				ran := false
+
+				dep := plan.TaskFunc("dep", taskFunc(true, nil))
+				plan.TaskFunc("conditional", taskFunc(false, func() {
+					ran = true
+				})).DependsOn(dep).OnlyIfChanged()
+
+				report, err := plan.Run(context.Background())
+				s.Require().NoError(err)
+				s.True(ran)
+				s.Equal(engine.StatusUnchanged, report.Tasks[1].Status)
+			},
+		},
+		{
+			name: "skips a task when its guard returns false",
+			validateFunc: func() {
+				plan := engine.NewPlan(nil)
+				ran := false
+
+				a := plan.TaskFunc("a", taskFunc(false, nil))
+				plan.TaskFunc("b", taskFunc(true, func() {
+					ran = true
+				})).DependsOn(a).When(func(_ engine.Results) bool { return false })
+
+				report, err := plan.Run(context.Background())
+				s.Require().NoError(err)
+				s.False(ran)
+				s.Equal(engine.StatusSkipped, report.Tasks[1].Status)
+			},
+		},
+		{
+			name: "a guard that runs on failure and inspects the failure runs its task",
+			validateFunc: func() {
+				ran, status, _ := s.runAfterFailure(func(r engine.Results) bool {
+					res := r.Get("fail")
+
+					return res != nil && res.Status == engine.StatusFailed
+				}, true)
+
+				s.True(ran)
+				s.Equal(engine.StatusChanged, status)
+			},
+		},
+		{
+			name: "a guard that runs on failure and returns false skips its task",
+			validateFunc: func() {
+				ran, status, reason := s.runAfterFailure(func(r engine.Results) bool {
+					res := r.Get("fail")
+
+					return res != nil && res.Status == engine.StatusChanged
+				}, true)
+
+				s.False(ran)
+				s.Equal(engine.StatusSkipped, status)
+				s.Equal("guard returned false", reason)
+			},
+		},
+		{
+			name: "a guard that does not run on failure is skipped after a failed dependency",
+			validateFunc: func() {
+				ran, status, reason := s.runAfterFailure(func(r engine.Results) bool {
+					res := r.Get("fail")
+
+					return res != nil && res.Status == engine.StatusFailed
+				}, false)
+
+				s.False(ran)
+				s.Equal(engine.StatusSkipped, status)
+				s.Equal("dependency failed", reason)
+			},
+		},
+		{
+			name: "an empty plan runs no level",
+			validateFunc: func() {
+				levels := 0
+				plan := engine.NewPlan(nil, engine.WithHooks(engine.Hooks{
+					BeforeLevel: func(int, []*engine.Task, bool) { levels++ },
+				}))
+
+				report, err := plan.Run(context.Background())
+				s.Require().NoError(err)
+				s.Empty(report.Tasks)
+				s.Zero(levels)
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -681,163 +787,41 @@ func (s *PlanPublicTestSuite) TestRun() {
 	}
 }
 
-func (s *PlanPublicTestSuite) TestRunOnlyIfChanged() {
-	tests := []struct {
-		name         string
-		depChanged   bool
-		validateFunc func(report *engine.Report, ran bool)
-	}{
-		{
-			name:       "skips when no dependency changed",
-			depChanged: false,
-			validateFunc: func(report *engine.Report, ran bool) {
-				s.False(ran)
-				s.Contains(report.Summary(), "skipped")
-			},
-		},
-		{
-			name:       "runs when dependency changed",
-			depChanged: true,
-			validateFunc: func(report *engine.Report, ran bool) {
-				s.True(ran)
-				s.Equal(engine.StatusUnchanged, report.Tasks[1].Status)
-			},
-		},
+// runAfterFailure runs a plan where the task "alert" depends on the task
+// "fail", which fails, and has guard. It returns whether alert ran, its
+// status, and its reason.
+func (s *PlanPublicTestSuite) runAfterFailure(
+	guard func(engine.Results) bool,
+	runsOnFailure bool,
+) (bool, engine.Status, string) {
+	plan := engine.NewPlan(
+		nil,
+		engine.OnError(engine.Continue),
+	)
+	ran := false
+
+	fail := plan.TaskFunc("fail", failFunc("boom"))
+	alert := plan.TaskFunc("alert", taskFunc(true, func() {
+		ran = true
+	}))
+	alert.DependsOn(fail)
+	alert.When(guard)
+
+	if runsOnFailure {
+		alert.RunsOnFailure()
 	}
 
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			plan := engine.NewPlan(nil)
-			ran := false
+	report, err := plan.Run(context.Background())
+	s.Require().ErrorContains(err, `step "fail": boom`)
 
-			dep := plan.TaskFunc("dep", taskFunc(tt.depChanged, nil))
-			conditional := plan.TaskFunc("conditional", taskFunc(false, func() {
-				ran = true
-			}))
-			conditional.DependsOn(dep).OnlyIfChanged()
-
-			report, err := plan.Run(context.Background())
-			s.Require().NoError(err)
-			tt.validateFunc(report, ran)
-		})
-	}
-}
-
-func (s *PlanPublicTestSuite) TestRunGuard() {
-	tests := []struct {
-		name         string
-		guard        func(engine.Results) bool
-		validateFunc func(report *engine.Report, ran bool)
-	}{
-		{
-			name:  "skips when guard returns false",
-			guard: func(_ engine.Results) bool { return false },
-			validateFunc: func(report *engine.Report, ran bool) {
-				s.False(ran)
-				s.Equal(engine.StatusSkipped, report.Tasks[1].Status)
-			},
-		},
+	reason := ""
+	for _, tr := range report.Tasks {
+		if tr.Name == "alert" {
+			reason = tr.Reason
+		}
 	}
 
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			plan := engine.NewPlan(nil)
-			ran := false
-
-			a := plan.TaskFunc("a", taskFunc(false, nil))
-			b := plan.TaskFunc("b", taskFunc(true, func() {
-				ran = true
-			}))
-			b.DependsOn(a)
-			b.When(tt.guard)
-
-			report, err := plan.Run(context.Background())
-			s.Require().NoError(err)
-			tt.validateFunc(report, ran)
-		})
-	}
-}
-
-func (s *PlanPublicTestSuite) TestRunGuardWithFailedDependency() {
-	failed := func(r engine.Results) bool {
-		res := r.Get("fail")
-
-		return res != nil && res.Status == engine.StatusFailed
-	}
-	changed := func(r engine.Results) bool {
-		res := r.Get("fail")
-
-		return res != nil && res.Status == engine.StatusChanged
-	}
-
-	tests := []struct {
-		name          string
-		guard         func(engine.Results) bool
-		runsOnFailure bool
-		validateFunc  func(bool, engine.Status, string)
-	}{
-		{
-			name:          "a guard that inspects the failure runs and returns true",
-			guard:         failed,
-			runsOnFailure: true,
-			validateFunc: func(ran bool, status engine.Status, _ string) {
-				s.True(ran)
-				s.Equal(engine.StatusChanged, status)
-			},
-		},
-		{
-			name:          "a guard that inspects the failure runs and returns false",
-			guard:         changed,
-			runsOnFailure: true,
-			validateFunc: func(ran bool, status engine.Status, reason string) {
-				s.False(ran)
-				s.Equal(engine.StatusSkipped, status)
-				s.Equal("guard returned false", reason)
-			},
-		},
-		{
-			name:  "another guard is skipped after a failed dependency",
-			guard: failed,
-			validateFunc: func(ran bool, status engine.Status, reason string) {
-				s.False(ran)
-				s.Equal(engine.StatusSkipped, status)
-				s.Equal("dependency failed", reason)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.name, func() {
-			plan := engine.NewPlan(
-				nil,
-				engine.OnError(engine.Continue),
-			)
-			ran := false
-
-			fail := plan.TaskFunc("fail", failFunc("boom"))
-			alert := plan.TaskFunc("alert", taskFunc(true, func() {
-				ran = true
-			}))
-			alert.DependsOn(fail)
-			alert.When(tt.guard)
-
-			if tt.runsOnFailure {
-				alert.RunsOnFailure()
-			}
-
-			report, err := plan.Run(context.Background())
-			s.Require().ErrorContains(err, `step "fail": boom`)
-
-			reason := ""
-			for _, tr := range report.Tasks {
-				if tr.Name == "alert" {
-					reason = tr.Reason
-				}
-			}
-
-			tt.validateFunc(ran, statusMap(report)["alert"], reason)
-		})
-	}
+	return ran, statusMap(report)["alert"], reason
 }
 
 func (s *PlanPublicTestSuite) TestClient() {
@@ -1009,6 +993,14 @@ func (s *PlanPublicTestSuite) TestLevels() {
 			},
 		},
 		{
+			name:  "returns no levels for an empty plan",
+			setup: func(*engine.Plan) {},
+			validateFunc: func(levels [][]*engine.Task, err error) {
+				s.NoError(err)
+				s.Empty(levels)
+			},
+		},
+		{
 			name: "returns error for invalid plan",
 			setup: func(plan *engine.Plan) {
 				a := plan.TaskFunc("a", taskFunc(false, nil))
@@ -1055,6 +1047,13 @@ func (s *PlanPublicTestSuite) TestExplain() {
 				s.Contains(output, "a [fn]")
 				s.Contains(output, "Level 1:")
 				s.Contains(output, "b [fn] <- a (only-if-changed, when, retry(2))")
+			},
+		},
+		{
+			name:  "an empty plan has no levels",
+			setup: func(*engine.Plan) {},
+			validateFunc: func(output string) {
+				s.Contains(output, "Plan: 0 tasks, 0 levels")
 			},
 		},
 		{

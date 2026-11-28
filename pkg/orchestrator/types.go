@@ -31,7 +31,8 @@ type Result = engine.Result
 type TaskResult = engine.TaskResult
 
 // StructToMap converts a struct to map[string]any using its JSON tags.
-// Useful in TaskFunc callbacks to populate Result.Data from SDK types.
+// Useful in TaskFunc callbacks to populate Result.Data from SDK types. It
+// returns an error when the value cannot be encoded as a JSON object.
 var StructToMap = engine.StructToMap
 
 // Orchestrator is the top-level entry point for building and running
