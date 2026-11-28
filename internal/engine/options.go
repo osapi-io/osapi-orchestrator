@@ -128,6 +128,16 @@ func (p RetryPolicy) backoffDelay(
 // Hooks provides consumer-controlled callbacks for plan execution
 // events. All fields are optional, nil callbacks are skipped.
 // The SDK performs no logging; hooks are the only output mechanism.
+//
+// BeforePlan, AfterPlan, BeforeLevel and AfterLevel run on the goroutine
+// that runs the plan, one at a time. A panic in one of them is recovered
+// and dropped, and the plan continues.
+//
+// BeforeTask, AfterTask, OnRetry and OnSkip run on the goroutine of their
+// task. The tasks of a level run at the same time, so these hooks can run
+// at the same time and must be safe for concurrent use. A panic in one of
+// them fails its task, as a panic in the task itself does, so the tasks
+// that depend on it are skipped.
 type Hooks struct {
 	BeforePlan  func(summary PlanSummary)
 	AfterPlan   func(report *Report)

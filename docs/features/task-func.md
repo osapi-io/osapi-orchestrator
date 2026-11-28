@@ -34,10 +34,11 @@ o.TaskFunc(
         if err != nil {
             return nil, err
         }
-        return &orchestrator.Result{
-            Changed: false,
-            Data:    orchestrator.StructToMap(resp.Data),
-        }, nil
+        data, err := orchestrator.StructToMap(resp.Data)
+        if err != nil {
+            return nil, err
+        }
+        return &orchestrator.Result{Changed: false, Data: data}, nil
     },
 )
 ```

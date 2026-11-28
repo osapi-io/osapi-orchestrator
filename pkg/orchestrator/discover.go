@@ -77,10 +77,7 @@ func (o *Orchestrator) fetchAgents(
 				return nil, fmt.Errorf("list agents: %w", err)
 			}
 
-			return &engine.Result{
-				Changed: false,
-				Data:    engine.StructToMap(resp.Data),
-			}, nil
+			return dataResult(false, resp.Data)
 		},
 	)
 

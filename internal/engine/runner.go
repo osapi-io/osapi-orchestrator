@@ -633,6 +633,10 @@ var jitter = func(
 func levelize(
 	tasks []*Task,
 ) [][]*Task {
+	if len(tasks) == 0 {
+		return nil
+	}
+
 	level := make(map[string]int, len(tasks))
 
 	var computeLevel func(t *Task) int

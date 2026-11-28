@@ -54,12 +54,13 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 		setupFn      func()
 		teardownFn   func()
 		input        any
-		validateFunc func(m map[string]any)
+		validateFunc func(m map[string]any, err error)
 	}{
 		{
 			name:  "converts struct with json tags to map",
 			input: testStruct{Name: "web-01", Value: 42},
-			validateFunc: func(m map[string]any) {
+			validateFunc: func(m map[string]any, err error) {
+				s.Require().NoError(err)
 				s.Require().NotNil(m)
 				s.Equal("web-01", m["name"])
 				s.Equal(float64(42), m["value"])
@@ -68,7 +69,8 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 		{
 			name:  "returns nil for nil input",
 			input: nil,
-			validateFunc: func(m map[string]any) {
+			validateFunc: func(m map[string]any, err error) {
+				s.NoError(err)
 				s.Nil(m)
 			},
 		},
@@ -78,7 +80,8 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 				Label: "parent",
 				Inner: testStruct{Name: "child", Value: 7},
 			},
-			validateFunc: func(m map[string]any) {
+			validateFunc: func(m map[string]any, err error) {
+				s.Require().NoError(err)
 				s.Require().NotNil(m)
 				s.Equal("parent", m["label"])
 
@@ -94,21 +97,23 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 				Hostname: "web-01",
 				Changed:  true,
 			},
-			validateFunc: func(m map[string]any) {
+			validateFunc: func(m map[string]any, err error) {
+				s.Require().NoError(err)
 				s.Require().NotNil(m)
 				s.Equal("web-01", m["hostname"])
 				s.Equal(true, m["changed"])
 			},
 		},
 		{
-			name:  "returns nil for unmarshalable input",
+			name:  "returns the error of input that JSON cannot encode",
 			input: make(chan int),
-			validateFunc: func(m map[string]any) {
+			validateFunc: func(m map[string]any, err error) {
+				s.ErrorContains(err, "encode chan int:")
 				s.Nil(m)
 			},
 		},
 		{
-			name: "returns nil when unmarshal fails",
+			name: "returns the error when decoding fails",
 			setupFn: func() {
 				engine.SetJSONUnmarshalFn(func(
 					_ []byte,
@@ -119,7 +124,8 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 			},
 			teardownFn: engine.ResetJSONUnmarshalFn,
 			input:      testStruct{Name: "test"},
-			validateFunc: func(m map[string]any) {
+			validateFunc: func(m map[string]any, err error) {
+				s.ErrorContains(err, "forced unmarshal error")
 				s.Nil(m)
 			},
 		},
@@ -134,8 +140,7 @@ func (s *BridgePublicTestSuite) TestStructToMap() {
 				defer tt.teardownFn()
 			}
 
-			got := engine.StructToMap(tt.input)
-			tt.validateFunc(got)
+			tt.validateFunc(engine.StructToMap(tt.input))
 		})
 	}
 }
@@ -170,19 +175,20 @@ func (s *BridgePublicTestSuite) TestHostFailed() {
 }
 
 func (s *BridgePublicTestSuite) TestCollectionResult() {
-	mapper := func(r osapi.HostnameResult) engine.HostResult {
+	mapper := func(r osapi.HostnameResult) (engine.HostResult, error) {
 		return engine.HostResult{
 			Hostname: r.Hostname,
 			Changed:  r.Changed,
 			Error:    r.Error,
-		}
+		}, nil
 	}
 
 	tests := []struct {
 		name         string
 		col          osapi.Collection[osapi.HostnameResult]
 		rawJSON      []byte
-		toHost       func(osapi.HostnameResult) engine.HostResult
+		setupFn      func()
+		toHost       func(osapi.HostnameResult) (engine.HostResult, error)
 		validateFunc func(*engine.Result, error)
 	}{
 		{
@@ -237,13 +243,13 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				},
 				JobID: "job-timeout",
 			},
-			toHost: func(r osapi.HostnameResult) engine.HostResult {
+			toHost: func(r osapi.HostnameResult) (engine.HostResult, error) {
 				status := "ok"
 				if r.Hostname == "web-02" {
 					status = "timeout"
 				}
 
-				return engine.HostResult{Hostname: r.Hostname, Status: status}
+				return engine.HostResult{Hostname: r.Hostname, Status: status}, nil
 			},
 			validateFunc: func(result *engine.Result, err error) {
 				s.Require().Error(err)
@@ -276,12 +282,12 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				},
 				JobID: "job-auto",
 			},
-			toHost: func(r osapi.HostnameResult) engine.HostResult {
+			toHost: func(r osapi.HostnameResult) (engine.HostResult, error) {
 				return engine.HostResult{
 					Hostname: r.Hostname,
 					Changed:  r.Changed,
 					Error:    r.Error,
-				}
+				}, nil
 			},
 			validateFunc: func(result *engine.Result, err error) {
 				s.EqualError(err, "1 of 1 hosts failed: db-01: timeout")
@@ -302,13 +308,13 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				},
 				JobID: "job-partial",
 			},
-			toHost: func(r osapi.HostnameResult) engine.HostResult {
+			toHost: func(r osapi.HostnameResult) (engine.HostResult, error) {
 				return engine.HostResult{
 					Hostname: r.Hostname,
 					Status:   string(r.Status),
 					Changed:  r.Changed,
 					Error:    r.Error,
-				}
+				}, nil
 			},
 			validateFunc: func(result *engine.Result, err error) {
 				// A skipped host is not a failure; a failed host with no
@@ -327,12 +333,12 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 				},
 				JobID: "job-explicit",
 			},
-			toHost: func(r osapi.HostnameResult) engine.HostResult {
+			toHost: func(r osapi.HostnameResult) (engine.HostResult, error) {
 				return engine.HostResult{
 					Hostname: r.Hostname,
 					Changed:  r.Changed,
 					Data:     map[string]any{"custom": "value"},
-				}
+				}, nil
 			},
 			validateFunc: func(result *engine.Result, err error) {
 				s.NoError(err)
@@ -378,6 +384,45 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 			},
 		},
 		{
+			name: "the error of the mapper is the error of the step",
+			col: osapi.Collection[osapi.HostnameResult]{
+				Results: []osapi.HostnameResult{
+					{Hostname: "web-01"},
+				},
+			},
+			toHost: func(osapi.HostnameResult) (engine.HostResult, error) {
+				return engine.HostResult{}, fmt.Errorf("forced mapper error")
+			},
+			validateFunc: func(result *engine.Result, err error) {
+				s.EqualError(err, "host result: forced mapper error")
+				s.Nil(result)
+			},
+		},
+		{
+			name: "a failed StructToMap of the data is the error of the step",
+			col: osapi.Collection[osapi.HostnameResult]{
+				Results: []osapi.HostnameResult{
+					{Hostname: "web-01"},
+				},
+			},
+			setupFn: func() {
+				engine.SetJSONUnmarshalFn(func(
+					_ []byte,
+					_ any,
+				) error {
+					return fmt.Errorf("forced unmarshal error")
+				})
+			},
+			toHost: mapper,
+			validateFunc: func(result *engine.Result, err error) {
+				s.ErrorContains(
+					err,
+					"host result data: decode client.HostnameResult: forced unmarshal error",
+				)
+				s.Nil(result)
+			},
+		},
+		{
 			name: "invalid rawJSON returns error",
 			col: osapi.Collection[osapi.HostnameResult]{
 				Results: []osapi.HostnameResult{
@@ -396,6 +441,11 @@ func (s *BridgePublicTestSuite) TestCollectionResult() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			if tt.setupFn != nil {
+				tt.setupFn()
+				defer engine.ResetJSONUnmarshalFn()
+			}
+
 			tt.validateFunc(engine.CollectionResult(
 				tt.col,
 				tt.rawJSON,

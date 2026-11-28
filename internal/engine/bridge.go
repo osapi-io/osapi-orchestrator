@@ -32,25 +32,26 @@ import (
 var jsonUnmarshalFn = json.Unmarshal
 
 // StructToMap converts a struct to map[string]any using its JSON tags.
-// Returns nil if v is nil or cannot be marshaled.
+// It returns nil for a nil v, and an error when v cannot be encoded as a
+// JSON object.
 func StructToMap(
 	v any,
-) map[string]any {
+) (map[string]any, error) {
 	if v == nil {
-		return nil
+		return nil, nil
 	}
 
 	b, err := json.Marshal(v)
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("encode %T: %w", v, err)
 	}
 
 	var m map[string]any
 	if err := jsonUnmarshalFn(b, &m); err != nil {
-		return nil
+		return nil, fmt.Errorf("decode %T: %w", v, err)
 	}
 
-	return m
+	return m, nil
 }
 
 // CollectionResult builds a Result from a Collection response.
@@ -66,10 +67,13 @@ func StructToMap(
 // When one or more hosts failed (HostFailed), the step fails: the
 // result comes back with an error that names each failed host, and
 // the runner keeps the result for the guards that inspect hosts.
+//
+// An error from toHostResult, or from StructToMap, is the error of the
+// step, so that a result never comes back with its data missing.
 func CollectionResult[T any](
 	col osapi.Collection[T],
 	rawJSON []byte,
-	toHostResult func(T) HostResult,
+	toHostResult func(T) (HostResult, error),
 ) (*Result, error) {
 	hostResults := make([]HostResult, 0, len(col.Results))
 	changed := false
@@ -77,10 +81,16 @@ func CollectionResult[T any](
 	var failures []string
 
 	for _, r := range col.Results {
-		hr := toHostResult(r)
+		hr, err := toHostResult(r)
+		if err != nil {
+			return nil, fmt.Errorf("host result: %w", err)
+		}
 
 		if hr.Data == nil {
-			hr.Data = StructToMap(r)
+			hr.Data, err = StructToMap(r)
+			if err != nil {
+				return nil, fmt.Errorf("host result data: %w", err)
+			}
 		}
 
 		if hr.Changed {
