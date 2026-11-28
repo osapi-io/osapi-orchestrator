@@ -26,9 +26,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 type StepTestSuite struct {

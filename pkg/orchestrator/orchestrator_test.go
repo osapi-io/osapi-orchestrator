@@ -28,9 +28,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
+
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 type OrchestratorTestSuite struct {
@@ -84,7 +85,9 @@ func (s *OrchestratorTestSuite) TestRun() {
 	tests := []struct {
 		name      string
 		handler   http.HandlerFunc
+		build     func(*Orchestrator)
 		expectErr bool
+		errSubstr string
 	}{
 		{
 			name: "Succeeds with healthy server",
@@ -109,6 +112,16 @@ func (s *OrchestratorTestSuite) TestRun() {
 			}),
 			expectErr: true,
 		},
+		{
+			name:    "a plan with a cycle is refused before it runs",
+			handler: http.NotFound,
+			build: func(orch *Orchestrator) {
+				a := orch.HealthCheck().Named("a")
+				b := orch.HealthCheck().Named("b").After(a)
+				a.After(b)
+			},
+			errSubstr: "plan validation",
+		},
 	}
 
 	for _, tc := range tests {
@@ -117,9 +130,20 @@ func (s *OrchestratorTestSuite) TestRun() {
 			defer server.Close()
 
 			orch := New(server.URL, "test-token")
-			orch.HealthCheck()
+			if tc.build != nil {
+				tc.build(orch)
+			} else {
+				orch.HealthCheck()
+			}
 
 			report, err := orch.Run(context.Background())
+
+			if tc.errSubstr != "" {
+				s.Require().ErrorContains(err, tc.errSubstr)
+				s.Nil(report)
+
+				return
+			}
 
 			if tc.expectErr {
 				// Run returns the report with the error, so the caller
@@ -138,18 +162,6 @@ func (s *OrchestratorTestSuite) TestRun() {
 			s.Len(report.Tasks, 1)
 		})
 	}
-}
-
-func (s *OrchestratorTestSuite) TestRunInvalidPlan() {
-	orch := New("http://127.0.0.1:0", "test-token")
-	a := orch.HealthCheck().Named("a")
-	b := orch.HealthCheck().Named("b").After(a)
-	a.After(b)
-
-	report, err := orch.Run(context.Background())
-
-	s.Require().ErrorContains(err, "plan validation")
-	s.Nil(report)
 }
 
 func (s *OrchestratorTestSuite) TestRendererHooks() {

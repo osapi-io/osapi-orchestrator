@@ -27,10 +27,10 @@ import (
 	"testing"
 	"time"
 
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi-orchestrator/internal/engine"
-	osapiclient "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 type PlanPublicTestSuite struct {
@@ -49,7 +49,7 @@ func taskFunc(
 ) engine.TaskFn {
 	return func(
 		_ context.Context,
-		_ *osapiclient.Client,
+		_ *osapi.Client,
 	) (*engine.Result, error) {
 		if sideEffect != nil {
 			sideEffect()
@@ -60,17 +60,21 @@ func taskFunc(
 }
 
 // failFunc creates a TaskFn that always returns the given error.
-func failFunc(msg string) engine.TaskFn {
+func failFunc(
+	msg string,
+) engine.TaskFn {
 	return func(
 		_ context.Context,
-		_ *osapiclient.Client,
+		_ *osapi.Client,
 	) (*engine.Result, error) {
 		return nil, fmt.Errorf("%s", msg)
 	}
 }
 
 // statusMap builds a name→status map from a report for easy assertions.
-func statusMap(report *engine.Report) map[string]engine.Status {
+func statusMap(
+	report *engine.Report,
+) map[string]engine.Status {
 	m := make(map[string]engine.Status, len(report.Tasks))
 	for _, r := range report.Tasks {
 		m[r.Name] = r.Status
@@ -95,77 +99,586 @@ func filterPrefix(
 }
 
 func (s *PlanPublicTestSuite) TestRun() {
-	s.Run("linear chain executes in order", func() {
-		var order []string
-		plan := engine.NewPlan(nil)
+	tests := []struct {
+		name         string
+		validateFunc func()
+	}{
+		{
+			name: "linear chain executes in order",
+			validateFunc: func() {
+				var order []string
+				plan := engine.NewPlan(nil)
 
-		mk := func(name string, changed bool) *engine.Task {
-			n := name
+				mk := func(name string, changed bool) *engine.Task {
+					n := name
 
-			return plan.TaskFunc(n, taskFunc(changed, func() {
-				order = append(order, n)
-			}))
-		}
-
-		a := mk("a", true)
-		b := mk("b", true)
-		c := mk("c", false)
-		b.DependsOn(a)
-		c.DependsOn(b)
-
-		report, err := plan.Run(context.Background())
-		s.Require().NoError(err)
-		s.Equal([]string{"a", "b", "c"}, order)
-		s.Len(report.Tasks, 3)
-		s.Contains(report.Summary(), "2 changed")
-		s.Contains(report.Summary(), "1 unchanged")
-	})
-
-	s.Run("parallel tasks run concurrently", func() {
-		var concurrentMax atomic.Int32
-		var concurrent atomic.Int32
-
-		plan := engine.NewPlan(nil)
-
-		for _, name := range []string{"a", "b", "c"} {
-			plan.TaskFunc(name, func(
-				_ context.Context,
-				_ *osapiclient.Client,
-			) (*engine.Result, error) {
-				cur := concurrent.Add(1)
-				for {
-					prev := concurrentMax.Load()
-					if cur > prev {
-						if concurrentMax.CompareAndSwap(prev, cur) {
-							break
-						}
-					} else {
-						break
-					}
+					return plan.TaskFunc(n, taskFunc(changed, func() {
+						order = append(order, n)
+					}))
 				}
-				concurrent.Add(-1)
 
-				return &engine.Result{Changed: false}, nil
-			})
-		}
+				a := mk("a", true)
+				b := mk("b", true)
+				c := mk("c", false)
+				b.DependsOn(a)
+				c.DependsOn(b)
 
-		report, err := plan.Run(context.Background())
-		s.Require().NoError(err)
-		s.Len(report.Tasks, 3)
-		s.GreaterOrEqual(int(concurrentMax.Load()), 1)
-	})
+				report, err := plan.Run(context.Background())
+				s.Require().NoError(err)
+				s.Equal([]string{"a", "b", "c"}, order)
+				s.Len(report.Tasks, 3)
+				s.Contains(report.Summary(), "2 changed")
+				s.Contains(report.Summary(), "1 unchanged")
+			},
+		},
+		{
+			name: "parallel tasks run concurrently",
+			validateFunc: func() {
+				var concurrentMax atomic.Int32
+				var concurrent atomic.Int32
 
-	s.Run("cycle detection returns error", func() {
-		plan := engine.NewPlan(nil)
-		a := plan.TaskFunc("a", taskFunc(false, nil))
-		b := plan.TaskFunc("b", taskFunc(false, nil))
-		a.DependsOn(b)
-		b.DependsOn(a)
+				plan := engine.NewPlan(nil)
 
-		_, err := plan.Run(context.Background())
-		s.Error(err)
-		s.Contains(err.Error(), "cycle")
-	})
+				for _, name := range []string{"a", "b", "c"} {
+					plan.TaskFunc(name, func(
+						_ context.Context,
+						_ *osapi.Client,
+					) (*engine.Result, error) {
+						cur := concurrent.Add(1)
+						for {
+							prev := concurrentMax.Load()
+							if cur > prev {
+								if concurrentMax.CompareAndSwap(prev, cur) {
+									break
+								}
+							} else {
+								break
+							}
+						}
+						concurrent.Add(-1)
+
+						return &engine.Result{Changed: false}, nil
+					})
+				}
+
+				report, err := plan.Run(context.Background())
+				s.Require().NoError(err)
+				s.Len(report.Tasks, 3)
+				s.GreaterOrEqual(int(concurrentMax.Load()), 1)
+			},
+		},
+		{
+			name: "cycle detection returns error",
+			validateFunc: func() {
+				plan := engine.NewPlan(nil)
+				a := plan.TaskFunc("a", taskFunc(false, nil))
+				b := plan.TaskFunc("b", taskFunc(false, nil))
+				a.DependsOn(b)
+				b.DependsOn(a)
+
+				_, err := plan.Run(context.Background())
+				s.Error(err)
+				s.Contains(err.Error(), "cycle")
+			},
+		},
+		{
+			name: "stop all on error",
+			validateFunc: func() {
+				plan := engine.NewPlan(nil)
+				didRun := false
+
+				fail := plan.TaskFunc("fail", failFunc("boom"))
+				next := plan.TaskFunc("next", taskFunc(false, func() {
+					didRun = true
+				}))
+				next.DependsOn(fail)
+
+				_, err := plan.Run(context.Background())
+				s.Error(err)
+				s.False(didRun)
+			},
+		},
+		{
+			name: "continue on error runs independent tasks",
+			validateFunc: func() {
+				plan := engine.NewPlan(
+					nil,
+					engine.OnError(engine.Continue),
+				)
+				didRun := false
+
+				plan.TaskFunc("fail", failFunc("boom"))
+				plan.TaskFunc("independent", taskFunc(true, func() {
+					didRun = true
+				}))
+
+				report, err := plan.Run(context.Background())
+				s.Error(err, "a task that failed with Continue makes Run fail")
+				s.True(didRun)
+				s.Len(report.Tasks, 2)
+			},
+		},
+		{
+			name: "continue skips dependents of failed task",
+			validateFunc: func() {
+				plan := engine.NewPlan(
+					nil,
+					engine.OnError(engine.Continue),
+				)
+
+				a := plan.TaskFunc("a", failFunc("a failed"))
+				plan.TaskFunc("b", taskFunc(true, nil)).DependsOn(a)
+				plan.TaskFunc("c", taskFunc(true, nil))
+
+				report, err := plan.Run(context.Background())
+				s.Error(err, "a task that failed with Continue makes Run fail")
+				s.Len(report.Tasks, 3)
+				m := statusMap(report)
+				s.Equal(engine.StatusFailed, m["a"])
+				s.Equal(engine.StatusSkipped, m["b"])
+				s.Equal(engine.StatusChanged, m["c"])
+			},
+		},
+		{
+			name: "continue transitive skip",
+			validateFunc: func() {
+				plan := engine.NewPlan(
+					nil,
+					engine.OnError(engine.Continue),
+				)
+
+				a := plan.TaskFunc("a", failFunc("a failed"))
+				b := plan.TaskFunc("b", taskFunc(true, nil))
+				b.DependsOn(a)
+				c := plan.TaskFunc("c", taskFunc(true, nil))
+				c.DependsOn(b)
+
+				report, err := plan.Run(context.Background())
+				s.Error(err, "a task that failed with Continue makes Run fail")
+				m := statusMap(report)
+				s.Equal(engine.StatusFailed, m["a"])
+				s.Equal(engine.StatusSkipped, m["b"])
+				s.Equal(engine.StatusSkipped, m["c"])
+			},
+		},
+		{
+			name: "per-task continue override",
+			validateFunc: func() {
+				plan := engine.NewPlan(nil) // default StopAll
+
+				a := plan.TaskFunc("a", failFunc("a failed"))
+				a.OnError(engine.Continue)
+				plan.TaskFunc("b", taskFunc(true, nil))
+
+				report, err := plan.Run(context.Background())
+				s.Error(err, "a task that failed with Continue makes Run fail")
+				m := statusMap(report)
+				s.Equal(engine.StatusFailed, m["a"])
+				s.Equal(engine.StatusChanged, m["b"])
+			},
+		},
+		{
+			name: "retry succeeds after transient failure",
+			validateFunc: func() {
+				attempts := 0
+				plan := engine.NewPlan(
+					nil,
+					engine.WithRetry(engine.Retry(2)),
+				)
+
+				plan.TaskFunc("flaky", func(
+					_ context.Context,
+					_ *osapi.Client,
+				) (*engine.Result, error) {
+					attempts++
+					if attempts < 3 {
+						return nil, fmt.Errorf("attempt %d failed", attempts)
+					}
+
+					return &engine.Result{Changed: true}, nil
+				})
+
+				report, err := plan.Run(context.Background())
+				s.NoError(err)
+				s.Equal(3, attempts)
+				s.Equal(engine.StatusChanged, report.Tasks[0].Status)
+			},
+		},
+		{
+			name: "retry exhausted returns error",
+			validateFunc: func() {
+				plan := engine.NewPlan(
+					nil,
+					engine.WithRetry(engine.Retry(1)),
+				)
+
+				plan.TaskFunc("always-fail", failFunc("permanent failure"))
+
+				report, err := plan.Run(context.Background())
+				s.Error(err)
+				s.Equal(engine.StatusFailed, report.Tasks[0].Status)
+			},
+		},
+		{
+			name: "per-task retry override",
+			validateFunc: func() {
+				attempts := 0
+				plan := engine.NewPlan(nil) // default StopAll
+
+				plan.TaskFunc("flaky", func(
+					_ context.Context,
+					_ *osapi.Client,
+				) (*engine.Result, error) {
+					attempts++
+					if attempts < 2 {
+						return nil, fmt.Errorf("attempt %d failed", attempts)
+					}
+
+					return &engine.Result{Changed: true}, nil
+				}).Retry(engine.Retry(1))
+
+				report, err := plan.Run(context.Background())
+				s.NoError(err)
+				s.Equal(2, attempts)
+				s.Equal(engine.StatusChanged, report.Tasks[0].Status)
+			},
+		},
+		{
+			name: "retry with backoff delays between attempts",
+			validateFunc: func() {
+				attempts := 0
+				var timestamps []time.Time
+
+				plan := engine.NewPlan(
+					nil,
+					engine.WithRetry(engine.Retry(
+						2,
+						engine.WithRetryBackoff(
+							50*time.Millisecond,
+							200*time.Millisecond,
+						),
+					)),
+				)
+
+				plan.TaskFunc("flaky", func(
+					_ context.Context,
+					_ *osapi.Client,
+				) (*engine.Result, error) {
+					timestamps = append(timestamps, time.Now())
+					attempts++
+					if attempts < 3 {
+						return nil, fmt.Errorf("attempt %d failed", attempts)
+					}
+
+					return &engine.Result{Changed: true}, nil
+				})
+
+				report, err := plan.Run(context.Background())
+				s.NoError(err)
+				s.Equal(3, attempts)
+				s.Equal(engine.StatusChanged, report.Tasks[0].Status)
+
+				// Verify delays between attempts: the jitter keeps at least half
+				// of the initial interval.
+				s.Require().Len(timestamps, 3)
+				gap1 := timestamps[1].Sub(timestamps[0])
+				s.GreaterOrEqual(gap1, 20*time.Millisecond)
+			},
+		},
+		{
+			name: "retry without backoff retries immediately",
+			validateFunc: func() {
+				attempts := 0
+				var timestamps []time.Time
+
+				plan := engine.NewPlan(
+					nil,
+					engine.WithRetry(engine.Retry(1)),
+				)
+
+				plan.TaskFunc("flaky", func(
+					_ context.Context,
+					_ *osapi.Client,
+				) (*engine.Result, error) {
+					timestamps = append(timestamps, time.Now())
+					attempts++
+					if attempts < 2 {
+						return nil, fmt.Errorf("attempt %d failed", attempts)
+					}
+
+					return &engine.Result{Changed: true}, nil
+				})
+
+				report, err := plan.Run(context.Background())
+				s.NoError(err)
+				s.Equal(2, attempts)
+				s.Equal(engine.StatusChanged, report.Tasks[0].Status)
+
+				// Without backoff, retries should be near-instant.
+				s.Require().Len(timestamps, 2)
+				gap := timestamps[1].Sub(timestamps[0])
+				s.Less(gap, 20*time.Millisecond)
+			},
+		},
+		{
+			name: "retry backoff respects context cancellation",
+			validateFunc: func() {
+				attempts := 0
+
+				ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
+				defer cancel()
+
+				plan := engine.NewPlan(
+					nil,
+					engine.WithRetry(engine.Retry(
+						10,
+						engine.WithRetryBackoff(
+							5*time.Second,
+							30*time.Second,
+						),
+					)),
+				)
+
+				plan.TaskFunc("flaky", func(
+					_ context.Context,
+					_ *osapi.Client,
+				) (*engine.Result, error) {
+					attempts++
+
+					return nil, fmt.Errorf("attempt %d failed", attempts)
+				})
+
+				_, err := plan.Run(ctx)
+				s.Error(err)
+				// Should only get 1 attempt because backoff (5s) is longer
+				// than context timeout (30ms).
+				s.Equal(1, attempts)
+			},
+		},
+		{
+			name: "all hooks called in order",
+			validateFunc: func() {
+				var events []string
+
+				hooks := allHooks(&events)
+				plan := engine.NewPlan(nil, engine.WithHooks(hooks))
+
+				a := plan.TaskFunc("a", taskFunc(true, nil))
+				plan.TaskFunc("b", taskFunc(false, nil)).DependsOn(a)
+
+				report, err := plan.Run(context.Background())
+				s.NoError(err)
+				s.NotNil(report)
+				s.Equal([]string{
+					"before-plan",
+					"before-level-0",
+					"before-a",
+					"after-a",
+					"after-level-0",
+					"before-level-1",
+					"before-b",
+					"after-b",
+					"after-level-1",
+					"after-plan",
+				}, events)
+			},
+		},
+		{
+			name: "a task that panics still calls AfterTask",
+			validateFunc: func() {
+				var events []string
+
+				hooks := allHooks(&events)
+				plan := engine.NewPlan(
+					nil,
+					engine.WithHooks(hooks),
+					engine.OnError(engine.Continue),
+				)
+				plan.TaskFunc("p", func(
+					_ context.Context,
+					_ *osapi.Client,
+				) (*engine.Result, error) {
+					panic("boom")
+				})
+
+				_, err := plan.Run(context.Background())
+				s.ErrorContains(err, `task "p" panicked`)
+				s.Contains(events, "before-p")
+				s.Contains(events, "after-p")
+			},
+		},
+		{
+			name: "retry hook called with correct args",
+			validateFunc: func() {
+				var events []string
+				attempts := 0
+
+				hooks := allHooks(&events)
+				plan := engine.NewPlan(
+					nil,
+					engine.WithHooks(hooks),
+					engine.WithRetry(engine.Retry(2)),
+				)
+
+				plan.TaskFunc("flaky", func(
+					_ context.Context,
+					_ *osapi.Client,
+				) (*engine.Result, error) {
+					attempts++
+					if attempts < 3 {
+						return nil, fmt.Errorf("fail-%d", attempts)
+					}
+
+					return &engine.Result{Changed: true}, nil
+				})
+
+				_, err := plan.Run(context.Background())
+				s.NoError(err)
+
+				retries := filterPrefix(events, "retry-")
+				s.Len(retries, 2)
+				s.Contains(retries[0], "retry-flaky-1-fail-1")
+				s.Contains(retries[1], "retry-flaky-2-fail-2")
+			},
+		},
+		{
+			name: "skip hook for dependency failure",
+			validateFunc: func() {
+				var events []string
+
+				hooks := allHooks(&events)
+				plan := engine.NewPlan(
+					nil,
+					engine.WithHooks(hooks),
+					engine.OnError(engine.Continue),
+				)
+
+				a := plan.TaskFunc("a", failFunc("a failed"))
+				plan.TaskFunc("b", taskFunc(true, nil)).DependsOn(a)
+
+				_, err := plan.Run(context.Background())
+				s.ErrorContains(err, `step "a": a failed`)
+
+				skips := filterPrefix(events, "skip-")
+				s.Len(skips, 1)
+				s.Contains(skips[0], "skip-b-dependency failed")
+			},
+		},
+		{
+			name: "skip hook for guard",
+			validateFunc: func() {
+				var events []string
+
+				hooks := allHooks(&events)
+				plan := engine.NewPlan(nil, engine.WithHooks(hooks))
+
+				a := plan.TaskFunc("a", taskFunc(false, nil))
+				b := plan.TaskFunc("b", taskFunc(true, nil))
+				b.DependsOn(a)
+				b.When(func(_ engine.Results) bool { return false })
+
+				_, err := plan.Run(context.Background())
+				s.NoError(err)
+
+				skips := filterPrefix(events, "skip-")
+				s.Len(skips, 1)
+				s.Contains(skips[0], "guard returned false")
+			},
+		},
+		{
+			name: "skip hook for guard with custom reason",
+			validateFunc: func() {
+				var events []string
+
+				hooks := allHooks(&events)
+				plan := engine.NewPlan(nil, engine.WithHooks(hooks))
+
+				a := plan.TaskFunc("a", taskFunc(false, nil))
+				b := plan.TaskFunc("b", taskFunc(true, nil))
+				b.DependsOn(a)
+				b.WhenWithReason(
+					func(_ engine.Results) bool { return false },
+					"host is unreachable",
+				)
+
+				_, err := plan.Run(context.Background())
+				s.NoError(err)
+
+				skips := filterPrefix(events, "skip-")
+				s.Len(skips, 1)
+				s.Contains(skips[0], "host is unreachable")
+			},
+		},
+		{
+			name: "skip hook for only-if-changed",
+			validateFunc: func() {
+				var events []string
+
+				hooks := allHooks(&events)
+				plan := engine.NewPlan(nil, engine.WithHooks(hooks))
+
+				a := plan.TaskFunc("a", taskFunc(false, nil))
+				b := plan.TaskFunc("b", taskFunc(true, nil))
+				b.DependsOn(a)
+				b.OnlyIfChanged()
+
+				_, err := plan.Run(context.Background())
+				s.NoError(err)
+
+				skips := filterPrefix(events, "skip-")
+				s.Len(skips, 1)
+				s.Contains(skips[0], "no dependencies changed")
+			},
+		},
+		{
+			name: "retry without hooks configured",
+			validateFunc: func() {
+				attempts := 0
+				plan := engine.NewPlan(
+					nil,
+					engine.WithRetry(engine.Retry(1)),
+				)
+
+				plan.TaskFunc("flaky", func(
+					_ context.Context,
+					_ *osapi.Client,
+				) (*engine.Result, error) {
+					attempts++
+					if attempts < 2 {
+						return nil, fmt.Errorf("attempt %d", attempts)
+					}
+
+					return &engine.Result{Changed: true}, nil
+				})
+
+				report, err := plan.Run(context.Background())
+				s.NoError(err)
+				s.Equal(2, attempts)
+				s.Equal(engine.StatusChanged, report.Tasks[0].Status)
+			},
+		},
+		{
+			name: "skip without hooks configured",
+			validateFunc: func() {
+				plan := engine.NewPlan(
+					nil,
+					engine.OnError(engine.Continue),
+				)
+
+				a := plan.TaskFunc("a", failFunc("a failed"))
+				plan.TaskFunc("b", taskFunc(true, nil)).DependsOn(a)
+
+				report, err := plan.Run(context.Background())
+				s.ErrorContains(err, `step "a": a failed`)
+				m := statusMap(report)
+				s.Equal(engine.StatusSkipped, m["b"])
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, tc.validateFunc)
+	}
 }
 
 func (s *PlanPublicTestSuite) TestRunOnlyIfChanged() {
@@ -327,486 +840,97 @@ func (s *PlanPublicTestSuite) TestRunGuardWithFailedDependency() {
 	}
 }
 
-func (s *PlanPublicTestSuite) TestRunErrorStrategy() {
-	s.Run("stop all on error", func() {
-		plan := engine.NewPlan(nil)
-		didRun := false
-
-		fail := plan.TaskFunc("fail", failFunc("boom"))
-		next := plan.TaskFunc("next", taskFunc(false, func() {
-			didRun = true
-		}))
-		next.DependsOn(fail)
-
-		_, err := plan.Run(context.Background())
-		s.Error(err)
-		s.False(didRun)
-	})
-
-	s.Run("continue on error runs independent tasks", func() {
-		plan := engine.NewPlan(
-			nil,
-			engine.OnError(engine.Continue),
-		)
-		didRun := false
-
-		plan.TaskFunc("fail", failFunc("boom"))
-		plan.TaskFunc("independent", taskFunc(true, func() {
-			didRun = true
-		}))
-
-		report, err := plan.Run(context.Background())
-		s.Error(err, "a task that failed with Continue makes Run fail")
-		s.True(didRun)
-		s.Len(report.Tasks, 2)
-	})
-
-	s.Run("continue skips dependents of failed task", func() {
-		plan := engine.NewPlan(
-			nil,
-			engine.OnError(engine.Continue),
-		)
-
-		a := plan.TaskFunc("a", failFunc("a failed"))
-		plan.TaskFunc("b", taskFunc(true, nil)).DependsOn(a)
-		plan.TaskFunc("c", taskFunc(true, nil))
-
-		report, err := plan.Run(context.Background())
-		s.Error(err, "a task that failed with Continue makes Run fail")
-		s.Len(report.Tasks, 3)
-		m := statusMap(report)
-		s.Equal(engine.StatusFailed, m["a"])
-		s.Equal(engine.StatusSkipped, m["b"])
-		s.Equal(engine.StatusChanged, m["c"])
-	})
-
-	s.Run("continue transitive skip", func() {
-		plan := engine.NewPlan(
-			nil,
-			engine.OnError(engine.Continue),
-		)
-
-		a := plan.TaskFunc("a", failFunc("a failed"))
-		b := plan.TaskFunc("b", taskFunc(true, nil))
-		b.DependsOn(a)
-		c := plan.TaskFunc("c", taskFunc(true, nil))
-		c.DependsOn(b)
-
-		report, err := plan.Run(context.Background())
-		s.Error(err, "a task that failed with Continue makes Run fail")
-		m := statusMap(report)
-		s.Equal(engine.StatusFailed, m["a"])
-		s.Equal(engine.StatusSkipped, m["b"])
-		s.Equal(engine.StatusSkipped, m["c"])
-	})
-
-	s.Run("per-task continue override", func() {
-		plan := engine.NewPlan(nil) // default StopAll
-
-		a := plan.TaskFunc("a", failFunc("a failed"))
-		a.OnError(engine.Continue)
-		plan.TaskFunc("b", taskFunc(true, nil))
-
-		report, err := plan.Run(context.Background())
-		s.Error(err, "a task that failed with Continue makes Run fail")
-		m := statusMap(report)
-		s.Equal(engine.StatusFailed, m["a"])
-		s.Equal(engine.StatusChanged, m["b"])
-	})
-
-	s.Run("retry succeeds after transient failure", func() {
-		attempts := 0
-		plan := engine.NewPlan(
-			nil,
-			engine.WithRetry(engine.Retry(2)),
-		)
-
-		plan.TaskFunc("flaky", func(
-			_ context.Context,
-			_ *osapiclient.Client,
-		) (*engine.Result, error) {
-			attempts++
-			if attempts < 3 {
-				return nil, fmt.Errorf("attempt %d failed", attempts)
-			}
-
-			return &engine.Result{Changed: true}, nil
-		})
-
-		report, err := plan.Run(context.Background())
-		s.NoError(err)
-		s.Equal(3, attempts)
-		s.Equal(engine.StatusChanged, report.Tasks[0].Status)
-	})
-
-	s.Run("retry exhausted returns error", func() {
-		plan := engine.NewPlan(
-			nil,
-			engine.WithRetry(engine.Retry(1)),
-		)
-
-		plan.TaskFunc("always-fail", failFunc("permanent failure"))
-
-		report, err := plan.Run(context.Background())
-		s.Error(err)
-		s.Equal(engine.StatusFailed, report.Tasks[0].Status)
-	})
-
-	s.Run("per-task retry override", func() {
-		attempts := 0
-		plan := engine.NewPlan(nil) // default StopAll
-
-		plan.TaskFunc("flaky", func(
-			_ context.Context,
-			_ *osapiclient.Client,
-		) (*engine.Result, error) {
-			attempts++
-			if attempts < 2 {
-				return nil, fmt.Errorf("attempt %d failed", attempts)
-			}
-
-			return &engine.Result{Changed: true}, nil
-		}).Retry(engine.Retry(1))
-
-		report, err := plan.Run(context.Background())
-		s.NoError(err)
-		s.Equal(2, attempts)
-		s.Equal(engine.StatusChanged, report.Tasks[0].Status)
-	})
-
-	s.Run("retry with backoff delays between attempts", func() {
-		attempts := 0
-		var timestamps []time.Time
-
-		plan := engine.NewPlan(
-			nil,
-			engine.WithRetry(engine.Retry(
-				2,
-				engine.WithRetryBackoff(
-					50*time.Millisecond,
-					200*time.Millisecond,
-				),
-			)),
-		)
-
-		plan.TaskFunc("flaky", func(
-			_ context.Context,
-			_ *osapiclient.Client,
-		) (*engine.Result, error) {
-			timestamps = append(timestamps, time.Now())
-			attempts++
-			if attempts < 3 {
-				return nil, fmt.Errorf("attempt %d failed", attempts)
-			}
-
-			return &engine.Result{Changed: true}, nil
-		})
-
-		report, err := plan.Run(context.Background())
-		s.NoError(err)
-		s.Equal(3, attempts)
-		s.Equal(engine.StatusChanged, report.Tasks[0].Status)
-
-		// Verify delays between attempts: the jitter keeps at least half
-		// of the initial interval.
-		s.Require().Len(timestamps, 3)
-		gap1 := timestamps[1].Sub(timestamps[0])
-		s.GreaterOrEqual(gap1, 20*time.Millisecond)
-	})
-
-	s.Run("retry without backoff retries immediately", func() {
-		attempts := 0
-		var timestamps []time.Time
-
-		plan := engine.NewPlan(
-			nil,
-			engine.WithRetry(engine.Retry(1)),
-		)
-
-		plan.TaskFunc("flaky", func(
-			_ context.Context,
-			_ *osapiclient.Client,
-		) (*engine.Result, error) {
-			timestamps = append(timestamps, time.Now())
-			attempts++
-			if attempts < 2 {
-				return nil, fmt.Errorf("attempt %d failed", attempts)
-			}
-
-			return &engine.Result{Changed: true}, nil
-		})
-
-		report, err := plan.Run(context.Background())
-		s.NoError(err)
-		s.Equal(2, attempts)
-		s.Equal(engine.StatusChanged, report.Tasks[0].Status)
-
-		// Without backoff, retries should be near-instant.
-		s.Require().Len(timestamps, 2)
-		gap := timestamps[1].Sub(timestamps[0])
-		s.Less(gap, 20*time.Millisecond)
-	})
-
-	s.Run("retry backoff respects context cancellation", func() {
-		attempts := 0
-
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Millisecond)
-		defer cancel()
-
-		plan := engine.NewPlan(
-			nil,
-			engine.WithRetry(engine.Retry(
-				10,
-				engine.WithRetryBackoff(
-					5*time.Second,
-					30*time.Second,
-				),
-			)),
-		)
-
-		plan.TaskFunc("flaky", func(
-			_ context.Context,
-			_ *osapiclient.Client,
-		) (*engine.Result, error) {
-			attempts++
-
-			return nil, fmt.Errorf("attempt %d failed", attempts)
-		})
-
-		_, err := plan.Run(ctx)
-		s.Error(err)
-		// Should only get 1 attempt because backoff (5s) is longer
-		// than context timeout (30ms).
-		s.Equal(1, attempts)
-	})
-}
-
-func (s *PlanPublicTestSuite) TestRunHooks() {
-	s.Run("all hooks called in order", func() {
-		var events []string
-
-		hooks := allHooks(&events)
-		plan := engine.NewPlan(nil, engine.WithHooks(hooks))
-
-		a := plan.TaskFunc("a", taskFunc(true, nil))
-		plan.TaskFunc("b", taskFunc(false, nil)).DependsOn(a)
-
-		report, err := plan.Run(context.Background())
-		s.NoError(err)
-		s.NotNil(report)
-		s.Equal([]string{
-			"before-plan",
-			"before-level-0",
-			"before-a",
-			"after-a",
-			"after-level-0",
-			"before-level-1",
-			"before-b",
-			"after-b",
-			"after-level-1",
-			"after-plan",
-		}, events)
-	})
-
-	s.Run("a task that panics still calls AfterTask", func() {
-		var events []string
-
-		hooks := allHooks(&events)
-		plan := engine.NewPlan(nil, engine.WithHooks(hooks), engine.OnError(engine.Continue))
-		plan.TaskFunc("p", func(
-			_ context.Context,
-			_ *osapiclient.Client,
-		) (*engine.Result, error) {
-			panic("boom")
-		})
-
-		_, err := plan.Run(context.Background())
-		s.ErrorContains(err, `task "p" panicked`)
-		s.Contains(events, "before-p")
-		s.Contains(events, "after-p")
-	})
-
-	s.Run("retry hook called with correct args", func() {
-		var events []string
-		attempts := 0
-
-		hooks := allHooks(&events)
-		plan := engine.NewPlan(
-			nil,
-			engine.WithHooks(hooks),
-			engine.WithRetry(engine.Retry(2)),
-		)
-
-		plan.TaskFunc("flaky", func(
-			_ context.Context,
-			_ *osapiclient.Client,
-		) (*engine.Result, error) {
-			attempts++
-			if attempts < 3 {
-				return nil, fmt.Errorf("fail-%d", attempts)
-			}
-
-			return &engine.Result{Changed: true}, nil
-		})
-
-		_, err := plan.Run(context.Background())
-		s.NoError(err)
-
-		retries := filterPrefix(events, "retry-")
-		s.Len(retries, 2)
-		s.Contains(retries[0], "retry-flaky-1-fail-1")
-		s.Contains(retries[1], "retry-flaky-2-fail-2")
-	})
-
-	s.Run("skip hook for dependency failure", func() {
-		var events []string
-
-		hooks := allHooks(&events)
-		plan := engine.NewPlan(
-			nil,
-			engine.WithHooks(hooks),
-			engine.OnError(engine.Continue),
-		)
-
-		a := plan.TaskFunc("a", failFunc("a failed"))
-		plan.TaskFunc("b", taskFunc(true, nil)).DependsOn(a)
-
-		_, err := plan.Run(context.Background())
-		s.ErrorContains(err, `step "a": a failed`)
-
-		skips := filterPrefix(events, "skip-")
-		s.Len(skips, 1)
-		s.Contains(skips[0], "skip-b-dependency failed")
-	})
-
-	s.Run("skip hook for guard", func() {
-		var events []string
-
-		hooks := allHooks(&events)
-		plan := engine.NewPlan(nil, engine.WithHooks(hooks))
-
-		a := plan.TaskFunc("a", taskFunc(false, nil))
-		b := plan.TaskFunc("b", taskFunc(true, nil))
-		b.DependsOn(a)
-		b.When(func(_ engine.Results) bool { return false })
-
-		_, err := plan.Run(context.Background())
-		s.NoError(err)
-
-		skips := filterPrefix(events, "skip-")
-		s.Len(skips, 1)
-		s.Contains(skips[0], "guard returned false")
-	})
-
-	s.Run("skip hook for guard with custom reason", func() {
-		var events []string
-
-		hooks := allHooks(&events)
-		plan := engine.NewPlan(nil, engine.WithHooks(hooks))
-
-		a := plan.TaskFunc("a", taskFunc(false, nil))
-		b := plan.TaskFunc("b", taskFunc(true, nil))
-		b.DependsOn(a)
-		b.WhenWithReason(
-			func(_ engine.Results) bool { return false },
-			"host is unreachable",
-		)
-
-		_, err := plan.Run(context.Background())
-		s.NoError(err)
-
-		skips := filterPrefix(events, "skip-")
-		s.Len(skips, 1)
-		s.Contains(skips[0], "host is unreachable")
-	})
-
-	s.Run("skip hook for only-if-changed", func() {
-		var events []string
-
-		hooks := allHooks(&events)
-		plan := engine.NewPlan(nil, engine.WithHooks(hooks))
-
-		a := plan.TaskFunc("a", taskFunc(false, nil))
-		b := plan.TaskFunc("b", taskFunc(true, nil))
-		b.DependsOn(a)
-		b.OnlyIfChanged()
-
-		_, err := plan.Run(context.Background())
-		s.NoError(err)
-
-		skips := filterPrefix(events, "skip-")
-		s.Len(skips, 1)
-		s.Contains(skips[0], "no dependencies changed")
-	})
-
-	s.Run("retry without hooks configured", func() {
-		attempts := 0
-		plan := engine.NewPlan(
-			nil,
-			engine.WithRetry(engine.Retry(1)),
-		)
-
-		plan.TaskFunc("flaky", func(
-			_ context.Context,
-			_ *osapiclient.Client,
-		) (*engine.Result, error) {
-			attempts++
-			if attempts < 2 {
-				return nil, fmt.Errorf("attempt %d", attempts)
-			}
-
-			return &engine.Result{Changed: true}, nil
-		})
-
-		report, err := plan.Run(context.Background())
-		s.NoError(err)
-		s.Equal(2, attempts)
-		s.Equal(engine.StatusChanged, report.Tasks[0].Status)
-	})
-
-	s.Run("skip without hooks configured", func() {
-		plan := engine.NewPlan(
-			nil,
-			engine.OnError(engine.Continue),
-		)
-
-		a := plan.TaskFunc("a", failFunc("a failed"))
-		plan.TaskFunc("b", taskFunc(true, nil)).DependsOn(a)
-
-		report, err := plan.Run(context.Background())
-		s.ErrorContains(err, `step "a": a failed`)
-		m := statusMap(report)
-		s.Equal(engine.StatusSkipped, m["b"])
-	})
-}
-
 func (s *PlanPublicTestSuite) TestClient() {
-	client := osapiclient.New("http://localhost", "token")
+	client := osapi.New("http://localhost", "token")
 
-	plan := engine.NewPlan(client)
-	s.Equal(client, plan.Client())
+	tests := []struct {
+		name         string
+		client       *osapi.Client
+		validateFunc func(*osapi.Client)
+	}{
+		{
+			name:   "returns the client the plan was made with",
+			client: client,
+			validateFunc: func(got *osapi.Client) {
+				s.Equal(client, got)
+			},
+		},
+		{
+			name: "returns nil when the plan has no client",
+			validateFunc: func(got *osapi.Client) {
+				s.Nil(got)
+			},
+		},
+	}
 
-	nilPlan := engine.NewPlan(nil)
-	s.Nil(nilPlan.Client())
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.validateFunc(engine.NewPlan(tt.client).Client())
+		})
+	}
 }
 
 func (s *PlanPublicTestSuite) TestConfig() {
-	plan := engine.NewPlan(
-		nil,
-		engine.OnError(engine.Continue),
-	)
+	tests := []struct {
+		name         string
+		opts         []engine.PlanOption
+		validateFunc func(engine.PlanConfig)
+	}{
+		{
+			name: "with no options the strategy is stop_all",
+			validateFunc: func(cfg engine.PlanConfig) {
+				s.Equal("stop_all", cfg.OnErrorStrategy.String())
+			},
+		},
+		{
+			name: "returns the error strategy the plan was made with",
+			opts: []engine.PlanOption{engine.OnError(engine.Continue)},
+			validateFunc: func(cfg engine.PlanConfig) {
+				s.Equal("continue", cfg.OnErrorStrategy.String())
+			},
+		},
+	}
 
-	cfg := plan.Config()
-	s.Equal("continue", cfg.OnErrorStrategy.String())
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.validateFunc(engine.NewPlan(nil, tt.opts...).Config())
+		})
+	}
 }
 
 func (s *PlanPublicTestSuite) TestTasks() {
-	plan := engine.NewPlan(nil)
-	s.Empty(plan.Tasks())
+	tests := []struct {
+		name         string
+		tasks        []string
+		validateFunc func([]*engine.Task)
+	}{
+		{
+			name: "a new plan has no tasks",
+			validateFunc: func(got []*engine.Task) {
+				s.Empty(got)
+			},
+		},
+		{
+			name:  "returns each task that was added",
+			tasks: []string{"a", "b"},
+			validateFunc: func(got []*engine.Task) {
+				s.Require().Len(got, 2)
+				s.Equal("a", got[0].Name())
+				s.Equal("b", got[1].Name())
+			},
+		},
+	}
 
-	plan.TaskFunc("a", taskFunc(false, nil))
-	plan.TaskFunc("b", taskFunc(false, nil))
-	s.Len(plan.Tasks(), 2)
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			plan := engine.NewPlan(nil)
+			for _, name := range tt.tasks {
+				plan.TaskFunc(name, taskFunc(false, nil))
+			}
+
+			tt.validateFunc(plan.Tasks())
+		})
+	}
 }
 
 func (s *PlanPublicTestSuite) TestValidate() {
@@ -845,6 +969,15 @@ func (s *PlanPublicTestSuite) TestValidate() {
 			},
 			validateFunc: func(err error) {
 				s.NoError(err)
+			},
+		},
+		{
+			name: "a task with no function returns error",
+			setup: func(plan *engine.Plan) {
+				plan.TaskFunc("none", nil)
+			},
+			validateFunc: func(err error) {
+				s.ErrorContains(err, `task "none" has no function`)
 			},
 		},
 	}
@@ -973,7 +1106,9 @@ func (s *PlanPublicTestSuite) TestExplain() {
 
 // allHooks returns a Hooks struct that appends all events to the given
 // slice, covering every hook type.
-func allHooks(events *[]string) engine.Hooks {
+func allHooks(
+	events *[]string,
+) engine.Hooks {
 	return engine.Hooks{
 		BeforePlan: func(_ engine.PlanSummary) {
 			*events = append(*events, "before-plan")

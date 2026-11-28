@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/lipgloss"
+
 	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 

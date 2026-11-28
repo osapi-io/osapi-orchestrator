@@ -28,9 +28,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/osapi-io/osapi/pkg/sdk/types"
+
+	"github.com/osapi-io/osapi-orchestrator/internal/engine"
 )
 
 // hostCall is an SDK call that answers with one row for each host.

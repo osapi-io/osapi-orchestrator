@@ -24,10 +24,10 @@ import (
 	"context"
 	"testing"
 
+	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/osapi-io/osapi-orchestrator/internal/engine"
-	osapiclient "github.com/osapi-io/osapi/pkg/sdk/client"
 )
 
 type TaskPublicTestSuite struct {
@@ -41,7 +41,7 @@ func TestTaskPublicTestSuite(t *testing.T) {
 // noop is a no-op TaskFn for tests that only need a valid task.
 func noop(
 	_ context.Context,
-	_ *osapiclient.Client,
+	_ *osapi.Client,
 ) (*engine.Result, error) {
 	return &engine.Result{}, nil
 }
@@ -90,43 +90,117 @@ func (s *TaskPublicTestSuite) TestDependsOn() {
 }
 
 func (s *TaskPublicTestSuite) TestOnlyIfChanged() {
-	task := engine.NewTaskFunc("t", noop)
-	dep := engine.NewTaskFunc("dep", noop)
-	task.DependsOn(dep).OnlyIfChanged()
+	tests := []struct {
+		name          string
+		onlyIfChanged bool
+		validateFunc  func(*engine.Task)
+	}{
+		{
+			name: "a new task requires no change",
+			validateFunc: func(task *engine.Task) {
+				s.False(task.RequiresChange())
+			},
+		},
+		{
+			name:          "a task after OnlyIfChanged requires a change",
+			onlyIfChanged: true,
+			validateFunc: func(task *engine.Task) {
+				s.True(task.RequiresChange())
+			},
+		},
+	}
 
-	s.True(task.RequiresChange())
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			task := engine.NewTaskFunc("t", noop)
+			task.DependsOn(engine.NewTaskFunc("dep", noop))
+			if tt.onlyIfChanged {
+				task.OnlyIfChanged()
+			}
+
+			tt.validateFunc(task)
+		})
+	}
 }
 
 func (s *TaskPublicTestSuite) TestWhen() {
-	task := engine.NewTaskFunc("t", noop)
-	s.False(task.HasGuard())
+	tests := []struct {
+		name         string
+		guard        bool
+		validateFunc func(task *engine.Task, called *bool)
+	}{
+		{
+			name: "a new task has no guard, and is evaluated to run",
+			validateFunc: func(task *engine.Task, called *bool) {
+				s.False(task.HasGuard())
 
-	called := false
-	task.When(func(_ engine.Results) bool {
-		called = true
+				run, reason := task.Evaluate(engine.Results{})
+				s.True(run)
+				s.Empty(reason)
+				s.False(*called)
+			},
+		},
+		{
+			name:  "a guard is called when the task is evaluated",
+			guard: true,
+			validateFunc: func(task *engine.Task, called *bool) {
+				s.True(task.HasGuard())
 
-		return true
-	})
+				run, reason := task.Evaluate(engine.Results{})
+				s.True(run)
+				s.Empty(reason)
+				s.True(*called)
+			},
+		},
+	}
 
-	s.True(task.HasGuard())
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			task := engine.NewTaskFunc("t", noop)
+			called := false
+			if tt.guard {
+				task.When(func(_ engine.Results) bool {
+					called = true
 
-	run, reason := task.Evaluate(engine.Results{})
-	s.True(run)
-	s.Empty(reason)
-	s.True(called)
+					return true
+				})
+			}
+
+			tt.validateFunc(task, &called)
+		})
+	}
 }
 
 func (s *TaskPublicTestSuite) TestTaskFunc() {
-	fn := func(
-		_ context.Context,
-		_ *osapiclient.Client,
-	) (*engine.Result, error) {
-		return &engine.Result{Changed: true}, nil
+	tests := []struct {
+		name         string
+		fn           engine.TaskFn
+		validateFunc func(*engine.Task)
+	}{
+		{
+			name: "names the task and keeps its function",
+			fn:   noop,
+			validateFunc: func(task *engine.Task) {
+				s.Equal("custom", task.Name())
+				s.True(task.IsFunc())
+				s.NotNil(task.Fn())
+			},
+		},
+		{
+			name: "a task with no function is not a function",
+			validateFunc: func(task *engine.Task) {
+				s.Equal("custom", task.Name())
+				s.False(task.IsFunc())
+				s.Nil(task.Fn())
+			},
+		},
 	}
 
-	task := engine.NewTaskFunc("custom", fn)
-	s.Equal("custom", task.Name())
-	s.True(task.IsFunc())
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.validateFunc(engine.NewTaskFunc("custom", tt.fn))
+		})
+	}
 }
 
 func (s *TaskPublicTestSuite) TestSetName() {
@@ -233,28 +307,69 @@ func (s *TaskPublicTestSuite) TestEvaluate() {
 }
 
 func (s *TaskPublicTestSuite) TestRetry() {
-	task := engine.NewTaskFunc("t", noop)
-	s.Nil(task.RetryPolicy())
+	tests := []struct {
+		name         string
+		count        int
+		validateFunc func(*engine.Task)
+	}{
+		{
+			name: "a new task has no retry policy",
+			validateFunc: func(task *engine.Task) {
+				s.Nil(task.RetryPolicy())
+			},
+		},
+		{
+			name:  "Retry sets the policy",
+			count: 3,
+			validateFunc: func(task *engine.Task) {
+				s.Require().NotNil(task.RetryPolicy())
+				s.Equal(3, task.RetryPolicy().Count())
+			},
+		},
+	}
 
-	task.Retry(engine.Retry(3))
-	s.Require().NotNil(task.RetryPolicy())
-	s.Equal(3, task.RetryPolicy().Count())
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			task := engine.NewTaskFunc("t", noop)
+			if tt.count > 0 {
+				task.Retry(engine.Retry(tt.count))
+			}
+
+			tt.validateFunc(task)
+		})
+	}
 }
 
 func (s *TaskPublicTestSuite) TestOnErrorOverride() {
-	task := engine.NewTaskFunc("t", noop)
-	task.OnError(engine.Continue)
+	tests := []struct {
+		name         string
+		strategy     *engine.ErrorStrategy
+		validateFunc func(*engine.Task)
+	}{
+		{
+			name: "a new task has no error strategy of its own",
+			validateFunc: func(task *engine.Task) {
+				s.Nil(task.ErrorStrategy())
+			},
+		},
+		{
+			name:     "OnError sets the task's error strategy",
+			strategy: &engine.Continue,
+			validateFunc: func(task *engine.Task) {
+				s.Require().NotNil(task.ErrorStrategy())
+				s.Equal("continue", task.ErrorStrategy().String())
+			},
+		},
+	}
 
-	s.NotNil(task.ErrorStrategy())
-	s.Equal("continue", task.ErrorStrategy().String())
-}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			task := engine.NewTaskFunc("t", noop)
+			if tt.strategy != nil {
+				task.OnError(*tt.strategy)
+			}
 
-func (s *TaskPublicTestSuite) TestFn() {
-	fnTask := engine.NewTaskFunc("fn", func(
-		_ context.Context,
-		_ *osapiclient.Client,
-	) (*engine.Result, error) {
-		return nil, nil
-	})
-	s.NotNil(fnTask.Fn())
+			tt.validateFunc(task)
+		})
+	}
 }
