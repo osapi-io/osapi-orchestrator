@@ -34,17 +34,21 @@ for distro, agents := range groups {
 
 ## Predicates
 
-| Predicate      | What it matches                                                |
-| -------------- | -------------------------------------------------------------- |
-| `OS`           | The OS distribution of the agent (not case-sensitive)          |
-| `Arch`         | The architecture of the agent (not case-sensitive)             |
-| `MinMemory`    | A minimum total memory                                         |
-| `MinCPU`       | A minimum CPU count                                            |
-| `HasLabel`     | A label key-value pair                                         |
-| `FactEquals`   | A fact key and value that are equal to the given key and value |
-| `HasCondition` | An agent that has an active condition of the given type        |
-| `NoCondition`  | An agent that does NOT have the active condition               |
-| `Healthy`      | An agent that has no active conditions                         |
+| Predicate      | What it matches                                              |
+| -------------- | ------------------------------------------------------------ |
+| `OS`           | The OS distribution of the agent (not case-sensitive)        |
+| `Arch`         | The architecture of the agent (not case-sensitive)           |
+| `MinMemory`    | A minimum total memory                                       |
+| `MinCPU`       | A minimum CPU count                                          |
+| `HasLabel`     | A label key-value pair                                       |
+| `FactEquals`   | A fact that is equal to the given value, as JSON compares it |
+| `HasCondition` | An agent that has an active condition of the given type      |
+| `NoCondition`  | An agent that does NOT have the active condition             |
+| `Healthy`      | An agent that has no active conditions                       |
+
+The facts of an agent come from JSON. Thus `FactEquals` compares the value in
+its JSON form: `FactEquals("cpu_count", 4)` matches the fact `4`, and a slice or
+a map matches a fact with the same elements.
 
 ## Example
 

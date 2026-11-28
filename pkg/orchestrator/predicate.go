@@ -21,6 +21,8 @@
 package orchestrator
 
 import (
+	"encoding/json"
+	"reflect"
 	"strings"
 
 	osapi "github.com/osapi-io/osapi/pkg/sdk/client"
@@ -82,14 +84,37 @@ func HasLabel(
 }
 
 // FactEquals returns a predicate that matches agents where the
-// given fact key equals the expected value.
+// given fact key equals the expected value. Facts come from JSON, so
+// value is compared in its JSON form: the int 4 matches the fact 4, and
+// a slice or a map matches a fact with the same elements. A value that
+// has no JSON form, such as a func, matches no agent.
 func FactEquals(
 	key string,
 	value any,
 ) Predicate {
+	want, ok := jsonValue(value)
+
 	return func(a osapi.AgentInfo) bool {
-		return a.Facts[key] == value
+		return ok && reflect.DeepEqual(a.Facts[key], want)
 	}
+}
+
+// jsonValue is v as encoding/json decodes it into an any, as the facts of
+// an agent are. ok is false when v has no JSON form.
+func jsonValue(
+	v any,
+) (any, bool) {
+	var out any
+
+	b, err := json.Marshal(v)
+	if err == nil {
+		err = json.Unmarshal(b, &out)
+	}
+	if err != nil {
+		return nil, false
+	}
+
+	return out, true
 }
 
 // HasCondition returns a predicate that matches agents with an active

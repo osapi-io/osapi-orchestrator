@@ -86,17 +86,17 @@ its type and fields.
 A predicate is a filter. You give predicates to `Discover` and `GroupByFact`,
 and you can use more than one together:
 
-| Predicate      | What it matches                                                |
-| -------------- | -------------------------------------------------------------- |
-| `OS`           | The OS distribution of the agent (not case-sensitive)          |
-| `Arch`         | The architecture of the agent (not case-sensitive)             |
-| `MinMemory`    | A minimum total memory                                         |
-| `MinCPU`       | A minimum CPU count                                            |
-| `HasLabel`     | A label key-value pair                                         |
-| `FactEquals`   | A fact key and value that are equal to the given key and value |
-| `HasCondition` | An agent that has an active condition of the given type        |
-| `NoCondition`  | An agent that does NOT have the active condition               |
-| `Healthy`      | An agent that has no active conditions                         |
+| Predicate      | What it matches                                              |
+| -------------- | ------------------------------------------------------------ |
+| `OS`           | The OS distribution of the agent (not case-sensitive)        |
+| `Arch`         | The architecture of the agent (not case-sensitive)           |
+| `MinMemory`    | A minimum total memory                                       |
+| `MinCPU`       | A minimum CPU count                                          |
+| `HasLabel`     | A label key-value pair                                       |
+| `FactEquals`   | A fact that is equal to the given value, as JSON compares it |
+| `HasCondition` | An agent that has an active condition of the given type      |
+| `NoCondition`  | An agent that does NOT have the active condition             |
+| `Healthy`      | An agent that has no active conditions                       |
 
 ## Error strategies
 
